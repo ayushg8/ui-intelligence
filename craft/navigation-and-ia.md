@@ -6,7 +6,8 @@ CSS custom properties the product ships. Values marked "approx." were eyeballed 
 rather than read from the DOM. Products measured: Grafana (the running app at play.grafana.org),
 Discourse (the running forum at meta.discourse.org), Stripe Docs, Vercel Docs, Sentry Docs, Supabase
 Docs, PostHog Docs, shopify.dev/Polaris, Notion Help, MDN, Tailwind Docs, Linear Docs, GitHub,
-shadcn/ui, Excalidraw.
+shadcn/ui, Excalidraw, VS Code for Web (vscode.dev), Mastodon, Bluesky, Hugging Face, YouTube mobile
+web.
 
 The reason this file exists: navigation is where generated UI reveals that nobody thought about the
 product. Spacing tells you the agent didn't look; navigation tells you the agent didn't *understand*.
@@ -23,8 +24,9 @@ could name what the software actually does.
    not done the exercise; those are not nouns in anyone's product, they are furniture.
 2. **Sidebar rows are 28–39px tall with a 4–8px radius, inset 8–12px from the rail edge.** Measured:
    PostHog 28, Grafana 32, Vercel 36, Discourse 36.8, Sentry 38.8. The rail is 240–320px, mode 280.
-   Never 44px rows — that is a *touch* minimum and it makes a pointer-driven 30-item list feel like
-   a phone app on a monitor.
+   Never 44px *rows* — that is a touch minimum and it makes a pointer-driven 30-item list feel like a
+   phone app on a monitor. (44 is fine as a rail *width*: VS Code's icon rail is 44 wide with 36×36
+   targets.)
 3. **Nothing moves on hover, and hover is usually instant.** Measured hover deltas: Grafana changes
    *only* text alpha (0.65 → 1.0) with `transition: all 0s`; Vercel adds a `#f2f2f2` fill and darkens
    text; Discourse fills with 15%-alpha brand purple. Zero of the three shift, scale, or add a
@@ -61,8 +63,12 @@ could name what the software actually does.
 | **MDN** | 296.5 (nav 264.5); `--layout-sidebar-min: 15rem` | 32 | 40 | pad `4 0` | 0 | 16/24 | none | — | — |
 | **Linear Docs** (dark) | **280** | 36 | 36 | inset 20, 239 wide | 0 | 14/21, **weight 510** | yes | full-opacity `#f7f8f8` vs `#8a8f98` | — |
 | **Tailwind Docs** | **240** | 24 | 32 | pad-left 16 | 0 | 14/24 | none | weight 600 + color | color only |
+| **VS Code for Web** (app, dark) | **44 icon rail + 300 panel** | activity item **36×36**, pitch **44** | 44 | rail x=4, panel x=48 | 8 on the rail's outer corners | **13/18.2** | icon-only rail | left edge bar + full-opacity icon | — |
+| **Mastodon** (app) | **285, on the *right*** | **48** | 48 | pad `12 12 12 16`, radius 4 | 4 | **16/18** | yes | `aria-current="page"` + weight | — |
+| **Bluesky** (app) | **245**, pad 16 | 28.5 (logo row) | — | rail ends exactly where the 600px feed column begins | 999 on buttons | 16 | yes | — | — |
+| **GitHub** code-view file tree | **321** pane / **273** inner nav | — | — | appears only inside `/blob` and `/tree` | 6 | 14/21 | file-type glyphs | — | — |
 
-**The signal on width:** 240–325px, and **280 is the mode** (Stripe, Notion, Linear, and Vercel/Sentry
+**The signal on width:** 240–325px for a labeled rail, and **280 is the mode** (Stripe, Notion, Linear, and Vercel/Sentry
 at 300 with 12px of internal padding = a 276–288 usable column). 320 and 325 appear only where the
 rail carries a three-level tree (Grafana) or very long labels (Supabase). Nobody in this sample ships
 a 200px rail and nobody ships 400.
@@ -90,6 +96,10 @@ place" below — this is the single most-abused control in generated navigation.
 | Stripe Docs | **64 + 48 = 112** | row 1 = logo/search/auth, row 2 = 6 product tabs |
 | GitHub | 72 (marketing) + 48 (repo tabs) | two independent bars |
 | MDN | 66 nav + `--breadcrumbs-bar-height: 2rem` | `--sticky-header-height: calc(nav + breadcrumbs)` |
+| Hugging Face | **65** | logo + **6** destinations at 16px, `padding: 2px 8px`, then a right cluster. **No sidebar anywhere in the product.** |
+| VS Code for Web | **35** title bar + **28** status bar | the title bar carries only back/forward and the workspace name; every destination is in the 44px rail or the palette |
+| YouTube (390 mobile web) | **48** | logo + a single 48×48 search target. No burger. |
+| Mastodon | **none** | no top bar at all; nav is a 285px right-hand panel beside a ~598px centered column |
 
 **The signal:** 48–64 for a single bar. Products that need two levels ship them as two bars of
 different heights (Stripe 64+48, GitHub 72+48, MDN 66+32), never as one tall 100px bar with two rows
@@ -104,17 +114,33 @@ composed header — the sticky-offset math has one source of truth.
 | **Supabase** | 576 | 500 | y200 (22% of 900) | 8 | **56px** / 15px | **44** | 6 | 4% black fill |
 | **Vercel Docs** | 640 | 489 | `top-[15%]` = y135 | 12 | 28px / **18px** | **55.2** (2-line) | 6 | 5% black fill |
 | **GitHub Docs** | 800 | 555 | **y16** | 12 | 30px / 14px | — | — | shadow `0 1px 3px rgba(31,35,40,.12), 0 8px 24px rgba(66,74,83,.12)` |
+| **VS Code for Web** | **602** | 407 | **y6** | 8 | 24px / **13px** | **22** | 4 | **solid `rgb(4,57,94)` + white text** |
 
-**The signal:** 512–800 wide, **anchored 15–22% down the viewport, never vertically centered** (GitHub
-pins it 16px from the top). Rows are 36–55 — taller than sidebar rows, because a palette row is a
-*decision* and a sidebar row is a *habit*. The selected row is always a low-alpha fill (4–5% black,
-or a 50%-alpha muted token) and never a border or an outline.
+**The signal:** 512–800 wide, **anchored 6px–22% down the viewport, never vertically centered**
+(GitHub pins it 16px from the top; VS Code pins it at 6). The taxonomy splits cleanly by what the
+palette is *for*:
+
+- **Navigation palettes** (shadcn 36, Supabase 44, Vercel 55) have rows *taller* than sidebar rows,
+  because a palette row is a decision and a sidebar row is a habit, and the input is 15–18px because
+  that is where the eye is.
+- **Command palettes over thousands of commands** go the other way: VS Code ships **22px rows and a
+  13px input** — the same 13px as the rest of its chrome — because the user is scanning fifty
+  `Editor: …` / `Git: …` lines for a prefix match, not reading. Its selected row is a **solid**
+  `rgb(4,57,94)` fill with white text, not a 5% wash, because at 22px a subtle fill is invisible.
+
+The rule that generalizes: **row height tracks how many results the user must compare, not how
+important the palette is.** Under ~10 likely results → 44–55px rows with descriptions. Hundreds →
+22–32px rows with a namespace prefix (`Editor: Font Size`) doing the disambiguation instead.
 
 **Group taxonomies actually shipped** — these are the real answer to "what goes in a palette":
 
 - Supabase: `Docs` → `Go to` → `Quick starts` → `Support`
 - shadcn/ui: `Pages` → `Styles` → `Components` → `Get Started`
 - GitHub Docs: two modes side by side, `Search docs` and `Ask Copilot`
+- VS Code: **no visual groups at all** — every entry is `Namespace: Verb Object` (`Accounts: Manage
+  Trusted Extensions`, `Add Data Breakpoint at Address`), so the prefix does the grouping and typing
+  `git ` filters to a group. Use this instead of headers once the list is too long for headers to
+  fit on screen.
 
 Note that every one of them mixes **navigation** ("Go to Auth") with **search results** and with
 **actions** ("Use system theme"). That mix is the whole point of a palette; a palette that only
@@ -130,6 +156,11 @@ searches documents is a search box wearing a costume.
 | **Stripe in-page tabs** | h 49, same underline language as the global tabs |
 | **Discourse view tabs** | `Latest / Hot / Top / Categories`, h **38**, 16px, radius 8, pad `0 10.4`, active = `#7b5fe2` text + underline |
 | **MDN right-rail TOC** | rows h **32**, pad `4 8`, radius 0, active = fill `rgb(236,244,254)` |
+| **Bluesky profile tabs** | 5 tabs (`Posts / Media / Videos / Feeds / Starter Packs`), **h47 desktop** with `padding: 14px 14px 0`, **h43 at 390** with `padding: 10px`, **16px type at both sizes**, across the full 600px column |
+
+**The signal on responsive tabs:** Bluesky shrinks tab *padding* from 14px to 10px between 1440 and
+390 and leaves the **font size alone at 16px**. Type size is legibility; padding is density. Shrink
+the second, never the first — a 13px tab label on a phone is the classic generated-mobile mistake.
 
 **The signal on counters:** GitHub carries "Issues 1k" and "Pull requests 2.3k" inline in the tab as
 a **neutral 12%-grey pill**, and spends its only accent color on the 2px active indicator. Generated
@@ -142,6 +173,7 @@ UI does the reverse: red badges on six items and a grey active state.
 | **MDN** | full-width bar between nav and content | 16px, 16px gap | `>` glyph | `--breadcrumbs-bar-height: 2rem`, folded into `--sticky-header-height` |
 | **Sentry Docs** | above the H1, y=110 | 14px / 24.5 | ` / ` | every segment a link in `#6a5fc1`; final segment also colored |
 | **Grafana** (app) | **inside the 48px top bar**, x=352 (rail 320 + 32) | 14/22 | ` / ` | shows even at depth 1 ("Dashboards"); reflects the *folder* path, not the nav path |
+| **GitHub** (code view) | its own 24px row above the file, y=202 | **16/24** | ` / ` in a **20.6px** gap between segments | every segment is a link in `#0969da` **including the repo name**; the crumb is the only path affordance on the page and doubles as the directory picker |
 
 ### Nesting and indentation — Grafana's expanded tree
 
@@ -167,8 +199,11 @@ never by shrinking the row.
 | **Linear Docs** | fixed 64px bar; drawer | burger **48×48 at x=334 (top right)** | — |
 | **Stripe Docs** | header collapses | burger **at x=16 (top left)**, 24px tall | — |
 | **Discourse** | header 52px, sidebar hidden | burger left of logo, 50.5×33 | — |
+| **YouTube** | **fixed bottom tablist, 390×57 at y=787**, 3 tabs of 130×56, 11px labels | no burger; 48px top bar is logo + search only | frosted `rgba(255,255,255,.9)`, 1px `rgba(0,0,0,.2)` top rule |
+| **Bluesky** | **fixed bottom bar, 390×62 at y=782** | — | 1px `rgb(220,226,234)` top rule |
 
-**Zero of the five ship a bottom tab bar.** More on why below.
+**Five of seven ship no bottom tab bar; the two that do are consumer feed apps with three
+destinations.** That split is the whole rule — see Decision 11.
 
 ### The no-shell archetype — Excalidraw
 
@@ -198,6 +233,13 @@ area from a user who needed it.
 → **Top bar only.** shopify.dev ships a 48px bar with 6 destinations and nothing else at that level.
 A sidebar for four items is a 280px column that is 90% empty, which reads as unfinished.
 
+**And "fewer than five destinations" is not the same as "a small product."** Hugging Face hosts
+millions of models, datasets and Spaces and ships **no sidebar anywhere** — a 65px header with six
+destinations (`Models`, `Datasets`, `Spaces`, `Buckets`, `Docs`, `Pricing`) at 16px with
+`padding: 2px 8px`, and search doing all the rest. That works because the objects are *found*, not
+*browsed*: nobody navigates a tree of two million models. Size of catalog argues for search; number
+of **kinds of thing** argues for shell. Count your kinds, not your rows.
+
 **Q3. Is the primary object a hierarchy the user navigates by browsing — a tree of pages, files,
 channels, projects, categories?**
 → **Left sidebar**, because a tree needs vertical room and the hierarchy has to stay on screen while
@@ -211,6 +253,19 @@ resources); the 280px rail carries the tree inside whichever area you picked. Th
 "which product am I in," the rail answers "where in it." Grafana does the same job differently — one
 320px rail with 11 collapsible top-level areas and a 48px bar carrying only breadcrumb + search +
 account, i.e. no destinations at all in the top bar.
+
+**Q5. Is the product one infinite stream of peer items — posts, videos, messages — that the user
+consumes rather than organizes?**
+→ **A fixed-width centered content column with nav parked beside it, not a stretching shell.**
+Measured: Bluesky renders its feed in a **600px column starting at x=420** on a 1440 viewport, with a
+**245px** nav rail ending exactly where the column begins. Mastodon renders a **~598px** column with
+its **285px navigation panel on the *right*** and a context/search column on the left. Neither shell
+stretches to fill 1440. The content column is sized for reading (600px ≈ 70–80 characters at 16px),
+the nav is whatever is left, and on a 2560px monitor you get more margin, not wider posts.
+
+The generic alternative — a 100%-width flex row with a 280px rail and a `flex: 1` feed — produces
+1160px-wide posts on a wide monitor, which nobody can read and which no shipping social product
+does.
 
 **When "command-first" is the real answer.** A palette becomes the primary navigation only when the
 destination set is large, flat, and user-generated — thousands of issues, files, or documents where
@@ -262,7 +317,8 @@ goes at the top, preferences about the shell itself go at the bottom.**
 ### Width
 
 Pick 280 unless you have a reason. If the rail carries a three-level tree, 300–320. If it carries a
-flat list of ≤8 short labels, 240 (Tailwind). The rail width is not a grid decision, it is a *longest
+flat list of ≤8 short labels, 240 (Tailwind). If it is icon-only, 44–52 — VS Code for Web ships a
+**44px** rail with **36×36** targets at a 44px pitch. The rail width is not a grid decision, it is a *longest
 label* decision: measure your longest real label at your real font size and add the icon column,
 the indent, and 24px of trailing room for a chevron or a count.
 
@@ -399,7 +455,16 @@ above a 44px footer strip with a top border, so it never competes with navigatio
 `←|` glyph at the **top-right of the rail** (255, 135). Discourse puts the toggle in the **top bar**,
 left of the logo, because collapsing is a page-level action there.
 
-If you collapse to an icon-only rail, keep the labels: an icon rail of approx. 52px with a small label under each
+**The reference implementation of a collapsed rail is VS Code's activity bar**: 44px wide, six
+36×36 targets on a 44px pitch, pinned to the left edge with 8px radius on its outer corners, and
+`Accounts` + `Manage` (settings) pushed to the bottom at y=784 and y=828 in an 807px column. Six
+icons, each one a genuinely different *mode* of the product (files, search, source control, run,
+remote, extensions) — which is the only condition under which naked glyphs are legible. Note it does
+not collapse to icons; the 44px rail is the permanent state and the 300px panel beside it is what
+opens and closes. That is a better model than a rail that shape-shifts: the mode switcher never
+moves, so muscle memory survives.
+
+If you do collapse a labeled rail to icons, keep the labels: an icon rail of approx. 52px with a small label under each
 icon (this is what Sentry's actual app ships, read off a product screenshot in their docs — `Issues`, `Explore`, `Dashboards`, `Insights`,
 `Settings`, five items, help pinned at the bottom) is dramatically more usable than 48px of naked
 glyphs with tooltips. Persist the collapsed state per user, not per session.
@@ -607,6 +672,37 @@ the entire feature: it is what lets someone find the SSO settings without openin
 Redirecting `/settings` to `/settings/general` is the default behavior of every routing library and
 it is the wrong one, because it removes the only page that could have shown the map.
 
+**2b. Measured: the best settings surface in shipping software is search-first.** VS Code for Web's
+settings editor, probed at 1440×900:
+
+| Element | Measured |
+|---|---|
+| Search field | **1094×26**, radius 4, the **first** element in the pane, full width, above everything |
+| Scope selector | `User` / `Workspace` tabs, **22px** tall, directly under the search field — plus `Remote` and `Folder` when they apply |
+| Table of contents | **200px** pane, rows **22px**, radius 4, 13px type, active row = fill `rgb(31,31,31)` + white text |
+| TOC top level | **9 items**: `Commonly Used`, `Text Editor`, `Workbench`, `Window`, `Chat`, `Features`, `Application`, `Security`, `Extensions` |
+| One setting's row | **98–125px tall** — bold `Namespace: Setting Name`, one line of description, then the control |
+
+Four things to steal from that, each of which most products get wrong:
+
+- **`Commonly Used` is the first TOC entry.** A curated shortlist of the ~8 settings people actually
+  change, duplicated out of the deeper tree. Duplication in settings navigation is correct;
+  duplication in product navigation is not.
+- **The scope tabs are two clicks from every setting, always visible.** `User` vs `Workspace` is the
+  Account/Workspace split rendered as a control instead of as two separate pages, so you can never
+  edit the wrong scope without having chosen it.
+- **Labels are namespaced** — `Editor: Font Size`, `Files: Auto Save`, `Extensions: GitHub Copilot
+  Chat`. That prefix is what makes a settings search result self-describing, and it is what lets the
+  same settings appear in the command palette without context.
+- **Descriptions cross-link other settings.** "Format a file on save. A formatter must be available…
+  When `Files: Auto Save` is set to `afterDelay`, the file will only be formatted when saved
+  explicitly." Settings that interact should say so and link, because the alternative is a support
+  ticket.
+
+The 98–125px per setting is the real cost of doing this right, and it is why "one line of help text
+at rest" is a structural decision, not a polish decision: it roughly triples the height of every
+settings page and you must design the IA for that from the start.
+
 **3. Inside a settings section, group by task and put destructive last.** The order that works:
 
 ```
@@ -668,25 +764,45 @@ Rules:
 
 ## Decision 11: mobile navigation
 
-**The measured fact first:** across the five products I probed at 390×844 — Stripe Docs, Vercel Docs,
-Linear Docs, Discourse, Grafana — **not one ships a bottom tab bar.** All of them keep a 48–64px top
-bar and move the navigation into a drawer or a full-width takeover.
+**The real evidence, measured at 390×844, splits cleanly along one line — and it is not the line
+most style guides draw.**
 
-That is not evidence that bottom tabs are bad. It is evidence about *where* they work:
+Products that ship **no** bottom bar: Stripe Docs, Vercel Docs, Linear Docs, Discourse, Grafana. All
+five keep a 48–64px top bar and put navigation in a drawer or a full-width takeover.
 
-- **Bottom tabs are right for a native or installed app with 3–5 fixed, equal-weight destinations
-  that the user switches between constantly.** Mail, maps, a music player, a delivery app.
-- **Bottom tabs are wrong on the mobile web**, for a mechanical reason you can verify in ten seconds:
-  mobile Safari's own URL bar and the Chrome-on-Android toolbar occupy the bottom edge and
-  show/hide on scroll, so a `position: fixed; bottom: 0` bar either collides with browser chrome or
-  jitters as the viewport resizes. `dvh` units help and do not eliminate it.
-- They are also wrong for **anything with more than 5 destinations** or with destinations of unequal
-  importance — a tab bar makes five things look equally important, which is a lie in most products.
+Products that ship a **fixed bottom bar on the mobile web**, measured:
+
+| Product | Bar | Tabs | Item | Label | Surface |
+|---|---|---|---|---|---|
+| **YouTube** (m.youtube.com) | `position: fixed`, **390×57 at y=787**, `role="tablist"` | **3** (`Home`, `Shorts`, `You`) | **130×56** each | icon over **11px** label | `rgba(255,255,255,.9)` frosted + **1px `rgba(0,0,0,.2)`** top rule |
+| **Bluesky** (bsky.app) | `position: fixed`, **390×62 at y=782** | measured signed out, so the bar carried auth CTAs rather than tabs — the chrome itself is the same fixed 62px strip | — | — | opaque white + **1px `rgb(220,226,234)`** top rule |
+
+YouTube's top bar in the same layout is **48px carrying only a logo and one 48×48 search target** —
+no burger at all. The entire IA is three bottom tabs plus search.
+
+So the honest rule is not "bottom tabs are for native apps." It is:
+
+- **Ship bottom tabs when the product is a small set of peer *feeds or modes* the user flips between
+  mid-session, and the session is long.** Three to five, equal weight, no hierarchy underneath them
+  worth showing. YouTube ships **three**. That is the shape.
+- **Ship a drawer when navigation is a hierarchy you *enter*, use, and leave.** Docs, dashboards,
+  admin tools, anything with sections and sub-sections. A drawer costs one tap and buys unlimited
+  depth; a tab bar costs 57–62px of every screen forever and caps you at five.
+- **Never both**, and never a tab bar over a nav set that will grow. The tab bar is the hardest nav
+  to change later because it is the most memorized.
+
+Two mechanical facts to design around if you do ship one:
+
+- Mobile Safari's URL bar and Chrome-on-Android's toolbar occupy the same edge and show/hide on
+  scroll. Use `100dvh`/`svh`, add `padding-bottom: env(safe-area-inset-bottom)`, and expect the bar
+  to be briefly overlapped during the browser's own transition. YouTube's answer is a **translucent**
+  bar — when browser chrome slides over it the collision reads as layering rather than as breakage.
+- **57–62px is the measured height**, not 44 and not 80, and the label is **11px** — smaller than any
+  other text in the product. A bottom bar with 14px labels and 72px height is a phone-app pastiche.
 
 The thumb-reach argument for bottom placement is real but is usually cited loosely. Steven Hoober's
 2013 observational study of 1,333 people is the source everyone quotes for the ~49% one-handed
-figure; treat it as directional and a decade old, not as a measurement of your users. The mechanical
-browser-chrome collision above is the argument that actually decides web cases.
+figure; treat it as directional and a decade old, not as a measurement of your users.
 
 **What to ship on mobile web, with measurements:**
 
@@ -756,8 +872,19 @@ A screen that fails any of the three needs structural work, not styling.
 - **The 8-item ceiling is wrong for platforms.** Grafana ships 11 top-level items legitimately
   because it is eleven products. If you genuinely have eleven product areas, group and collapse them
   — do not pretend you have six.
-- **Bottom tabs are wrong on mobile web and right in a native app.** Same pattern, opposite verdict,
-  entirely because of what occupies the bottom 60px of the screen.
+- **"Bottom tabs are only for native apps" is wrong**, and the corpus of advice repeating it is out
+  of date. YouTube and Bluesky both ship fixed bottom bars on the mobile *web* (57px and 62px). The
+  real boundary is the shape of the destination set: 3–5 peer feeds you flip between mid-session →
+  bottom bar; a hierarchy you enter and leave → drawer. Docs sites are drawers because docs are a
+  tree, not because the web forbids bottom bars.
+- **"Never nest navigation" is wrong for section-scoped nav.** GitHub renders a **321px** file-tree
+  pane that exists only inside `/blob` and `/tree` and nowhere else in the product — a third level of
+  navigation, scoped to one section, that would be absurd if it were global. Nav local to a section
+  is cheaper than forcing that section's structure into the global rail.
+- **Duplicating an item in settings navigation is right**, even though duplicating a product nav item
+  is wrong. VS Code's `Commonly Used` group repeats eight settings that also live in the deeper tree.
+  Settings are searched, not memorized; a shortcut list at the top saves more time than consistency
+  costs.
 - **"Always use a left sidebar for apps" is wrong for canvases and editors.** Excalidraw's shell is
   three floating elements and it is more usable than any rail would be.
 - **Auto-saving settings is wrong for anything with a blast radius.** Toggling "Require SSO for all
@@ -850,6 +977,40 @@ a 542×44 floating toolbar and a 36px footer strip.
 
 ---
 
+### Tell 5: settings as one long page of toggles
+
+**What it looks like:** `/settings` renders a single scrolling column of 24 switches with two-word
+labels (`Email notifications`, `Dark mode`, `Public profile`, `Advanced`), no scope statement, no
+search, no grouping beyond a couple of `<h2>`s, auto-saving silently, with `Delete account` sitting
+between two harmless preferences. Every setting is one 40px row because the generator produced a
+`<Switch>` list.
+
+**Why it fails:** settings are the surface with the worst ratio of *time spent designing* to *cost of
+getting it wrong*. Users arrive at settings from a support answer or a moment of frustration, looking
+for one specific control they cannot name precisely. A flat toggle list is unsearchable by eye and
+gives no signal about blast radius — the whole point of the page.
+
+**The corrective procedure:**
+
+1. **State the scope at the top of every settings screen.** Grafana prints `Organization: Play
+   Grafana` under the H1; VS Code puts `User` / `Workspace` tabs directly under the search field.
+   Pick one of those two shapes and apply it everywhere.
+2. **Put a search field first**, full width, before any group. Once you pass ~30 settings this is not
+   optional, and it is the cheapest thing on this list to build.
+3. **Namespace every label** — `Editor: Font Size`, not `Font size`. It makes search results and
+   palette entries self-describing.
+4. **Give every setting one line of help text at rest**, not in a tooltip, and budget for it: a real
+   setting row is 98–125px tall, not 40. If your settings page got 3× taller, you did it right.
+5. **Cross-link interacting settings** in the description rather than letting users discover the
+   interaction by breaking something.
+6. **Add a `Commonly Used` group at the top** duplicating the 6–10 settings people actually change.
+7. **Separate the danger zone**, put it last, and confirm destructive actions by typing the object's
+   name.
+8. **Deep-link every section** and pick one save model — auto-save for preferences, explicit save for
+   policy — and use it in the entire product.
+
+---
+
 ## Self-check
 
 Run this against your own output before calling navigation done.
@@ -866,8 +1027,10 @@ Run this against your own output before calling navigation done.
 **Shell**
 
 - [ ] The shell choice was made from the product's shape (Decision 1), not from a template.
-- [ ] Rail width 240–320 (default 280); rows 28–39px tall; pitch = height; radius 0–6 (or a
-      consistent pill language); 14px type.
+- [ ] Rail width 240–320 (default 280), or 44–52 if icon-only; rows 28–39px tall; pitch = height;
+      radius 0–6 (or a consistent pill language); 14px type.
+- [ ] If the main content is a reading stream, its column is fixed (~600px) and the shell does not
+      stretch it on a wide monitor.
 - [ ] Icons are either on every row for a heterogeneous list, or on none. No generic-shape filler
       glyphs.
 - [ ] Active state = exactly two signals, and neither is a border.
@@ -906,6 +1069,9 @@ Run this against your own output before calling navigation done.
 - [ ] `/settings` is a directory with one-line descriptions, not a redirect to the first tab.
 - [ ] Every section is deep-linkable. Destructive actions are last, separated, and confirm by typing.
 - [ ] Save behavior is one consistent model across every settings page.
+- [ ] A search field is the first element of the settings surface, the scope (Account/Workspace) is a
+      visible control on every settings screen, and setting labels are namespaced (`Editor: Font Size`).
+- [ ] Settings whose behavior depends on another setting name it and link to it in their description.
 
 **Mobile at 390**
 
@@ -914,7 +1080,9 @@ Run this against your own output before calling navigation done.
 - [ ] Search field is above the nav list in the sheet.
 - [ ] Rows 40–44px. Closes via `×`, veil tap, and back button.
 - [ ] Opens with the current section expanded and scrolled into view.
-- [ ] No `position: fixed; bottom: 0` tab bar on mobile web.
+- [ ] A bottom tab bar exists only if the product is 3–5 peer feeds/modes; if so it is 57–62px with
+      11–12px labels, translucent, `env(safe-area-inset-bottom)` padded, and sized with `dvh`/`svh`.
+      Otherwise there is no fixed bottom bar at all.
 
 **Finally**
 

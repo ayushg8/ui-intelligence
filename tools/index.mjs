@@ -62,6 +62,31 @@ function parseCategory(file) {
       },
     });
   }
+  // Rejections mostly live as prose bullets under "## Rejected / avoid" rather than
+  // as scorecards, so a scorecard-only parse under-reports the single tier an agent
+  // most needs machine-readable. Parse that section too.
+  const rej = md.match(/^##\s+Rejected\s*\/\s*avoid\s*$([\s\S]*?)(?=^##\s|\Z)/im);
+  if (rej) {
+    for (const m of rej[1].matchAll(/^[-*]\s+\*\*(.+?)\*\*\s*[—–-]\s*([\s\S]*?)(?=^[-*]\s+\*\*|\Z)/gm)) {
+      const name = m[1].replace(/`/g, '').trim();
+      if (!name || entries.some((e) => e.name.toLowerCase() === name.toLowerCase())) continue;
+      const reason = m[2].replace(/\s+/g, ' ').trim();
+      entries.push({
+        name, tier: 'avoid', category: slug,
+        verdict: reason.slice(0, 400) || null,
+        use_when: null, vibecode_risk: null, link: null, scores: null,
+        source: 'rejected-section',
+        evidence: {
+          stars: null,
+          weekly_npm: (() => { const x = reason.match(/([\d,]+)\s*(?:weekly|wk)/i); return x ? Number(x[1].replace(/,/g, '')) : null; })(),
+          license: (reason.match(/\b(MIT|Apache-2\.0|BSD-[\w.-]+|ISC|MPL-2\.0|AGPL-[\w.-]+|GPL-[\w.-]+|NOASSERTION|Commons Clause|Proprietary)\b/i) || [])[1] || null,
+          last_release: (reason.match(/last (?:npm )?publish(?:ed)?[^.\n]*?(\d{4}-\d{2}-\d{2})/i) || [])[1] || null,
+          last_push: (reason.match(/last push(?:ed)?\s*(\d{4}-\d{2}-\d{2})/i) || [])[1] || null,
+          raw: reason.slice(0, 300) || null,
+        },
+      });
+    }
+  }
   return { slug, title, evaluated, file: `libraries/${file}`, entries };
 }
 
@@ -103,5 +128,7 @@ mkdirSync(join(ROOT, 'data'), { recursive: true });
 writeFileSync(OUT, json);
 console.log(`data/index.json — ${all.length} entries across ${categories.length} categories`);
 for (const t of TIERS) console.log(`  ${String(index.by_tier[t]).padStart(4)}  ${t}`);
+const fromProse = all.filter((e) => e.source === 'rejected-section').length;
+if (fromProse) console.log(`\n  ${fromProse} entr${fromProse === 1 ? 'y' : 'ies'} parsed from prose "Rejected / avoid" sections (no scorecard)`);
 const missing = all.filter((e) => !e.link).length;
 if (missing) console.log(`\n  note: ${missing} entr${missing === 1 ? 'y has' : 'ies have'} no Link field`);

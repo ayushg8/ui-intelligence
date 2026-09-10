@@ -6,7 +6,7 @@ computed from those values. Contrast ratios are WCAG relative-luminance ratios a
 background, computed from the measured colors. Nothing here is recalled from memory. Where a value
 is inferred it says "approx."
 
-Two numbers to anchor everything that follows.
+Three numbers to anchor everything that follows.
 
 > **Border weight.** Across nine production tables, every horizontal rule between rows measured
 > between **1.19:1 and 1.36:1** against white. Vercel docs `rgba(0,0,0,0.08)` = 1.19. Radix Themes
@@ -17,6 +17,13 @@ Two numbers to anchor everything that follows.
 > carry `font-variant-numeric: tabular-nums`. On the shadcn/ui `tasks` example — the single most
 > copied table in AI-generated UI — the count is **1 of 1,200**. That one difference is most of why
 > generated tables of numbers look wrong and nobody can say why.
+>
+> **How much that costs, measured.** Loading each font as a real `woff2` and measuring the rendered
+> advance width of every digit 0–9: in **Inter**, digit widths span **0.2392em** and in **Geist**
+> **0.2791em**. At 14px across an 8-digit column that is **26.8px** and **31.3px** of drift — a
+> ragged right edge two to three characters wide. `tabular-nums` collapses both to exactly 0.
+> In `system-ui` (SF on macOS) the spread is 0.1737em → **19.5px**. The narrowest digit is `1` in
+> every proportional font measured; the widest is `4`, `6`, `8` or `0` depending on the face.
 
 ---
 
@@ -26,25 +33,30 @@ Two numbers to anchor everything that follows.
    every string.** Not "usually." Always. Yahoo Finance, Vercel docs and Linear all set `tabular-nums`
    at the container, not per-cell. Dates go right if they're sortable timestamps in a fixed format,
    left if they're prose ("2 days ago"). Headers inherit their column's alignment — a right-aligned
-   number column gets a right-aligned header.
+   number column gets a right-aligned header. **And check the font can do it:** measured, `tabular-nums`
+   is a no-op in Roboto/IBM Plex/Open Sans/Lato/Helvetica/Verdana (already uniform) and is *ignored*
+   by DM Sans, Poppins and Georgia, which have no `tnum` feature and drift 35–42px per 8-digit column
+   regardless. In those three, the only fix is a different font for numeric cells.
 2. **One horizontal 1px rule at ~8–12% black, no vertical rules, no zebra, no outer box.** Measured
    band: 1.19–1.36:1 contrast. Vertical column borders appeared in exactly **zero** of the nine tables
    measured. Zebra appeared in exactly one (MDN reference tables, at `#f7f7f8` vs `#fff` — a 1.07:1
    difference you can barely see).
-3. **Pick the row height from the reading task, not from a token.** Measured: 32px (Plausible's
-   scannable ranked list), 40px (Yahoo Finance, Linear issue rows), 42px (AG Grid at 100k rows), 44px
-   (Radix), 48px (Vercel docs), 52px (MUI DataGrid), 63–79px (GitHub's two-line rows). The generic
+3. **Pick the row height from the reading task, not from a token.** Measured: 22.8px
+   (Baseball-Reference, 11px Verdana — the density ceiling), 32px (Plausible's scannable ranked list),
+   40px (Yahoo Finance, Linear issue rows), 42px (AG Grid at 100k rows), 44px (Radix), 48px (Vercel
+   docs), 52px (MUI DataGrid), 63–79px (GitHub's two-line rows). The generic
    answer — 48–56px because that's the "touch target" — is wrong for anything a person reads 200 rows
    of on a laptop.
 4. **A number with no comparison is decoration. Ship the delta or don't ship the tile.** Plausible's
    tiles are label / value / delta-vs-previous-period, and clicking a tile *changes the chart below
    it*. Grafana's "Running pods 92" has no baseline and teaches the viewer nothing. If you cannot
    name the comparison, the metric does not belong on the dashboard.
-5. **Gridlines are the text color at 10–15% opacity, in one direction only, and the axis line is not
-   darker than the gridlines.** Observable Plot ships `rgb(60,60,67)` at `stroke-opacity: 0.1`
-   (1.18:1), horizontal only. Recharts ships `#d6d3d1` dashed in *both* directions plus an axis line
+5. **Gridlines are the text color at 10–15% opacity, in one direction only, the axis line is not
+   darker than the gridlines, and no default library palette survives.** Observable Plot ships
+   `rgb(60,60,67)` at `stroke-opacity: 0.1` (1.18:1), horizontal only. Recharts ships `#d6d3d1` dashed in *both* directions plus an axis line
    and tick marks at `#52525b` — **7.73:1**, as dark as body text. That single default is the loudest
-   tell in an AI-generated chart.
+   tell in an AI-generated chart. And measure your series colors: Nivo's five defaults are **all five**
+   below 3:1 against white; Our World in Data's six run 4.54:1 to 10.79:1.
 
 ---
 
@@ -65,9 +77,66 @@ Two numbers to anchor everything that follows.
 | **GitHub** PR list | **63.3** | — | `0` | 14/21 | border-**top** `#d1d9e0 @70%` → 1.28 | — | no | **none** | no |
 | **GitHub** Actions runs | **79** | — | `16px` | 14/21 | border-top, same | — | no | none | no |
 | **MDN** reference tables | ~40 | — | — | — | — | — | no | — | **`#f7f7f8` → 1.07** |
+| **Baseball-Reference** standings | **22.8** | **22.8** | `4px 3px` | **11/13.75 Verdana** | `#dddddd` → 1.36 | 11px **w700 `#990000`** on `#eee` | no² | — | no |
+| **shadcn/ui** `tasks`, **dark** | 49 | 40 | `8px` | 14/20 Geist | **`#fff` @10%** → 1.24 on `#0a0a0a` | 14px w500 | 1 element | `muted @50%` | no |
 
 ¹ Linear: `font-variant-numeric: lining-nums tabular-nums` plus `font-feature-settings: "cv01","ss03"`
 on issue IDs and counters — 78 elements on the homepage.
+
+² Baseball-Reference doesn't need it: Verdana's digits are already uniform width (measured advance
+0.6358em for every digit). Choosing a font with tabular digits is an alternative to setting the
+property — and it's what the densest table on the public web actually does.
+
+**Baseball-Reference is the density ceiling and worth studying**, because it is a real table that
+real people read for hours. **22.8px rows** at **11px/13.75 Verdana** with `4px 3px` padding — half
+the height of a shadcn row. It survives that density because of four specific choices: numeric cells
+carry `text-align: right` and `white-space: nowrap`; the team-name column is `position: sticky; left: 0;
+z-index: 1` with an opaque white fill and a **`#747678` (4.56:1) right border** as the seam — the one
+place in the table where a heavy rule is correct, because it separates frozen from scrolling content,
+not row from row; row rules are `#dddddd` (1.36:1); and the header is a **`#eee` fill (1.16:1) with
+`#990000` bold 11px text (7.69:1 on that fill)**, exactly the same height as a data row. Contrast this
+with the instinct to give a header more height and more weight: this table gives it *color* instead,
+which costs no vertical space.
+
+### Does your font need `tabular-nums`?
+
+Measured by loading each `woff2` and rendering every digit at 100px. "Spread" is
+`max(digit width) − min(digit width)` in em; "drift" is that spread at 14px across an 8-digit column
+— the worst-case ragged edge in a right-aligned number column.
+
+| Font | Digit spread (em) | Drift @14px, 8 digits | `tabular-nums` fixes it? | Digit advance normal → tnum |
+|---|---|---|---|---|
+| **DM Sans** | **0.3720** | **41.7px** | **NO — no `tnum` feature** | 0.6841 → 0.6841 |
+| **Poppins** | **0.3150** | **35.3px** | **NO** | 0.6281 → 0.6281 |
+| **Geist** | 0.2791 | 31.3px | yes | 0.6631 → **0.6000** (column gets 9.5% narrower) |
+| **Public Sans** | 0.2405 | 26.9px | yes | 0.6120 → **0.7000** (column gets 14% wider) |
+| **Inter** | 0.2392 | 26.8px | yes | 0.6309 → 0.6484 |
+| **Space Grotesk** | 0.2230 | 25.0px | yes | 0.6411 → 0.6200 |
+| **Manrope** | 0.2306 | 25.8px | yes | 0.6100 → 0.6200 |
+| **Figtree** | 0.2280 | 25.5px | yes | 0.6411 → 0.6231 |
+| **Rubik** | 0.2080 | 23.3px | yes | 0.6350 → 0.6191 |
+| **Georgia** | 0.1842 | 20.6px | **NO — old-style figures, no `tnum`** | 0.6139 → 0.6139 |
+| **system-ui** (SF, macOS) | 0.1737 | 19.5px | yes | 0.6066 → 0.6045 |
+| Roboto | **0** | 0 | n/a — already tabular | 0.5620 |
+| IBM Plex Sans | **0** | 0 | n/a | 0.6000 |
+| Open Sans | **0** | 0 | n/a | 0.5719 |
+| Lato | **0** | 0 | n/a | 0.5800 |
+| Source Sans 3 | **0** | 0 | n/a | 0.4970 |
+| Helvetica / Arial | **0** | 0 | n/a | 0.5563 |
+| Verdana | **0** | 0 | n/a | 0.6358 |
+| JetBrains Mono | **0** | 0 | n/a | 0.6000 |
+
+Three decisions fall out of this table:
+
+- **If the product is data-heavy, do not pick DM Sans or Poppins.** They are the two fonts an agent
+  reaches for when asked for something "modern" and "friendly", and neither can align a number column
+  at all. 41.7px of drift in DM Sans is wider than the `$` and three digits it's supposed to align.
+  If the brand demands one of them, scope a second family to `td.numeric` and accept the mismatch.
+- **`tabular-nums` changes column width, so set it before you size columns.** Geist's numerals get
+  **9.5% narrower** with `tnum`; Public Sans' get **14% wider**. Sizing a fixed numeric column from a
+  measurement taken without the property set produces either a wrapping column or a gap.
+- **Setting it costs nothing where it's a no-op**, so still set it on the table root. The point of the
+  table is to tell you when it is *not* enough.
 
 **Read the header column.** Three of the six products that style a header at all use **weight 400**.
 Yahoo drops the header to **12px while the body stays 14px**, and makes the header row **5.5px
@@ -93,6 +162,43 @@ whatever `d3-scale` returns, at 14px.
 
 **The x-axis label count too.** Plausible shows **6 date labels for 28 days of data** (one per ~5
 days). Radar shows 4 for 7 days. Neither labels every bucket.
+
+### Chart library defaults, read from the library
+
+These are not screenshots — they're the actual default option objects, read out of Chart.js 4.4.7,
+ECharts 5.5.1 and Highcharts 11.4.8 loaded from CDN, plus computed SVG styles from Nivo, Tremor,
+Recharts, Observable Plot and Our World in Data. This is what you ship if you write
+`<LineChart data={data} />` and stop.
+
+| | Gridlines | Direction | Axis line | Tick marks | Tick labels | Line width | Marker on every point | Legend | Animation |
+|---|---|---|---|---|---|---|---|---|---|
+| **Chart.js 4.4.7** | `rgba(0,0,0,.1)` → **1.25** | **both** | same 1px `rgba(0,0,0,.1)` ✓ | **yes, 8px long** | 12px `#666` (5.74) Helvetica Neue | **3px** | **yes, r=3** (hover r=4, **hitRadius 1**) | **on, top** | **1000ms** easeOutQuart |
+| **ECharts 5.5.1** | `#E0E6F1` → **1.25** | **horizontal only** ✓ (`xAxis.splitLine.show:false`) | **`#6E7079` → 4.93** | **yes, 5px** | 12px | 2px | **yes, `emptyCircle` size 4** | off by default | on |
+| **Highcharts 11.4.8** | `#e6e6e6` → **1.25** | horizontal only (`yAxis` 1px, `xAxis` 0) ✓ | **`#333333` → 12.63** on x | **yes, 10px, `#333`** | 0.8em `#333` (12.63) | 2px | yes | **on, bottom center** | on + **`credits: true`** watermark |
+| **Nivo** (line demo) | `#dddddd` → **1.36** | **both** (24 + 24 lines) | `#889eae` → 2.78 | yes | 11px `#6a7c89` (4.32) | 2px | **yes, ring marker ×65** | **right side, vertical** | on |
+| **Recharts** | `#d6d3d1` dashed 5,5 → **1.49** | **both** | **`#52525b` → 7.73** | yes (13 elements) | **14px** | 2px | **yes** | on | on |
+| **Tremor** | `#e5e7eb` → **1.24** | horizontal only, **5 lines** ✓ | none ✓ | none ✓ | 12px gray-500 (4.83) | 2px | no ✓ | configurable | on |
+| **Observable Plot** | ink @ `stroke-opacity .1` → **1.18** ✓ | horizontal only ✓ | none ✓ | none ✓ | **10px** system-ui | 1.5px | no ✓ | off ✓ | none ✓ |
+| **Our World in Data** | `#dddddd` **dashed 4,4** → 1.36 ✓ | horizontal only ✓ | none ✓ | none ✓ | 12px `#5b5b5b` (**6.79**) Lato | **1.5px** | small dots | **none — direct labels** ✓ | none ✓ |
+
+**The default categorical palettes, scored against the plot background.** Series color needs ≥3:1
+against the background to be a *legible mark*, not a tint (WCAG 1.4.11, non-text contrast). Count of
+colors that fail:
+
+| Palette | Colors | Below 3:1 vs white | Worst |
+|---|---|---|---|
+| **Nivo** `#61cdbb #e8a838 #f1e15b #f47560 #e8c1a0` | 5 | **5 of 5** | `#f1e15b` at **1.34:1** |
+| **Highcharts** `#2caffe #544fc5 #00e272 #fe6a35 #6b8abc #d568fb #2ee0ca #fa4b42 #feb56a #91e8e1` | 10 | **7 of 10** | `#91e8e1` at **1.42:1** |
+| **ECharts** `#5470c6 #91cc75 #fac858 #ee6666 #73c0de #3ba272 #fc8452 #9a60b4 #ea7ccc` | 9 | **5 of 9** | `#fac858` at **1.56:1** |
+| **Recharts** `#8884d8 #82ca9d` | 2 | 1 of 2 | `#82ca9d` at **1.93:1** |
+| **Tremor** `#3b82f6 #10b981` | 2 | 1 of 2 | `#10b981` at 2.54:1 |
+| **Our World in Data** `#9a5129 #00847e #a2559c #4c6a9c #c4523e #18470f` | 6 | **0 of 6** | worst is `#c4523e` at **4.54:1** |
+
+That last row is the whole lesson. The one organization whose entire product is charts read by
+strangers ships six series colors between **4.54:1 and 10.79:1** — dark, desaturated, distinguishable
+in grayscale. Every JS charting library ships a pastel ramp that fails at half its entries. **Build
+the series palette to a contrast floor (≥3:1, ≥4.5:1 if the color also appears as a text label), not
+from a hue wheel.**
 
 ### Dashboard chrome
 
@@ -165,6 +271,29 @@ Two follow-on rules the measurements make obvious:
   white adds a container that carries no information. Radix uses `radius: 7px` on the table root
   because their table *is* a surface with a fill; Vercel docs and GitHub have none.
 
+### The same table in dark mode
+
+Measured by re-loading shadcn/ui's `tasks` example with `prefers-color-scheme: dark`. Only three
+things change, and two of them are the ones agents get wrong:
+
+- **The separator becomes `#fff` at 10%,** not a darker gray. Composited over the `#0a0a0a` ground
+  that resolves to `#222222` — **1.24:1**, landing in the same 1.2–1.35:1 band as every light-mode rule
+  measured. Over a lifted `#18181b` surface it's `#2f2f32` → 1.33:1. **A light-mode separator token
+  reused in dark mode disappears entirely; a `#333` "dark border" reused is roughly right by accident
+  and wrong the moment the surface lifts.** Express it as an alpha on the foreground and it tracks the
+  surface automatically — which is exactly why Observable Plot's `stroke-opacity: 0.1` on the ink color
+  is the right way to write a gridline too.
+- **Row hover becomes an alpha overlay, not a lighter gray:** measured `oklab(0.269 … / 0.5)` — the
+  muted token at 50%. Same principle: alpha over whatever is underneath.
+- **The text color flips to full `#ffffff` at weight 400.** That is the one thing to *not* copy. Pure
+  white body text on near-black is the most common dark-table mistake: at 14px in a 200-row grid it
+  vibrates. Drop it to ~90% (`#e4e4e7`-ish, ≈15:1) and let only headers and emphasized numbers reach
+  full white — the extra step of hierarchy costs nothing and the table stops buzzing.
+
+Everything else — 49px rows, 40px header, 8px padding, alignment, tabular figures — is identical
+across themes, as it should be. **Density, alignment and rhythm are theme-independent; only color
+crosses the boundary.**
+
 ### Zebra striping: almost never
 
 One of nine measured tables uses it, and it's MDN's reference tables — many narrow columns, wrapped
@@ -197,6 +326,54 @@ row-delimiting systems doing one job.
 And the rule everyone forgets: **the header takes its column's alignment.** A right-aligned number
 column with a left-aligned header is the single most common alignment bug in generated tables.
 Yahoo right-aligns `Price`, `Change`, `Change %`; left-aligns `Symbol`, `Name`.
+
+### Formatting the numbers themselves
+
+Alignment is half the job; the other half is deciding how many characters are in the cell at all.
+Every output below was produced by running `Intl.NumberFormat` — these are verified strings, not
+remembered ones.
+
+| Value | `notation:"compact"`, maxFrac 1 | `maxSignificantDigits:3` | currency, maxFrac 0 | currency default | percent, maxFrac 1 | `signDisplay:"exceptZero"` |
+|---|---|---|---|---|---|---|
+| 1,000 | `1K` | `1K` | `$1,000` | `$1,000.00` | — | `+1,000` |
+| 1,234 | `1.2K` | `1.23K` | `$1,234` | `$1,234.00` | — | `+1,234` |
+| 999,499 | **`999.5K`** | `999K` | `$999,499` | — | — | — |
+| 1,250,000 | **`1.3M`** | `1.25M` | `$1,250,000` | — | — | — |
+| 1,500,000,000 | `1.5B` | `1.5B` | — | — | — | — |
+| −2,400 | `-2.4K` | — | `-$2,400` | `-$2,400.00` | — | `-2,400` |
+| 0.425 | — | — | — | — | `42.5%` | `+0.4` |
+
+Rules that follow from those exact strings:
+
+- **Compact notation rounds, and the rounding is visible.** 1,250,000 renders `1.3M` at 1 fraction
+  digit. If the reader is going to reconcile that number against a report, compact is wrong — put the
+  exact value in the cell and compact in the chart axis. Use compact where the magnitude is the
+  message (axis ticks, tiles) and exact where the value is the message (tables, invoices, exports).
+- **Pick one of `maximumFractionDigits` or `maximumSignificantDigits` and keep it for the whole
+  column**, because they disagree: 999,499 is `999.5K` under one and `999K` under the other. Mixing
+  them inside a column is what makes a generated table look subtly wrong.
+- **Currency: `maximumFractionDigits: 0` for anything above ~$1,000, cents below.** `$1,250,000.00`
+  wastes three characters on zeros nobody reads. Never superscript the cents.
+- **Deltas use `signDisplay: "exceptZero"`,** so `+1,000` / `-2,400` / `0`. The default swallows the
+  plus sign, and a delta column where gains have no sign and losses do is unreadable at a glance.
+- **Percent style multiplies by 100.** Pass `0.425`, not `42.5`. This is the single most common
+  numeric bug in generated dashboards, and it renders `4250%` rather than crashing.
+
+**Locale gotchas, all verified:**
+
+- `new Intl.DateTimeFormat(l, { dateStyle, timeStyle, timeZoneName })` **throws**
+  `TypeError: Invalid option : option`. To get a timezone label you must spell the parts out:
+  `{ year:"numeric", month:"short", day:"numeric", hour:"numeric", minute:"2-digit", timeZone:"UTC",
+  timeZoneName:"short" }` → `Sep 9, 2026, 10:48 PM UTC`. Agents write the throwing version constantly.
+- **`fr-FR` groups with U+202F**, a narrow no-break space: `1 234 567,89`, character codes
+  `49,8239,50,51,52,8239,…`. Any parser doing `value.replace(/,/g,'')` silently fails on it, and any
+  fixed-width column sized on `en-US` output is wrong.
+- **`en-IN` groups in lakhs:** `12,34,567.89` — one more separator than `en-US` for the same number.
+  Size numeric columns from the widest *locale*, not the widest value.
+- **Compact notation is not width-stable across locales:** 1.5e9 renders `1.5B` (en-US), `1,5 Mrd.`
+  (de-DE), `15億` (ja-JP), `150Cr` (en-IN). A tile sized to fit `1.5B` clips in German.
+- For a sortable timestamp column, the ISO-ish form is still the best: `2026-09-09 22:48:02 UTC`,
+  monospace or tnum, right-aligned, fixed width, sorts as a string.
 
 ### Column sizing and truncation
 
@@ -502,6 +679,40 @@ Prefer direct labels. In order:
 4. **Never** a right-side vertical legend that steals 20% of the plot width, and never a legend whose
    order differs from the visual order of the series.
 
+### The reference implementation: Our World in Data's grapher
+
+Rendered at 1440 and looked at, then measured. Six series (Oceania, Europe, Americas, Asia, World,
+Africa) on one 957×409 chart, and every decision in it is copyable:
+
+- **Every line is labeled at its right end, in its own color**, inside the plot's right margin — no
+  legend anywhere. Each label carries a small ⓘ that explains that entity. Six series, zero legend
+  lookups.
+- **Labels sit on a 2.5px white stroke halo** (measured: `stroke: rgb(255,255,255); stroke-width: 2.5px`
+  ×6, painted under the text). That is how you put a direct label over a gridline without a box behind
+  it. Copy this: it's the detail that makes direct labeling work at all in a dense chart.
+- **The unit is repeated on every y tick — `80 years`, `70 years`, `0 years` — instead of an axis
+  title.** No rotated text, no separate label, no ambiguity when the chart is screenshotted. Compare
+  Nivo's demo, which rotates the word "count" 90° up the y axis.
+- **The first and last x labels are the real data endpoints** (`1770`, `2023`), anchored
+  `text-anchor: start` and `end` respectively so they can't clip, with round numbers
+  (`1800…2000`) anchored `middle` in between. Seven labels for 253 years.
+- **Gridlines are `#dddddd` dashed 4,4, horizontal only, at 1.36:1.** No plot border, no axis line,
+  no tick marks.
+- **Series lines are 1.5px** — thinner than every JS library default — which is what lets six of them
+  cross without turning into a braid.
+- **The chart has a `Table | Map | Line | Bar` switcher, and `Table` is listed first.** The same data,
+  four representations, one control. If your chart cannot become a table, the reader has no way to
+  get the exact number.
+- **The entity picker on the right is simultaneously the legend, the filter and a data table**: a
+  checkbox, the entity name, and its current value right-aligned (79.1, 77.3, 63.8), sorted by that
+  value, with a "Sort by: Life expectancy, 2023" control above it. One component instead of three.
+- **A one-sentence definition of the metric sits under the title**, with the defined term underlined
+  as a link. Below the plot: data source, license, and Download / Share / Enter full-screen.
+
+The generic version of this chart is: a legend on the right, "Years" rotated up the y axis, solid
+gridlines in both directions, five pastel series at 2px, no way to see the underlying numbers, and no
+statement of what "life expectancy" means. Every one of those is a decision OWID made differently.
+
 ### Tooltips
 
 - Trigger on the **nearest x value**, not on hovering the exact 2px line. A vertical crosshair plus a
@@ -645,6 +856,21 @@ has never been designed.
 - **"Hidden-until-hover actions are bad" is wrong in an expert tool with keyboard-first
   interaction** — Linear-class products hide row actions because the user uses shortcuts and the
   visual quiet is worth more. Do this only when the shortcuts genuinely exist and are discoverable.
+- **"Tick labels at 55–70% ink" is wrong for a standalone, publishable chart.** OWID's tick labels
+  measure **6.79:1** — nearly body-text weight — because their charts are embedded in articles, printed,
+  and screenshotted into contexts where nobody can hover anything. Dashboard chrome sits *next to* its
+  data and can recede; a chart that travels alone must carry its own labels at full strength. The same
+  logic pushes their gridlines to a visible dashed 1.36:1 rather than Plot's 1.18:1.
+- **"Never a heavy border" is wrong for the seam of a frozen column.** Baseball-Reference uses
+  `#747678` at **4.56:1** on the right edge of its sticky name column — 3× darker than any row rule on
+  the page. That border isn't separating rows, it's separating two coordinate systems, and it has to
+  be legible while content slides underneath it.
+- **"Alpha-based separators" are wrong when the row itself has a background.** An `rgba(0,0,0,0.08)`
+  rule over a zebra stripe, a selected row and a plain row renders three different colors. Where rows
+  carry fills, use a solid separator token computed against the *lightest* row background.
+- **"Right-align numbers" and everything else about columns is wrong for a card list on mobile.**
+  Below ~600px a table should usually stop being a table: one card per row, label-above-value, and the
+  numeric alignment argument evaporates because there's no column to align to.
 - **All of this is wrong if the product already has a design system.** A table that matches the
   existing one imperfectly beats a better table that doesn't match.
 
@@ -719,6 +945,52 @@ long enough to truncate, and a partial current bucket rendered as incomplete.
 **14. `N/A`, `null`, `undefined`, or `0` in place of a missing value.**
 → **Correction:** `—`.
 
+**15. A line chart whose x axis is unordered categories.**
+Nivo's own line demo connects `plane → helicopter → boat → train → subway → bus → car` with a line,
+and that demo is what gets copied. A line asserts continuity between adjacent points; between
+"helicopter" and "boat" there is none, and the slope is pure noise.
+→ **Correction:** categories get a **horizontal bar chart sorted by value**. Lines are for time and
+other continuous axes only. If the x axis has no natural order, there is no line to draw.
+
+**16. The library's pastel palette, shipped as-is.**
+Measured against white: Nivo fails 3:1 on **5 of 5** default colors (`#f1e15b` = 1.34:1), Highcharts on
+**7 of 10** (`#91e8e1` = 1.42:1), ECharts on **5 of 9**. These are marks the reader is supposed to
+*distinguish*, printed in colors barely separable from the page.
+→ **Correction:** define 4–6 series colors yourself with a ≥3:1 floor against the plot background —
+and check them in grayscale. OWID's six, at 4.54–10.79:1, are the shape to aim for.
+
+**17. DM Sans or Poppins on a data-heavy product.**
+Both are common "modern SaaS font" picks and **neither supports `tnum`**: digit spread 0.372em and
+0.315em, so a right-aligned 8-digit column drifts 41.7px / 35.3px, and `font-variant-numeric:
+tabular-nums` changes nothing.
+→ **Correction:** for anything with number columns, pick from the already-tabular set (Roboto, IBM
+Plex Sans, Open Sans, Lato, Source Sans 3, Helvetica) or the `tnum`-capable set (Inter, Geist,
+system-ui) — and verify by rendering `111111` above `000000` and checking the edges line up.
+
+**18. Chart.js untouched: gridlines both directions, 8px tick marks, a 3px line, a 3px dot on every
+point, a top legend for one series, and a 1000ms `easeOutQuart` entrance animation.**
+Its `hitRadius` is **1**, so the tooltip only fires when the cursor is within a pixel of the point.
+→ **Correction:** `scales.x.grid.display:false`, `grid.drawTicks:false`, `border.display:false`,
+`elements.line.borderWidth:2`, `elements.point.radius:0` with `pointHoverRadius:4`,
+`interaction:{mode:'index',intersect:false}`, `plugins.legend.display:false` for ≤2 series,
+`animation:{duration:0}` for anything that refreshes on a timer.
+
+**19. Highcharts with `credits: true`.**
+The default prints a "Highcharts.com" watermark in the corner of your product. Its x axis also ships a
+**`#333333` (12.63:1) axis line with 10px tick marks** — as dark as body text.
+→ **Correction:** `credits:{enabled:false}`, `xAxis:{lineWidth:0, tickLength:0}`, labels to ~4.8:1.
+
+**20. Compact notation in a table people reconcile against a source of truth.**
+`1.3M` is 1,250,000. In a chart axis that's correct; in an invoice table it's a defect.
+→ **Correction:** compact on axes and tiles, exact grouped values in table cells, and never both
+formats for the same metric on one screen without a unit label saying which.
+
+**21. `new Intl.DateTimeFormat(l,{dateStyle:'medium',timeStyle:'short',timeZoneName:'short'})`.**
+This throws `TypeError: Invalid option : option` at runtime — `dateStyle`/`timeStyle` cannot be
+combined with `timeZoneName`.
+→ **Correction:** enumerate the parts explicitly (see the formatting section), or use
+`timeStyle:'long'`, which includes the zone.
+
 ---
 
 ## Self-check list
@@ -733,7 +1005,14 @@ Run this against your own output before you call a data surface done.
 - [ ] There is no box around the table unless the table sits on a colored ground.
 
 **Numbers**
-- [ ] `font-variant-numeric: tabular-nums` is set on the table root.
+- [ ] `font-variant-numeric: tabular-nums` is set on the table root — **and the font honors it.**
+      (Render `111111` directly above `000000` in the real font and check both edges align. DM Sans,
+      Poppins and Georgia will fail this and cannot be fixed with CSS.)
+- [ ] Column widths were measured *after* `tabular-nums` was applied, not before.
+- [ ] One of `maximumFractionDigits` / `maximumSignificantDigits` is used consistently per column.
+- [ ] Percent values are passed as fractions to `style:"percent"` (0.425, not 42.5).
+- [ ] Deltas use `signDisplay:"exceptZero"` so gains show `+`.
+- [ ] Compact notation appears on axes and tiles only — never in a cell someone reconciles.
 - [ ] Every numeric column is right-aligned, **and so is its header**.
 - [ ] Identifiers (IDs, codes, regions) are left-aligned, not right.
 - [ ] Currency/percent units appear once — in the header or on each value — not both.
@@ -773,7 +1052,21 @@ Run this against your own output before you call a data surface done.
 - [ ] Null renders as a gap, not as zero.
 - [ ] Incomplete trailing periods are visually marked.
 - [ ] Series colors are assigned by meaning and consistent across every panel.
-- [ ] No default library palette survives.
+- [ ] No default library palette survives. Every series color is ≥3:1 against the plot background —
+      computed, not eyeballed — and the set is still distinguishable in grayscale.
+- [ ] The x axis is continuous. (If the categories have no natural order, this is a bar chart.)
+- [ ] Point markers are off above ~30 points; hover targets are widened separately
+      (Chart.js `hitRadius`/`interaction.mode`, or Tremor's transparent 12px stroke trick).
+- [ ] Entrance animation is 0ms on anything that auto-refreshes.
+- [ ] `credits`/watermarks from the charting library are disabled.
+- [ ] If direct labels sit over gridlines, they have a ~2.5px background-colored halo stroke.
+- [ ] The reader can get the exact numbers — a table view, a tooltip, or a download.
+
+**Dark mode**
+- [ ] Separators and gridlines are alphas on the foreground color, not hard-coded grays, so they hold
+      1.2–1.4:1 on every surface elevation.
+- [ ] Body text in dark tables is ~90% white, not `#fff`.
+- [ ] Row height, padding and alignment are identical to light mode.
 
 **States**
 - [ ] Loading occupies the final height — data landing causes no reflow.
@@ -802,6 +1095,29 @@ background, height and top offset. Contrast ratios were computed from the measur
 (alpha composited over the measured background first) with the standard WCAG relative-luminance
 formula.
 
+Three further methods were used for the later sections:
+
+- **Font digit metrics** — each family loaded as a real `woff2` (Google Fonts' latin subsets, Geist
+  from `vercel/geist-font`), forced to load with `document.fonts.load()`, then each digit 0–9 rendered
+  at `font-size: 100px` in a hidden inline element and measured with `getBoundingClientRect()`, with
+  and without `font-variant-numeric: tabular-nums`. Spreads are reported in em; drift is
+  `spread × 14px × 8`. Locally installed faces (`system-ui`, Helvetica, Verdana, Georgia, Tahoma,
+  Menlo) were verified as distinct by fingerprinting the rendered width of a control string, so a
+  silent fallback to the default font would have been caught.
+- **Library defaults** — Chart.js 4.4.7, ECharts 5.5.1 and Highcharts 11.4.8 loaded from jsDelivr into
+  a blank page, then `Chart.defaults`, `echarts.init(...).getOption()` and `Highcharts.getOptions()`
+  read directly. These are the library's own values, not an interpretation of a screenshot.
+- **Number and date formatting** — every string in the formatting tables is the literal output of
+  `Intl.NumberFormat` / `Intl.DateTimeFormat` on Node 24, including the `TypeError` raised by
+  combining `dateStyle` with `timeZoneName`.
+
+Contrast ratios throughout are WCAG relative-luminance ratios computed from the measured sRGB values,
+alpha-composited over the measured background first.
+
 Sites measured: Plausible live demo, Cloudflare Radar, Grafana Play, GitHub (pull requests, Actions,
-Status), Yahoo Finance, Vercel docs, Linear, Radix Themes docs, shadcn/ui `tasks` example,
-MUI DataGrid docs, AG Grid 100k-row demo, MDN, Observable Plot docs, Recharts examples.
+Status), Yahoo Finance, Vercel docs, Linear, Radix Themes docs, shadcn/ui `tasks` example (light and
+dark), MUI DataGrid docs, AG Grid 100k-row demo, MDN, Observable Plot docs, Recharts examples,
+Baseball-Reference standings, Nivo line demo, Tremor area-chart docs, and Our World in Data's
+life-expectancy grapher. Screenshots of the OWID grapher and the Nivo demo were rendered at 1440 and
+inspected; the numbers for Baseball-Reference come from a successful computed-style pass, though a
+later screenshot attempt was intercepted by a bot check.

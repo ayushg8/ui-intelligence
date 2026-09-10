@@ -379,7 +379,7 @@ ships one 44px button everywhere.
 | Anthropic | link color | `0.2s ease` (186 elements); nav menu `400ms`, dropdown `200ms` |
 | OpenAI | hover | `0.1 / 0.2 / 0.25s`, mostly `cubic-bezier(0, 0, 1, 1)` (linear) |
 | Rivian | named easings | `--ease-shift-magnetic: cubic-bezier(0.83,0,0.17,1)`, `--ease-attract-emphasized: cubic-bezier(0.2,0,0,1)`, `--ease-repel-aggressive-exit: cubic-bezier(0.8,0,1,1)` |
-| Kinfolk | image reveal | `0.5s cubic-bezier(0.25, 1, 0.5, 1)` on opacity (84 elements) |
+| Kinfolk | image reveal | `0.5s cubic-bezier(0.25, 1, 0.5, 1)` on opacity (87 elements, re-probed 2026-09) |
 
 Two rules fall out.
 
@@ -557,7 +557,7 @@ Aim for "geometry does not move", not for a literal zero in a grep.
 **7. Scroll choreography is slow, uses clip-path or masks, and reveals content that is already there.**
 Stripe: `0.8s cubic-bezier(0.165, 0.84, 0.44, 1)` on `transform` across 46 elements and on
 `clip-path` across 12, plus a `1s cubic-bezier(0.16, 1, 0.3, 1)`. Kinfolk: `0.5s
-cubic-bezier(0.25, 1, 0.5, 1)` on opacity across 84 elements. Rivian: one `h-[300vh]` sticky section
+cubic-bezier(0.25, 1, 0.5, 1)` on opacity across 87 elements. Rivian: one `h-[300vh]` sticky section
 that scrubs a video against scroll position — the page still scrolls at native speed, the *content*
 is time-mapped to it.
 *Why it works:* an 800ms expo-out reveal reads as the page settling. A 300ms ease reads as a
@@ -1114,7 +1114,7 @@ scratchpad under `elm/`.
   30px/39.9px/normal/w400; 48px 0-radius outlined CTA; centered nav wordmark with two link rows at
   12px.
 - **kinfolk.com** — three optical serif cuts; 50px/52px uppercase hero; body 20px/30px serif;
-  `Buy | Read` text-link CTA; 0.5s `cubic-bezier(0.25,1,0.5,1)` opacity reveals across 84 elements.
+  `Buy | Read` text-link CTA; 0.5s `cubic-bezier(0.25,1,0.5,1)` opacity reveals across 87 elements.
 - **pudding.cool** — Gooper SemiCondensed at 32px/32px/−0.8px; per-story flat color mats
   (`#F5C33C`, `#F19EF5`, `#E88B2E`); outline-pill issue numbers with mono dates above the image;
   2px button radius; 1280px container.

@@ -19,16 +19,23 @@ single most reliable tell that no human tuned the interface.
    responsive, make the color change *faster*, not bigger.
 2. **Size the hover delta to how many of the thing there are.** A row in a 200-row list gets a
    3–8% overlay (GitHub: white → `#f6f8fa`, a 1.065:1 step). A one-per-page CTA can take a 1.4:1
-   step (GOV.UK: `#0f7a52` → `#0b5c3e`). Using the CTA delta on list rows makes lists strobe;
-   using the row delta on a CTA makes it feel dead.
-3. **Hover transitions are 0–150ms, and the number goes down as density goes up.** Atlassian
-   ships `--ds-listitem-hovered: 50ms` and `--ds-button-hovered: 150ms` as separate tokens.
-   GitHub's issue rows and Radix Themes' buttons both use **0s** — instant. 300ms is wrong
+   step (GOV.UK `#0f7a52` → `#0b5c3e` = 1.50:1; Notion's marketing CTA `#0075de` → `#005bab` =
+   1.49:1 — two different houses, same number). Using the CTA delta on list rows makes lists
+   strobe; using the row delta on a CTA makes it feel dead. **Then set `:active` to 1.5–2× the
+   hover overlay** (Radix `gray-a3` 5.9% → `gray-a4` 9.0%; Notion 5.1% → 10.2%). A hover with no
+   `:active` is why generated buttons feel like nothing happened when you click them.
+3. **Hover transitions are 0–150ms, they name their properties, and they live in the `:hover`
+   block — not the base rule.** Putting them on the base rule forces one symmetric duration;
+   every product measured here is asymmetric (Linear fades in at `0s` and out at `150ms`; Notion
+   does the exact opposite). Atlassian ships `--ds-listitem-hovered: 50ms` and
+   `--ds-button-hovered: 150ms` as separate tokens; Radix's card hover is **40ms**. 300ms is wrong
    everywhere.
-4. **Focus-visible is a 2px ring with a 2px page-background gap, and it is never removed.**
-   Vercel: `box-shadow: 0 0 0 2px var(--ds-background-100), 0 0 0 4px var(--ds-focus-color)`.
-   Radix: `outline: 2px solid var(--focus-8); outline-offset: 2px`. The gap is what makes the ring
-   legible on any surface — not the ring color.
+4. **Focus-visible is a 2px ring with a 2px page-background gap, and it is never removed.** Three
+   independent teams converged on exactly 2px/2px — Vercel Geist
+   (`box-shadow: 0 0 0 2px var(--ds-background-100), 0 0 0 4px var(--ds-focus-color)`), Radix
+   (`outline: 2px solid var(--focus-8); outline-offset: 2px`), and Notion
+   (`--tatami-dimension-interaction-focus-ring-outline-{width,offset}: .125rem`). The gap is what
+   makes the ring legible on any surface — not the ring color.
 5. **Undo beats confirm; a spinner under ~300ms is worse than nothing.** Do the action, show a
    toast with Undo (10s, not Sonner's 4s default). And if the request usually finishes in 120ms,
    render nothing — a spinner that flashes for two frames reads as a bug.
@@ -160,7 +167,7 @@ the base rule and you get one symmetric duration, which is the generated default
 Pick by density: instant-in (Linear) for rows you sweep across, where a fade reads as lag;
 fade-in/snap-out (Notion) for sparse buttons, where a lingering fade-out reads as a ghost.
 
-### Switches, checkboxes and committed controls
+### Switch and small-control timings (measured)
 
 Radix Themes' Switch, read off the stylesheet. This is the most carefully-tuned small control I
 measured:
@@ -856,6 +863,12 @@ Craft, from Sonner (measured): title `font-weight: 500`, description `400`, `gap
 them, `line-height: 1.5 / 1.4`. Swipe-to-dismiss expands the hit area with a
 `::before { transform: scaleY(3) }` so the gesture target is three times the visible toast height.
 
+Its internals, read from `dist/index.mjs`: `TOAST_LIFETIME = 4000`, `VISIBLE_TOASTS_AMOUNT = 3`,
+`GAP = 14` (px between stacked toasts), `TIME_BEFORE_UNMOUNT = 200`, and a **dual** dismiss
+threshold — `SWIPE_THRESHOLD = 45` px **or** velocity `> 0.11`. Copy the dual threshold: a fast
+flick should dismiss at any distance, and only a slow drag should need the full 45px. Distance-only
+thresholds are why hand-rolled swipe-to-dismiss feels broken.
+
 Non-negotiables:
 
 - **Never place a toast over a primary action** — bottom-right is safe for a sidebar app,
@@ -1031,7 +1044,19 @@ pointer), screen-reader users, and anyone with a motor impairment who can't hold
   (Figma, a spreadsheet, a code editor) legitimately draws its own selection/caret indicator
   instead of an outline. The requirement is a visible indicator, not literally `outline`.
 - **`opacity: 0.5` for disabled is defensible on a single-color, non-text element** — a disabled
-  icon glyph with no adjacent border or fill. It's wrong on any compound control.
+  icon glyph with no adjacent border or fill. It's wrong on any compound control. GOV.UK, the
+  strictest system measured here, ships `.govuk-input:disabled { opacity: 0.5 }` — so treat the
+  ban as "wrong on compound controls," not as an absolute.
+- **"Validate on blur" is wrong for a single-field form.** Vercel's ~1000ms idle debounce is
+  better there: the user gets the answer without leaving the field. It becomes wrong the moment
+  the form has enough fields that people Tab through them quickly, where a 1s timer fires *after*
+  focus has already moved and the error appears next to a field the user has left.
+- **"Never debounce validation feedback" has no exceptions in the clearing direction** — but
+  submit-only validation (Linear's contact form) is genuinely fine for 2–4 fields the user will
+  submit within seconds. It scales terribly past ~6 fields.
+- **The 160/120 switch asymmetry is for a switch that takes effect immediately.** A checkbox in an
+  unsubmitted form should be symmetric and fast (or instant) — it isn't committing to anything
+  yet, so weighting the "on" direction implies a permanence that hasn't happened.
 - **`prefers-reduced-motion` does not mean "no feedback."** Keep color transitions; drop transform,
   parallax, autoplay, and anything that moves more than ~10px. Replace slide-ins with a fade at the
   same duration. Note that Radix Themes and Polaris ship **zero** reduced-motion blocks — the
@@ -1068,6 +1093,14 @@ pointer), screen-reader users, and anyone with a motor impairment who can't hold
 | 23 | One `hover` treatment doing duty for `selected` | Selection is indistinguishable from "the cursor is here." | Selected = tinted fill + a non-color marker (rail, check, `aria-selected`). Hover on a selected row = one step darker than selected. |
 | 24 | Shift-click that extends from "the last selected item" | Range selection behaves unpredictably after any ⌘-click. | Track an explicit anchor = the last **plain** click. Shift extends from the anchor, every time. |
 | 25 | Drag-to-reorder with no keyboard path | WCAG 2.2 SC 2.5.7 failure, and unusable on touch with assistive tech. The demo looks great with a mouse, which is why it ships. | Add "Move up / Move down" to the row menu, handle `⌘↑/⌘↓` on the focused row, announce the result with `aria-live`. |
+| 26 | A hover state with no `:active` at all | The click produces no evidence it registered, so users click twice — which double-submits. This is the most common half-finished state machine in generated UI. | `:active` = the same neutral overlay at **1.5–2×** hover (Radix `a3→a4` = 1.53×; Notion 5.1%→10.2% = 2.00×). Not a new color, not a transform. |
+| 27 | `transition` declared on the base rule | Forces one symmetric duration, so enter and exit can never differ. Every product measured here is asymmetric. | Put the transition inside the `:hover` block. Linear: in `0s`, out `150ms`. Notion: in `150ms`, out `0s`. Pick by density; just don't ship symmetric. |
+| 28 | A switch that animates at one duration in both directions, with no `:active` | Reads as a CSS demo, not a mechanism. | On `160ms`, off `120ms`, `:active` `30ms`, `transition-property: none` when disabled. (Radix Themes, measured.) |
+| 29 | A switch whose thumb waits for the server before moving | The control hangs mid-travel; it is the worst-feeling control in software. | Move on click, reconcile after. On failure snap back **and** show a persistent inline error naming the setting. |
+| 30 | Debouncing the *clearing* of a validation error | Measured on Vercel at **1094ms** — the user has already fixed the field and the form keeps calling them wrong. | Debounce the appearance (blur, or ~1s idle). Clear unconditionally and immediately on the first keystroke that makes the value valid. |
+| 31 | Growing a small control's hit area with `padding` or `scale()` on hover | Padding reflows the row; `scale()` jitters and blurs text. | `box-shadow: 0 0 0 10px var(--hover-grey)` — GOV.UK's radio. The perceived target grows in every direction and box-shadow doesn't participate in layout. Compose with the focus ring: `0 0 0 4px #ffdd00, 0 0 0 10px #cecece`. |
+| 32 | A press overlay that stacks under the focus ring | Keyboard Space-press muddies both indicators. | Scope press styling as `:active:not(:focus-visible)` (Radix's rule). |
+| 33 | A disabled-but-checked checkbox rendered at low contrast | It carries real state ("this is on and locked") and disappears. Even Radix ships this at **1.68:1**. | Give disabled-and-checked more contrast than disabled-and-unchecked. Target GitHub's disabled number (~5.4:1), not the exemption's floor. |
 
 ---
 
@@ -1078,7 +1111,11 @@ Run this against your own output before you call the screen done.
 **States**
 - [ ] Every interactive element has default / hover / focus-visible / active / disabled rendered — and I *looked* at all five.
 - [ ] Nothing changes size or position on `:hover`. Grep your diff for `hover:scale`, `hover:translate`, `hover:p-`, `hover:border-2`.
-- [ ] Hover deltas are ~6–8% on dense surfaces and one color-scale step on buttons — not `/90`.
+- [ ] Hover deltas are ~5–8% on dense surfaces and one color-scale step on buttons — not `/90`.
+- [ ] Every hovering element also has an `:active` at **1.5–2× the hover overlay**, scoped `:active:not(:focus-visible)`.
+- [ ] The transition is declared in the `:hover` block, not the base rule, so enter and exit can differ.
+- [ ] Switches: on 160ms / off 120ms / `:active` 30ms / no transition when disabled; the thumb moves on `translateX`; the thumb moves on click, not on the server response.
+- [ ] Disabled-and-checked controls are more legible than disabled-and-unchecked, not less.
 - [ ] Hover transitions are 0–150ms, and they name specific properties. No `transition: all`.
 - [ ] Focus ring is 2px with a background-colored gap, is not animated, uses `:focus-visible`, and has a `transparent` outline companion for forced-colors mode.
 - [ ] Disabled is a recolor, not `opacity: 0.5`, and the reason is visible without hover.
@@ -1094,7 +1131,7 @@ Run this against your own output before you call the screen done.
 
 **Decisions**
 - [ ] Destructive actions use undo (10s toast + ⌘Z) unless genuinely irreversible; confirm buttons name the action.
-- [ ] Validation is on-blur, clears on-change; submit moves focus to the first invalid field.
+- [ ] Validation is on-blur (or ~1s idle), and the **clear is never debounced** — it fires on the first keystroke that makes the value valid.
 - [ ] Autosave has a `Saving…` / `Saved` / **`Not saved [Retry]`** slot that never moves, plus `beforeunload`.
 - [ ] Empty states are one of three kinds, and the filtered one names the filter and offers to clear it.
 - [ ] No error string in the diff is "Something went wrong", a bare code, or an unstyled stack trace.

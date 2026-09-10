@@ -73,7 +73,8 @@ The data-type palette is the finding worth copying: every socket, connector dot 
 | Shadow 2 (light) ✓ | `0 0 2px #00000029, 0 2px 3px #0000003d, 0 2px 6px #0000001a, inset 0 0 0 1px #fff` |
 | Shadow 4 (light) ✓ | `0 0 3px #00000030, 0 5px 4px #00000029, 0 2px 16px #0000000f, inset 0 0 0 1px #fff` |
 | Style panel ✎ | 148px wide, radius 9px, `--tl-color-panel` `#fcfcfc`, **shadow-2** (first pass said shadow-4); sections are 148px-wide blocks with a **7px** gap between them |
-| Tool / swatch buttons ✓ | 40×40px hit area on a **36px** pitch (measured x: 1284 / 1320 / 1356 / 1392) — hit areas deliberately overlap by 4px so there is no dead gap |
+| Style-panel swatch buttons ✓ | 40×40px hit area on a **36px** pitch (measured x: 1284 / 1320 / 1356 / 1392) — hit areas deliberately overlap by 4px so there is no dead gap |
+| Toolbar tool buttons ✎ | **48×48px hit area on a 44px pitch** (measured x: 501 / 545 / 589 / 633 …, y 844) — a *second* hit tier, 20% larger than the swatches, because a toolbar tool is hit mid-gesture without looking. The earlier row labelled "tool / swatch buttons" measured only the style panel and should not be read as covering the toolbar. |
 | UI type ✓ | Inter, 12px / 19.2px (1.6), weight 500 |
 | Transition duration on style-panel controls ✓ | `0s`. Not "fast". Zero. |
 | Frame (artboard) label geometry ✓ | `--tl-frame-height` 24px, `--tl-frame-padding-x` 6px, `--tl-frame-offset-width` 16px, `--tl-frame-minimum-width` 32px — the label is a token set, so it stays legible on a 32px frame |

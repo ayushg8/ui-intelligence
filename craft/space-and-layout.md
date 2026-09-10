@@ -53,7 +53,7 @@ description of it.
 | **Notion / Tatami** | `--tatami-dimension-spacing-*` | 4, 8, 12, 16, 20, 24, 28, **30**, 32, 40, 48, 56, 64, 72, 80, 96, **100**, 128, 160 | Two off-grid survivors (30, 100) — a real human overriding the system twice |
 | **Figma** | `--fig-space-*` | 4, 6, 8, 12, 16, 24, 32, 40, 56 | A 6 between 4 and 8; no 20, no 48 |
 | **Raycast** | `--spacing-1: 8px` | 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 80, 96, 112, 168, 224 | 8px-named with a half-step; the top of the ramp is marketing sections |
-| **shadcn/ui** | `--radius: .625rem` (10px) | padding 8 (490×), 12, 2, 4, 6, 24; gaps 8 (210×), 4, 6, 24 | Radius is derived: `sm = r−4` (6), `md = r−2` (8), `lg = r` (10), `xl = r+4` (**14**, the Card) |
+| **shadcn/ui** | `--radius: .625rem` (10px) | padding 8 (490×), 12, 2, 4, 6, 24; gaps 8 (210×), 4, 6, 24 | Every radius on the page is derived from that one token: measured 6, 8, 10 and **14** — the Card is `radius + 4` |
 | **IBM Carbon** | 8px mini-unit | observed padding: **16px (496×), 32px (153×)**, then almost nothing | The one product in this sample that genuinely *is* an 8px system — see below |
 | **Material 3 docs** | 4dp grid | observed gaps 20 (23×), 8; padding 24, 16, 56, 104 | A 20px gutter, off the 8 grid, on Google's own spec site |
 | **Mercury (marketing)** | `--gap-md: 32px` | 4, 12, 20, 24, 32, 40, 56, 72, 80, 112, 128, 144 | `--gap-md` and `--gap-lg` are **both** 32px. Real systems have collisions |
@@ -275,7 +275,7 @@ Constraining a dashboard to 1200px wastes exactly the real estate the user opene
 
 - **Flex** when one axis matters and sizes are content-driven — toolbars, rows, button groups,
   anything with `gap` and `flex-wrap`. This is ~80% of UI. Measured `display:flex` vs `display:grid`
-  on live pages: Attio 4:1, Stripe 4:1, GitHub 4:1, react.dev **62:1**, shadcn dashboard 21:1.
+  on live pages: Stripe 3.7:1, GitHub 4.3:1, **Attio 15:1**, shadcn dashboard 21:1, react.dev **62:1**.
   Grid is the specialist; do not "modernize" a working flex row into a grid.
 - **Grid** when you need alignment *across independent rows*. The tell: row 2's second column must line
   up with row 1's second column, and the rows are separate DOM elements. Flex cannot do that; subgrid
@@ -380,7 +380,7 @@ with background shifts alone. It is why Notion's topic tiles *are* cards: each o
   `padding: 24px 0` with `px-6` on the header, content and footer. That is what lets a divider or a
   table run edge-to-edge inside a padded card. A card with uniform `p-6` can never have a full-bleed row.
 - **Concentric radii must satisfy `inner = outer − padding`.** shadcn derives its whole set from one
-  token: `--radius: 10px` → `sm 6 / md 8 / lg 10 / xl 14`, and the Card is the 14. A 12px radius inside
+  token — `--radius: 10px`, and every radius measured on its dashboard is 6, 8, 10 or 14, with the Card at 14. A 12px radius inside
   a 12px radius with 16px of padding between them looks wrong even when nobody can say why.
 
 **Never nest a card in a card.** Maximum surface depth is 2: page > panel. If a panel's contents need
@@ -409,7 +409,7 @@ and has no first/last-child exceptions. Most alignment bugs are margin bugs.
 
 Measured vertical section padding:
 
-- **Resend: 96px top and bottom on 11 consecutive sections** — uniform, and it works
+- **Resend: 96px top and bottom on nine consecutive sections**, plus a 96/0 closer — uniform, and it works
 - Ramp: 128px and 64px; Apple: 144px observed, `--global-section-aap-padding: 196px`
 - Raycast: `--spacing-12: 168px`, `--spacing-13: 224px`; Attio: 152 top / 112 bottom
 - Product UI (Grafana, GitHub, Vercel docs, Plausible): **nothing above 48px anywhere**
@@ -418,8 +418,8 @@ So: **marketing sections are 96–224px apart; product sections are 24–48px ap
 is the single biggest cause of a dashboard that feels empty — someone applied marketing spacing to a
 work surface.
 
-Resend is the useful correction to "always vary your section rhythm": eleven sections at exactly 96/96
-read as calm and deliberate, because the *content type* alternates (copy block, product shot, code
+Resend is the useful correction to "always vary your section rhythm": nine consecutive sections at
+exactly 96/96 read as calm and deliberate, because the *content type* alternates (copy block, product shot, code
 sample, logo wall) even though the padding does not. Vary the type of gap or the width of the content
 block; you do not also have to vary the number. What you must not do is vary it randomly — 96, 80, 112,
 88 reads as an accident, not a rhythm.

@@ -1,14 +1,14 @@
 # Form and input craft
 
-**Measured:** 2026-09. Every number below was read off a live page's computed styles at 1440×1000 (Playwright, `getComputedStyle` + `getBoundingClientRect`), or quoted from a component's shipped HTML. Products probed: **Stripe Checkout** (live embedded session, `js.stripe.com/v3/embedded-checkout-inner`), **Stripe Dashboard** signup, **GOV.UK Design System** (13 components, measured inside their own example iframes), **Mercury** (`demo.mercury.com` — the real product, signed in as a demo user), **Linear** (marketing form + a signed-in settings screenshot), **Vercel Geist** (`vercel.com/geist/*`, plus the resolved `--ds-*` / `--geist-*` token values), **Ramp** signup, **shadcn/ui**. Where I could not measure, I say so.
+**Measured:** 2026-09, in two passes. Every number below was read off a live page's computed styles at 1440×1000 (Playwright, `getComputedStyle` + `getBoundingClientRect`), or quoted from a component's shipped HTML. Products probed: **Stripe Checkout** (live embedded session, `js.stripe.com/v3/embedded-checkout-inner`), **Stripe Dashboard** signup, **GOV.UK Design System** (19 components and patterns, measured inside their own example iframes), **Mercury** (`demo.mercury.com` — the real product, signed in as a demo user: settings *and* the full five-step send-money wizard, including typing into the money field and watching what it did), **Linear** (the live `linear.app/contact/sales` form, re-measured field by field, plus a signed-in settings screenshot), **Vercel** (Geist docs with resolved `--ds-*` tokens, plus the live `vercel.com/login` form), **Atlassian Design System** textfield, **Ramp** signup, **shadcn/ui** (input and the input-otp component, dissected — it is what an agent will reach for). Where I could not measure, I say so; three products in the brief (Notion settings, Vercel project settings, Linear settings) are behind logins and bot walls, and the notes on them are marked as structure-only.
 
 ---
 
 ## If you only apply five things
 
 1. **One column. No exceptions except a genuinely paired field.** Stripe Checkout puts every field in a 378px single column — email, name, country, address, card — and splits horizontally exactly once, for expiry/CVC (173px + 173px). Ramp splits exactly once, for first/last name (290px + 290px). GOV.UK splits exactly once, for Day/Month/Year. If you cannot name the *pair*, do not split.
-2. **Size every field to its content.** GOV.UK ships six fixed widths and uses them: 2 chars = **52px**, 3 = **71px**, 4 = **86px**, 5 = **105px**, 10 = **219px**, 20 = **390px**. A UK postcode field is 105px wide next to a 748px address line. The generated version makes both `w-full` and it is the single loudest tell that a human did not lay out the form.
-3. **Label above the field, 4–9px away, always visible.** Stripe Checkout: 16px/20.8 label, **4px** gap to a 44px input. Stripe Dashboard: 14px/20 label, **9px** gap. Linear: 14px/21 label, **8px** gap. Nobody in this sample floats a label into the box. Placeholders are format examples (`1234 1234 1234 1234`, `MM / YY`, `For example, 27 3 2007`), never names.
+2. **Size every field to its content — selects included.** GOV.UK ships six fixed widths and uses them: 2 chars = **52px**, 3 = **71px**, 4 = **86px**, 5 = **105px**, 10 = **219px**, 20 = **390px**. A UK postcode field is 105px wide next to a 748px address line, and their `Sort by` select is **218.5px**, not full width. The generated version makes all of them `w-full` and it is the single loudest tell that a human did not lay out the form.
+3. **Label above the field, 4–12px away, always visible.** Measured across the whole sample: Atlassian 4px, Stripe Checkout 4px, GOV.UK 5px, Linear 8px, Stripe Dashboard 9px, Mercury 12px. The gap scales with the label's size, and it is always far smaller than the gap between one field group and the next (GOV.UK: 5px inside a group, 30px between them — a 6:1 ratio). Nobody in this sample floats a label into the box. Placeholders are format examples (`1234 1234 1234 1234`, `MM / YY`, `For example, 27 3 2007`), never names.
 4. **Do not validate on blur. Validate on submit.** GOV.UK's shipped guidance is literal: *"Do not validate when the user moves away from a field. Wait until they try to move to the next part of the service."* Measured on Stripe Checkout: typing a malformed email produced no error while the field was focused. The one legitimate live check is a hard limit you want to stop before it's wasted — GOV.UK's character count is their named exception.
 5. **Set `autocomplete`, `inputmode`, and `type` on every field, even when it looks unnecessary.** Stripe Checkout's ZIP field carries `autocomplete="shipping postal-code"` **and** `inputmode="numeric"` **and** a `--tabularnums` class. Its phone country-code `<select>` carries `autocomplete="never-autocomplete-country-code"` — a deliberately invalid token to *stop* Chrome autofilling it. Nobody at that level ships a bare `<input type="text">`.
 
@@ -27,13 +27,21 @@
 | **Stripe Dashboard** signup (password) | 44px | 16/24 w400 | `8px 12px` | 6px | `… 0 0 0 1px #d4dee9 …` | `box-shadow .24s` |
 | **GOV.UK** text input | **40px** | 19/25 w400 GDS Transport | `5px` | **0px** | `2px solid #0b0c0c` | `--govuk-focus-colour: #fd0` (yellow block) |
 | **GOV.UK** textarea | 133px (5 rows) | 19/**23.75** w400 | `5px` | 0px | `2px solid #0b0c0c` | same |
-| **Linear** (marketing form, dark) | 40px | 14/21 w400 Inter | `0 10px` | **8px** | `1px solid rgba(255,255,255,.05)` on `bg rgba(255,255,255,.05)` | — |
 | **Vercel Geist** small | **32px** | 14/20 w400 Geist | `0 12px` | 6px | `--ds-shadow-border-base: 0 0 0 1px #00000014` | `--ds-focus-border: 0 0 0 1px #00000057, 0 0 0 4px #00000029` |
 | **Vercel Geist** default | **36px** | 14/20 w400 | `0 12px` | 6px | same | same |
 | **Vercel Geist** large | **40px** | 16/24 w400 | `0 12px` | **8px** | same | same |
 | **Vercel Geist** select | 32 / 36 / 40 | 14/20 · 14/20 · 16/24 | `0 36px 0 12px` (chevron gutter); `0 36px 0 40px` with leading icon | 6 / 6 / 8 | same | `box-shadow .2s cubic-bezier(.4,0,.2,1)` |
 | **Ramp** signup | input element measures 24px; visible chrome is on a wrapper I did not isolate | 16/24 **w300** Lausanne | `0` | 0px | — | — |
 | **shadcn/ui** default | **32px** | 14/20 w400 | `4px 10px` | **10px** | `1px solid` neutral-200 | ring utility |
+| **Mercury** send-money (money, date, combobox) | **40px** | 15/24 w400 Arcadia Text | `7px 11px` | 8px | `1px solid rgba(112,115,147,.16)` on `bg #FBFCFD` | border → `#5266EB`; **the label recolors too** (see below) |
+| **Mercury** account picker (rich select) | **68px** | 13/20 + 15/24, two lines | `0` (inner rows) | 8px | same hairline on `#FBFCFD` | indigo border + halo |
+| **Linear** `contact/sales` (dark) — re-measured | **40px** | 14/21 w400 Inter Variable, `ls -0.182px` | `0 10px` | **8px** | `1px solid rgba(255,255,255,.05)` on `bg rgba(255,255,255,.05)` | — |
+| **Linear** textarea, same form | **106px** | 14/21 w400 | `10px 12px` | 8px | same | — |
+| **Atlassian** textfield | **36px** | 14/20 w400 Atlassian Sans | `8px 6px` | 0px on the input; chrome on the wrapper | wrapper-drawn | — |
+| **Vercel** `/login` email | **40px** | **16/24** w400 GeistSans | `0 12px` | 0px on the input (8px on the wrapper) | wrapper-drawn | Geist focus ring |
+| **GOV.UK** select (`Sort by`) | 40px | 19 w400 | `5px` | 0px | `2px solid #0b0c0c` | yellow block |
+
+Two things to take from the new rows. **Mercury's whole product runs on one 40px input** — money, dates, comboboxes and rich 68px account pickers all share the same hairline, radius and `#FBFCFD` fill, so the money field is not visually special even though it is the most consequential field in the app; the *label* and the affix carry that job instead. And **Vercel and Atlassian both put zero radius and zero border on the `<input>` itself** and draw all the chrome on a wrapper — which is why copying an input's computed style from a real product and pasting it into a bare `<input>` gives you a borderless box and makes you think you measured wrong.
 
 Read the spread: **32–44px** is the entire working range. 32/36px is a dense app control (Vercel, shadcn). 40px is the general-purpose default (GOV.UK, Linear, Stripe Dashboard). 44px is what a *payment* form uses (Stripe Checkout) — deliberately at the iOS touch-target minimum because half the traffic is a thumb on a phone. Nothing ships a 56px input except a marketing hero.
 
@@ -45,11 +53,13 @@ Read the spread: **32–44px** is the entire working range. 32/36px is a dense a
 | **Stripe Dashboard** | 14/20 w400 `#1A1F36` **16.2:1** | **9px** | — | — | 17px (input bottom → next label top) |
 | **GOV.UK** (standard) | 19/25 w400 `#0b0c0c` **19.59:1**, `margin-bottom: 5px` | **5px** | 19/25 `#484949` **9.03:1**, `mb: 10–15px` | 19/25 **w700** `#CA3535` **5.16:1**, `mb: 15px` | `.govuk-form-group { margin-bottom: 30px }` |
 | **GOV.UK** (label as page heading) | **36/40 w700** inside `<h1>`, `mb: 15px` | 15px | same | same | 30px |
-| **Linear** (marketing) | 14/21 w400 **`#8A8F98` — secondary, not primary** | **8px** | — | — | 24px |
 | **Mercury** settings | 16/16 w360 Arcadia primary | n/a (read-only row) | **13/20** w400 `#535461` **7.48:1**, in a 296px left column | — | 1px rule between rows |
 | **Vercel Geist** checkbox | 13/19.5 w400 | — | — | linked via `aria-describedby="…-error"` | — |
+| **Mercury** send-money form | 13/20 w400 `#535461` **7.48:1**; **13/20 w480 `#5266EB` 4.71:1 when the field is focused** | **12px** | **below** the input, 12/20 `#70707D` **4.88:1**, id `<field>-helptext` | — | 88px (label top → next label top) |
+| **Linear** `contact/sales` | 14/21 w400 **`#8A8F98` — secondary, not primary**, **6.13:1** on `#08090A` | **8px** | — | — | **24px** input bottom → next label top |
+| **Atlassian** textfield | **12/16 w653** `#505258` **7.81:1** | **4px** | — | — | — |
 
-Two things to steal. **One:** Linear sets the label in *secondary* text color (`#8A8F98`, ~6:1 on their dark ground) and the input value in primary white — the value outranks its own label, which is correct, because the value is the content. Stripe and GOV.UK do the opposite (label at 13–19:1). Both work; what doesn't work is label and value at the *same* weight and color, which is what a default `<label>` + `<input>` gives you. **Two:** GOV.UK's error message is the only text on the page at **w700** — bold is doing the signalling as much as the red is, which is what makes it survive a monochrome or color-blind read.
+Three things to steal. **One:** Mercury moves the *label* on focus, not the field — the 13px label goes from `#535461` w400 to `#5266EB` w480 while the input's border picks up the same indigo. Two elements change, both by color only, nothing moves, and the eye is pulled to the field's *name* rather than to its box. That is a better use of an accent than the usual 4px glow. **Two:** Linear sets the label in *secondary* text color (`#8A8F98`, ~6:1 on their dark ground) and the input value in primary white — the value outranks its own label, which is correct, because the value is the content. Stripe and GOV.UK do the opposite (label at 13–19:1). Both work; what doesn't work is label and value at the *same* weight and color, which is what a default `<label>` + `<input>` gives you. **Three:** GOV.UK's error message is the only text on the page at **w700** — bold is doing the signalling as much as the red is, which is what makes it survive a monochrome or color-blind read.
 
 ### GOV.UK's fixed-width scale, measured
 
@@ -86,6 +96,32 @@ Card group (346px wide):
 | `#cardCvc` | 173px | `0 0 6px 0` |
 
 Every member keeps the same 1px shadow-ring, so adjacent rings overlap into a single hairline. The result reads as one bordered card with internal rules — three inputs, one perceived object, **one** label above it (`Shipping address`, `Card information`) and **one** error message below it.
+
+### Choice controls, hit targets and joined groups, measured
+
+Checkboxes, radios, switches and OTP boxes are where generated forms leak accessibility, because the visual is 16px and the target is 16px.
+
+| Product | Control | Visual | **Target** | Label | Gap between items |
+|---|---|---|---|---|---|
+| **GOV.UK** | checkbox | 40×40 drawn | **44×44 input**, row 44px tall | 19/25, `padding: 7px 15px`, starts at x=+44 | **10px** |
+| **GOV.UK** | radio | 40×40 drawn | **44×44 input** | same | 10px |
+| **Mercury** | radio (Person / Business) | 18×18 | **the whole 117–130×50 card** (width fits the label): `bg #FBFCFD`, `1px solid rgba(112,115,147,.16)`, `r8`, `padding 12px 18px` | 15/24 inside the card | 8px between cards |
+| **Mercury** | switch (`Repeat this payment`) | **40×20**, `r10` | 40×20 + the 140px label to its right | 15/24 `#535461` | — |
+| **Stripe Checkout** | checkbox (`Billing info is same as shipping`) | 16×16, checked by default | whole row | — | — |
+| **shadcn/ui** | OTP slot | 32×32 | the *hidden real input* spans all six | — | 0 (borders shared) |
+
+Two decisions live in that table. **GOV.UK pads the target out to 44px and leaves the drawing at 40px** — the extra 4px is invisible and is the difference between a control a thumb can hit and one it can't. **Mercury turns a 2-option radio group into two 50px-tall cards** — same semantics, ~7× the target area, and it reads as a segmented choice rather than as a form field. Use the card form when there are 2–4 options with short labels; use GOV.UK's row form when there are 5+ or the labels wrap.
+
+### The OTP component, dissected (shadcn `input-otp`, measured)
+
+Six boxes are usually a mistake, but shadcn's is built the one way that isn't, and it is worth copying exactly because the mechanism is not obvious:
+
+- **One real `<input>`** spans the whole 192px group: `autocomplete="one-time-code"`, `inputmode="numeric"`, `font-variant-numeric: tabular-nums`, `color: transparent`, and `letter-spacing: -16px` at `font-size: 32px` — the value is *actually there* for paste, autofill, backspace and screen readers, it is simply invisible.
+- **Six 32×32 `<div>` slots** render the characters, and are pure presentation.
+- The slots are joined the way Stripe joins address fields: first slot `border-radius: 10px 0 0 10px`, last `0 10px 10px 0`, middle `0`; borders are `1px 1px 1px 0` on every slot after the first so adjacent edges never double into 2px.
+- The separator variant splits 6 into 2+2 or 3+3 groups by inserting a dash, which is how the code arrives in the SMS.
+
+If you cannot afford that machinery, ship **one plain input** sized to the code (`~6em` + padding), tabular figures, `autocomplete="one-time-code"`. Never ship six `<input maxlength="1">` elements with `onKeyUp` focus-advance: paste dies, backspace dies, and a screen reader announces six unlabelled fields.
 
 ### Attribute discipline, Stripe Checkout (read off the live DOM)
 
@@ -128,6 +164,8 @@ Note what is *not* there: no `type="number"` anywhere, and no `type="tel"` on th
 | **Linear** (marketing) | 134×44, r9999, 13px **w510**, left-aligned | — | Width fits the label |
 | **Ramp** | 704×**56**, r0, `#E4F222` | — | Full width |
 | **Stripe Dashboard** | 444×36, r4 | — | Full width |
+| **Mercury** wizard footer | `Next` 109×**40**, r**9999**, `#5266EB` → `#465BD1` under the pointer, `padding: 8px 28px 8px 32px` (asymmetric — the chevron eats the right side) | `Back` / `Go back` 110–122×40, r9999, `rgba(112,115,147,.1)`, same height | Both sit in a sticky footer above a hairline, **left-aligned with the 560px form column at x=440**, not right-aligned to the viewport |
+| **Vercel** `/login` | 320×**40**, r8, `#171717`, 16/24 w500 | `Continue with Google/GitHub/SSO/Passkey`, identical 320×40 boxes | Every option is the same size — the primary is distinguished only by fill |
 
 ---
 
@@ -135,7 +173,7 @@ Note what is *not* there: no `type="number"` anywhere, and no `type="tel"` on th
 
 ### Single column, and the three real exceptions
 
-Two-column forms cost you the reading path. The eye finishes field 1 (left) and has to decide whether field 2 is to the right or below; every field re-poses the question. Measured evidence that the good products know this: Stripe Checkout is 378px wide on a 1440px viewport — it does not expand to fill. GOV.UK's form column is 748px on the same viewport (two-thirds of a 12-column grid) and never wider.
+Two-column forms cost you the reading path. The eye finishes field 1 (left) and has to decide whether field 2 is to the right or below; every field re-poses the question. Measured evidence that the good products know this: Stripe Checkout is 378px wide on a 1440px viewport — it does not expand to fill. GOV.UK's form column is two-thirds of its grid and never wider — 748px as measured inside the design system's 809px example iframe, **630px** on a real service page, where `main` is 960px at a 1440px viewport (re-measured 2026-09; see [`../archetypes/institutional-civic.md`](../archetypes/institutional-civic.md)).
 
 Split horizontally only when the two fields are **one fact the user holds as one fact**:
 
@@ -163,6 +201,8 @@ Write down the *maximum* content each field will hold, then apply ~1em/char + pa
 | Address line 1 | 40+ | full column |
 | Street/City | 20–25 | full column is fine — it's prose-shaped |
 
+**Selects obey the same rule and are missed even more often.** GOV.UK's `Sort by` select measures **218.5px** in a 748px column — sized to `Recently published`, its longest option. A country select needs ~300px; a `Yes/No` select needs ~90px and probably shouldn't be a select at all. The generated default makes every `<select>` `w-full`, which is how you get a 640px-wide dropdown containing the word `USD`.
+
 The nuance most people miss: **short fields do not need to be the same width as each other.** GOV.UK's Day is 52px and its Year is 86px, sitting side by side. Making them equal (a `grid-cols-3`) would be *more* symmetric and *less* informative — the widths are telling you how many digits go in each box before you read the label.
 
 **When to ignore this:** dense settings tables and inline-edit grids where every control shares a column, and a ragged right edge would read as a layout bug rather than as information. Vercel's Geist docs show every input at the same 178px in the size comparison for the same reason. If the fields are in a *table*, align them; if they're in a *form*, size them.
@@ -176,7 +216,7 @@ Left-aligned labels (label in a column to the left of the input) are a legacy of
 **Floating labels** — the label that starts as a placeholder and animates to a small caption inside the box on focus — fail for four specific reasons, in order of severity:
 
 1. **The resting state is a placeholder.** Before the user focuses, the field is labelled by grey text that disappears the moment they start typing. Anyone who is interrupted mid-form, comes back, and looks at a filled form has no labels at all. This is the same failure as a bare placeholder, just deferred.
-2. **The floated label is too small to read.** To fit inside the box it typically shrinks to 11–12px. Compare the smallest label in the whole measured set: GOV.UK's is **19px**, Stripe's is **16px**, Linear's and Vercel's are **14px**. Nothing ships a 12px label as a field's primary name.
+2. **The floated label is too small to read.** To fit inside the box it typically shrinks to 11–12px, at the same 400 weight as the value. Compare the measured set: GOV.UK's label is **19px**, Stripe Checkout's **16px**, Linear's and Vercel Geist's **14px**, Mercury's **13px**. The one genuine 12px label in the sample is Atlassian's — and it is **12/16 at weight 653** in `#505258` (**7.81:1**), against a 14px w400 value. That is the deal: below 13px a label has to buy back its legibility with weight and contrast, and a floated label sitting *inside* the field at w400 in grey never does. If you want a small label, copy Atlassian's numbers, not the float.
 3. **It fights browser autofill.** Chrome fills a field without firing the events some float implementations listen for, so the label sits on top of the value. Stripe works around autofill so aggressively that its input transition string literally reads `box-shadow 0.08s ease-in, color 0.08s ease-in, **filter 50000s**` — a 50,000-second transition on `filter` used to defeat Chrome's autofill background repaint. Products that fight this hard about autofill do not also introduce a label that autofill can break.
 4. **It removes the hint slot.** Once the label is inside the box, there is nowhere for the 19px hint line that GOV.UK puts under a third of its labels — and hints prevent more errors than any validation does.
 
@@ -204,9 +244,24 @@ A placeholder is a value that isn't there. That is its whole semantic. It is dra
 
 **What placeholders are actually for — format examples.** Look at what Stripe puts in them: `1234 1234 1234 1234`, `MM / YY`, `(201) 555-0123`, `email@example.com`. Every one of those is a *shape*, not a name. The name is in the label above (`Card information`, `Email`). This is the correct use and it's a good one: the format example sits exactly where the user's eyes and cursor already are.
 
+The second correct use is a *specific* example that shows the shape of an acceptable answer. Linear's sales form, measured live: `Full name` → `Kevin Flynn`, `Work email` → `kevin@encom.com`, `Tell us about your requirements` → `I'm interested in Linear for my team...`. Three real strings, written by a person, none of them `Enter your full name` restating the label. If your placeholder is the label again, delete it.
+
+**An honest counterexample, measured.** `vercel.com/login` ships a single 320×40 email field with `placeholder="Email Address"` and **no visible label** — a company with one of the most disciplined design systems in the industry taking the shortcut this document tells you not to take. It survives for the exact reasons the exception allows: one field, on a page whose `<h1>` already says what it is, with a submit button reading `Continue with Email` 16px below it. Nothing is lost when the placeholder disappears, because there is nothing to confuse it with. Take that as the boundary of the exception, not as permission: the same shortcut in Vercel's own project-settings forms would be indefensible.
+
 **When you need a persistent explanation, use hint text.** GOV.UK's hint sits between the label and the input, 19/25 at `#484949` (**9.03:1** — note it's *not* faint), with `margin-bottom: 10–15px`, and is wired in via `aria-describedby`. A real example from their shipped HTML: label `National Insurance number`, hint `It's on your National Insurance card, benefit letter, payslip or P60 – for example, 'QQ 12 34 56 C'`. That hint is longer than the label and it belongs there, because it eliminates the error instead of catching it.
 
 Mercury's settings help text is the same idea at a smaller scale: 13/20 at `#535461` (**7.48:1**), in a 296px column, e.g. *"This is the name that appears on Mercury and in your notifications."* — it explains the *consequence* of the field, not its format.
+
+Mercury's send-money form is the clean demonstration of the split, all of it measured at 12/20 `#70707D` (**4.88:1** — the weakest text in their form, and the floor you should treat as a hard minimum at 12px), each wired by an id of the form `<field>-helptext`:
+
+| Field | Help text | What it's doing |
+|---|---|---|
+| `Email (optional)` | `For payment receipts` | why you'd fill it in |
+| `Nickname (optional)` | `For your reference only - not visible to the recipient` | who else sees it |
+| `Payment method` | `0-1 business days · No fee` | the consequence of the *choice* |
+| `Send on` | `Payment expected to arrive in 0-1 business days` | the consequence of the *value* |
+
+None of them describe a format. Notice also that Mercury marks `(optional)` in the label text, at the same size and colour as the label — a commercial product independently arriving at GOV.UK's rule.
 
 **Below-field help** is for a consequence that only matters after entry ("We'll email a receipt here"). **Above-field hint** is for anything that shapes what they type. If in doubt, above.
 
@@ -359,6 +414,16 @@ Their other requirements for a question page: a **back link at the top** (becaus
 - A **task list** — GOV.UK's pattern for long applications — beats both when the steps are independent and resumable. It also implicitly promises "you can leave and come back," which a progress bar does not.
 - Never animate the bar from 0 on each page load; it reads as a loading indicator.
 
+**A measured commercial wizard: Mercury's send-money flow.** Five steps — `Recipient → Amount → Categorization → Details → Review` — and every single design choice is worth copying:
+
+- **One URL per step** (`/send-money/pay/start`, `/pay/recipient-details`, `/pay/amount`). Browser back works, a step is linkable, and a refresh doesn't nuke the flow. The generated version keeps all five steps in one component's `useState` and loses everything on reload.
+- **A named vertical step list in the left rail**, not a bar and not `Step 2 of 5`. Current step is near-black with a **2px indigo left bar**; the completed step above it is also near-black; steps not yet reached are grey (`~#9D9DA8`). No checkmarks, no percentages, no animation. You can read the whole journey before you start it.
+- **The wizard takes the whole window.** Product chrome (sidebar, nav) is replaced by a logo, a workspace name and a single ✕ / `Esc` affordance at the top right. Nothing competes with the form.
+- **The form column is 560px** at x=440 on a 1440 viewport — narrower than the content area it replaced, and centered on nothing in particular: the step rail sits left of it. Fields are full-column *within* those 560px.
+- **A sticky footer** with `Back` (grey pill) and `Next` (indigo pill), both 40px, **left-aligned with the form column**, above a hairline. Not right-aligned to the viewport, which is the default a component library will hand you.
+- **The first step offers a shortcut that skips the form**: `Upload a bill` (a 560×106 drop target that pre-fills the recipient's payment details) `OR` `Select a recipient`. The best form question is one the user never has to answer.
+- **Each step shows the consequences of the choices on it**: `0-1 business days · No fee` under the payment-method select, `Payment expected to arrive in 0-1 business days` under the date. 12/20 `#70707D`. This is help text doing decision support, not format instruction.
+
 **Carry answers forward.** GOV.UK: *"only ask for a piece of information once within a single journey"* — pre-populate or offer the previous answer as a selectable option. Stripe Checkout ships the small version of this as a `Billing info is same as shipping` checkbox (16×16, checked by default) that collapses an entire address group.
 
 ### Save, cancel, and dirty state
@@ -403,7 +468,7 @@ Two details that separate real confirmations from generated ones:
 
 **OTP / one-time code.**
 - Put `autocomplete="one-time-code"` and `inputmode="numeric"` on it. That alone gets you iOS/macOS SMS autofill.
-- **A single input is more robust than six boxes.** Six-box implementations break paste, break autofill, break backspace across boxes, and confuse screen readers about how many fields exist. If you must ship boxes, back them with one real input and treat the boxes as presentation.
+- **A single input is more robust than six boxes.** Six *real* inputs break paste, break autofill, break backspace across boxes, and confuse screen readers about how many fields exist. If you want the boxes, back them with one real input and treat the boxes as presentation — see *The OTP component, dissected* above for the exact shadcn mechanism (transparent text, `letter-spacing: -16px`, shared borders).
 - Size to the code: 6 digits ≈ 6em + padding. Tabular figures. Auto-submit on the last digit only if you also handle "the code was wrong" gracefully — otherwise the user gets an error before they've finished reading their own screen.
 
 **Address.**
@@ -427,15 +492,27 @@ Two details that separate real confirmations from generated ones:
 
 **Currency / amount.**
 - `inputmode="decimal"`, not `numeric` (numeric hides the decimal separator on some Android keyboards).
-- **Tabular figures**, always. Mercury sets `font-variant-numeric: tabular-nums` on every amount in the product — measured on their sidebar balance `$2,023,267.12` — and goes further: each thousands separator is wrapped in its own span with `padding-right: 0.39px`, sub-pixel kerning applied to a comma so the digit groups sit at even intervals. That's the level of care fintech typography actually gets.
+- **Tabular figures for displayed amounts — but not necessarily inside the input.** Mercury sets `font-variant-numeric: tabular-nums` on amounts throughout the product (their sidebar balance `$2,023,267.12`) and goes further: each thousands separator is wrapped in its own span with `padding-right: 0.39px`, sub-pixel kerning on a comma so the digit groups sit at even intervals. But their money *input* is `font-variant-numeric: normal`, 15/24, left-aligned. Measured, not assumed. The reason holds: tabular figures buy you alignment between rows, and there is only ever one row inside a text field. Use them in tables, ledgers and live-updating totals; skip them in the field itself unless your typeface's proportional digits are visibly uneven.
 - Put the currency symbol in a **prefix affix inside the field**, not in the value the user types and not as a floating label. Vercel's Geist input ships exactly this affordance: a 38–71px prefix/suffix label welded to the input (measured `https://` prefix at 71px, `.com` suffix at 57px, at 36px input height). Same mechanic, `$` or `USD`.
 - Right-align the value if amounts appear in a column; left-align if it's a lone field.
-- Format on blur (`1234.5` → `1,234.50`), never while typing — reformatting mid-keystroke moves the caret.
+- **Split the formatting into two events — this is the detail nobody gets right.** Measured on Mercury's `Recipient gets` field: typing `1234.5` produced **`1,234.5` live, while typing** (thousands separators inserted on each keystroke), and blurring produced **`1,234.50`** (cents padded). That is exactly the right split. Group separators are inserted *to the left of the caret* while the user types at the end of the value, so a correct implementation re-places the caret and the user never notices. Padding the cents, rewriting the decimal, or normalising a currency symbol *while the caret is inside the number* is what moves the caret and drops keystrokes — defer all of that to blur. The blanket advice "never format while typing" is a half-truth that produces fields where `2000000` sits there unreadable until you tab away.
+- The affix: Mercury renders a grey `$` as an in-field prefix with the value starting ~12px after it, inside the same 40px, `#FBFCFD`, `r8` box as every other field in the form.
 - Don't use `type="number"`. Users paste `$1,234.56`.
 
-**File upload.**
+**File upload.** Two shipped drop targets, measured:
+
+| | **GOV.UK** enhanced file upload | **Mercury** bill upload (send-money step 1) |
+|---|---|---|
+| Target | 748×**156** | 560×**106** |
+| Edge | `2px dashed #cecece` — **1.57:1 against white** | 1px hairline on a filled `#F7F8F9`-ish panel, `r8` |
+| Inside | a real secondary `<button>` `Choose file` (**115.5×38**, `#f3f3f3`, `box-shadow: 0 2px 0 #858686`) + `or drop file` at 19/25, 7px lower | icon + `Drag and drop here or click to upload` (15/24) + `Upload images, PDFs, or spreadsheets` (13/20 secondary) |
+| Status line | `No file chosen` at 19/25 on a `#d2e2f1` blue block, `padding: 15px 10px` | — |
+| Semantics | the whole zone is a `<button>` whose accessible name is *"No file chosen, Choose file or drop file"*, wrapping a real `<input type="file">` | `<input type="file">` filling the panel |
+
+The lesson from the contrast number: **a dashed 1.57:1 rectangle is decoration, not an affordance.** In both products the thing that says "you can do something here" is the solid button or the sentence inside the zone, not the border. If you delete the dashed edge, both still work; if you delete the button and keep the edge, only mouse users can upload.
+
 - Both affordances: a real `Choose file` button and a drop target. GOV.UK's improved component ships exactly these two.
-- State the constraints **before** the picker opens, in hint text: accepted types, max size, max count. An error after a 40MB upload has already failed is the worst possible time to mention the 10MB limit.
+- **State the constraints inside the zone, before the picker opens** — accepted types, max size, max count — in the products' own words: `Upload images, PDFs, or spreadsheets` (Mercury, in the drop panel), `You may upload PDF, PNG, or JPEG files` (Mercury, in the upload sheet). Not in a tooltip, and never for the first time in an error: after a 40MB upload has already failed is the worst possible moment to mention the 10MB limit.
 - Show per-file progress with a cancel control, and show the file name and size after upload with a `Remove` action.
 - Set `accept` to narrow the OS picker, but **also validate server-side** — `accept` is a filter, not a constraint.
 - GOV.UK's rule worth stealing: *"make sure users can easily reuse a previously uploaded file within a single journey"* — if you ask for the same ID document twice, offer the first upload as a selectable option rather than making them find the file again.
@@ -451,7 +528,9 @@ Why this is better than the obvious alternative: a settings page is read ten tim
 
 **Linear: autosave rows with toggles.** Notification settings — observed in a signed-in screenshot, so structure only, no measurements — are a card containing rows: title + secondary description on the left, control on the right, hairline rules between rows inset from the card padding. Toggles commit immediately; there's no Save. Correct because every setting is a single boolean with an instant, visible effect.
 
-**Sectioned cards with per-section save.** Each settings section is its own card with its own footer save button, so the "dirty" scope is one card rather than the page. (I could not measure Vercel's project settings — it's behind a login — so treat this as the pattern, not as Vercel's exact numbers.) This is the right middle ground when settings are text fields, which can't autosave cleanly, but there are too many to open a dialog for each.
+**Mercury's edit form, measured** (`Edit recipient details`, opened from that row pattern): 584px column, `<h2>` section headings (`Profile`, `Address`) at 17/28 w400, label 13/20 `#535461`, value 15/24 `#363644` (**11.56:1** on the `#FBFCFD` field), help text 12/20 below, `(optional)` in the label text, and a two-card radio group (`Person` / `Business`) at the top because it changes which fields appear below. One column throughout. That is what "edits like a dialog" actually looks like.
+
+**Sectioned cards with per-section save.** Each settings section is its own card with its own footer save button, so the "dirty" scope is one card rather than the page. (Vercel's project settings, Notion's settings and Linear's settings are all behind a login, and I could not get past it on this pass — `notion.com/login` and `github.com/signup` both refused an automated browser outright. Treat this pattern as described-from-structure, not as measured numbers. What *is* measured from Vercel is the Geist control scale it would be built from: 32/36/40px inputs, `r6`/`r8`, `--ds-shadow-border-base: 0 0 0 1px #00000014`.) This is the right middle ground when settings are text fields, which can't autosave cleanly, but there are too many to open a dialog for each.
 
 **How to choose:**
 
@@ -502,6 +581,14 @@ GOV.UK's is the outlier and worth knowing about: a solid `#fd0` yellow block beh
 **44px inputs are wrong in a desktop-only dense app.** Vercel ships 32px and 36px controls and they're right to — a settings sidebar with 44px inputs wastes a third of the viewport. 44px is the mobile/payment floor, not a universal minimum.
 
 **Tabular figures are wrong for a lone number in prose.** `font-variant-numeric: tabular-nums` widens the `1` to match the `0` and makes single numbers in a sentence look gappy. It's for columns, live-updating values, and money — not for "3 items selected."
+
+**"Never format while the user is typing" is wrong for thousands separators.** Measured on Mercury: grouping commas go in live, cents get padded on blur. A seven-figure amount with no separators until blur is unreadable at the moment the user most needs to check it. The rule that survives is narrower: *never rewrite characters at or left of the caret* — separators appended behind a caret that sits at the end of the value are safe if you re-place the caret; cents, currency symbols and decimal normalisation are not.
+
+**"Six OTP boxes are wrong" is wrong when they're presentational.** shadcn's `input-otp` renders six 32×32 slot divs over a single real input (`letter-spacing: -16px`, transparent text, `one-time-code`, `inputmode="numeric"`). Paste, autofill, backspace and screen readers all behave. The failure mode is six real `<input maxlength="1">` elements, not the visual.
+
+**"Nothing below 13px for a label" is wrong at high weight.** Atlassian ships 12/16 **w653** at 7.81:1 and it reads fine above a 14px w400 value, because label and value are separated by weight rather than by size. A 12px w400 grey label is the version that fails.
+
+**A named step rail is wrong for a two-step flow.** Mercury's five-step rail earns its 200px of horizontal space; the same component around `Details → Payment` is scaffolding for a journey the user has already finished reading. Under three steps, show the heading and the Back link and nothing else.
 
 **Type-to-confirm is wrong below Tier 3.** Making someone type `newsletter-draft` to delete a draft they created 30 seconds ago is theatre, and theatre trains people to do it without reading, which is exactly what you didn't want when it mattered.
 
@@ -571,8 +658,8 @@ Removes the ring entirely, or shifts the layout 1px. → `box-shadow` or `outlin
 **20. Currency in proportional figures with no tabular setting, formatted while typing.**
 Column jitters; caret jumps. → `font-variant-numeric: tabular-nums`, `inputmode="decimal"`, currency symbol as an in-field prefix, format on blur.
 
-**21. Six separate boxes for an OTP.**
-Breaks paste, autofill, and backspace. → One input, `autocomplete="one-time-code"`, `inputmode="numeric"`, sized to the code length.
+**21. Six separate `<input maxlength="1">` boxes for an OTP with `onKeyUp` focus-advance.**
+Breaks paste, autofill, and backspace, and announces six unlabelled fields. → One real input (`autocomplete="one-time-code"`, `inputmode="numeric"`), sized to the code length. If you want the six-box look, render six presentational slots over that one input the way shadcn's `input-otp` does — the mechanism is measured above.
 
 **22. A calendar picker for a date of birth.**
 40 clicks back through months. → Three text inputs (D/M/Y), `inputmode="numeric"`, own labels, one fieldset, hint with an example date.
@@ -582,6 +669,24 @@ Breaks paste, autofill, and backspace. → One input, `autocomplete="one-time-co
 
 **24. Fields cleared after a failed submit.**
 → Re-render with everything the user typed, exactly as they typed it.
+
+**25. A dashed 1px `border-gray-300` rectangle as the entire upload affordance.**
+Measured against white, GOV.UK's dashed drop-zone border is **1.57:1** — it is decoration. → Put a real `Choose file` button and a sentence naming the accepted types *inside* the zone; the border can then be as faint as you like.
+
+**26. `Step 3 of 5` over an animated progress bar, on a branching flow.**
+The denominator is a promise you can't keep, and the bar re-animating from 0 on each page reads as loading. → A named step list (Mercury: five words in a left rail, current one marked with a 2px bar, future ones grey) or nothing.
+
+**27. The whole wizard lives in one component's state.**
+Refresh loses everything; the browser back button exits the flow. → One URL per step, as Mercury does (`/pay/recipient-details`, `/pay/amount`), with the answers in the URL or in a server-side draft.
+
+**28. Wizard footer buttons right-aligned to the viewport.**
+The eye finishes the last field at x=440 and has to travel 900px to find `Next`. → Left-align the footer actions with the form column, as Mercury does; keep them in a sticky bar above a hairline.
+
+**29. Money formatted only on blur, so `2000000` sits there unseparated.**
+→ Group separators live while typing (re-place the caret), pad the cents on blur.
+
+**30. A `<select>` at `w-full` containing `USD`.**
+→ Size the select to its longest option, exactly like a text field. GOV.UK's `Sort by` is 218.5px in a 748px column.
 
 ---
 
@@ -597,9 +702,9 @@ Run this against the form you just wrote.
 
 **Labels and help**
 - [ ] Every input has a visible `<label>` with a matching `for`/`id`.
-- [ ] Label sits above the input, 4–9px away.
+- [ ] Label sits above the input, 4–12px away.
 - [ ] No placeholder is doing a label's job. Placeholders contain format examples only.
-- [ ] Hint text (if any) is above the input, ≥7:1 contrast, wired via `aria-describedby`.
+- [ ] Hint text that shapes what they type is *above* the input at ≥7:1 (GOV.UK: 9.03:1); consequence help is *below* at ≥4.5:1 (Mercury: 4.88:1 at 12px — the floor, not a target). Both wired via `aria-describedby`.
 - [ ] The minority — required or optional, whichever is fewer — is marked, in the label text.
 
 **Attributes**
@@ -636,9 +741,17 @@ Run this against the form you just wrote.
 - [ ] Autosaved writes are optimistic, silent on success, and roll back with an inline error on failure.
 - [ ] Non-editable values have no edit affordance at all.
 
+**Multi-step**
+- [ ] Each step has its own URL; refresh and browser-back both work.
+- [ ] Progress, if shown, is a named step list — not a percentage on a branching flow.
+- [ ] Footer actions are aligned to the form column, not to the viewport.
+- [ ] There is a path that skips the form entirely (import, upload, "same as billing", a saved value).
+
 **Physics**
 - [ ] Visible focus ring on every control, in both themes, that doesn't shift layout.
 - [ ] Hit targets ≥44px on touch; label text is part of the target for checkboxes and radios.
 - [ ] Autofill doesn't repaint the field into something that looks broken.
-- [ ] Money and codes use `font-variant-numeric: tabular-nums`.
+- [ ] Money and codes use `font-variant-numeric: tabular-nums` **in tables and totals** (a lone value in a text field does not need it).
+- [ ] Checkbox and radio targets are ≥44px even when the drawn control is 16–20px; a 2–4 option radio group is a card, not a bare dot.
+- [ ] The upload zone's affordance is a button and a sentence, not a dashed border.
 - [ ] Nothing reformats the value while the caret is in the field.

@@ -1,22 +1,22 @@
 # Imagery, illustration and visual assets
 
-**Evaluated:** 2026-09. Every number below was read off a live page — computed styles, `naturalWidth`, `<picture><source>` media queries, HTTP `Content-Type`/`Content-Length`, or a format A/B run by varying the `Accept` header against the real CDN. Where I could not measure, I say so.
+**Evaluated:** 2026-09, re-probed 2026-09-10 — see [Review pass](#review-pass-2026-09) for what changed. Every number was read off a live page: computed styles, `naturalWidth`, `<picture><source>` media queries, HTTP `Content-Type`/`Content-Length`, or a format A/B run by varying the `Accept` header against the real CDN. **Per-page image *counts* drift** with lazy-load depth, A/B bucket and search results; ratios, byte sizes and per-element geometry do not. Where I could not measure, I say so.
 
-This is the craft file for *what goes in the image slot*. Which icon library to install lives in [`libraries/_research/icons-and-typography.md`](../libraries/_research/icons-and-typography.md); this file is about how an icon behaves next to a word.
+This is the craft file for *what goes in the image slot*. Which icon library to install lives in [`libraries/icons-and-typography.md`](../libraries/icons-and-typography.md); this file is about how an icon behaves next to a word.
 
 ---
 
 ## If you only apply five things
 
-1. **Pick exactly two aspect ratios for the whole product and enforce them with `aspect-ratio` on the wrapper, not on the image.** Airbnb's Paris search page renders 77 images at precisely two ratios — `1.000` (48 of them) and `1.333` (28 of them) — while the underlying host photos arrive at 720×480, 720×540 and **720×1080**. A portrait photo and a landscape photo land in the identical 307×230 box because the wrapper carries `aspect-ratio: 4/3` and the `<img>` carries `object-fit: cover`. Slack's homepage, by contrast, ships eight different ratios across 50 images (1.923, 0.868, 1.46, 1.37, 1.0, 1.438, 1.9, 2.68) and reads as a page assembled from separate briefs. Two ratios is a system; eight is an accident.
+1. **Pick two aspect ratios for the whole product and enforce them with `aspect-ratio` on the wrapper, not on the image.** Airbnb's Paris search page renders every photograph at `1.000` or `1.333` while the host uploads arrive at 720×480, 720×540 and **720×1080**. A portrait and a landscape land in the identical 307×230 box because the wrapper carries `aspect-ratio: 4/3` and the `<img>` carries `object-fit: cover`. Slack ships eight ratios with more than one instance each, 24 distinct in total. Two ratios is a system; eight is an accident. **Scope:** a centre `cover` crop is safe when the subject is an environment and destructive when it is a framed human or a vertical video — see *When this advice is wrong*.
 
 2. **A real screenshot of your own product beats every abstract graphic, and the thing that makes it real is the data in it.** Basecamp's hero is one product screenshot containing named people (Geoff Collier, Leah Bernstein, Kurt Holloway, Liza Randall), a file list reading `Hero Image.png · Jul 20 · 1.86 MB` and `FAQ Entries.md · Jul 20 · 27.9 KB`, a July 2026 calendar with real events, and three external links pointing at actual Figma/Drive/Zoom URLs. Linear's hero is issue `DRV-8852` with the body text *"Render UI before `vehicle_state` sync when minimum required state is present, instead of blocking on full refresh during iOS startup."* Neither page has a single abstract shape on the fold. Lorem, `John Doe`, `$1,234.56` and `Project Alpha` destroy this in one pass.
 
-3. **Ship AVIF, and know what it buys you.** Same Airbnb listing photo at 720px, negotiated by `Accept` header on their live CDN: **AVIF 12,455 B · WebP 20,232 B · JPEG 29,997 B**. Same Linear hero screenshot at 1440px: **AVIF 5,345 B · WebP 9,074 B · PNG 69,561 B — AVIF is 13× smaller than the PNG.** Photographs gain ~2.4× over JPEG; flat UI screenshots gain an order of magnitude over PNG. Slack ships 96 image requests totalling **6,823 KB with zero WebP and zero AVIF** — 3,441 KB of PNG and 3,379 KB of JPEG. That is the single largest unforced asset cost I measured.
+3. **Ship AVIF, and know what it buys you.** Same Airbnb listing photo at 720px, negotiated by `Accept` on their live CDN: **AVIF 12,455 B · WebP 20,232 B · JPEG 29,997 B**. Same Linear hero screenshot at 1440px: **AVIF 5,345 B · WebP 9,074 B · PNG 69,561 B — 13× smaller than the PNG.** Photographs gain ~2.4× over JPEG; flat UI screenshots gain an order of magnitude over PNG. Slack still ships **6,823 KB of images with zero WebP and zero AVIF** (PNG 3,441 KB + JPEG 3,379 KB, re-confirmed 2026-09-10). It is not their biggest asset problem: the same page pulls **20 distinct autoplay videos, 44 MB unique** — 6.5× the image payload. On any page that autoplays, audit video before images.
 
-4. **`srcset` without `sizes` is worse than neither.** Slack sets `srcset` on 42 of 50 images and `sizes` on **zero**, so the browser assumes `100vw` and downloads the widest candidate for a 300px slot. Their G2 badges arrive at 868px natural for a 104px box — 4.17× oversupply even at 2× DPR. Stripe's customer photographs carry seven candidates plus `sizes="(min-width: 1298px) 1232px, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"`. Mailchimp sets `sizes` on 68 of 82 images and is the most disciplined page in this sample. If you cannot write a correct `sizes`, use a fixed-width CDN param instead — Airbnb just appends `?im_w=720` and ships no `srcset` at all.
+4. **`srcset` without `sizes` is worse than neither.** Slack sets `srcset` on **71 images and `sizes` on zero**, so the browser assumes `100vw` and downloads the widest candidate for a 300px slot. Their G2 badges arrive at 868px natural for a 104px box — 4.17× oversupply even at 2× DPR. Stripe's four customer photographs each carry **seven candidates** plus `sizes="(min-width: 1298px) 1232px, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"` — re-counted 2026-09-10. Mailchimp sets `sizes` on 68 of 82 images and is the most disciplined page in this sample. If you cannot write a correct `sizes`, use a fixed-width CDN param instead — Airbnb just appends `?im_w=720` and ships no `srcset` at all.
 
-5. **Decorative images take `alt=""`; content images take a sentence.** Stripe's homepage carries 44 `<img>` elements: **40 have `alt=""`** and the four that don't are the four real photographs, each with a full descriptive sentence — *"Aerial view of a street intersection where the crosswalks form…"*, *"Street view of a traditional Parisian newspaper kiosk with y…"*. That ratio is the correct shape. Apple's MacBook Pro page: 58 empty, 31 descriptive (*"A person at an airport using their MacBook Pro"*). A page where every image has a keyword-stuffed alt is as broken as one where none do.
+5. **Decorative images take `alt=""`; content images take a sentence.** Stripe's homepage carries 52 `<img>`: **47 are `alt=""`**, and the five that aren't are the four documentary photographs plus a book cover, each with a full sentence — *"Aerial view of a street intersection where the crosswalks form a slanted parallelogram…"*. Apple: 73 empty, 37 descriptive. **This majority-empty shape is a *marketing-page* shape.** On a catalogue, a photo gallery, a docs page whose screenshots carry the instruction, or any clinical or scientific surface the ratio inverts and near-100% descriptive is correct. The test is never the ratio; it is whether the image carries information the adjacent text does not.
 
 ---
 
@@ -33,22 +33,35 @@ Same source asset, same CDN, same requested width; only the `Accept` header chan
 
 The second row is the one agents get wrong. A UI screenshot is flat colour and hard edges — the case PNG was designed for — and AVIF still beats it by 13×. There is no remaining reason to ship a PNG screenshot.
 
+**But `f=auto` is not the same as "AVIF."** Two traps, both measured on Linear's own Cloudflare endpoint, both silent:
+
+| Same asset, same `f=auto` transform | Returns |
+|---|---|
+| `…/f=auto,fit=scale-down,metadata=none` (no width) | **PNG, 1,057,126 B** — for every `Accept`, including one advertising AVIF |
+| `…,width=1440` | **AVIF 33,672 B** / WebP 42,054 B / PNG 383,655 B |
+
+One missing URL parameter costs 31×, and Linear ships that exact URL: a **1,032 KB PNG** is the single heaviest asset on their homepage. Separately, their hero requests `width=2560`, and at that width the same endpoint returns **WebP (25,958 B) even when the client advertises AVIF** — the converter declines above a size threshold. Assert the response `Content-Type`; do not assume the transform did what its name says.
+
 ### What each product actually ships
 
-| Product / surface | Images | Formats (requests / bytes) | Ratios in use | `srcset` / `sizes` | `<picture>` | `aspect-ratio` boxes | alt empty / text |
-|---|---|---|---|---|---|---|---|
-| **Airbnb** search (Paris) | 77 | AVIF 39 (637 KB), PNG 19 (755 KB), WebP 2 | **2** — `1.000`×48, `1.333`×28 | 2 / 2 | 48 | 62 | 76 / 1 |
-| **Stripe** home | 44 | WebP 10, PNG 3, GIF 13 — 1,108 KB total | `0.768`×8, `1.000`×5, `2.321`×4, `0.930`×4 | most / 7-candidate sets | 44 | 96 | 40 / 4 |
-| **Linear** home | 39 | AVIF only, via `imagedelivery` `f=auto` | `1.000` dominant, `1.778` hero | 0 / 0 (CDN width param) | 0 | 40 | ~33 / 6 |
-| **Apple** MacBook Pro | 89 | **JPEG 10 (1,023 KB)** — no AVIF, no WebP | `1.000`×69, `1.853`×5, `1.547`×4, `3.2`×3 | 0 / 0 (all in `<source>`) | **109** | 1 | 58 / 31 |
-| **Notion** home | 58 | SVG 43, WebP 30 (718 KB), via `/image?url=…&q=75` | `1.000`×27, `3.5`×5, `3.583`×3 | 31 / 11 | 9 | 104 | 52 / 6 |
-| **Duolingo** home | 52 | **SVG 55 (335 KB)**, PNG 1, GIF 1 | `1.297`×42 (one ratio does 81%) | 0 / 0 | 1 | 8 | 50 / 2 |
-| **Basecamp** home | 20 | WebP 23 (3,721 KB), SVG 5, JPEG 2 | `0.95`×11, `1.000`×6, `1.778`×3 | 0 / 0 | 17 | 8 | 13 / 7 |
-| **Mailchimp** home | 82 | SVG 38, GIF 12, AVIF 10, WebP 5, **PNG 3 (464 KB)** | `1.333`×34, `1.000`×7, `3.2`×4 | 63 / **68** | 46 | 103 | 9 / 73 |
-| **Slack** home | 50 | **PNG 48 (3,441 KB) + JPEG 23 (3,379 KB)**, zero WebP/AVIF | 8 distinct | 42 / **0** | 0 | 7 | 23 / 27 |
-| **Vercel** home | 5 | AVIF 2, WebP 3, SVG 4 — 162 KB total | `1.785`×2, `1.898`, `3.19`, `1.151` | 3 / 3 | 0 | 28 | 0 / 5 |
+Rows marked † were re-probed 2026-09-10 with a full lazy-scroll, which pulls in more images than the first pass; where the two disagree the re-probe wins.
 
-Read the last column as a diagnostic. Mailchimp at 73-of-82 descriptive is over-alting (their star-rating graphic carries *"Four yellow filled stars and one yellow outlined empty star, representing a 4 ou…"*, which a screen reader will read on every page load next to the same information in text). Airbnb at 76-of-77 empty is correct, because every listing photo sits inside a link whose accessible name is the listing title.
+| Product / surface | Images | Formats (requests / bytes) | Ratios in use | `srcset` / `sizes` | `<picture>` | `aspect-ratio` boxes | alt empty / text / **missing** |
+|---|---|---|---|---|---|---|---|
+| **Airbnb** search (Paris) † | 73 | AVIF 38 (717 KB), PNG 14 (579 KB), WebP 1 | **2** photo ratios — `1.000`, `1.333` | 2 / 2 | 46 | 115 | 52 / 1 / **20** |
+| **Stripe** home † | 52 | **WebP 38 (3,786 KB)**, PNG 3, GIF 29 — **zero AVIF** | `1.000`×8, `0.768`×8, `0.930`×4, `2.321`×4 | 50 / 13 | 52 | 115 | 47 / 5 / 0 |
+| **Linear** home † | 39 | AVIF 29 (256 KB) **+ PNG 1 (1,032 KB) + JPEG 1 (338 KB)** — 1,652 KB | `1.000`×34, `1.791` hero | 0 / 0 (CDN width param) | 0 | 40 | 27 / 12 / 0 |
+| **Apple** MacBook Pro † | 111 | **JPEG 36 (12,699 KB) + PNG 14** — no AVIF, no WebP; plus **mp4 12 (20,314 KB)** | `1.000`×46, `1.642`×6, `1.853`×5 | 0 / 0 (all in `<source>`) | **109** | 1 | 73 / 37 / 1 |
+| **Notion** home | 58 | SVG 43, WebP 30 (718 KB), via `/image?url=…&q=75` | `1.000`×27, `3.5`×5, `3.583`×3 | 31 / 11 | 9 | 104 | 52 / 6 / 0 |
+| **Duolingo** home | 52 | **SVG 55 (335 KB)**, PNG 1, GIF 1 | `1.297`×42 (one ratio does 81%) | 0 / 0 | 1 | 8 | 50 / 2 / 0 |
+| **Basecamp** home | 20 | WebP 23 (3,721 KB), SVG 5, JPEG 2 | `0.95`×11, `1.000`×6, `1.778`×3 | 0 / 0 | 17 | 8 | 13 / 7 / 0 |
+| **Mailchimp** home | 82 | SVG 38, GIF 12, AVIF 10, WebP 5, **PNG 3 (464 KB)** | `1.333`×34, `1.000`×7, `3.2`×4 | 63 / **68** | 46 | 103 | 9 / 73 / 0 |
+| **Slack** home † | 89 | **PNG 48 (3,441 KB) + JPEG 23 (3,379 KB)**, zero WebP/AVIF; plus **20 videos, 44 MB** | 8 recurring, 24 distinct | 71 / **0** | 0 | 7 | 33 / 56 / 0 |
+| **Vercel** home † | 19 | AVIF + WebP + SVG, 162 KB in the first pass | `1.785`×2, `1.898`, `3.19`, `1.151` | 14 / 12 | 0 | 28 | 3 / 16 / 0 |
+
+Read the last column as a diagnostic. Mailchimp at 73-of-82 descriptive is over-alting on a *marketing* page — their star-rating graphic carries *"Four yellow filled stars and one yellow outlined empty star, representing a 4 ou…"* next to text already saying the same thing. Airbnb's empty alts are correct, because every listing photo sits inside a link whose accessible name is the listing title.
+
+**The correction the first pass got wrong:** missing `alt` is not zero in the wild. Airbnb ships **20 `<img>` with no `alt` attribute at all** — every one a 16px amenity or badge icon, exactly the class that should carry `alt=""`. A screen reader falls back to announcing the filename, so a `4d090f93-f9a5-4f0…jpeg` is read aloud twenty times. Grep your own output for `<img` without `alt`; a linter catches this and a code review does not.
 
 ### Aspect ratios worth standardising on
 
@@ -91,6 +104,8 @@ The GitHub hairline is the detail worth copying: an avatar whose photo has a whi
 
 The working band is **0.85×–1.35× the adjacent font-size, gap 4–8px**. Stroke width where present was `1` or `1.5`, never `2`. Two colour policies exist and both are defensible: match the label exactly (GitHub tabs, Stripe), or demote the icon one neutral level (Linear sidebar, GitHub notifications). What nobody does is make the icon *brighter* than its label, or size it at 20–24px next to 14px text, which is the generated default.
 
+**Scope:** every measurement here is a pointer-driven, arm's-length surface running 12–16px body text. The band does not transfer to 10-foot UI (TV, kiosk), automotive HMI, or an accessibility mode where the icon must also be a glance or touch target — there the icon is sized by viewing distance and hit area, and 4–8px gaps disappear entirely.
+
 ### Logo-row conventions, measured
 
 | Product | Eyebrow copy | Eyebrow type | How logos are monochromed | Sizing |
@@ -98,9 +113,9 @@ The working band is **0.85×–1.35× the adjacent font-size, gap 4–8px**. Str
 | **Notion** | *"Trusted by 98% of the Forbes Cloud 100"* | 14px w400 `rgba(0,0,0,0.54)` (4.6:1) | **Pre-made mono assets** — `Figma_Wordmark__Black_.svg`, `cursor-logo-mono.svg` | Widths 62–82px, per-logo, not a uniform box |
 | **Linear** | *"Powering the companies building the future"* | 12px w400 **uppercase** `rgb(98,102,109)` | inline SVG at brand-neutral fill | per-logo |
 | **Slack** | *"Trusted by top teams"* | 12px w400 `rgb(117,117,117)` | **`filter: grayscale(1)` at `opacity: 1`** | uniform-ish |
-| **Vercel** | (none on the row I measured) | — | true black inline SVG | heights **20 / 35 / 17 / 21 / 28 / 45 px** in one 1392×44 row |
+| **Vercel** | (none on the row I measured) | — | true black inline SVG, `filter: none`, `opacity: 1` | **seven** marks at heights **20 / 35 / 17 / 21 / 28 / 45 / 30 px** — widths 127 / 69 / 147 / 78 / 98 / 58 / 130 — in one 1392×44 row |
 
-Vercel's row is the instructive one: six logos at six different rendered heights, because a wide wordmark and a tall square mark reach equal optical weight at different pixel heights. Setting a uniform `height: 32px` on a logo row is the generated move and it makes the square marks shout and the wordmarks vanish.
+Vercel's row is the instructive one: seven logos at seven different rendered heights (re-measured 2026-09-10), because a wide wordmark and a tall square mark reach equal optical weight at different pixel heights. Setting a uniform `height: 32px` on a logo row is the generated move; it makes square marks shout and wordmarks vanish.
 
 Notion's eyebrow is the other lesson: *"98% of the Forbes Cloud 100"* is a falsifiable claim with a named denominator. *"Trusted by top teams"* is not a claim at all.
 
@@ -108,7 +123,7 @@ Notion's eyebrow is the other lesson: *"98% of the Forbes Cloud 100"* is a falsi
 
 ## Decision 1: does this slot need an image?
 
-Run this before choosing what the image is. The most common failure in generated UI is not a bad image — it is an image in a place that wanted none.
+The most common failure in generated UI is not a bad image — it is an image in a place that wanted none.
 
 **An image earns the slot if it does one of these:**
 - It **is** the content (a listing photo, a product photo, an uploaded file, a chart of real data).
@@ -122,9 +137,11 @@ Run this before choosing what the image is. The most common failure in generated
 - It is a generic illustration of the concept in the heading (a rocket next to "Launch faster").
 - It repeats, in picture form, the sentence directly beside it.
 
-**The strongest evidence for "none at all":** Jasper's 2026 homepage ships **zero imagery above the fold** — a serif headline, a subhead, two buttons, nothing else. Vercel's homepage ships **five `<img>` elements total, 162 KB**, against Slack's 96 requests and 6.8 MB. Both read as more confident than the image-dense pages, because empty space adjacent to a strong sentence reads as certainty, and a generic graphic adjacent to a strong sentence reads as hedging.
+**The evidence for "none at all," corrected.** The first pass cited Jasper as shipping zero hero imagery. That is **no longer true, and the way it fails is instructive**: as of 2026-09-10 Jasper's fold carries a `1440×420` **`<canvas>`** at `top: 546px` compositing a cut-out photograph of a person, a pink grid, a `+35%` stat card and floating UI chips out of AVIF assets (`Grid Illo.avif`, `Home - BV (Plain).avif`) — plus a thirteen-logo row under *"World-class marketing teams trust Jasper"*, which is the unfalsifiable claim §7 warns about. **A `document.querySelectorAll('img')` audit returns nothing for that fold.** Canvas, WebGL and CSS `background-image` heroes are invisible to every `<img>`-counting audit in this file, including the self-check. Screenshot the page; do not trust the element count.
 
-Anthropic ships zero hero CTAs and near-zero hero imagery for the same reason (see [`references/editorial-luxury-and-marketing.md`](../references/editorial-luxury-and-marketing.md)). The corpus rule stands: **if the only justification is "the section looked bare," delete the image and reduce the section's height instead.**
+Vercel still holds the line: **162 KB of imagery** against Slack's 6.8 MB of images plus 44 MB of video. That is the real comparison. Empty space next to a strong sentence reads as certainty; a generic graphic next to a strong sentence reads as hedging.
+
+Anthropic ships zero hero CTAs and near-zero hero imagery for the same reason (see [`references/editorial-luxury-and-marketing.md`](../references/editorial-luxury-and-marketing.md)). The rule stands: **if the only justification is "the section looked bare," delete the image and reduce the section's height instead** — unless your audience does not read your language fluently, in which case see *When this advice is wrong*.
 
 ---
 
@@ -134,9 +151,9 @@ Anthropic ships zero hero CTAs and near-zero hero imagery for the same reason (s
 
 Three cases, and they are narrower than people assume.
 
-**1. The photograph is the inventory.** Airbnb, e-commerce, real estate, food delivery, marketplaces, dating. Here the photo is not decoration, it is the row of the database the user is shopping. Everything in this file about crops, ratios, `object-fit` and placeholders exists for this case.
+**1. The photograph is the inventory.** Airbnb, e-commerce, real estate, food delivery, marketplaces, dating. The photo is not decoration, it is the row of the database the user is shopping. Everything in this file about crops, ratios, `object-fit` and placeholders exists for this case.
 
-**2. The photograph is the argument.** Apple's MacBook Pro hero is one rim-lit product shot on pure black: no environment, no hands, no desk, the machine positioned into a V. The type sits in the empty lower-left quadrant and never crosses the object. This works because the object is the thing being sold and Apple can afford to shoot it. It fails immediately for a SaaS product, because there is no object.
+**2. The photograph is the argument.** Apple's MacBook Pro hero is one rim-lit product shot on pure black: no environment, no hands, no desk. The type sits in the empty lower-left quadrant and never crosses the object. It works because the object is the thing being sold; it fails immediately for a SaaS product, because there is no object.
 
 **3. The photograph documents a real customer.** Stripe ships four photographs on its homepage — a Parisian newspaper kiosk, an overhead door stoop with a delivery bag, a clothing boutique exterior, an aerial crosswalk. All four are 1232×531 (`aspect-ratio: 2460/1060`), all four have descriptive alt sentences, and all four show *places where Stripe's payments happen* rather than *people using Stripe*. That is the distinction between documentary and stock: the subject is the business, not a model performing enthusiasm.
 
@@ -146,14 +163,14 @@ Everywhere else — a B2B dashboard, a developer tool, an internal admin — pho
 
 A set of photographs reads as one system when four things are constant. Change one deliberately; changing three by accident is what "we bought a stock pack" looks like.
 
-- **Subject distance.** Stripe's four homepage photographs are all shot from the same middle distance — a whole shopfront or a whole doorway fills the frame, no close-ups, no wide cityscapes. Apple's product shots are all one object at one distance.
-- **Light direction and quality.** Apple: single hard key from behind-left producing a rim on the lid edge, deep black falloff, no fill. Mailchimp: warm ambient daylight through a shop window, high dynamic range, visible shadow. Both are consistent within themselves. Mixing hard studio light and window daylight in one grid is the fastest way to make a set look bought.
+- **Subject distance.** Stripe's four homepage photographs are all one middle distance — a whole shopfront or doorway fills the frame, no close-ups, no cityscapes.
+- **Light direction and quality.** Apple: single hard key from behind-left, rim on the lid edge, deep black falloff, no fill. Mailchimp: warm window daylight, visible shadow. Mixing hard studio light and window daylight in one grid is the fastest way to make a set look bought.
 - **Colour temperature and grade.** Pick one and apply it. If you cannot grade, shoot in one location on one day.
 - **The crop.** See below — one ratio for the set.
 
 ### Aspect ratios and why picking two matters
 
-Airbnb is the proof. 77 images, two ratios, and the source files disagree wildly: 720×480 (3:2), 720×540 (4:3) and 720×1080 (2:3, portrait). All four listing cards render at **307×230**, ratio `1.333`, because:
+Airbnb is the proof. Two photograph ratios against source files that disagree wildly — 720×480 (3:2), 720×540 (4:3), 720×960 and 720×1080 (2:3, portrait). Every listing card renders at **307×230**, ratio `1.333`, because:
 
 ```css
 /* the wrapper owns the shape */
@@ -163,9 +180,9 @@ Airbnb is the proof. 77 images, two ratios, and the source files disagree wildly
 
 Three properties in the correct places. The mistakes to avoid:
 
-- Putting `aspect-ratio` on the `<img>` and leaving `object-fit: fill` — the image squashes instead of cropping. Stripe does this on 19 of its 44 images (`fit: fill`), which is safe only because those sources already match their boxes exactly. It is not safe for anything user-supplied.
+- Putting `aspect-ratio` on the `<img>` and leaving `object-fit: fill` — the image squashes instead of cropping. Stripe does this on 27 of its 52 images, which is safe only because those sources already match their boxes exactly. It is not safe for anything user-supplied.
 - Setting a fixed `height` and letting width vary. The row height stays honest, the crop does not.
-- Using `object-fit: contain` for photographs. `contain` letterboxes, which puts your background colour inside the content area and makes a grid look like a slide deck. Airbnb uses `contain` on 22 images — all of them **icons and brand marks**, where letterboxing is correct — and `cover` on the 37 that are photographs. That split is the rule: `cover` for photos, `contain` for logos and icons, `fill` only when you control the source dimensions exactly.
+- Using `object-fit: contain` for photographs. `contain` letterboxes, which puts your background colour inside the content area and makes a grid look like a slide deck. Airbnb uses `contain` on 20 images — all of them **icons and brand marks**, where letterboxing is correct — and `cover` on the 35 that are photographs. That split is the rule: `cover` for photos, `contain` for logos and icons, `fill` only when you control the source dimensions exactly.
 
 ### Focal points: when they matter and when they are theatre
 
@@ -173,26 +190,32 @@ Airbnb sets `object-position: 50% 50%` on every listing photo. No focal-point sy
 
 Focal points earn their complexity in exactly two situations:
 
-1. **Faces.** A centre crop of a portrait at 1:1 decapitates roughly a third of them. If you crop faces, either detect them or store a per-image `object-position` and let a human set it once at upload.
-2. **Extreme ratio changes across breakpoints.** If the same source renders 21:9 on desktop and 1:1 on mobile, the centre of one is not the centre of the other. This is what `<picture>` with art-directed `<source media>` is actually for — a different *crop*, not just a different *size*. Notion uses exactly this: `<source media="(min-width: 840px)">` and `<source media="(max-width: 839px)">` pointing at differently-cropped renditions.
+1. **Faces and vertical compositions.** A centre crop of a portrait at 1:1 decapitates roughly a third of them. Detect the face, or store a per-image `object-position` set once by a human at upload.
+2. **Extreme ratio changes across breakpoints.** If the same source renders 21:9 on desktop and 1:1 on mobile, the centre of one is not the centre of the other. This is what `<picture>` with `<source media>` is for — a different *crop*, not a different *size*. Notion ships exactly that: `(min-width: 840px)` and `(max-width: 839px)` pointing at differently-cropped renditions.
 
 If neither applies, ship `50% 50%` and spend the effort elsewhere.
 
 ### Avatars and fallbacks
 
-The order of preference, and the reasoning:
-
 **1. The user's own photo.** Circle at ≤32px, `object-fit: cover`, `object-position: 50% 50%` (a portrait cropped square from centre is fine; the head is near the middle in a selfie). Add the GitHub hairline: `box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08)`.
 
-**2. Initials on a deterministic colour.** One or two characters, the background hashed from the user ID (never from the name — people rename), the text colour chosen for contrast against that background rather than always white. Initials are the correct fallback because they carry the only information you actually have, and because a wall of initials in a member list is *scannable* — you can find "KH" among thirty of them. Size the text at ~40% of the avatar diameter and set `font-weight: 500`; at 500 the two letters read as a mark, at 700 they read as shouting.
+**2. Initials on a deterministic colour.** One or two characters, the background hashed from the user ID (never from the name — people rename), the text colour chosen for contrast against that background rather than always white. A wall of initials is *scannable*: you can find "KH" among thirty. Size the text at ~40% of the avatar diameter at `font-weight: 500` — at 700 two letters read as shouting.
 
-**3. Generated identicons — usually don't.** GitHub's identicon is the famous one, and it works there for a specific reason: GitHub avatars are frequently *bots and apps*, not people, and a deterministic pattern is honest about that. In a product where every avatar is a human colleague, an identicon is worse than initials on three counts: it carries zero information the viewer can use, it is unmemorable (nobody recognises "my teammate's identicon"), and the geometric-blob-on-pastel aesthetic is instantly legible as *a thing a library generated*. That last point is the one that matters for this corpus — Boring Avatars, DiceBear's `shapes`/`bottts`/`beam` sets and the various gradient-blob generators are recognisable on sight, and their presence reads as "nobody made a decision here."
+**Where initials fail, and what to do instead.** "If you have a name, you have initials" is a Latin-script assumption. It breaks on:
+- **CJK names.** 张伟 and 张三 both initialise to 张. In a Chinese, Japanese or Korean product the *last* one or two characters of the given name discriminate; the family name does not. Take the trailing character(s), not the leading one.
+- **Mononyms and single-token handles** — one letter on a coloured disc is a colour swatch, not a mark.
+- **RTL and Indic scripts**, where a "first letter" may be a joined or combining form that does not render standalone.
+- **Bulk enterprise directories** with forty J. Smiths.
 
-The narrow case where generated is right: when the entity genuinely has no name and no face — an anonymous session, a wallet address, a server, a hash. Then a deterministic visual *is* the information.
+In those cases the honest ordering flips: photo → **a short display-name chip or the full given name at 11px** → deterministic pattern. See [`craft/i18n-rtl-and-global.md`](i18n-rtl-and-global.md) before shipping an initials component into a non-Latin market.
+
+**3. Generated identicons — usually don't.** GitHub's works because GitHub avatars are frequently *bots and apps*, and a deterministic pattern is honest about that. Where every avatar is a human colleague an identicon carries zero usable information, is unmemorable, and — the part that matters here — is legible on sight as a library default. Boring Avatars, DiceBear's `shapes`/`bottts`/`beam` and the gradient-blob generators all read as "nobody made a decision."
+
+Generated is right when the entity has no name and no face — an anonymous session, a wallet address, a server, a hash. Then a deterministic visual *is* the information.
 
 **4. A default silhouette icon — the worst option.** Twenty identical grey person-glyphs in a member list convey nothing and make the list unscannable. If you have a name, you have initials.
 
-**Never** let a broken image URL show a broken-image glyph. Handle `onerror` by swapping to the initials layer, or render initials *underneath* the `<img>` so a failed load reveals them:
+**Never** show a broken-image glyph. Render the initials *underneath* the `<img>` so a failed load reveals them:
 
 ```html
 <span class="avatar" style="--bg: oklch(0.72 0.11 250)">
@@ -203,13 +226,11 @@ The narrow case where generated is right: when the entity genuinely has no name 
 
 ### User-generated imagery you do not control
 
-You will receive: portrait photos in a landscape slot, 5000px JPEGs, screenshots of screenshots, images that are 95% white, images that are 95% black, animated GIFs, images with text burned in, and photos whose subject is in the corner. Design for that, not for the three good ones in your seed data.
-
-The measures that actually hold, all of them visible in Airbnb's implementation:
+You will receive portrait photos in a landscape slot, 5000px JPEGs, screenshots of screenshots, images that are 95% white, images that are 95% black, animated GIFs, images with text burned in, and photos whose subject is in the corner. Design for those, not the three good ones in your seed data. The measures that hold, all visible in Airbnb's implementation:
 
 - **The wrapper owns the shape.** `aspect-ratio` + `overflow: hidden` + `object-fit: cover`. Nothing the user uploads can change the layout.
 - **Overlays get their own opaque chip.** Airbnb's "Guest favorite" and "Luxe" badges sit in white pills with their own background; the heart sits in a filled circle. Neither relies on a text-shadow or a scrim over the photo, because you cannot know whether the photo behind is a white ceiling or a black night shot. **Never place bare text directly on a user's image.** If you must, put a `linear-gradient(to top, rgb(0 0 0 / 0.6), transparent 50%)` scrim between them and accept that you have now darkened a third of every photo.
-- **A neutral ground behind the image.** Set the wrapper's background to a mid-neutral, not white. A 95%-white upload against a white card has no edge.
+- **A neutral ground behind the image.** Set the wrapper's background to a mid-neutral, not white. A 95%-white upload against a white card has no edge. Measured, and consistent with [`references/consumer-and-marketplace.md`](../references/consumer-and-marketplace.md): Airbnb's frame is one `307×230` div carrying `border-radius: 20px`, `overflow: clip` and `background-color: #DDDDDD` — the same element is the reserved box, the clip, the loading ground and the broken-image ground. Vinted uses `#E1E6E6` at `r6`. **One element, one colour, one radius, three states** — if your skeleton, your placeholder and your error box are three code paths, two of them are wrong.
 - **Cap the delivered size at the CDN**, not in CSS. Airbnb appends `?im_w=720` and gets a 12 KB AVIF back. A 5000px original rendered into a 307px box with `width: 100%` still costs the user the full download.
 - **Colour placeholder, not a spinner.** See the technical section — extract the dominant colour or a ThumbHash at upload time and paint it into the box.
 
@@ -219,26 +240,26 @@ The measures that actually hold, all of them visible in Airbnb's implementation:
 
 ### Why it reads as filler
 
-Stock photography fails in product UI for a mechanical reason, not a taste one: **the photograph was made before your product existed, so it cannot contain your product, your customer, or your claim.** The viewer's eye clocks the mismatch before their brain names it. Everything else is downstream of that.
+Stock photography fails in product UI for a mechanical reason, not a taste one: **the photograph was made before your product existed, so it cannot contain your product, your customer, or your claim.** Everything else is downstream of that.
 
 ### The tells, specifically
 
 - **Smiling people at a laptop.** Nobody smiles at a laptop. The give-away is eye-line: in stock, the subject looks at a colleague or at the camera while gesturing at a screen. In documentary, they look at the screen.
 - **The over-lit workspace.** Two or three soft sources, no shadow anywhere, no dust, no cable, a plant, a notebook nobody wrote in, and a laptop whose screen is either off or displaying a blurred generic dashboard. Real desks have one light source and a mess.
-- **The Unsplash-desk genre.** Overhead flat-lay: MacBook, coffee, moleskine, phone at a 15° angle, marble or reclaimed-wood surface. This is so pervasive it has become the visual equivalent of Lorem Ipsum. The corpus already records the 2020-era template that shipped "a centered hero over an Unsplash photo of people at laptops with a white play-button overlay" ([`libraries/_research/premium-commercial.md`](../libraries/_research/premium-commercial.md)) — that is the fossil.
-- **Diverse-team-in-a-meeting.** Four to six people of visibly assorted demographics around a glass table, at least one laughing, sticky notes on a window. The composition is always the same because it is a casting brief, not an event.
+- **The Unsplash-desk genre.** Overhead flat-lay: MacBook, coffee, moleskine, phone at a 15° angle, marble or reclaimed wood. The visual equivalent of Lorem Ipsum; the corpus records the 2020-era template that shipped "a centered hero over an Unsplash photo of people at laptops with a white play-button overlay" ([`libraries/premium-commercial.md`](../libraries/premium-commercial.md)).
+- **Diverse-team-in-a-meeting.** Four to six people of assorted demographics around a glass table, at least one laughing, sticky notes on a window. The composition is always the same because it is a casting brief, not an event.
 - **Handshake, lightbulb, arrows-going-up.** Concept stock. If a photograph illustrates an abstraction rather than depicting a thing, it is filler.
 
-**The 2026 update:** the models have changed but the genre has not. The current version is an AI-generated version of the same brief. Tailark's shadcn marketing registry — a component library whose entire product is marketing-page blocks — ships a hero demo with a close-up of a wrist and a smartwatch with blown highlights, plasticky skin rendering and no discernible light source. It is the Unsplash desk with a new pipeline.
+**The 2026 update:** the models changed, the brief did not. Tailark's shadcn marketing registry — a component library whose entire product is marketing-page blocks — ships a hero demo with a close-up wrist and smartwatch, blown highlights, plasticky skin, no locatable light source. The Unsplash desk with a new pipeline.
 
 ### What to ship instead, in order of credibility
 
 1. **A screenshot of your own product with real data.** Highest credibility, lowest cost, most under-used. See Decision 6.
 2. **A real customer's real premises or real product.** Stripe's kiosk and boutique. Mailchimp puts a real customer's oat-milk brand ("OAT LORD") inside the campaign canvas on the screen in their hero photo, so the photograph is documenting an actual campaign rather than illustrating the idea of one.
 3. **Abstract but owned.** A visual system you built and can repeat: Linear's noise-grain texture (`grain-default.png` tiled at `256px 256px`) and its radial `rgba(255,255,255,0.04)` glows; Stripe's signature `radial-gradient(circle, #7F7DFC, #F44BCC 33%, #E5EDF5 66%)` mesh. These are cheap, infinitely reusable, and unmistakably yours because you defined the palette. They are not "an abstract 3D render off a stock site."
-4. **Nothing.** Jasper, 2026: no hero image at all. Vercel: 5 images, 162 KB.
+4. **Nothing.** Vercel: 162 KB of imagery on the whole homepage. (Jasper held this position in early 2026 and has since added a canvas photo-collage hero — the position is defensible but it is not sticky.)
 
-Stock is defensible in exactly one place: an editorial context where the photograph is *about* something external — a blog post about a city, an industry report, a news item. There the reader understands the photo is illustrative journalism, and the alternative is a blank column.
+Stock is defensible in one place: editorial, where the photograph is *about* something external — a post about a city, an industry report, a news item. The reader understands it as illustrative journalism and the alternative is a blank column.
 
 ---
 
@@ -248,16 +269,18 @@ Stock is defensible in exactly one place: an editorial context where the photogr
 
 An illustration set is a system when a new drawing can be produced by a different person and still belong. Six variables decide that:
 
-1. **Line weight — including zero.** Duolingo's characters have **no outline at all**: flat filled shapes, no stroke. Notion's doodles are the inverse: **outline only**, single weight, black ink, no fill. Both are systems because the answer is absolute. A set where some drawings have a 2px outline and others have none is not a set.
+1. **Line weight — including zero.** Duolingo's characters have **no outline at all**: filled shapes, no stroke. Notion's doodles are the inverse: **outline only**, single weight, black ink, no fill. Both are systems because the answer is absolute. A set where some drawings have a 2px outline and others have none is not a set.
 2. **Palette derived from the product's, not chosen fresh.** Duolingo's illustrations run on the same saturated primaries as the app's UI (the brand green is the same green as the `GET STARTED` button). If your illustration palette contains colours your interface does not, you have two brands.
-3. **Perspective.** Pick one: flat/orthographic, isometric, or one-point. Duolingo is flat with no perspective at all — characters tumble in 2D. Mixing isometric objects with flat characters is the single most common incoherence.
-4. **Level of detail, expressed as a budget.** "No more than X shapes per drawing," "no gradients," "no textures." Notion's doodles are ~12 strokes each. Duolingo's characters have two-dot eyes and no fingers.
+3. **Perspective.** Pick one: flat/orthographic, isometric, or one-point. Mixing isometric objects with flat characters is the most common incoherence.
+4. **Level of detail, expressed as a budget.** "No more than X shapes per drawing," "no gradients," "no textures." Notion's doodles are ~12 strokes each and hold to it.
+
+**A correction from looking at the Duolingo hero rather than reading about it.** The first pass called that system "flat, no perspective, no gradients, two-dot eyes, no fingers." Screenshot at 1440 and none of that survives: the characters carry **soft gradient shading** (highlights on the bald character's head, a graded green on Duo's body), **cast ellipse shadows** under every tumbling figure, **articulated hands with fingers**, and the coin tray is drawn in **three-quarter perspective with visible depth**. The real invariants are narrower and more useful: **no outlines, one saturated palette shared with the UI, one light direction, faces built from a fixed part-kit.** Copy those. A budget that forbids gradients is a legitimate choice — it is just not the choice Duolingo made, and a rule attributed to the wrong exemplar is a rule nobody will trust twice.
 5. **Character or no character.** This is the biggest fork and it is a business decision, not a style one. See below.
-6. **Where the drawing sits relative to real UI.** Notion's answer is a two-register system: black ink doodles float *around* a real product screenshot, while **full-colour circular app icons** (Slack, Gmail, HubSpot, Drive) sit at the doodles' hands. The registers never mix — the doodles are never coloured, the app icons are never redrawn. That separation is what stops it reading as clip-art.
+6. **Where the drawing sits relative to real UI.** Notion's answer is a two-register system: black ink doodles float *around* a real product screenshot (and a 958×599 autoplay hero video), while **full-colour circular app icons** (Slack, Gmail, GitHub, Drive) sit at the doodles' hands. Precisely stated after looking: **the ink is always black; colour is only ever the container.** The doodle faces sit inside coloured rings and on red, blue and yellow filled discs — the line itself is never coloured, and the app icons are never redrawn. Colour-as-container is what lets the two registers touch without becoming clip-art.
 
 ### The Corporate Memphis / Alegria problem
 
-The style — noodle-limbed figures with disproportionate hands, no facial features, flat saturated fills, non-naturalistic skin colours — became a cliché for a structural reason worth stating precisely: **it was designed to be produced at volume by many hands with no art direction.** Facebook commissioned Alegria (Buck, 2017) specifically so an in-house team could generate endless assets in one voice. That property is what made it spread and what killed it: a style optimised for infinite cheap production ends up everywhere, and "everywhere" is the definition of a cliché.
+The style — noodle-limbed figures with disproportionate hands, no facial features, flat saturated fills, non-naturalistic skin colours — became a cliché for a structural reason: **it was designed to be produced at volume by many hands with no art direction.** Facebook commissioned Alegria (Buck, 2017) so an in-house team could generate endless assets in one voice. A style optimised for infinite cheap production ends up everywhere, and "everywhere" is the definition of a cliché.
 
 **What replaced it is not one style — it is three moves**, and knowing which you are making matters more than the drawing:
 
@@ -265,7 +288,7 @@ The style — noodle-limbed figures with disproportionate hands, no facial featu
 - **The hand-drawn mark.** Notion's ink doodles. Deliberately imperfect line, visibly made by a person, no fills, no gradients. It reads as craft rather than production because a wobbling line is evidence of a hand. Cheap to extend, hard to fake convincingly, and it fails badly if the rest of your interface is precision-engineered — Notion gets away with it because their UI is also deliberately plain.
 - **The abstract-but-owned texture.** Linear's grain and glows. No figures at all. The right answer for most B2B products, because a B2B product does not need a character and cannot afford one.
 
-**The honest note:** as of 2026, Corporate Memphis has largely disappeared from AI output. The corpus's own control baseline recorded "no Corporate Memphis, no glassmorphism, no purple gradient blobs, no lorem" in generated landing pages ([`evaluation/results/2026-09-control-baseline.md`](../evaluation/results/2026-09-control-baseline.md)). Do not spend your review budget hunting for it. The current generated failure in this territory is different and is covered in *The generated version* below.
+**The honest note:** as of 2026 Corporate Memphis has largely disappeared from AI output — the corpus's own control baseline recorded "no Corporate Memphis, no glassmorphism, no purple gradient blobs, no lorem" in generated landing pages ([`evaluation/results/2026-09-control-baseline.md`](../evaluation/results/2026-09-control-baseline.md)). Do not spend review budget hunting for it; see *The generated version* below for what replaced it.
 
 ### When illustration earns its place
 
@@ -285,7 +308,7 @@ The style — noodle-limbed figures with disproportionate hands, no facial featu
 
 ### The current tells
 
-These are the ones I can still identify on sight in 2026 output. They are less about "AI" and more about "nobody art-directed it."
+Less about "AI" than about "nobody art-directed it."
 
 - **The over-rendered 3D blob.** A glossy, subsurface-scattering, softly-lit abstract form — a torus knot, a folded ribbon, a liquid-metal sphere — floating on a gradient. Zero informational content, high render cost. This was the 2023–24 default and is the one tell that has genuinely faded from funded companies' sites but persists in template marketplaces.
 - **Iridescent / chromatic-aberration gradients.** A holographic sheen sampled from nothing. Distinguishable from a designed gradient by its palette: designed gradients use two or three colours from the product's own ramp (Stripe's `#7F7DFC → #F44BCC → #E5EDF5` is three brand colours); generated ones sweep the whole spectrum.
@@ -296,9 +319,9 @@ These are the ones I can still identify on sight in 2026 output. They are less a
 
 ### An honest position on when it is defensible
 
-I do not think a blanket prohibition survives contact with reality. The defensible cases:
+A blanket prohibition does not survive contact with reality. The defensible cases:
 
-- **Texture and ground, where no subject is depicted.** Generating a noise field, a paper grain, a soft abstract wash to sit *behind* content — indistinguishable in kind from a Photoshop filter, and nobody is being told a photograph exists.
+- **Texture and ground, where no subject is depicted.** A noise field, a paper grain, a soft wash sitting *behind* content — indistinguishable in kind from a Photoshop filter, and nobody is being told a photograph exists.
 - **Internal, throwaway, or placeholder work.** Comps, pitch decks, seed data. The failure mode is forgetting to replace it.
 - **Where the product itself is generative.** An AI image tool showing its own output is documentation.
 - **Style-transfer and upscaling on assets you own.** Extending your own photograph's background to fit a wider crop is retouching, and retouching predates the technology.
@@ -317,11 +340,11 @@ The practical test: **would you be comfortable if the alt text said "AI-generate
 
 This is the most under-used, highest-credibility asset available to almost every product, and generated pages reach for it almost never.
 
-Both of the strongest heroes I measured are screenshots. Linear's is issue `DRV-8852 · Faster app launch`, showing a real body paragraph, a `vehicle_state` inline code token, an activity feed with three real timestamps ("2min ago", "4 min ago"), a `1 / 84` counter, and a floating agent panel that reads "Worked for 10 sec". Basecamp's is a whole project page: a message board with five real threads, a docs list with file sizes, a July 2026 calendar, a kanban with column counts `(9) (6) (4) (2) (2)`, and external links to Figma, Drive and Zoom.
+Both of the strongest heroes I measured are screenshots. Linear's is issue `DRV-8852 · Faster app launch`, with a real body paragraph, a `vehicle_state` inline code token, an activity feed with three real timestamps, a `1 / 84` counter and an agent panel reading "Worked for 10 sec". Basecamp's is a whole project page: five real message threads, a docs list with per-file sizes and owners, folder counts (`Photography 12 items`, `Proofs 3 items`), a July 2026 calendar, a kanban with column counts `(9) (6) (4) (2) (2)`, and external links to real Figma, Drive and Zoom URLs. Note also that Basecamp draws a **fake cursor arrow** into the screenshot over the message board — a one-element trick that says "this is a thing you operate" without a device frame or a play button.
 
 ### How to shoot one
 
-**Real data, and specifically real *bad* data.** Rows of the same length are a tell. Basecamp's file list has `Hero Image.png · Jul 20 · 1.86 MB` next to `FAQ Entries.md · Jul 20 · 27.9 KB` — four orders of magnitude apart, because real file lists are. Include one truncated string, one long name, one empty field, one number that isn't round. `118,254` beats `100,000+`.
+**Real data, and specifically real *bad* data.** Rows of the same length are a tell. Basecamp's file list has `Hero Image.png · Leah Bernstein · Jul 20 · 1.86 MB` next to `FAQ Entries.md · Kurt Holloway · Jul 20 · 27.9 KB` — two orders of magnitude apart, because real file lists are. Include one truncated string, one long name, one empty field, one number that isn't round. `117,231` beats `100,000+`.
 
 **Correct density.** Shoot at the density a real user has, not at the density that makes the screenshot pretty. If your product's list view holds forty rows, do not screenshot six.
 
@@ -329,7 +352,7 @@ Both of the strongest heroes I measured are screenshots. Linear's is issue `DRV-
 
 **Consistent chrome.** Decide once whether screenshots include the browser bar, the OS window frame, or neither, and never mix. Basecamp includes the app's own content area only — no browser, no OS. Linear includes the app's full sidebar and header but no browser. Both are clean because they are consistent.
 
-**Device frames: usually no.** A device frame adds 15–20% to the asset's area and communicates "this is a mockup." The exception is when the *platform* is the point — a mobile-only feature, or a comparison of desktop and mobile. Stripe uses a phone silhouette in its bento specifically because the section is about in-person and mobile payments. Apple ships bare screens in `<picture>` elements at 1728×912 and 1260×680 with no frame, because the frame is the physical product photographed elsewhere on the page.
+**Device frames: usually no.** A frame adds 15–20% to the asset's area and says "this is a mockup." The exception is when the *platform* is the point — Stripe uses a phone silhouette because that section is about in-person and mobile payments. Apple ships bare screens with no frame, because the frame is the physical product photographed elsewhere on the page.
 
 **Shoot at 2× and deliver AVIF.** A 1440×900 screenshot shot at 2× is 2880×1800. As PNG that is the 69 KB → 5 KB gap measured above, at scale. Basecamp pays 3,721 KB of WebP for 23 assets — their single `view-chat-light.webp` is **677 KB**. In AVIF that same screenshot would land near 100 KB.
 
@@ -341,9 +364,9 @@ Both of the strongest heroes I measured are screenshots. Linear's is issue `DRV-
 
 Three reasons, all mechanical:
 
-1. **It is checkable.** A reader who has used a competitor can evaluate a screenshot in two seconds. They cannot evaluate a gradient.
-2. **It answers the question the reader actually has** — "what will this look like when I'm in it?" — which no headline can.
-3. **It cannot be produced by someone who does not have the product.** That is precisely why it reads as credible and why generated pages avoid it.
+1. **It is checkable.** A reader who has used a competitor evaluates a screenshot in two seconds. They cannot evaluate a gradient.
+2. **It answers the reader's actual question** — "what will this look like when I'm in it?" — which no headline can.
+3. **It cannot be produced by someone who does not have the product.** Which is exactly why it reads as credible and why generated pages avoid it.
 
 The boundary: a screenshot fails when the product is genuinely not visual (an API, a CLI, a background job) — in which case ship the *artefact*: a code block, a terminal session, a JSON response, a log line. Stripe's docs do this throughout. A terminal session with real output is a screenshot.
 
@@ -353,7 +376,7 @@ The boundary: a screenshot fails when the product is genuinely not visual (an AP
 
 ### The cliché and why it persists
 
-"Trusted by teams at" over six grey logos at `opacity: 60%` is the corpus's canonical marketing tell (see [`references/editorial-luxury-and-marketing.md`](../references/editorial-luxury-and-marketing.md), §4). It persists because it is the cheapest possible credibility gesture. It fails because:
+"Trusted by teams at" over six grey logos at `opacity: 60%` is the corpus's canonical marketing tell (see [`references/editorial-luxury-and-marketing.md`](../references/editorial-luxury-and-marketing.md), §4) — the cheapest possible credibility gesture. It fails because:
 
 - **Desaturating a logo destroys the one property that made it recognisable at 24px.** Coca-Cola grey is not Coca-Cola.
 - **Even spacing at a uniform height makes six logos look like a shortfall,** and makes square marks visually shout over wordmarks.
@@ -361,7 +384,7 @@ The boundary: a screenshot fails when the product is genuinely not visual (an AP
 
 ### How to do it with substance
 
-**Make the claim falsifiable and put the denominator in it.** Notion: *"Trusted by 98% of the Forbes Cloud 100"* at 14px w400 `rgba(0,0,0,0.54)`. There is a named list and a percentage of it. Basecamp: *"118,254 people are working in Basecamp right now!"* — a live count with six significant figures. Linear: *"Powering the companies building the future"* at 12px uppercase, which is honest about being a slogan and doesn't pretend to be data.
+**Make the claim falsifiable and put the denominator in it.** Notion: *"Trusted by 98% of the Forbes Cloud 100"* at 14px w400 `rgba(0,0,0,0.54)` — a named list and a percentage of it, still live on 2026-09-10. Basecamp: *"117,231 people are working in Basecamp right now!"* — and the number is **injected at runtime**, not baked into the markup, which is why it read 118,254 on the first pass and 117,231 on the re-probe. That is the strongest form of the genre: a claim that can go *down*. Linear: *"Powering the companies building the future"* at 12px uppercase, honest about being a slogan and not pretending to be data.
 
 **Or replace the row with one named human.** Notion's testimonial alt text carries `Michael Truell, Co-founder and CEO of Cursor`, `Renee Solorzano, Sr. Director of Product Design at Faire`, `Ben Levick, Head of Operations & Internal AI at Ramp`. Name, title, company, photograph. One of those outweighs eight grey logos, because it is attributable and therefore risky to fake.
 
@@ -397,21 +420,21 @@ Gaps landed at **4px, 6px or 8px** across every product measured. Nothing wider.
 
 ### When an icon adds scan speed and when it adds noise
 
-An icon accelerates scanning when it is the **fastest discriminator in the row**. In Linear's sidebar the icons differ from each other more than the words do at a glance, so the eye lands on shape first. In a settings list where every row is a toggle, an icon per row adds twelve decorations and zero discrimination.
+An icon accelerates scanning when it is the **fastest discriminator in the row**. In Linear's sidebar the icons differ from each other more than the words do at a glance, so the eye lands on shape first. In a settings list where every row is a toggle, an icon per row adds decoration and zero discrimination.
 
 Three tests before adding one:
 
 1. **Does it repeat across rows?** If ten rows carry the same icon, delete it.
-2. **Is it a metaphor a first-time user resolves in under a second?** A gear is settings. A "sparkle" is not "AI" to anyone who hasn't been trained on the convention, and the corpus flags a sparkle on anything that isn't literally generation as a tell ([`libraries/_research/ai-interfaces.md`](../libraries/_research/ai-interfaces.md)).
+2. **Is it a metaphor a first-time user resolves in under a second?** A gear is settings. A "sparkle" is not "AI" to anyone who hasn't been trained on the convention, and the corpus flags a sparkle on anything that isn't literally generation as a tell ([`libraries/ai-interfaces.md`](../libraries/ai-interfaces.md)).
 3. **Would the row be ambiguous without it?** If the label alone is unambiguous, the icon is decoration.
 
-Icons genuinely earn their place in: navigation rails (where they may be the only affordance at collapsed width), status/severity (where the shape encodes a value colour alone cannot, for colour-blind users), file and content types, and destructive actions (where redundancy is a safety feature).
+Icons earn their place in: navigation rails (the only affordance at collapsed width), status and severity (shape encodes what colour alone cannot, for colour-blind users), file and content types, and destructive actions (redundancy as a safety feature).
 
 ### Icon + label vs icon-only
 
 **Icon-only requires all three:** an unambiguous universal metaphor (close, search, back, play), a real `aria-label`, and a tooltip. Two out of three is a bug. Toolbars in dense creative tools are the case where icon-only is right, because the user is repeating the action hundreds of times and label width is the binding constraint.
 
-**Everywhere else, ship the label.** A 24px icon button saves ~50px of width and costs comprehension. Vercel's nav pairs a 24px icon with 22px text. GitHub's repo tabs pair 16px icons with 14px labels.
+**Everywhere else, ship the label.** A 24px icon button saves ~50px of width and costs comprehension.
 
 ### Consistency of metaphor
 
@@ -433,22 +456,28 @@ Also keep **colour policy** consistent. Linear demotes sidebar icons one neutral
 |---|---|---|
 | **AVIF** | Everything raster, first choice | Measured 2.4× smaller than JPEG on a photograph, **13× smaller than PNG on a UI screenshot**. Supports alpha and HDR. Encodes slowly — a build-time cost, not a runtime one. |
 | **WebP** | The single fallback | Measured 1.6–1.7× larger than AVIF. Universally supported. One `<source type="image/webp">` covers everything AVIF doesn't. |
-| **JPEG** | Final fallback in `<img src>` | Apple still ships their entire MacBook Pro page as JPEG — 1,023 KB across 10 images. That is a deliberate compatibility choice at Apple's scale, not a template to copy. |
+| **JPEG** | Final fallback in `<img src>` | Apple still ships their entire MacBook Pro page as JPEG — re-probed 2026-09-10 at **36 requests / 12,699 KB**, plus 12 mp4 at 20,314 KB. A deliberate compatibility choice at Apple's scale, not a template to copy, and larger than it looks above the fold. |
 | **PNG** | Almost never | Only when you need exact lossless pixels *and* AVIF's lossless mode isn't available in your pipeline. Slack's 3,441 KB of PNG is the cost of not deciding. |
 | **SVG** | Logos, icons, illustration | Duolingo's entire illustration system is **55 SVG requests / 335 KB**, and it scales to any density for free. Watch the tail: their largest single SVG is **121 KB**, which is a raster-traced file that should have been AVIF. Rule of thumb: an SVG over ~30 KB is a raster in disguise. |
-| **Video (`.mp4`/`.webm`)** | Motion that is content | Slack ships five `autoplay muted loop` videos with `poster` frames at 641px; Airbnb ships six 72×72 `.webm` category icons with posters; Notion ships one 958×599 autoplay hero. Always `muted`, always `playsinline`, always a `poster`, and always respect `prefers-reduced-motion`. |
+| **Video (`.mp4`/`.webm`)** | Motion that is content | **The line item nobody audits.** Slack ships **30 `<video>` elements over 20 distinct files, 44 MB unique** (`rivian-web-trailer@2x.webm` 12.8 MB, `mr-beast-slackbot-teaser@2x.webm` 14.4 MB) — 6.5× their whole image payload — and Chrome refetches several, so the wire cost is higher still. Apple: 12 mp4 / 20,314 KB. Airbnb: six 72×72 `.webm` category icons with posters. Notion: one 958×599 autoplay hero. Always `muted`, always `playsinline`, always a `poster`, always respect `prefers-reduced-motion`, and put a byte budget on video before you put one on images. |
 
 ### Responsive images: the three correct patterns
 
-**1. Fixed-width CDN param — simplest, and enough for most product UI.** Airbnb: `?im_w=720` for a 307px box, no `srcset`, no `sizes`. Linear: `f=auto,fit=scale-down,metadata=none,width=1440`. Note Linear's `f=auto`, which negotiates AVIF/WebP off the `Accept` header — this is why 6 of 6 Linear image responses came back AVIF.
+**1. Fixed-width CDN param — simplest, and enough for most product UI.** Airbnb: `?im_w=720` for a 307px box, no `srcset`, no `sizes`. Linear: `f=auto,fit=scale-down,metadata=none,width=1440`. **The `width` is not optional.** Drop it and Cloudflare's `f=auto` returns the original PNG at every `Accept` — that is how Linear ends up serving a 1,032 KB PNG on a page that is otherwise AVIF, and how the same asset drops to 33,672 B once `width=1440` is present. Add a CI assertion on the response `Content-Type` of your ten largest assets.
 
-**2. `srcset` + `sizes` — required when the box width varies with viewport.** Get `sizes` right or don't bother; Slack's 42 `srcset` attributes with zero `sizes` are a pure regression. Stripe's is the model:
+**2. `srcset` + `sizes` — required when the box width varies with viewport.** Get `sizes` right or don't bother; Slack's 71 `srcset` attributes with zero `sizes` are a pure regression. Stripe's is the model — note that the `<img>` fallback candidates are the **original PNGs** and the modern format arrives through a sibling `<source type>`, which is why Stripe ships zero AVIF and a 3,786 KB WebP payload:
 
 ```html
-<img srcset="…-640.avif 640w, …-1232.avif 1232w, …-2464.avif 2464w"
-     sizes="(min-width: 1298px) 1232px, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
-     alt="Aerial view of a street intersection where the crosswalks form a diagonal">
+<picture>
+  <source type="image/webp"
+          srcset="…/enterprise-accordion-hertz.png?w=296&fm=webp&q=90 296w, … 2460w">
+  <img srcset="…/enterprise-accordion-hertz.png?w=296&q=90 296w, … 2460w"
+       sizes="(min-width: 1298px) 1232px, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
+       alt="Aerial view of a street intersection where the crosswalks form a slanted parallelogram">
+</picture>
 ```
+
+Copy the `sizes` clause; do not copy the format ladder. Adding one `<source type="image/avif">` above the WebP would take ~2.4× off Stripe's largest page cost.
 
 **3. `<picture>` with `<source type>` and/or `<source media>`.** Two distinct jobs, often confused:
 
@@ -463,13 +492,13 @@ Also keep **colour policy** consistent. Linear demotes sidebar icons one neutral
 </picture>
 ```
 
-Apple uses **109 `<picture>` elements** and zero `srcset` on `<img>` — everything happens in `<source>`. Notion uses `<source media="(min-width: 840px)">` / `(max-width: 839px)` for genuine re-crops. Airbnb wraps 48 images in `<picture>`.
+Apple uses **109 `<picture>` elements** and zero `srcset` on `<img>` — everything happens in `<source>`. Notion uses `<source media="(min-width: 840px)">` / `(max-width: 839px)` for genuine re-crops (re-verified 2026-09-10). Airbnb wraps 46 images in `<picture>`.
 
-**Oversupply is the common bug.** Measured: Slack's G2 badges at 868px natural into 104px boxes (**4.17×**), Basecamp's `walkthrough-09-26.webp` at 1600px into a 137px box (**5.8×**), a Linear activity avatar at 144px natural into a 14px box (**≈5×**), Notion's `Figma_Wordmark__Black_.svg` at 300px into 62px. Target **2× the CSS box** and stop. Above 3× you are paying for pixels no display can resolve.
+**Oversupply is the common bug.** Re-measured 2026-09-10: Slack's six G2 badges at 868px natural into 104px boxes (**4.17×**), Basecamp's `walkthrough-09-26.webp` at 1600px into a 123px box (**6.5×**), Linear's activity avatars at 144px into 14px boxes (**5.14×**) and its team-row avatars at **512px into 36px (7.11×)**, Notion's `Figma_Wordmark__Black_.svg` at 300px into 62px. Target **2× the CSS box** and stop. Above 3× you are paying for pixels no display can resolve — **except** where the user can pinch, zoom or open a detail view (maps, product zoom, document viewers, artwork). There the oversupply is the feature; exempt those elements explicitly rather than letting a lint rule delete them.
 
 ### Placeholders: LQIP, BlurHash, ThumbHash
 
-The purpose is not "a loading state." It is that a placeholder matching the image's actual colour makes a slow gallery *feel* fast in a way a spinner never does, and it eliminates the white-flash-then-image transition that reads as jank.
+Not a loading state. A placeholder matching the image's actual colour makes a slow gallery *feel* fast in a way a spinner never does, and it removes the white-flash-then-image transition that reads as jank.
 
 | Technique | Payload | Verdict |
 |---|---|---|
@@ -479,11 +508,11 @@ The purpose is not "a loading state." It is that a placeholder matching the imag
 | **LQIP (tiny inline JPEG/AVIF)** | 300 B – 2 KB | Higher fidelity than either hash, but 10–80× the payload and it inflates your HTML. Use only for a single hero. |
 | **Spinner over an empty box** | 0 | Wrong. It draws attention to the wait. |
 
-Both hash formats are **frozen by design** — a hash format that churns breaks every stored value — so their stale npm dates are not a red flag. Corpus verdict unchanged from [`libraries/_research/maps-3d-media.md`](../libraries/_research/maps-3d-media.md): use one and stop shipping grey boxes.
+Both hash formats are **frozen by design** — a hash format that churns breaks every stored value — so their stale npm dates are not a red flag. Corpus verdict unchanged from [`libraries/maps-3d-media.md`](../libraries/maps-3d-media.md): use one and stop shipping grey boxes.
 
 ### Aspect-ratio boxes and CLS
 
-Every image must reserve its space before it loads. Three mechanisms, in order:
+Every image must reserve its space before it loads. Two mechanisms; use the first unless the source varies. (The `padding-top` hack is dead in 2026.)
 
 ```html
 <!-- 1. width + height attributes: the browser derives the ratio. Cheapest. -->
@@ -494,21 +523,19 @@ Every image must reserve its space before it loads. Three mechanisms, in order:
 .media { aspect-ratio: 4 / 3; overflow: hidden; }
 .media > img { width: 100%; height: 100%; object-fit: cover; }
 ```
-```css
-/* 3. Legacy padding-top hack — only if you must support a browser without aspect-ratio.
-      You almost certainly don't in 2026. */
-```
 
-The measured counts tell you who takes this seriously: **Notion 104 elements with a non-`auto` `aspect-ratio`, Mailchimp 103, Stripe 96, Airbnb 62, Linear 40, Vercel 28 — Slack 7, Apple 1.** Apple gets away with it because every one of their 109 `<picture>` blocks carries explicit `width`/`height`; Slack does not, and their page shifts.
+The measured counts tell you who takes this seriously: **Airbnb 115, Stripe 115, Notion 104, Mailchimp 103, Linear 40, Vercel 28 — Slack 7, Apple 1** (re-probed 2026-09-10).
 
-Also set `loading="lazy"` on everything below the fold and `fetchpriority="high"` on the LCP image only. Mailchimp lazy-loads 80 of 82. Vercel marks 2 of 5 `eager` and 3 `lazy`. Never lazy-load your hero — it delays LCP by a full round trip.
+**The first pass got Apple's escape wrong.** It claimed Apple relies on explicit `width`/`height` attributes. Re-probed: **0 of Apple's 111 `<img>` elements carry `width` or `height`**, and only one element on the page has a non-`auto` `aspect-ratio`. Apple reserves space a third way — every `<picture>` sits in a CSS-sized container with the image at `object-fit: fill` (105 of 111), so the box is fixed by the layout and the image is told to fit it. That works when you control every source dimension and ship no user content; it is the least portable of the three and you should not copy it. Slack does none of the three, and their page shifts.
+
+Also set `loading="lazy"` on everything below the fold and `fetchpriority="high"` on the LCP image only. Mailchimp lazy-loads 80 of 82; Linear 32 of 39; Slack 68 of 89. Never lazy-load your hero — it delays LCP by a full round trip.
 
 ### Dark-mode image handling
 
 Four strategies, in descending quality:
 
 1. **Ship the asset twice.** Basecamp pairs every product screenshot: `-light.webp` / `-dark.webp` behind `<source media="(prefers-color-scheme: …)">`. Vercel does it by filename (`notion-desktop-dark.webp`). This is correct and it **doubles your screenshot budget** — Basecamp already sits at 3,721 KB of WebP in light mode alone. Budget for it before committing.
-2. **Use SVG with `currentColor` or a CSS-variable fill.** Free for icons, logos and line illustration. This is why Duolingo's all-SVG system and Linear's 240 inline SVGs cost nothing to theme.
+2. **Use SVG with `currentColor` or a CSS-variable fill.** Free for icons, logos and line illustration. This is why Duolingo's all-SVG system and Linear's 243 inline SVGs cost nothing to theme.
 3. **Filter a light asset.** Notion applies `filter: brightness(1.4) saturate(0.25)` to an image in dark mode — lift the midtones, drain the colour so it stops vibrating against a dark ground. Acceptable for incidental imagery. It looks wrong on a screenshot, because UI screenshots have large flat white areas that filters cannot convincingly darken.
 4. **Do nothing, but soften the edge.** For photographs, dark mode is usually fine as-is — real photographs contain their own dark values. Reduce brightness ~8% and add a hairline border so a bright photo doesn't glare: `filter: brightness(0.92); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06)`.
 
@@ -520,7 +547,7 @@ The rule is a decision, not a description:
 
 - **`alt=""` (empty, but the attribute must be present)** when the image adds nothing a sighted user gets that a screen-reader user doesn't already have from adjacent text. Airbnb's 76 empty alts are correct — each photo sits in a link whose accessible name is the listing title, price and rating. Stripe's 40 empty alts are correct — they are decorative gradients, bento graphics and icons beside labels.
 - **A sentence** when the image carries information. Apple: *"A MacBook Pro screen showing a video getting enhanced with AI in Topaz Video"* — it says what is on the screen, because that is the point of the image. Stripe: *"Overhead view of a door stoop with a grocery delivery bag containing…"*.
-- **Missing `alt` entirely** is never correct. Across every page I probed, `missing` was 0 — even Slack, which fails on everything else here, sets the attribute.
+- **Missing `alt` entirely** is never correct, and it is not rare. Slack, Stripe, Linear, Notion and Vercel are all at zero missing. **Airbnb is at 20** — every one a 16px amenity or badge icon, where the screen reader falls back to reading a UUID filename aloud. Lint for it; review does not catch it.
 - **Do not over-alt.** Mailchimp's *"Four yellow filled stars and one yellow outlined empty star, representing a 4 ou…"* sits next to text already saying "4.5 based on 33,000+ reviews." A screen-reader user hears it twice. That graphic wants `alt=""`.
 - **Functional images take the function, not the picture.** An icon inside a button is `alt=""` with the button labelled; a logo that links home is `alt="Notion — home"`, not `alt="Notion logo"`.
 
@@ -528,15 +555,23 @@ The rule is a decision, not a description:
 
 ## When this advice is wrong
 
-**"Pick two aspect ratios" breaks in editorial and portfolio work.** A magazine layout's *variety* of crops is its craft — a full-bleed, then a tall column, then a small inset. The rule is for systems where images are rows of a database. If your images are individually art-directed by a human, ratio variety is intent, not accident. Test: could a new image arrive tomorrow from a user? Then two ratios. Could it only arrive from your designer? Then as many as they choose.
+Three of these were constructed adversarially in this review pass — a realistic product where following the rule as written produces a *worse* interface. They are marked **[adversarial]** and the rule above now carries the scope.
+
+**"Pick two aspect ratios" breaks in editorial and portfolio work.** A magazine layout's *variety* of crops is its craft — a full-bleed, then a tall column, then a small inset. The rule is for systems where images are rows of a database. Test: could a new image arrive tomorrow from a user? Then two ratios. Could it only arrive from your designer? Then as many as they choose.
+
+**[adversarial] "Two ratios + `object-fit: cover`" is destructive on a short-form vertical video feed.** Build a creator app: user uploads are 9:16 phone video, the discovery grid renders 4:3 cards. Follow the rule and every thumbnail is a centre crop of a 1080×1920 frame — which removes the creator's head, their caption, and the product they are holding, because a vertical composition puts its subject in the upper third, not the middle. Airbnb can centre-crop safely *because a room is an environment and its subject is the middle*. **The real rule: `cover` is safe when the subject is an environment; when the subject is a framed human or a deliberately vertical composition, either match the source ratio (one portrait ratio for the whole grid) or store a per-item `object-position` set at upload.** A vertical-video product should pick 9:16 and 1:1 and never own a landscape card.
+
+**[adversarial] "Initials, never a generated pattern" breaks outside Latin script.** Build a Chinese team-chat product. Every member list is now a wall of 张 / 李 / 王 — three characters covering most of the room, so the fallback is *less* discriminating than a hashed pattern would be, and the "scannable wall of initials" argument inverts. Same failure for mononyms, for handle-only communities, and for a 40,000-seat directory of J. Smiths. **Scope: initials beat identicons only where the script yields two discriminating characters.** In CJK take the trailing character(s) of the given name; where nothing discriminates, a deterministic pattern keyed to the user ID is the honest fallback and the file's identicon prohibition does not apply.
+
+**[adversarial] "AVIF everywhere" is the wrong call on a long feed of low-end Android devices.** Build a classifieds app for a market where the median device is a sub-$120 Android. AVIF wins the byte comparison — and loses the experience, because AVIF decode is materially more CPU-expensive than JPEG or WebP, and a fling through 200 listing thumbnails decodes dozens of images per second. On a weak CPU that turns a bytes win into dropped frames and a hot phone. **Scope: pick AVIF for hero and above-the-fold assets, and for anything where bytes dominate; measure decode time on your actual p90 device before making it the default for a long scroll. WebP is the safe floor — 1.6–1.7× larger and decoded by everything cheaply.**
 
 **"Screenshot beats illustration" breaks when the product isn't visual or isn't built.** An API, a CLI, a background service, a pre-launch product. Ship the artefact (a code block, a terminal session) or ship nothing. Do not ship an illustration of a dashboard that does not exist.
 
-**"AVIF everywhere" breaks in three places.** Email (no AVIF support in most clients — JPEG/PNG only). Anywhere users download and re-upload the asset (an export feature). And any build pipeline where AVIF's encode time would gate deploys — measure it; a large gallery can add minutes.
+**"AVIF everywhere" breaks in four more places.** Email (no AVIF support in most clients — JPEG/PNG only). Anywhere users download and re-upload the asset (an export feature). Any build pipeline where AVIF's encode time would gate deploys — measure it; a large gallery can add minutes. And any asset going through a transform that silently declines to convert: verify the response `Content-Type`, because `f=auto` returned the original PNG for Linear's heaviest asset.
 
 **"Never use stock" breaks in editorial and news.** A blog post about Lisbon needs a photograph of Lisbon and you did not go to Lisbon. Licensed editorial photography is the correct answer there. The prohibition is on stock as a *substitute for having something to show*.
 
-**"Identicons look cheap" breaks for non-human entities.** Wallets, servers, API keys, anonymous sessions, bots. A deterministic pattern derived from a hash is the *only* honest visual for something with no name and no face — and GitHub is right to use one.
+**"Identicons look cheap" breaks for non-human entities.** Wallets, servers, API keys, anonymous sessions, bots. A deterministic pattern derived from a hash is the *only* honest visual for something with no name and no face — and GitHub is right to use one. It also breaks for scripts where initials do not discriminate; see the adversarial case above.
 
 **"Illustration is padding" breaks for products whose brand is illustration.** Duolingo's illustration budget is not decoration, it is the product's differentiator; removing it would remove the reason people tolerate a language app that nags them. Same for Mailchimp's hand-drawn heritage. If illustration is load-bearing brand, the density rules in this file do not apply to you.
 
@@ -544,16 +579,16 @@ The rule is a decision, not a description:
 
 **"Real screenshots with real data" breaks under privacy and NDA.** A healthcare or fintech product cannot show real records. Build a fictional-but-plausible dataset with real *shape* — realistic name distribution, realistic value ranges, realistic messiness — and label it as sample data where a reasonable person might mistake it for real.
 
+**"Delete the image if the section looked bare" breaks for low-literacy and multilingual audiences.** "Empty space next to a strong sentence reads as certainty" assumes a reader who parses your language at speed. A civic benefits service, a health screening flow, or a consumer app in a market you do not write for gets *worse* when you strip the illustration that was carrying the step. There the drawing is not decoration, it is a second channel for the same instruction — see [`references/institutional-health-civic.md`](../references/institutional-health-civic.md).
+
 ---
 
 ## The generated version
 
-**What AI output does here, in 2026:**
-
-The old tells have largely gone. Corporate Memphis is rare, the purple 3D blob is rare, glassmorphism is rare — the corpus's own control baseline confirms it. What remains is a different and more boring failure:
+**What AI output does here, in 2026.** The old tells have largely gone — Corporate Memphis, the purple 3D blob, glassmorphism are all rare, and the corpus's control baseline confirms it. What remains is more boring:
 
 1. **No imagery at all, in places that needed some** — and specifically: no product screenshot. A generated landing page for a real product will ship a headline, a badge pill, two CTAs, three feature cards with 24px outline icons, and never once show the product. The single highest-value correction available.
-2. **A placeholder that was never replaced.** `/placeholder.svg`, a grey box with an image glyph, `via.placeholder.com`, or — the template-marketplace terminal case — a "trusted by" row containing literal **Logoipsum** marks, shipped as the demo on the current top-trending Framer template.
+2. **A placeholder that was never replaced.** `/placeholder.svg`, a grey box with an image glyph, `via.placeholder.com`, `i.pravatar.cc` for testimonial faces (the corpus flags this one in [`references/editorial-luxury-and-marketing.md`](../references/editorial-luxury-and-marketing.md)), or — the template-marketplace terminal case — a "trusted by" row containing literal **Logoipsum** marks. Re-verified 2026-09-10: the #1 trending Framer template ("Sentira" by Nasir Nawaz) still ships a logo row reading `LOGO · Logoipsum · LOGO · Lightdash` as its demo.
 3. **`<img>` with no `width`/`height` and no `aspect-ratio` wrapper**, so the page shifts on load. This is the most common technical defect and it's invisible in code review.
 4. **`object-fit` left at `fill`** on a user-supplied image, so portraits squash.
 5. **Icons at 20–24px next to 14px text** with `gap-3` (12px), giving an icon/text ratio of 1.4–1.7× against a measured band of 0.85–1.35× and gaps of 4–8px.
@@ -561,7 +596,8 @@ The old tells have largely gone. Corporate Memphis is rare, the purple 3D blob i
 7. **`grayscale opacity-60` on a logo row** under "Trusted by teams at", with the logos at a uniform `h-8`.
 8. **A PNG screenshot at 1× density**, or an AVIF-capable pipeline shipping JPEG.
 9. **`alt` filled with the filename, or with a keyword-stuffed sentence, on every image including the decorative ones.**
-10. **An identicon/gradient-blob avatar library** (Boring Avatars, DiceBear `beam`) used for human colleagues.
+10. **An identicon/gradient-blob avatar library** (Boring Avatars, DiceBear `beam`) used for human colleagues in a Latin-script product.
+11. **A hero that no `<img>` audit can see** — a `<canvas>`, a WebGL scene, or a CSS `background-image`. Jasper's fold is a 1440×420 canvas; `querySelectorAll('img')` returns nothing for it. If your check is an element count, screenshot the page too.
 
 **The specific corrections, in leverage order:**
 
@@ -574,7 +610,7 @@ The old tells have largely gone. Corporate Memphis is rare, the purple 3D blob i
 | PNG screenshot | AVIF. Measured 13× smaller on the same asset. |
 | 24px icon + 14px text + `gap-3` | 14–16px icon + 14px text + `gap-1.5` (6px), icon colour equal to or one neutral level below the label. |
 | Three feature cards with generic icons | Three real screenshots at full-section width, or one screenshot and two sentences. |
-| "Trusted by teams at" + grey logos at uniform height | A falsifiable number with a denominator ("98% of the Forbes Cloud 100"; "118,254 people right now"), or one named customer with title and company. Per-logo optical heights, pre-made mono assets. |
+| "Trusted by teams at" + grey logos at uniform height | A falsifiable number with a denominator ("98% of the Forbes Cloud 100"; a live count that can go down), or one named customer with title and company. Per-logo optical heights, pre-made mono assets. |
 | Identicon avatars for humans | Initials on a hashed background, `font-weight: 500` at ~40% of the diameter, plus a 1px inset hairline ring. |
 | `alt` on everything | `alt=""` for decoration (expect this to be the *majority* — Stripe is 40 of 44), a full sentence for the few that carry information. |
 
@@ -582,7 +618,7 @@ The old tells have largely gone. Corporate Memphis is rare, the purple 3D blob i
 
 ## Self-check
 
-Run this against your own output. Every item is verifiable by reading your code or probing your rendered page — no judgement calls.
+Every item is verifiable by reading your code or probing your rendered page — no judgement calls.
 
 **Ratios and layout**
 - [ ] Count the distinct rendered aspect ratios on one page. Is it ≤3? (Airbnb: 2. Slack: 8.)
@@ -590,16 +626,19 @@ Run this against your own output. Every item is verifiable by reading your code 
 - [ ] Is `object-fit: cover` on every photograph and `contain` on every logo/icon? Is `fill` used only where you control the source dimensions?
 
 **Content**
-- [ ] Does any image in your product contain Lorem, `John Doe`, `Jane Smith`, `Project Alpha`, `example.com`, `$1,234.56`, or `/placeholder`? Grep for them.
+- [ ] Does any image in your product contain Lorem, `John Doe`, `Jane Smith`, `Project Alpha`, `example.com`, `$1,234.56`, `/placeholder`, `pravatar`, or `logoipsum`? Grep for them.
+- [ ] Screenshot the fold at 1440 and 390 and **look**. A canvas, WebGL or CSS-background hero is invisible to every element-count check above it.
 - [ ] Is there at least one screenshot of your actual product on your marketing page?
 - [ ] In that screenshot: are there at least two values of visibly different magnitude (a 1.86 MB file next to a 27.9 KB one)? At least one truncated string? At least one non-round number?
 - [ ] Is any face on the page generated? Is any face on the page presented as a customer or employee without being one?
 
 **Technical**
 - [ ] `curl -sI` your largest image. Is the `content-type` `image/avif`?
-- [ ] For each image, compute `naturalWidth / (renderedWidth × 2)`. Is anything above 3?
+- [ ] For each image, compute `naturalWidth / (renderedWidth × 2)`. Is anything above 3? Exempt anything the user can pinch or zoom, and nothing else. (Linear team-row avatars: 512px into 36px, 7.11×.)
 - [ ] Does any element have `srcset` without `sizes`?
 - [ ] Sum your image bytes. Is it under 1 MB for a marketing page? (Vercel: 162 KB. Slack: 6,823 KB.)
+- [ ] Sum your **video** bytes separately. Slack's are 44 MB — 6.5× their images. Video is usually the larger number and never the audited one.
+- [ ] For your ten largest assets, assert the response `Content-Type` in CI. A CDN transform can silently decline to convert (Linear's `f=auto` without `width` returns a 1,032 KB PNG).
 - [ ] Does every below-fold image have `loading="lazy"`, and does the LCP image have neither `lazy` nor a missing `fetchpriority="high"`?
 - [ ] Do images have a colour or ThumbHash placeholder, or do they flash white?
 
@@ -608,18 +647,19 @@ Run this against your own output. Every item is verifiable by reading your code 
 - [ ] Is any logo being `invert(1)`-ed into a negative?
 
 **Icons**
-- [ ] For each icon+label pair, is `iconWidth / fontSize` between 0.85 and 1.35?
+- [ ] For each icon+label pair, is `iconWidth / fontSize` between 0.85 and 1.35? (Pointer surfaces at 12–16px body text only; not TV, kiosk, automotive or large-text modes.)
 - [ ] Is the gap 4, 6 or 8px?
 - [ ] Does any concept have two different icons anywhere in the product?
 - [ ] Does any icon-only button lack an `aria-label` or a tooltip?
 
 **Avatars**
-- [ ] Does a user with no photo get initials, not a silhouette and not an identicon?
+- [ ] Does a user with no photo get initials, not a silhouette and not an identicon? (Latin script only — check what your initials logic does to 张伟, to a mononym, and to an Arabic name.)
 - [ ] Does a broken avatar URL show a broken-image glyph? (Break one and look.)
 - [ ] Is there a hairline ring so a white-background photo has an edge?
 
 **Alt**
-- [ ] What fraction of your `alt` attributes are empty? If it is under ~50% on a marketing page, you are probably over-alting.
+- [ ] What fraction of your `alt` attributes are empty? Under ~50% on a *marketing* page means you are probably over-alting. On a catalogue, gallery, docs or clinical surface the opposite is true — do not apply this ratio there.
+- [ ] Does any `<img>` have **no `alt` attribute at all**? (Airbnb ships 20. Lint for it.)
 - [ ] Is any `alt` a filename?
 - [ ] Does any `alt` duplicate text that is already visible beside it?
 
@@ -632,21 +672,115 @@ Run this against your own output. Every item is verifiable by reading your code 
 
 ## Sources
 
-Screenshots in `/Users/ayushgarg/Ayush/UI_Library/.cache/shots/img-*.png`; probe scripts and raw JSON in the session scratchpad. Every value below was read from the live page on 2026-09-09/10.
+Screenshots in `/Users/ayushgarg/Ayush/UI_Library/.cache/shots/img-*.png` and `imagery-and-illustration-v-{1..5}-{1440,390}.png`; probe scripts and raw JSON in the session scratchpad. Every value below was read from the live page on 2026-09-09/10; entries marked **†re-probed** were re-measured on 2026-09-10.
 
-- **airbnb.com/s/Paris--France/homes** — the reference implementation for uncontrolled imagery. 77 images at exactly two ratios (`1.000`×48, `1.333`×28); cards render 307×230 from wrappers carrying `aspect-ratio: 4/3`, with `object-fit: cover` and `object-position: 50% 50%`. Source naturals disagree: 720×480, 720×540, 720×480, **720×1080**. Delivery by `?im_w=720` with no `srcset`/`sizes`. 48 `<picture>`, 62 aspect-ratio boxes, 39 AVIF (637 KB) + 19 PNG (755 KB). 76 of 77 alts empty. Six 72×72 `.webm` category icons with posters. Overlay badges sit in their own opaque white pills — never bare text on a photo.
-- **stripe.com** — 44 images, **40 `alt=""` and 4 descriptive sentences**, all four being real documentary photographs of businesses (Parisian kiosk, door stoop, boutique, aerial crosswalk) at 1232×531 / `aspect-ratio: 2460/1060`, 7 srcset candidates and a three-clause `sizes`. 44 `<picture>`, 96 aspect-ratio boxes, 183 inline SVG. 1,108 KB total. The bento phone shows a **German-localised** checkout (`Zahlungsinformationen`, `Oder mit Karte bezahlen`, `€149.00`, Klarna selected) beside a fraud panel reading `0.06% / 0.02% / 0.08%`.
-- **linear.app** — hero is a full product screenshot: issue `DRV-8852 Faster app launch`, body copy about `vehicle_state` sync, a `1 / 84` counter, an agent panel reading "Worked for 10 sec". All imagery through Cloudflare `imagedelivery` with `f=auto` (6/6 responses AVIF). 240 inline SVG, 0 `<picture>`, 40 aspect-ratio boxes. Avatars at **36px / `border-radius: 6px`** in the team row and 14px / `50%` in the activity feed; one served 144×144 into a 14px box. Logo eyebrow *"Powering the companies building the future"* at 12px w400 uppercase `rgb(98,102,109)`.
-- **apple.com/macbook-pro** — one rim-lit product photograph on black, no environment, type in the empty lower-left. **109 `<picture>` elements, 0 `srcset` on `<img>`, 1 aspect-ratio box** (they rely on explicit `width`/`height`). Entirely JPEG: 10 requests, 1,023 KB, heaviest 248 KB. 31 of 89 alts descriptive (*"A person at an airport using their MacBook Pro"*). Videos at 2880×900, 1728×912, 1260×680.
-- **basecamp.com** — hero screenshot with fully real data: Geoff Collier / Leah Bernstein / Kurt Holloway / Liza Randall, `Hero Image.png · Jul 20 · 1.86 MB`, `FAQ Entries.md · Jul 20 · 27.9 KB`, a July 2026 calendar, kanban counts `(9)(6)(4)(2)(2)`, live Figma/Drive/Zoom links, and *"118,254 people are working in Basecamp right now!"* as social proof. **Every product screenshot ships as a `-light.webp` / `-dark.webp` pair behind `<source media="(prefers-color-scheme: …)">`** — verified by loading the page under both schemes. Cost: 3,721 KB of WebP across 23 requests, heaviest `view-chat-light.webp` at **677 KB**.
+- **airbnb.com/s/Paris--France/homes** — †re-probed; still the reference implementation for uncontrolled imagery. Photographs at exactly two ratios (`1.000`, `1.333`); cards render 307×230 from wrappers carrying `aspect-ratio: 4/3`, with `object-fit: cover` and `object-position: 50% 50%`. Source naturals disagree: 720×480, 720×540, 720×960, **720×1080**. Delivery by `?im_w=720` with no `srcset`/`sizes` — Accept-negotiated AVIF 12,455 B / WebP 20,232 B / JPEG 29,997 B on the same URL. 46 `<picture>`, **115** aspect-ratio boxes, 38 AVIF (717 KB) + 14 PNG (579 KB), six 72×72 `.webm` category icons. **20 `<img>` carry no `alt` attribute at all** — all 16px badge and amenity icons, the one real defect on the page. Six 72×72 `.webm` category icons with posters. Overlay badges sit in their own opaque white pills — never bare text on a photo.
+- **stripe.com** — †re-probed. 52 images, **47 `alt=""` and 5 descriptive sentences**, four of them real documentary photographs of businesses (Parisian kiosk, door stoop, boutique, aerial crosswalk) at 1232×531 / `aspect-ratio: 2460/1060`, with the exact `sizes` quoted above. 52 `<picture>`, 115 aspect-ratio boxes, 266 inline SVG. **Formats corrected: WebP 38 requests / 3,786 KB, PNG 3, GIF 29 — zero AVIF.** The photographs are Contentful PNGs re-encoded by `?fm=webp`; the first pass's `.avif` srcset example was wrong. The bento phone shows a **German-localised** checkout (`Zahlungsinformationen`, `Oder mit Karte bezahlen`, `€149.00`, Klarna selected) beside a fraud panel reading `0.06% / 0.02% / 0.08%`.
+- **linear.app** — †re-probed, and the first pass's headline claim was wrong. Hero is a full product screenshot: issue `DRV-8852 Faster app launch`, body copy about `vehicle_state` sync, a `1 / 84` counter, an agent panel reading "Worked for 10 sec". **Not AVIF-only:** 29 AVIF (256 KB) *plus a 1,032 KB PNG and a 338 KB JPEG* — 1,652 KB total, of which 83% is those two assets. The PNG comes back as PNG for every `Accept` because its `f=auto` transform carries **no `width` param**; adding `width=1440` returns 33,672 B of AVIF from the identical source. The hero requests `width=2560` and gets **WebP** even when AVIF is advertised. 243 inline SVG, 0 `<picture>`, 40 aspect-ratio boxes. Avatars at **36px / `border-radius: 6px`** in the team row (served 512×512 — 7.11× oversupply) and 14px / `50%` in the activity feed (served 144×144). Logo eyebrow *"Powering the companies building the future"* at 12px w400 uppercase `rgb(98,102,109)`.
+- **apple.com/macbook-pro** — †re-probed. One rim-lit product photograph on black, no environment, type in the empty lower-left. **109 `<picture>` elements, 0 `srcset` on `<img>`, 1 aspect-ratio box — and 0 of 111 `<img>` carry `width`/`height`.** The first pass's explanation was wrong: space is reserved by CSS-sized containers with `object-fit: fill` (105 of 111), not by intrinsic attributes. Entirely JPEG/PNG, no AVIF, no WebP: **36 JPEG / 12,699 KB + 14 PNG / 89 KB, plus 12 mp4 / 20,314 KB.** Hero is a `hero_startframe` / `hero_endframe` JPEG pair at 2880×900. 37 of 111 alts descriptive; 1 missing.
+- **basecamp.com** — †re-probed. Hero screenshot with fully real data: Geoff Collier / Leah Bernstein / Kurt Holloway / Liza Randall, `Hero Image.png · Jul 20 · 1.86 MB`, `FAQ Entries.md · Jul 20 · 27.9 KB`, folder counts (`Photography 12 items`), a July 2026 calendar, kanban counts `(9)(6)(4)(2)(2)`, live Figma/Drive/Zoom links, a drawn-in cursor arrow, and a **runtime-injected** live counter reading *"117,231 people are working in Basecamp right now!"* on 2026-09-10 (118,254 on the first pass — it is a counter, not a constant). **Every product screenshot ships as a `-light.webp` / `-dark.webp` pair behind `<source media="(prefers-color-scheme: …)">`** — verified by loading the page under both schemes. Cost: 3,721 KB of WebP across 23 requests, heaviest `view-chat-light.webp` at **677 KB**.
 - **notion.com** — two-register illustration system: black ink doodle characters (outline only, no fill) around a real product screenshot, with full-colour circular app icons (Slack, Gmail, HubSpot, Drive) as the only coloured elements. Logo row under *"Trusted by 98% of the Forbes Cloud 100"* (14px w400 `rgba(0,0,0,0.54)`), logos as **pre-monochromed assets** — `Figma_Wordmark__Black_.svg`, `cursor-logo-mono.svg`, `Ramp.svg` at 300px natural rendered 62–82px wide. Dark mode uses `filter: brightness(1.4) saturate(0.25)` and `brightness(0) invert(1)`. 104 aspect-ratio boxes. Testimonial alts carry full attribution: *"Michael Truell, Co-founder and CEO of Cursor"*.
-- **duolingo.com** — illustration system as **55 SVG requests / 335 KB**, one ratio (`1.297`) covering 42 of 52 images, zero `srcset`. Flat vector with **no outlines**, saturated primaries matching the UI palette, a named recurring cast rather than a style. Largest single SVG 121 KB (a traced raster that wants to be AVIF).
+- **duolingo.com** — illustration system as **55 SVG requests / 335 KB**, one ratio (`1.297`) covering 42 of 52 images, zero `srcset`. Vector with **no outlines** and one saturated palette shared with the app UI, a single light direction, and a named recurring cast rather than a style. †re-looked 2026-09-10: the drawings *do* carry gradient shading, cast ellipse shadows, fingers and a three-quarter-perspective prop — "flat, no gradients" was inherited, not observed. Largest single SVG 121 KB (a traced raster that wants to be AVIF).
 - **mailchimp.com** — the most responsive-image-disciplined page measured: `sizes` on 68 of 82, `srcset` on 63, 46 `<picture>`, 103 aspect-ratio boxes, 80 of 82 lazy. Hero is an art-directed photograph of a bike-shop workspace whose screen shows a real Mailchimp automation canvas for a real customer product ("OAT LORD") — but under a heavy dark scrim so white type survives, which leaves the photograph doing little work. Over-alts: 73 of 82 have text, including a five-star graphic described in full next to the same information in prose. 464 KB of PNG for 3 images.
-- **slack.com** — the counter-example on almost every axis. 96 image requests, **6,823 KB, zero WebP, zero AVIF** (PNG 3,441 KB + JPEG 3,379 KB). `srcset` on 42 images, `sizes` on **0**. Eight distinct aspect ratios across 50 images. 7 aspect-ratio boxes. G2 badges at 868px natural into 104px boxes. Logo row via `filter: grayscale(1)` at `opacity: 1` under *"Trusted by top teams"* (12px w400 `rgb(117,117,117)`), alt text `GM Logo` / `OpenAI Logo` / `Target Logo` / `Paramount Logo` / `Stripe Logo`. Five `autoplay` videos with posters.
-- **vercel.com** — 5 images, 162 KB total, all five with descriptive alt sentences. Logo row: six marks at rendered heights **20 / 35 / 17 / 21 / 28 / 45 px** in one 1392×44 container — optical sizing, not a uniform box. Dark assets by filename (`notion-desktop-dark.webp`, `zapier-desktop-dark.webp`). 47 inline SVG, 28 aspect-ratio boxes.
+- **slack.com** — †re-probed; the counter-example on almost every axis, and worse than the first pass recorded. Images: **6,823 KB, zero WebP, zero AVIF** (PNG 48 req / 3,441 KB + JPEG 23 req / 3,379 KB) — exact to the byte on re-measure. `srcset` on 71 images, `sizes` on **0**. Eight recurring aspect ratios, 24 distinct. 7 aspect-ratio boxes; 7 of 89 `<img>` carry `width`/`height`. Six G2 badges at 868px natural into 104×120 boxes (4.167×). Logo row via `filter: grayscale(1)` at `opacity: 1` under *"Trusted by top teams"*. **The number the first pass missed: 30 `<video>` elements over 20 distinct files, 44.2 MB unique** — `mr-beast-slackbot-teaser@2x.webm` 14.4 MB, `rivian-web-trailer@2x.webm` 12.8 MB, `caraway-web-trailer@2x.webm` 8.8 MB — all `autoplay muted` with posters.
+- **vercel.com** — †re-probed. 162 KB of imagery, almost all with descriptive alt sentences. Logo row re-measured: **seven** marks at rendered heights **20 / 35 / 17 / 21 / 28 / 45 / 30 px** and widths 127 / 69 / 147 / 78 / 98 / 58 / 130 in one 1392×44 container, `filter: none`, `opacity: 1` — optical sizing, not a uniform box. Dark assets by filename (`notion-desktop-dark.webp`, `zapier-desktop-dark.webp`). 47 inline SVG, 28 aspect-ratio boxes.
 - **github.com** (contributors, discussions) — avatar convention: `border-radius: 50%` plus `box-shadow: rgba(31,35,40,0.15) 0 0 0 1px` as a hairline ring (box-shadow, not border, so no layout cost). Served `?s=60` for 40px boxes, `?s=32` for both 32px (1×, soft on retina) and 16px (2×) boxes.
-- **jasper.ai** — zero imagery above the fold in 2026: serif headline, subhead, two buttons. Evidence that "no image" is a live option for a funded company.
-- **framer.com/marketplace** — the template genre, current. Top-trending "Sentira" ships an AI-generated wireframe-topography hero **and a logo row reading `LOGO · Logoipsum · LOGO · Lightdash`**. "Fabrica" ships AI-generated black smoke. "MaestroClass" ships a laptop-on-a-couch mockup.
+- **jasper.ai** — †re-probed 2026-09-10 and **the claim has expired**. The fold now carries a `1440×420` `<canvas>` at `top: 546px` compositing a cut-out photograph of a person, a pink grid, a `+35%` card and floating UI chips from AVIF assets (`Grid Illo.avif`, `Home - BV (Plain).avif`, `Peter So.avif`), plus a 13-logo mono WebP row under *"World-class marketing teams trust Jasper"* — an unfalsifiable claim of exactly the kind §7 rejects. `querySelectorAll('img')` returns **zero** elements in the first 900px, which is the transferable lesson: element-count audits cannot see a canvas hero.
+- **framer.com/marketplace** — †re-verified by screenshot 2026-09-10. Trending order unchanged: **#1 "Sentira" (Nasir Nawaz, free)** — AI-generated green wireframe-topography hero and a logo row reading `LOGO · Logoipsum · LOGO · Lightdash`; **#2 "Fabrica"** ($129) AI-generated black smoke; **#4 "MaestroClass"** ($58) laptop-on-a-couch mockup. Nine months on, the placeholder-logo demo is still the top trending template.
 - **tailark.com** — a shadcn marketing-block registry whose own hero demo uses a stock/AI photograph of a wrist and smartwatch with blown highlights and no locatable light source. The 2026 Unsplash desk.
 - **Format A/B** — `curl -H "Accept: …"` against the live CDNs, 2026-09-10. Airbnb listing photo @720w: AVIF 12,455 B / WebP 20,232 B / JPEG 29,997 B. Linear hero @1440w: AVIF 5,345 B / WebP 9,074 B / PNG 69,561 B.
-- **npm/GitHub, re-verified 2026-09-10** — thumbhash 241,941 wk / ★4,206 / last push 2024-05-26; blurhash 1,214,784 wk / ★17,069 / last push 2024-07-08; sharp 69,643,139 wk; @unpic/react 1,299,485 wk. Consistent with [`libraries/_research/maps-3d-media.md`](../libraries/_research/maps-3d-media.md), whose verdict this file adopts rather than re-deriving.
+- **npm/GitHub, re-verified 2026-09-10** (week of 2026-08-31 → 09-06) — thumbhash 241,941 wk / ★4,206 / npm 0.1.1 published 2023-03-22 / last GitHub push 2024-05-26; blurhash 1,214,784 wk / ★17,069 / npm 2.0.5 published 2023-02-17 / last push 2024-07-08; sharp 69,643,139 wk; @unpic/react 1,299,485 wk. Every figure matches [`libraries/maps-3d-media.md`](../libraries/maps-3d-media.md) exactly; this file adopts that verdict rather than re-deriving it. Neither repo is archived.
+
+---
+
+## Review pass (2026-09)
+
+Adversarial re-read on 2026-09-10. Every page in the reference table was re-fetched with a full
+lazy-scroll, five interfaces were screenshotted at 1440 and 390 and looked at, the two format A/B
+runs were repeated against the live CDNs, and the library evidence was re-pulled from npm and the
+GitHub API.
+
+### Verified unchanged (exact to the byte)
+
+| Claim | Method | Result |
+|---|---|---|
+| Airbnb photo @720w: AVIF 12,455 / WebP 20,232 / JPEG 29,997 B | `curl -H "Accept: …"` on `a0.muscache.com` | **exact** |
+| Linear hero @1440w: AVIF 5,345 / WebP 9,074 / PNG 69,561 B | `curl -H "Accept: …"` on `imagedelivery` | **exact** |
+| Slack PNG 3,441 KB + JPEG 3,379 KB, zero WebP/AVIF, `sizes` on 0 | Playwright response capture | **exact** |
+| Slack G2 badges 868px natural into 104px boxes = 4.167× | computed `naturalWidth / rect.width` | **exact** |
+| thumbhash 241,941 wk / ★4,206 · blurhash 1,214,784 wk / ★17,069 | npm downloads API + `gh api` | **exact**, and consistent with `libraries/maps-3d-media.md` |
+| Vercel logo row, non-uniform optical heights in a 1392×44 box | computed geometry | **verified**, seven marks not six |
+| Notion *"Trusted by 98% of the Forbes Cloud 100"* + `<source media>` re-crops | live DOM | **verified** |
+| Basecamp `-light.webp` / `-dark.webp` behind `prefers-color-scheme` | live `<source>` list | **verified** on every tool and view asset |
+| Apple 109 `<picture>`, 0 `srcset`, 1 aspect-ratio box | live DOM | **verified** |
+| Framer #1 trending template ships a `Logoipsum` logo row | screenshot | **verified**, still #1 |
+
+### Corrected
+
+1. **Jasper no longer ships an imageless fold.** It now has a 1440×420 `<canvas>` photo-collage hero
+   and a 13-logo *"World-class marketing teams trust Jasper"* row. The file cited it twice as the
+   proof that "no image" is a live option; both places are rewritten, and the more durable lesson —
+   **canvas/WebGL/CSS-background heroes are invisible to `<img>` audits** — is now in Decision 1, the
+   generated-version list and the self-check.
+2. **Linear is not AVIF-only.** 29 AVIF plus a **1,032 KB PNG** and a 338 KB JPEG. The PNG's
+   `f=auto` transform carries no `width`, and Cloudflare then declines to convert at any `Accept`;
+   adding `width=1440` returns 33,672 B of AVIF from the same source — **31×** for one URL parameter.
+   At `width=2560` the same endpoint returns WebP even when AVIF is advertised. New table in
+   *Format cost*, new CI advice in *Responsive images*.
+3. **Stripe ships zero AVIF.** Its photographs are Contentful PNGs re-encoded by `?fm=webp` through a
+   sibling `<source type="image/webp">`. The first pass's example markup showed `.avif` candidates on
+   the `<img>`; the real markup is now quoted, with a note that the `sizes` clause is the part to copy.
+4. **Apple does not reserve space with `width`/`height`.** 0 of 111 `<img>` carry either. It reserves
+   with CSS-sized containers and `object-fit: fill` (105 of 111) — the least portable of the three
+   mechanisms. The CLS paragraph said the opposite.
+5. **Slack's real asset problem is video, not images.** 30 `<video>` elements over 20 files,
+   **44.2 MB unique** — 6.5× the 6.8 MB of images. "The single largest unforced asset cost I
+   measured" was wrong by an order of magnitude. Byte budgets and the self-check now cover video.
+6. **`alt` missing is not zero in the wild.** Airbnb ships **20 `<img>` with no `alt` attribute**, all
+   16px badge and amenity icons, so a screen reader announces UUID filenames. The file previously
+   asserted `missing` was 0 on every page probed.
+7. **Duolingo's illustration system is not flat-and-ungraded.** The hero has gradient shading, cast
+   shadows, articulated fingers and a three-quarter-perspective object. The real invariants — no
+   outlines, one shared saturated palette, one light direction, a fixed face part-kit — replace the
+   inherited description. A rule attributed to the wrong exemplar is a rule nobody trusts twice.
+8. **Notion's two registers, stated precisely.** The ink is always black; **colour is only ever the
+   container.** The doodle faces sit inside coloured rings and on red, blue and yellow filled discs.
+   "The doodles are never coloured" was imprecise about the mechanism that makes it work.
+9. **Basecamp's social-proof number is injected at runtime** — 117,231 on this pass, 118,254 on the
+   last. Reframed as the strongest form of the genre: a claim that can go down.
+10. **Page-level image counts drift** with lazy-scroll depth and A/B bucket (Stripe 44→52, Slack
+    50→89, Apple 89→111, Vercel 5→19). The reference table now says so, marks re-probed rows †, and
+    the surviving invariants are ratios, bytes and per-element geometry.
+
+### Scoped after adversarial testing
+
+Three realistic products were constructed where the file's advice as written produces a worse
+interface. Each is now scoped in *When this advice is wrong*, and the corresponding rule up-page
+carries a pointer.
+
+- **Short-form vertical video feed** → "two ratios + `object-fit: cover`" decapitates every creator
+  thumbnail. `cover` is safe for environments, destructive for framed humans and vertical compositions.
+- **Chinese team chat** → "initials, never a generated pattern" produces a wall of 张 / 李 / 王. The
+  initials rule is a Latin-script rule; CJK takes trailing characters, and where nothing discriminates
+  a hashed pattern is the honest fallback.
+- **Classifieds feed on sub-$120 Android** → "AVIF everywhere" wins bytes and loses frames, because
+  AVIF decode is CPU-expensive and a fling decodes dozens of images per second. AVIF for heroes;
+  measure decode on the p90 device before defaulting a long scroll to it.
+
+Two smaller scopes were added the same way: the **icon 0.85×–1.35× band** is a pointer-and-arm's-length
+band and does not transfer to TV, kiosk, automotive or large-text modes; the **oversupply ≤2× rule**
+must exempt anything the user can pinch or zoom. The **majority-empty `alt` ratio** is a marketing-page
+shape and inverts on catalogues, galleries, docs and clinical surfaces.
+
+### Corpus consistency
+
+- **`libraries/maps-3d-media.md`** — ThumbHash/BlurHash stars, downloads and frozen-by-design
+  publish dates match to the digit. No divergence; this file continues to adopt that verdict.
+- **`references/consumer-and-marketplace.md`** — Airbnb 307×230 at 1.33 agrees. Its measured frame
+  (`border-radius: 20px`, `overflow: clip`, `background: #DDDDDD`, plus Vinted's `#E1E6E6` at r6) was
+  pulled into *User-generated imagery* to replace this file's unmeasured "set a mid-neutral".
+- **`references/editorial-luxury-and-marketing.md`** — the true-black-vs-grayscale logo-row verdict
+  agrees; its `i.pravatar.cc` tell was added to the generated-placeholder list.
+- **`evaluation/results/2026-09-control-baseline.md`** — Corporate Memphis absence agrees.
+
+No conflicting numbers for the same measurement were left in the corpus.

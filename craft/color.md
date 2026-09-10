@@ -1,677 +1,845 @@
 # Color systems for interfaces
 
-**Measured:** 2026-09. Every hex, ratio and OKLCH triple below was read from a live product with
-Playwright (computed styles or the shipped stylesheet), or computed from those values with the
-scripts described at the end. Nothing here is recalled from memory.
+**Measured 2026-09.** Every hex, ratio, OKLCH triple and ΔE below was read from a live product
+with Playwright (CSS Typed OM on `document.documentElement`, so runtime-injected theme variables
+are captured, not just what's in the stylesheet), or computed from those values with the scripts in
+the last section. Contrast is computed with WCAG 2 and with APCA 0.1.9 (validated: `#fff` on `#000`
+= 21.00:1 / Lc −107.9). Forced-colors behavior was tested in Chromium 148.0.7778.96. Nothing here
+is recalled from memory. Where I could not measure something, it says so.
 
-The single most useful fact in this file, and the one that should reframe everything else:
+The one number that should reframe everything else. Chromatic pixel share (fraction of pixels with
+OKLCH chroma > 0.04), measured at 1440px:
 
-> On Linear's homepage at 1440px — dark theme, including a full in-product screenshot —
-> **0.04% of pixels have OKLCH chroma above 0.04.** On GitHub's issue list at 1440px, a dense
-> light-mode list with user-authored label pills, it is **0.86%**. For comparison, Vercel's Geist
-> *color documentation page* — a page whose entire content is color swatches — is 6.45%.
+| Surface | C > 0.04 | C > 0.10 |
+|---|---|---|
+| Linear homepage — dark, includes a full in-product screenshot | **0.04%** | 0.02% |
+| GitHub `vercel/next.js` issue list — dense light-mode list with user-authored label pills | **0.92%** | 0.49% |
+| A typical AI-generated dashboard (built below, four stat cards, five-color bar chart) | **11.60%** | 4.38% |
+| The same dashboard, same information, fixed (also below) | **0.30%** | 0.25% |
 
 Product interfaces made by good designers are 99% neutral. Not "mostly neutral." Ninety-nine
-percent. And note what the 6.45% figure means: a documentation page consisting of nine ten-step
-color ramps, rendered as ~90 filled swatches, is still 93.5% grayscale. If you take one thing from
-this file, take the number.
+percent. In the Linear screenshot the *only* chromatic pixels in a 1440×1250 viewport are one
+yellow favorite star, one amber issue-status ring, and one violet branch icon — and the in-product
+AI agent panel visible in that screenshot is a plain `#0f1011` surface with a `#ffffff14` hairline.
+No gradient, no glow, no purple.
 
 ---
 
 ## If you only apply five things
 
-1. **Build the neutral ramp first, and make the interface work in grayscale before you add any hue.**
-   10–12 steps, spaced by perceptual lightness, not by hex arithmetic. If the screen is not legible
-   and hierarchical with zero color, color will not save it.
-2. **Never use `#000` or `#fff` for text.** Light mode: text at `oklch(0.24–0.29 …)`, page at
-   `#fff` or `oklch(0.99 …)`. Dark mode: page at `oklch(0.14–0.18 …)`, text at
-   `oklch(0.95–0.98 …)`. Measured: Linear `#282a30` on `#fff`; Radix `#1c2024`; Primer `#1f2328`;
-   Notion black-at-90%-alpha. Nobody ships `#000`.
-3. **One accent. Allowed uses: primary action, current selection, focus ring, active nav item, link.
-   That is the whole list.** Not headings, not icons, not borders, not card backgrounds, not
-   "featured" badges. If you catch yourself needing a second accent, you need a neutral instead.
-4. **Semantic colors are chosen by target lightness, not by hue name.** Pick L ≈ 0.55 for
-   on-light and L ≈ 0.66–0.72 for on-dark, then take whatever chroma the gamut allows at that
-   lightness. Measured across Primer, Wise and Geist, every success/warning/danger triple lands at
-   L 0.51–0.58 with chroma ranging 0.117 (yellow) to 0.206 (red). `#ff0000 / #ffff00 / #00ff00` are
-   at L 0.63 / 0.97 / 0.87 — which is why naive traffic-light palettes look broken.
-5. **Dark mode is not an inversion. Elevation goes up in lightness (+3 to +5 L per level), borders
-   carry the structural load, and text-role accents get lighter by ΔL +0.11 to +0.17 while
-   fill-role accents stay put.** Measured: Geist's border alpha goes `#00000014` (8%) →
-   `#ffffff25` (15%); Primer's `fgColor-accent` goes `#0969da` (L 0.540) → `#4493f8` (L 0.663)
-   while `bgColor-accent-emphasis` moves only `#0969da` → `#1f6feb` (L 0.540 → 0.569).
+1. **Build the neutral ramp first and make the screen work in grayscale.** 10–12 steps spaced by
+   perceptual lightness. If the layout isn't legible and hierarchical with zero hue, color won't
+   save it — it will only hide the problem.
+2. **Never `#000` text, never `#fff` text.** Light mode text at L 0.24–0.29
+   (measured: Radix `slate-12` `#1c2024` L 24.1 · Primer `#1f2328` L 25.4 · Mercury `#272735`
+   L 27.9 · Linear `#282a2f` L 28.5). Dark mode text at L 0.94–0.97 (Linear `#f7f8f8` L 97.8 ·
+   Primer `#f0f6fc` L 97.0 · Geist `#ededed` L 94.7 · Radix `slate-12` `#edeef0` L 94.9).
+   Nobody ships `#000`. shadcn's default theme does — that is the tell.
+3. **Choose semantic colors by target lightness, not by hue name.** Every foreground status color
+   in GitHub Primer's light theme lands in **L 49.5–56.5** and chroma falls wherever the sRGB gamut
+   allows (0.117 for amber, 0.207 for purple). Mercury goes further: *seven* hue families share one
+   lightness ladder to within 0.2 L. Naive `#f00 / #ff0 / #0f0` sit at L 62.8 / 96.8 / 86.6 — which
+   is why traffic-light palettes look broken.
+4. **One accent, and it needs exactly two values.** A *fill* value at L 0.54–0.58 (so white text
+   passes on it) and a *text* value that changes per theme. Measured: Primer's fill moves +2.9 L
+   from light to dark while its foreground moves +12.3 L. Allowed uses of the accent, exhaustively:
+   primary action, current selection, focus ring, link, one live indicator.
+5. **Dark mode is not an inversion.** Elevation is lightness (+3 to +5 L per step, roughly 2× the
+   light-mode step size). Borders carry the structural load — Linear's dark borders sit +12.6 to
+   +22.7 L above the page while its light borders sit only −6.8 to −10.7 L below it. Text-role
+   accents gain +10 to +24 L; fill-role accents stay put. Chroma barely moves in either.
 
 ---
 
-## The measured reference table
+# The measured reference tables
 
-### Neutral ramps, side by side (OKLCH, light theme)
+## Neutral ramps, light theme
 
-| Role | Linear | Vercel Geist | Stripe Sail | GitHub Primer | Radix `slate` | Notion `tatami` | Mercury (beige) |
+Values as shipped; `L` is OKLCH lightness ×100.
+
+| Role | Linear | Vercel Geist | GitHub Primer | Radix `slate` | Stripe Sail | Mercury | Notion `tatami` |
 |---|---|---|---|---|---|---|---|
-| Page ground | `#fff` L 100 | `#fff` L 100 | `#f7fafc` L 98.3 | `#fff` L 100 | `1 #fcfcfd` L 99.1 | `#fff` | `#fbfcfd` L 99.1 |
-| Subtle surface | `#f9f8f9` L 98.0 | `#fafafa` L 98.5 | — | `#f6f8fa` L 97.8 | `2 #f9f9fb` L 98.3 | `#f9f9f8` L 98.2 | `#f4f5f9` L 97.1 |
-| Component bg | `#f4f2f4` L 96.3 | `#f2f2f2` L 96.1 | `#e3e8ee` L 92.9 | `#f6f8fa` L 97.8 | `3 #f0f0f3` L 95.6 | `#f6f5f4` L 97.1 | `#ededf3` L 94.8 |
-| … hover | `#eeedef` L 94.7 | `#ebebeb` L 94.0 | — | `#eff2f5` L 96.0 | `4 #e8e8ec` L 93.2 | — | `#dddde5` L 90.0 |
-| … active | `#e9e8ea` L 93.2 | `#e6e6e6` L 92.5 | — | `#e6eaef` L 93.5 | `5 #e0e1e6` L 91.0 | — | `#c3c3cc` L 82.0 |
-| Border subtle | `#e9e8ea` L 93.2 | `#00000014` α8% | — | `#d1d9e0b3` L 88.1 | `6 #d9d9e0` L 88.7 | `#00000014` α8% | `#c3c3cc` L 82.0 |
-| Border default | `#e4e2e4` L 91.5 | `#0000001a` α10% | `#c0c8d2` L 83.0 | `#d1d9e0` L 88.1 | `7 #cdced6` L 85.3 | `#0000001a` α10% | `#535461` L 45.0 ¹ |
-| Border strong | `#dcdbdd` L 89.3 | `#00000036` α21% | — | `#818b98` L 63.3 | `8 #b9bbc6` L 79.4 | — | `#272735` L 27.9 ¹ |
-| Text disabled | `#86848d` L 61.8 | `#00000057` α34% | `#a3acb9` L 74.1 | `#818b98` L 63.3 | `9 #8b8d98` L 64.5 | `#0000004d` α30% | `#70707d` L 55.0 |
-| Text tertiary | `#6f6e77` L 54.2 | `#8f8f8f` L 65.0 | `#687385` L 55.3 | — | `10 #80838d` L 61.1 | — | — |
-| Text secondary | `#3c4149` L 37.4 | `#4c4c4c` L 41.7 | `#4f566b` L 45.5 | `#59636e` L 49.5 | `11 #60646c` L 50.2 | `#0000008a` α54% | `#535461` L 45.0 |
-| Text primary | `#282a30` L 28.5 | `#171717` L 20.5 | `#3c4257` L 38.2 | `#1f2328` L 25.4 | `12 #1c2024` L 24.1 | `#000000e5` α90% | `#272735` L 27.9 |
-| Ramp **hue** | 291–325 (pink→violet) | 0, chroma **0.000** | 237–274 (blue) | 244–255 (blue) | 264–286 (violet) | 61–106 (**warm**) | 88–106 (**warm**) |
-| Ramp **max chroma** | 0.015 | **0.000** | 0.044 | 0.023 | 0.016 | 0.010 | 0.021 |
+| Page | `#ffffff` 100 | `#ffffff` 100 | `#ffffff` 100 | `1 #fcfcfd` 99.1 | `#ffffff` 100 | `#fbfcfd` 99.1 | `#ffffff` 100 |
+| Subtle surface | `#f9f8f9` 98.0 | `#fafafa` 98.5 | `#f6f8fa` 97.8 | `2 #f9f9fb` 98.3 | `50 #f7fafc` 98.3 | `#f4f5f9` 97.1 | `#f6f5f4` 97.1 |
+| Component bg | `#f4f2f4` 96.3 | `100 #f2f2f2` 96.2 | `#f6f8fa` 97.8 | `3 #f0f0f3` 95.6 | `100 #e3e8ee` 92.9 | `#ededf3` 94.8 | — |
+| … hover | `#eeedef` 94.7 | `200 #ebebeb` 93.9 | — | `4 #e8e8ec` 93.2 | — | `#dddde5` 90.0 | `#dfdcd9` 89.6 |
+| … active | `#e9e8ea` 93.2 | `300 #e6e6e6` 92.3 | — | `5 #e0e1e6` 91.0 | — | `#c3c3cc` 82.0 | — |
+| Border subtle | `#e9e8ea` 93.2 | `α 8%` (−6.1) | `#d1d9e0` @70% 88.1 | `6 #d9d9e0` 88.7 | `200 #c1c9d2` 83.2 | `#c3c3cc` 82.0 | `black 10%` (−7.7) |
+| Border default | `#e4e2e4` 91.5 | `α 10%` (−7.7) | `#d1d9e0` 88.1 | `7 #cdced6` 85.3 | — | `#707393` @22% | — |
+| Border strong | `#dcdbdd` 89.3 | `α 21%` (−16) | `#818b98` 63.3 | `8 #b9bbc6` 79.4 | `300 #a3acb9` 74.1 | `#535461` 45.0 ¹ | — |
+| Text disabled | `#86848d` 61.8 | `700 #8f8f8f` 64.9 | `#818b98` 63.3 | `9 #8b8d98` 64.5 | `400 #8792a2` 65.6 | `#70707d` 55.0 | `black 30%` |
+| Text tertiary | `#6f6e77` 54.2 | `800 #7d7d7d` 59.0 | — | `10 #80838d` 61.1 | `500 #697386` 55.4 | — | `black 54%` |
+| Text secondary | `#3c4149` 37.4 | `900 #4c4c4c` 41.8 | `#59636e` 49.5 | `11 #60646c` 50.2 | `700 #3c4257` 38.2 | `#535461` 45.0 | — |
+| Text primary | `#282a2f` 28.5 | `1000 #171717` 20.4 | `#1f2328` 25.4 | `12 #1c2024` 24.1 | `900 #1a1f36` 24.7 | `#272735` 27.9 | `black 90%` |
+| Ramp **hue** | 268–326 (pink→blue) | **none** | 244–258 (blue) | 248–286 (violet) | 236–274 (blue) | 275–286 (violet) | 62–107 (**warm**) |
+| Ramp **max chroma** | 0.015 | **0.000** | 0.023 | 0.016 | **0.044** | 0.026 | 0.005 |
 
-¹ Mercury's `--border-default` and `--border-emphasized` really are that dark — they are input
-outlines and focus-adjacent edges on a near-white page, not card dividers. Its card-divider
-equivalent is `--border-subdued: #c3c3cc` (L 82.0). Worth noting because "border" means different
-things in different systems: check what a token is *used on* before copying its value.
+¹ Mercury's `--border-default` really is that dark — it is an input outline, not a card divider.
+Its divider equivalent is `--border-subdued: #c3c3cc` (L 82.0). *Check what a token is used on
+before copying its value;* "border" means different things in different systems.
 
-**Read that last row.** The largest chroma anywhere in six of these seven neutral ramps is under
-0.02 — about 1/12th of a saturated brand color. Stripe is the outlier at 0.044, and it is the one
-whose grays visibly read as "blue." Vercel's gray is literally `hsla(0, 0%, X%)` — chroma exactly
-zero, no tint at all.
+Read the last row. Six of seven ramps top out under chroma 0.026 — about a tenth of a saturated
+brand color. Vercel's gray is literally `hsla(0, 0%, X%)`: chroma exactly zero, no tint at all.
+Stripe at 0.046 is the outlier and it is the one whose grays visibly read navy (`#3c4257`), which
+works because Stripe's entire identity is blue.
 
-### The same ramps, dark theme
+## Neutral ramps, dark theme
 
-| Role | Linear dark | Geist dark | Primer dark | Radix `slate` dark |
+| Role | Linear | Geist | Primer | Radix `slate` |
 |---|---|---|---|---|
-| Page ground | `#08090a` L 13.9 | `#000` L 0 **(!)** | `#0d1117` L 17.6 | `1 #111113` L 17.9 |
-| Content surface | `#0f1011` L 17.2 | `#0a0a0a` L 14.5 ² | `#151b23` L 22.0 | `2 #18191b` L 21.3 |
-| Component bg | `#1c1c1f` L 22.8 | `#1a1a1a` L 21.8 | `#212830` L 27.4 | `3 #212225` L 25.2 |
-| … hover | `#232326` L 25.7 | `#1f1f1f` L 23.9 | `#262c36` L 29.2 | `4 #272a2d` L 28.3 |
-| … active | `#28282c` L 27.8 | `#292929` L 28.1 | `#2a313c` L 31.1 | `5 #2e3135` L 31.2 |
-| Border subtle | `#23252a` L 26.4 | `#ffffff17` α9% | `#3d444db3` L 38.4 @70% | `6 #363a3f` L 34.7 |
-| Border default | `#34343a` L 32.7 | `#ffffff25` α**15%** | `#3d444d` L 38.4 | `7 #43484e` L 39.9 |
-| Border strong | `#3e3e44` L 36.6 | `#ffffff3d` α24% | `#656c76` L 52.9 | `8 #5a6169` L 48.9 |
-| Text disabled | `#62666d` L 50.9 | `#ffffff8a` α54% | `#656c76` L 52.9 | `9 #696e77` L 53.7 |
-| Text secondary | `#8a8f98` L 64.9 | `#a1a1a1` L 70.9 | `#9198a1` L 67.7 | `11 #b0b4ba` L 76.9 |
-| Text primary | `#f7f8f8` L 97.8 | `#ededed` L 94.6 | `#f0f6fc` L 97.0 | `12 #edeef0` L 94.9 |
+| Sunken | — | — | `#010409` 10.4 | — |
+| Page | `#08090a` 13.9 | `200 #000000` **0.0** | `#0d1117` 17.6 | `1 #111113` 17.9 |
+| Content surface | `#0f1011` 17.2 | `100 #0a0a0a` 14.6 | `#151b23` 22.0 | `2 #18191b` 21.3 |
+| Component bg | `#1c1c1f` 22.8 | `100 #1a1a1a` 21.6 | `#212830` 27.4 | `3 #212225` 25.2 |
+| … hover | `#232326` 25.7 | `200 #1f1f1f` 23.8 | `#262c36` 29.2 | `4 #272a2d` 28.3 |
+| … active | `#28282c` 27.8 | `300 #292929` 28.0 | `#2a313c` 31.1 | `5 #2e3135` 31.2 |
+| Border subtle | `#23252a` 26.4 | `α 9%` white | `#3d444d` @70% | `6 #363a3f` 34.7 |
+| Border default | `#34343a` 32.7 | `α 13–15%` white | `#3d444d` 38.4 | `7 #43484e` 39.9 |
+| Border strong | `#3e3e44` 36.6 | `α 24%` white | `#656c76` 52.9 | `8 #5a6169` 48.9 |
+| Text disabled | `#62666d` 50.9 | `α 51%` white | `#656c76` 52.9 | `9 #696e77` 53.7 |
+| Text secondary | `#8a8f98` 64.9 | `900 #a1a1a1` 70.8 | `#9198a1` 67.7 | `11 #b0b4ba` 76.9 |
+| Text primary | `#f7f8f8` 97.8 | `1000 #ededed` 94.7 | `#f0f6fc` 97.0 | `12 #edeef0` 94.9 |
 
-² Vercel is the only measured product whose dark page ground is pure `#000` (`--ds-background-200`). Every piece of content sits on `--ds-background-100` = `#0a0a0a` above it, and body text is `#ededed`, not white. Read that as: if you use a black page, do not also use white text.
+Vercel is the only measured product with a pure `#000` page ground — and every piece of content
+sits on `--ds-background-100` = `#0a0a0a` (L 14.6) *above* that black, with body text at `#ededed`,
+not white. If you use a black page, do not also use white text.
 
-### Accents, one row per product
+## The single most important structural finding: lightness-locked ladders
 
-| Product | Light accent | Dark accent | White-on-accent (WCAG 2) | Note |
-|---|---|---|---|---|
-| Linear | `#7070ff` oklch(0.622 0.207 278) | `#5e6ad2` oklch(0.567 0.159 275) | 3.85 → **4.70** | goes *darker* + desaturates in dark, because dark is the fill role |
-| Stripe | `#635bff` oklch(0.578 0.235 278) | — | 4.70 | |
-| Mercury | `#5266eb` oklch(0.570 0.200 272) | — | 4.71 | `--surface-magic` (the AI surface) is **the same token** |
-| Primer fill | `#0969da` oklch(0.540 0.191 258) | `#1f6feb` oklch(0.569 0.202 260) | 5.19 / 4.63 | fill lightness barely moves |
-| Primer text | `#0969da` L 0.540 | `#4493f8` L 0.663 | — | text role gains **ΔL +0.123** |
-| Geist focus | `#0072f5` oklch(0.579 0.215 258) | `#52a8ff` oklch(0.717 0.152 251) | 4.44 | the biggest measured desaturation: ΔC −0.062 |
-| Tailwind `violet-500` | `#8b5cf6` oklch(0.606 0.219 293) | — | **4.23 — fails AA** | the AI default |
+Four of the seven systems build every hue family on **one shared lightness ladder**, varying only
+hue and chroma. This is the mechanism behind "fix lightness, let chroma float," implemented at
+scale.
 
-### Semantic status colors: measured, versus the naive version
+**Mercury** — seven families, measured OKLCH L per step:
 
-| | OKLCH | Contrast on white |
+```
+step      0     50    100   150   200   300   400   500   600   700   800   900   950
+beige   100.0  99.1  97.0  94.8  90.0  82.0   —    55.0  45.0  34.0  28.0  23.9  20.9
+blue    100.0  98.8  97.0  94.8  90.0  82.0   —    55.1  45.1  33.9  27.9  24.0  21.0
+green   100.0  98.9  97.1  94.9  90.1  82.1   —    55.0  45.0  33.9  28.1  23.9  20.9
+orange  100.0  99.1  97.1  94.8  90.1  82.0   —    54.9  45.0  34.0  28.0  24.0  21.0
+purple  100.0  98.9  97.0  94.8  90.1  82.0   —    55.0  45.0  34.0  27.8  24.1  20.9
+neutral 100.0  99.1  97.1  94.8  90.0  82.0  69.9  55.0  45.0  33.9  27.9  24.1  20.9
+```
+
+Maximum deviation across all seven families at any step: **0.2 L**. Mercury also ships a second
+chroma tier at the same lightnesses — `-base-` families run chroma 0.019–0.052 (chrome) and
+`-magic-` families run 0.050–0.134 (emphasis). Same lightness, two loudnesses.
+
+**Stripe Sail** does the same across 8+ hue families: `50` ≈ 98.2–98.6, `100` ≈ 92.7–93.6,
+`200` ≈ 81.4–83.9, `500` ≈ 53.8–58.0, `900` ≈ 24.1–25.7.
+
+**Radix** `gray` / `slate` / `sand` are identical to within 0.6 L at every one of the 12 steps
+(99.1 / 98.2 / 95.5 / 93.1 / 90.7 / 88.5 / 85.1 / 79.2 / 64.3 / 61.0 / 50.3 / 24.4). So you can
+swap your neutral's temperature with zero contrast or layout consequence.
+
+**Tailwind v4** `gray` / `slate` / `zinc` / `neutral` / `stone` likewise share one ladder to within
+1.1 L through step 900 (1.8 L at 950). What they share is the *problem* — see the next section.
+
+The practical consequence: **your semantic colors should be indices into a ladder, not
+hand-picked hexes.** `danger = red-600`, `warning = amber-600`, `success = green-600` — where all
+three `600`s are the same L — is a system. Three hand-picked hexes is not.
+
+## Semantic status colors, measured
+
+GitHub Primer ships seven independent foreground semantic families. Look at the lightness column:
+
+| Token | Light | L | C | Dark | L | C | ΔL | ΔC |
+|---|---|---|---|---|---|---|---|---|
+| `fgColor-success` | `#1a7f37` | 52.4 | 0.140 | `#3fb950` | 69.5 | 0.181 | **+17.1** | +0.041 |
+| `fgColor-accent` | `#0969da` | 54.0 | 0.191 | `#4493f8` | 66.3 | 0.169 | **+12.3** | −0.021 |
+| `fgColor-attention` | `#9a6700` | 55.4 | **0.117** | `#d29922` | 72.0 | 0.140 | **+16.5** | +0.023 |
+| `fgColor-severe` | `#bc4c00` | 55.7 | 0.160 | `#db6d28` | 65.4 | 0.158 | +9.7 | −0.002 |
+| `fgColor-danger` | `#d1242f` | 55.7 | 0.206 | `#f85149` | 66.5 | 0.205 | +10.8 | −0.001 |
+| `fgColor-done` | `#8250df` | 56.3 | **0.207** | `#ab7df8` | 68.8 | 0.178 | +12.5 | −0.029 |
+| `fgColor-sponsors` | `#bf3989` | 56.5 | 0.187 | `#db61a2` | 66.2 | 0.168 | +9.7 | −0.019 |
+| `fgColor-muted` (neutral) | `#59636e` | 49.5 | 0.022 | `#9198a1` | 67.7 | 0.016 | +18.2 | −0.006 |
+
+Seven hues, light lightness spread **52.4 → 56.5** (4.1 points), chroma spread 0.117 → 0.207 (a
+factor of 1.8). Dark lightness spread 65.4 → 72.0. **Lightness moves +9.7 to +18.2 between themes;
+chroma moves by at most 0.041, which is noise.** "Desaturate your accents in dark mode" is folk
+advice that the measurements do not support. *Lighten* them.
+
+The fill (`-emphasis`) tokens behave completely differently:
+
+| Fill token | Light | Dark | ΔL | white-on light | white-on dark |
+|---|---|---|---|---|---|
+| `bgColor-accent-emphasis` | `#0969da` | `#1f6feb` | +2.9 | 5.19:1 | 4.63:1 |
+| `bgColor-success-emphasis` | `#1f883d` | `#238636` | −0.6 | 4.52:1 | 4.63:1 |
+| `bgColor-attention-emphasis` | `#9a6700` | `#9e6a03` | +1.1 | 4.87:1 | 4.65:1 |
+| `bgColor-danger-emphasis` | `#cf222e` | `#da3633` | +3.5 | 5.36:1 | 4.61:1 |
+| `bgColor-done-emphasis` | `#8250df` | `#8957e5` | +2.1 | 5.05:1 | 4.61:1 |
+
+**In dark mode all five fills land within 0.04 of each other at 4.61–4.65:1.** Somebody tuned every
+fill to sit just above the AA floor with white text. That is what a system looks like.
+
+Vercel Geist independently landed in the same place:
+
+| Geist `-900` | Light | L | Dark | L | ΔL | ΔC |
+|---|---|---|---|---|---|---|
+| red | `#cb2a2f` | 55.0 | `#ff6166` | 69.8 | +14.8 | −0.004 |
+| green | `#297a3a` | 51.6 | `#62c073` | 73.2 | +21.6 | +0.017 |
+| amber | `#a35200` | 52.8 | `#f2a20d` | 77.2 | +24.4 | +0.030 |
+| blue | `#0068d6` | 53.3 | `#52a8ff` | 71.8 | +18.5 | −0.036 |
+
+And the naive version, for contrast:
+
+| | OKLCH | On white |
 |---|---|---|
-| naive `#ff0000` | L 0.628 C 0.258 H 29 | 4.00 |
-| naive `#ffff00` | L **0.968** C 0.211 H 110 | **1.07 — invisible** |
-| naive `#00ff00` | L **0.866** C 0.295 H 143 | 1.37 |
-| Primer danger `#d1242f` | L 0.557 C 0.206 H 25 | 5.24 |
-| Primer attention `#9a6700` | L 0.554 C **0.117** H 75 | 4.87 |
-| Primer success `#1a7f37` | L 0.552 C 0.145 H 148 | 5.08 |
-| Wise negative `#cf2929` | L 0.556 C 0.201 H 27 | 5.25 |
-| Wise warning `#9a6500` | L 0.550 C 0.117 H 73 | 4.96 |
-| Wise positive `#008026` | L 0.522 C 0.160 H 146 | 5.10 |
-| Geist red-900 | L 0.550 C 0.197 H 24 | 5.38 |
-| Geist amber-900 | L 0.520 C 0.135 H 52 | 5.80 |
-| Geist green-900 | L 0.515 C 0.119 H 150 | 5.32 |
+| `#ff0000` | L 62.8 C 0.258 H 29 | 4.00:1 |
+| `#ffff00` | L **96.8** C 0.211 H 110 | **1.07:1 — invisible** |
+| `#00ff00` | L **86.6** C 0.295 H 143 | 1.37:1 |
 
-Three independent design systems, built by different teams, converged on **L 0.51–0.56 for all
-three status colors** and let chroma fall where the gamut allows. That's the algorithm.
+## Maximum sRGB chroma at fixed lightness, by hue
 
-### WCAG 2 vs APCA on identical pairs
+Binary-searched against the sRGB gamut boundary. This is the table that explains why your green
+never looks as vivid as your red.
+
+| Hue | L 0.45 | L 0.50 | **L 0.55** | L 0.60 | L 0.65 | L 0.70 | at L 0.55: white-on / black-on |
+|---|---|---|---|---|---|---|---|
+| 25 red | 0.183 | 0.203 | **0.223** | 0.243 | 0.236 | 0.191 | 5.45 / 3.47 |
+| 45 orange | 0.129 | 0.143 | **0.157** | 0.172 | 0.186 | 0.200 | 5.18 / 3.64 |
+| 75 amber | 0.095 | 0.106 | **0.116** | 0.127 | 0.137 | 0.148 | 4.95 / 3.81 |
+| 145 green | 0.142 | 0.157 | **0.173** | 0.189 | 0.205 | 0.220 | 4.52 / 4.18 |
+| 165 teal-green | 0.095 | 0.105 | **0.116** | 0.126 | 0.137 | 0.147 | 4.57 / 4.13 |
+| 195 cyan | 0.077 | 0.085 | **0.094** | 0.102 | 0.111 | 0.119 | 4.64 / 4.07 |
+| 230 sky | 0.090 | 0.100 | **0.110** | 0.120 | 0.130 | 0.140 | 4.73 / 3.99 |
+| 258 blue | 0.167 | 0.185 | **0.204** | 0.219 | 0.188 | 0.158 | 5.00 / 3.78 |
+| 275 blue-violet | 0.283 | 0.284 | **0.251** | 0.219 | 0.188 | 0.158 | 5.34 / 3.54 |
+| 293 violet | 0.250 | 0.278 | **0.277** | 0.241 | 0.207 | 0.174 | 5.63 / 3.36 |
+| 310 purple | 0.228 | 0.253 | **0.278** | 0.296 | 0.254 | 0.213 | 5.70 / 3.31 |
+| 330 magenta | 0.205 | 0.228 | **0.251** | 0.274 | 0.296 | 0.314 | 5.60 / 3.37 |
+
+At L 0.55, blue-violet holds **2.7× the chroma of cyan**. If you want a cyan or teal brand at a
+lightness that carries white text, it will look washed out and there is nothing you can do about it
+in sRGB. (Display-P3 helps, unevenly — see below.)
+
+## Which hues can carry white text at all
+
+Radix's step 9 is the brand fill for every hue scale. I computed white-on and black-on for all 23:
+
+**Can carry white text (WCAG ≥ 4.5):** `iris` `#5b5bd6` (5.37) · `violet` `#6e56cf` (5.39) ·
+`indigo` `#3e63dd` (5.21) · `purple` `#8e4ec6` (5.18) · `plum` `#ab4aba` (4.75). All five sit at
+L 54.0–57.9.
+
+**Cannot** (needs dark text): blue `#0090ff` (3.26) · grass (3.03) · green (3.16) · teal (3.07) ·
+cyan (3.00) · orange (2.97) · red `#e5484d` (3.91) · crimson (3.85) · pink (4.12) · tomato (3.87) ·
+brown, bronze, gold (3.5–3.7) · amber `#ffc53d` (1.58) · yellow (1.26) · lime (1.35) · mint (1.43) ·
+sky (1.48).
+
+**Five hues out of twenty-three.** All in the 260°–320° band. This is the mechanical reason every
+SaaS accent is blue-violet — it is the only place you can have a saturated brand fill *and* white
+text *and* a link color from the same hue. It is not fashion; it's the gamut.
+
+**So the real choice is:** accept blue-violet, or move your accent hue and give the fill dark text
+(Radix does exactly this — `amber-9` at L 85.4 takes `#111` at 11.96:1), or push your hue down to
+L 0.54 and lose chroma. All three are legitimate. Silently shipping white-on-`#3b82f6` at 3.68:1 is
+not.
+
+## WCAG 2 versus APCA on identical pairs
 
 | Pair | WCAG 2 | APCA Lc |
 |---|---|---|
-| Linear light `#282a30` on `#fff` | 14.34:1 | 101 |
-| Linear light `#6f6e77` on `#fff` | 5.03:1 | **75** |
-| Linear light `#86848d` on `#fff` | 3.68:1 | 65 |
-| Linear dark `#f7f8f8` on `#08090a` | 18.73:1 | −103 |
-| Linear dark `#8a8f98` on `#08090a` | **6.13:1** | **−42** |
-| Linear dark `#62666d` on `#08090a` | 3.45:1 | −23 |
-| Radix `slate-11` on `slate-2`, light | 5.65:1 | 76 |
-| Radix `slate-11` on `slate-2`, **dark** | **8.45:1** | **−60** |
-| white on `#3b82f6` (Tailwind blue-500) | 3.68:1 | −69 |
-| white on `#8b5cf6` (violet-500) | 4.23:1 | −74 |
-| `#fff` on `#000` | 21.00:1 | −108 |
+| Primer light `fgColor-default` `#1f2328` on `#fff` | 15.80:1 | 102.8 |
+| Primer light `fgColor-muted` `#59636e` on `#fff` | **6.11:1** | **80.5** |
+| Primer **dark** `fgColor-muted` `#9198a1` on `#0d1117` | **6.50:1** | **−45.8** |
+| Primer light `fgColor-disabled` on `#fff` | 3.45:1 | 62.1 |
+| Primer **dark** `fgColor-disabled` on `#0d1117` | 3.57:1 | −24.9 |
+| Linear light tertiary `#6f6e77` on `#fff` | 5.03:1 | 74.8 |
+| Linear **dark** tertiary `#8a8f98` on `#08090a` | 6.13:1 | −41.8 |
+| Radix `slate-11` on `slate-2`, light | 5.65:1 | 76.2 |
+| Radix `slate-11` on `slate-2`, **dark** | **8.45:1** | **−60.3** |
+| white on Tailwind v4 `blue-500` `#2b7fff` | 3.42:1 | −64.8 |
+| white on Tailwind v4 `violet-500` `#8e51ff` | **4.40:1 — fails AA** | −75.3 |
+| `#fff` on `#000` | 21.00:1 | −107.9 |
 
-Look at Linear's tertiary text: **5.03:1 in light mode reads better (APCA 75) than 6.13:1 in dark
-mode (APCA 42).** WCAG 2 systematically over-rewards light-text-on-dark. Radix compensates by
-holding APCA roughly constant across themes and letting WCAG float from 5.65 to 8.45 — a 50%
-increase in "official" contrast to buy the same perceived readability.
+**Primer's muted text has *more* WCAG contrast in dark mode (6.50 vs 6.11) and reads dramatically
+worse (Lc 45.8 vs 80.5).** WCAG 2 systematically over-rewards light-text-on-dark. Radix's answer,
+verified across all eight scales I tested, is to hold APCA roughly constant and let WCAG float:
+
+| Scale | light Lc | dark Lc | light WCAG | dark WCAG |
+|---|---|---|---|---|
+| `gray-11` on `gray-2` | 76.0 | −60.6 | 5.62 | **8.48** |
+| `slate-11` | 76.2 | −60.3 | 5.65 | **8.45** |
+| `sand-11` | 76.6 | −60.0 | 5.73 | **8.39** |
+| `blue-11` | 68.9 | −60.1 | 4.53 | **8.38** |
+| `red-11` | 70.5 | −60.3 | 4.94 | **8.56** |
+| `grass-11` | 71.2 | −65.3 | 4.82 | **9.30** |
+| `amber-11` | 68.8 | −77.6 | **4.43** | **11.52** |
+| `iris-11` | 76.1 | −60.1 | 5.74 | **8.48** |
+
+Dark-mode WCAG is 1.5–2.6× the light-mode value for the same perceived readability. Note also
+`amber-11` at 4.43:1 — Radix ships a step that technically fails AA because at Lc 68.8 it reads
+fine. Radix's documented guarantees (step 11 ≥ Lc 60, step 12 ≥ Lc 90 against step 2) hold in every
+scale I checked.
+
+**Working rule:** in dark mode, add roughly 2 points of WCAG ratio to hit the light-mode reading
+experience. Light secondary at 5:1 → dark secondary at ~7:1.
+
+## Accents, one row per product
+
+| Product | Light | Dark | white-on light | white-on dark | Note |
+|---|---|---|---|---|---|
+| Linear brand fill | `#7070ff` L 62.2 C 0.207 | `#5e6ad2` L 56.7 C 0.159 | **3.85 — fails** | 4.70 | goes *darker* in dark |
+| Linear link | `#7070ff` | `#828fff` | 3.85:1 on white | 6.95:1 on page | |
+| Linear focus ring | `#5e69d1` | `#5e69d1` | — | — | same both themes |
+| Linear accent tint | `#f1f1ff` L 96.2 C 0.019 | `#18182f` L 22.2 C 0.044 | — | — | wash flips, accent doesn't |
+| Primer | `#0969da` L 54.0 | fill `#1f6feb` / text `#4493f8` | 5.19 | 4.63 | split roles |
+| Geist focus | `#0072f5` L 57.9 C 0.214 | `#52a8ff` L 71.8 C 0.152 | 4.44 | — | biggest measured ΔC (−0.062) |
+| Mercury | `#5266eb` L 57.0 C 0.200 | — | 4.71 | — | `--surface-magic` is the same token |
+| Stripe Sail `blue-500` | `#5469d4` L 56.0 C 0.165 | — | 4.83 | — | |
+| Notion | `#097fe8` L 59.7 C 0.183 | — | 4.03 | — | |
+| Tailwind v4 `violet-500` | `#8e51ff` L 60.0 C 0.242 | — | **4.40 — fails** | — | the AI default |
+
+**Linear's light-mode link and primary button both fail WCAG AA at 3.85:1.** Great products ship
+brand-colored links that fail. If yours does, know it, and don't also make that color the only cue
+that something is interactive.
+
+Note Linear's direction of travel: the brand goes *darker and less saturated* in dark mode
+(L 62.2 → 56.7). That's not "desaturate for dark" — it's that in dark mode the token's job is a
+fill carrying white text, and 3.85:1 → 4.70:1 is the fix.
 
 ---
 
-## Decision 1 — how much color to use at all
+# Decisions
 
-The default failure is not choosing a bad palette. It is applying a fine palette to too many
-things. Run this against your own screenshot before you argue with anything else in this file:
+## 1. How much color to use at all
+
+The common failure is not a bad palette. It is a fine palette applied to too many things.
+Screenshot your work and run this before arguing with anything else here:
 
 ```python
-# pip install pillow ; then: python3 chroma.py shot.png
+# pip install pillow ; python3 chroma.py shot.png
 from PIL import Image; import sys, math
 def lin(c):
-    c = c / 255.0
-    return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
-def chroma(r, g, b):
-    R, G, B = lin(r), lin(g), lin(b)
-    l = (0.4122214708*R + 0.5363325363*G + 0.0514459929*B) ** (1/3)
-    m = (0.2119034982*R + 0.6806995451*G + 0.1073969566*B) ** (1/3)
-    s = (0.0883024619*R + 0.2817188376*G + 0.6299787005*B) ** (1/3)
-    return math.hypot(1.9779984951*l - 2.4285922050*m + 0.4505937099*s,
-                      0.0259040371*l + 0.7827717662*m - 0.8086757660*s)
-im = Image.open(sys.argv[1]).convert('RGB'); im.thumbnail((700, 700))
-px = list(im.getdata()); n = len(px)
-print(f"chromatic (C>0.04): {100*sum(chroma(*p) > 0.04 for p in px)/n:.2f}%")
-print(f"strong    (C>0.10): {100*sum(chroma(*p) > 0.10 for p in px)/n:.2f}%")
+    c = c/255.0
+    return c/12.92 if c <= 0.04045 else ((c+0.055)/1.055)**2.4
+def chroma(r,g,b):
+    R,G,B = lin(r),lin(g),lin(b)
+    l = (0.4122214708*R+0.5363325363*G+0.0514459929*B)**(1/3)
+    m = (0.2119034982*R+0.6806995451*G+0.1073969566*B)**(1/3)
+    s = (0.0883024619*R+0.2817188376*G+0.6299787005*B)**(1/3)
+    return math.hypot(1.9779984951*l-2.4285922050*m+0.4505937099*s,
+                      0.0259040371*l+0.7827717662*m-0.8086757660*s)
+im = Image.open(sys.argv[1]).convert('RGB'); im.thumbnail((800,800))
+px = list(im.getdata()); n = len(px); cs = [chroma(*p) for p in px]
+print(f"chromatic (C>0.04): {100*sum(c>0.04 for c in cs)/n:.2f}%")
+print(f"strong    (C>0.10): {100*sum(c>0.10 for c in cs)/n:.2f}%")
 ```
 
-**Targets, measured from real products at 1440px:**
+Targets, from the measurements at the top: **product screen under 1%, hard ceiling 3%.** If you're
+over, you colored something that should have been neutral. In order of frequency: stat-card
+backgrounds, icon chips, non-status badges, chart fills, section dividers, "featured" treatments,
+and the hero gradient.
 
-| Surface | Chromatic pixel share |
-|---|---|
-| Dense product UI (Linear app view, dark) | 0.04% |
-| Dense product UI with user-generated color (GitHub issues) | 0.86% |
-| Product marketing page | 1–3% |
-| A page whose *subject* is color (Geist color docs) | 6.45% |
-| **Typical AI-generated dashboard** | 8–20% |
+**Two boundaries on this metric.** It measures *chrome*, not content. Mercury's homepage reads
+6.60% because it is a full-bleed photograph — the only interface elements on it are one `#5266eb`
+button and two frosted-glass pills. Exclude photography and data. And GitHub's 0.92% is *mostly*
+user-authored label pills (`Turbopack` magenta, `Error Overlay` magenta, `Form (next/form)` brown,
+`Image (next/image)` blue), not GitHub's own palette. GitHub built a deliberately colorless chrome
+so that user-chosen label colors would be the loudest thing in the row — because the labels are the
+data. **Your design system's color budget and your users' color budget are separate; spend yours so
+theirs can be seen.**
 
-If you are over 3% on a product screen, you have colored something that should have been neutral.
-The usual culprits, in order of frequency: card headers, icons, badges that aren't status,
-"featured" treatments, chart fills, section dividers, and the gradient behind the hero.
-
-**The generic alternative this replaces:** picking a 5-color palette and then finding a place to
-use all five. Real systems have one accent and a status set that only appears when something is
-actually wrong.
-
----
-
-## Decision 2 — building the neutral ramp
+## 2. Building the neutral ramp
 
 ### How many steps
 
-**10–12.** Fewer and you can't distinguish page/surface/hover/active/border-subtle/border in light
-mode. More and you're inventing distinctions nobody perceives.
-
-Radix uses 12 and assigns each an explicit job — this is the best-documented mapping in the
-industry and worth copying wholesale:
+**10–12.** Radix's 12 with explicit jobs is the best-documented mapping in the industry:
 
 | Step | Job |
 |---|---|
 | 1 | App background |
-| 2 | Subtle background (striped rows, code blocks, cards on a tinted page) |
+| 2 | Subtle background — striped rows, code blocks, cards on a tinted page |
 | 3 | Component background, rest |
 | 4 | Component background, hover |
-| 5 | Component background, pressed/selected |
-| 6 | Border, non-interactive (separators, card outlines, headers) |
+| 5 | Component background, pressed / selected |
+| 6 | Border, non-interactive — separators, card outlines |
 | 7 | Border, interactive component |
 | 8 | Border, strong / focus ring |
-| 9 | Solid fill (this is the accent's brand color in a hue scale) |
+| 9 | Solid fill (the brand color in a hue scale) |
 | 10 | Solid fill, hover |
-| 11 | Low-contrast text — Radix guarantees APCA Lc ≥ 60 on step 2 |
-| 12 | High-contrast text — Radix guarantees APCA Lc ≥ 90 on step 2 |
+| 11 | Low-contrast text — guaranteed Lc ≥ 60 on step 2 |
+| 12 | High-contrast text — guaranteed Lc ≥ 90 on step 2 |
 
-I verified both guarantees: `slate-11` on `slate-2` is Lc 76.2 light / 60.3 dark; `slate-12` is
-99.8 / 95.5.
+One detail worth stealing: **Radix's step 9 is byte-identical in light and dark** for every hue
+scale (`blue-9` is `#0090ff` in both, `red-9` is `#e5484d`, `iris-9` is `#5b5bd6`). Only the
+*neutral* scales change step 9 between themes. Your brand fill is one value; your neutrals flip.
 
 ### How to space the steps
 
-**Not evenly.** Measured `slate` light deltas in OKLCH lightness ×100:
+**Not evenly.** Measured Radix `slate` deltas in OKLCH L:
 
 ```
-1→2  0.9    2→3  2.7    3→4  2.4    4→5  2.2    5→6  2.3    6→7  3.4
-7→8  5.9    8→9 14.9    9→10 3.5   10→11 10.8  11→12 26.1
+light:  1→2 0.9   2→3 2.7   3→4 2.4   4→5 2.2   5→6 2.3   6→7 3.4
+        7→8 5.9   8→9 14.9  9→10 3.5  10→11 10.8  11→12 26.1
+dark:   1→2 3.5   2→3 3.9   3→4 3.1   4→5 2.9   5→6 3.5   6→7 5.3
+        7→8 9.0   8→9 4.8   9→10 4.6  10→11 18.6  11→12 18.0
 ```
 
-Surfaces and borders (1–8) are packed into ~20 points of lightness. Then a cliff to the solid
-fill, and text lives at the far end. This shape is correct and deliberate: **an interface needs
-many closely-spaced values near the background and two or three far away for text. It needs almost
-nothing in the middle.**
+Steps 1–8 (every surface and border you own) live inside **20 points of lightness in light mode
+and 30 in dark**. Then a cliff, and text lives at the far end. **An interface needs many tightly
+packed values near the ground and two or three far away for text. It needs almost nothing in
+between.** Linear's light theme makes this brutal: it ships **zero neutral tokens between L 61.8 and L 87.1**
+— a 25.3-point hole in the middle of the ramp, verified across all 33 of its opaque low-chroma
+tokens — and the product is fine.
 
-Linear's light theme makes this brutally explicit — it has *zero* tokens between L 61.8 and L 89.3.
-A 27-point hole in the middle of the ramp, and the product is fine.
+Note the light/dark asymmetry: dark steps 1→6 are **1.3–3.9× wider** than the light ones. The eye
+discriminates far better near white. Inverting a light ramp gives you a dark theme where the page
+and the card are two points apart and therefore identical.
 
-Contrast with Tailwind v4's neutral ramp deltas:
+### Contrarian: Tailwind's ramp is not a UI ramp
+
+Measured OKLCH L deltas down `neutral` (chroma exactly 0, so nothing is ambiguous). `gray`,
+`slate`, `zinc` and `stone` match these to within ~1 L at every step:
 
 ```
-50→100 1.5   100→200 4.8   200→300 5.2   300→400 16.2   400→500 15.2
-500→600 11.7  600→700 6.8   700→800 10.2  800→900 6.4   900→950 6.0
+50→100  1.5   100→200 4.8   200→300  5.2   300→400 16.2   400→500 15.2
+500→600 11.7  600→700 6.8   700→800 10.2  800→900  6.4   900→950  6.0
 ```
 
-**Contrarian point: Tailwind's ramp is not a UI ramp, and using it as one is why so much output
-looks the same.** The 16.2-point hole between `300` and `400` means there is no value between
-"visible border" and "clearly a mid-gray" — so every Tailwind interface uses `gray-200` for every
-border and `gray-500` for every muted text, because those are the only two steps that work. That
-uniformity is a fingerprint. Radix's 6/7/8 (88.7 / 85.3 / 79.4) gives you three distinguishable
-border weights; Tailwind gives you one.
-
-If you stay on Tailwind, define your own extra steps rather than reaching for `gray-400`:
+The two largest steps in the whole ramp — 16.2 and 15.2 — sit exactly where UI needs values: the
+region between "visible border" and "muted text." Above L 86 Tailwind gives you four steps
+(50/100/200/300); Radix gives you eight (1–8) in the same range. That is the concrete reason every
+Tailwind interface uses `gray-200` for every border and `gray-500` for every muted label: they are
+the only steps that work. **That uniformity is a fingerprint.** If you stay on Tailwind, define the
+missing steps rather than reaching for `gray-400`:
 
 ```css
 @theme {
-  --color-n-250: oklch(0.900 0 0);  /* border-strong: between 200 and 300 */
-  --color-n-350: oklch(0.800 0 0);  /* the missing step */
+  --color-n-250: oklch(0.900 0 0);  /* the border-strong that doesn't exist */
+  --color-n-350: oklch(0.800 0 0);  /* the missing mid step */
 }
 ```
 
-### Why `#000` and `#fff` are usually wrong
+Also worth knowing: **Tailwind v4's palette is louder than v3's.** `violet-600` went from
+`#7c3aed` (C 0.247) to `#7f22fe` (C 0.281); `violet-500` from `#8b5cf6` (C 0.219) to `#8e51ff`
+(C 0.242). v4 targets P3 and clips into sRGB. If you moved v3 → v4 and things look more saturated,
+they are.
 
-Nobody serious ships either as *text*:
+### Why `#000` and `#fff` are wrong for text
 
-- Linear light text: `#282a30` (L 0.285)
-- Radix `slate-12`: `#1c2024` (L 0.241)
-- Primer `fgColor-default`: `#1f2328` (L 0.258)
-- Mercury `text-default`: `#272735` (L 0.279)
-- Notion `text-normal`: black at **90% alpha** = `#1a1a1a` effective (L 0.209)
-- shadcn's default theme: `--foreground: lab(0% 0 0)` — **pure `#000`.** This is the tell.
+Nobody serious ships either. The measured text primaries: Radix `#1c2024` (L 24.1), Primer
+`#1f2328` (25.4), Mercury `#272735` (27.9), Linear `#282a2f` (28.5), Geist `#171717` (20.4),
+Notion black-at-90%-alpha (effective 17.40:1), Stripe `#1a1f36` (24.7). shadcn's default theme
+ships `--foreground: #000000`, `--card-foreground: #000000`, `--popover-foreground: #000000`.
 
-Pure black text on pure white is 21:1 / APCA 108. It's not "too much contrast" in an abstract
-sense; it's that at 21:1 the edges of glyphs shimmer against the paper-white ground on an LCD,
-and every product that has done real typographic work backs off to 14–17:1.
+At 21:1 / Lc 108, glyph edges shimmer against a paper-white ground on an LCD. Every product that
+has done real typographic work backs off to 14–17.5:1. `#fff` as a *page or card background* is
+fine and near-universal; it is white *text on a dark ground* that causes trouble.
 
-The white end is more forgiving: `#fff` as a *page or card background* is fine and universal
-(Linear, Primer, Mercury elevated surfaces all use it). It's white *text on a dark ground* that
-causes trouble — see Decision 6.
-
-### Warm vs cool neutrals, and what each reads as
-
-Measured OKLCH hue of the neutral ramp:
+### Warm versus cool
 
 | Ramp | Hue | Max chroma | Reads as |
 |---|---|---|---|
-| Vercel Geist | none (chroma **0**) | 0.000 | engineered, clinical, brand-free |
-| Notion `tatami` | 61–106 (yellow-green) | 0.010 | paper, document, calm |
-| Mercury `beige` | 88–106 (yellow) | 0.021 | premium, warm-institutional |
+| Vercel Geist | none (C = 0.000) | 0.000 | engineered, clinical, brand-free |
+| Notion `tatami` | 62–107 | 0.005 | paper, document, calm |
+| Mercury `beige` | 88–106 | 0.019 | premium, warm-institutional |
 | Radix `sand` | 68–107 | 0.010 | editorial, humane |
-| Radix `slate` | 264–286 (violet) | 0.016 | modern-neutral, default-safe |
-| Primer | 247–258 (blue) | ~0.018 | technical, dense |
-| Stripe Sail | 253–274 (blue) | **0.044** | corporate-serious, distinctly "blue gray" |
-| Linear light | 291–325 (pink-violet) | 0.015 | — subliminal at this chroma |
+| Radix `slate` | 248–286 | 0.016 | modern-neutral, safe default |
+| Primer | 244–258 | 0.023 | technical, dense |
+| Stripe Sail | 236–274 | **0.044** | corporate-serious, visibly navy |
+| Tailwind `slate` | 248–266 | **0.046** | same as Stripe, and everywhere |
 
-**The rule:** stay under chroma 0.02 unless you mean it. Stripe at 0.044 is a deliberate,
-recognizable choice — `#3c4257` is visibly navy — and it works because Stripe's whole identity is
-blue. At 0.005–0.015 the tint is subliminal: users won't name it, but a warm ramp makes the same
-layout feel less clinical and a cool ramp makes it feel more technical.
+**Stay under chroma 0.02 unless you mean it.** At 0.005–0.016 the tint is subliminal — users can't
+name it, but a warm ramp makes the same layout feel less clinical. At 0.046 it is a visible color
+decision.
 
-Curious detail worth noticing: Linear's *surfaces* are hue 308–325 (pink) while its *text* is
-259–296 (blue-violet). Warm paper, cool ink. At chroma 0.003 vs 0.014 nobody can name it, but it's
-there.
+Two details worth copying. **Chroma should arc, not stay constant.** Radix `slate` runs
+0.001 → 0.016 (peak at steps 8–9) → 0.010: chroma peaks in the middle and falls at both ends,
+because near white and near black chroma reads as a cast rather than warmth. **And hue should
+drift.** Radix `slate` walks 286° → 248° down the ramp; Notion's warm gray walks 106° → 68° → 95°;
+Linear's *surfaces* sit at hue 308–326 (pink) while its *text* sits at 259–296 (blue-violet) —
+warm paper, cool ink, at chroma 0.003 where nobody can name it. Perfectly constant hue is a tell
+that a ramp was generated rather than designed.
 
-**When warm is wrong:** monitoring dashboards, code editors, anything where a warm cast will fight
-with syntax highlighting or with amber/red status colors. **When cool is wrong:** anything selling
-comfort, wellness, food, or money-you-own (Mercury went beige for exactly this reason).
+There is a fourth option nobody mentions: **tint your neutral with your brand hue.** Wise's neutral
+ramp sits at hue 122–146 — *green* — at chroma 0.004–0.006: `content-primary #0e0f0c` (19.23:1),
+`content-secondary #454745` (9.37:1), `content-tertiary #6a6c6a` (5.30:1). Nobody perceives those
+as green. They perceive the product as coherent, because the near-blacks share a hue with the brand.
+It costs nothing and it is the cheapest way off `slate`.
 
----
+**When warm is wrong:** monitoring dashboards, code editors, anything where a warm cast fights
+syntax highlighting or amber status. **When cool is wrong:** anything selling comfort, wellness,
+food, or money-you-already-own — Mercury went beige for exactly this reason.
 
-## Decision 3 — from a palette to a semantic system
+## 3. From a palette to a semantic system
 
 A palette is `gray-100 … gray-900`. A semantic system is `--surface-raised`, `--border-subtle`,
-`--text-secondary`. **Components must only ever reference semantic names.** The moment a component
-says `gray-200`, the dark theme becomes a find-and-replace job instead of a token swap.
+`--text-secondary`. **Components reference only semantic names.** The moment a component says
+`gray-200`, dark mode becomes a find-and-replace instead of a token swap.
 
-### The role set that actually shows up in shipped systems
-
-Here is Mercury's complete semantic layer, which is the tightest one I measured:
+Mercury's complete semantic layer — the tightest one I measured, reproduced verbatim:
 
 ```
-surface-default / -hover / -active     #ededf3 #dddde5 #c3c3cc
-surface-elevated / -hover / -active    #ffffff #fbfcfd #f4f5f9
-surface-input / -hover / -disabled     #fbfcfd #ffffff #ededf3
-surface-emphasized / -hover / -active  #5266eb1a #5266eb29 #5266eb38   ← accent at 10/16/22% alpha
-surface-inverted                       #1e1e2a
-surface-primary / -hover / -active     #5266eb #4354c8 #3442a6
-background-default / -secondary        #fbfcfd #f4f5f9
+surface-default / -hover / -active      #ededf3  #dddde5  #c3c3cc
+surface-elevated / -hover / -active      #ffffff  #fbfcfd  #f4f5f9
+surface-input / -hover / -disabled       #fbfcfd  #ffffff  #ededf3
+surface-emphasized / -hover / -active    #5266eb at 10% / 16% / 22%
+surface-frosted / -hover / -active       #707393 at 10% / 16% / 22%
+surface-primary / -hover / -active       #5266eb  #4354c8  #3442a6      (L 57.0 → 50.1 → 43.1)
+surface-magic / -hover / -active         #5266eb  #4354c8  #3442a6      ← identical to primary
+surface-inverted                         #1e1e2a
+background-default / -secondary          #fbfcfd  #f4f5f9
 
-border-subdued / -default / -emphasized  #c3c3cc #535461 #272735
-border-input / -focus / -error           #70739338 #5266eb #d0327538
+border-subdued / -default / -emphasized  #c3c3cc  #535461  #272735
+border-input / -focus / -error           #707393@22%  #5266eb  #d03275@22%
 
 text-emphasized / -default / -subdued / -disabled   #1e1e2a #272735 #535461 #70707d
-text-primary (= accent) / -on-primary / -error       #5266eb #ffffff #d03275
-
 icon-emphasized / -default / -subdued / -disabled   #1e1e2a #272735 #535461 #70707d
+text-primary (= accent) / -on-primary / -error      #5266eb #ffffff #d03275
 ```
 
-Note that the icon family ships the *same four values* as the text family. Mercury defines them
-separately anyway, so that icons can be optically corrected later without touching type — the token
-split is cheap and the migration isn't.
+Three things to steal:
 
-**How many of each you actually need:**
+**The icon family duplicates the text family exactly.** Four identical values, defined twice, so
+icons can be optically corrected later without touching type. The token split is free; the
+migration isn't.
 
-| Role family | Count | Notes |
+**States are alpha of one value, not new hexes.** `surface-emphasized` is the accent at 10/16/22%.
+`surface-primary`'s three states are three *opaque* values because they carry white text and alpha
+would break that.
+
+**Error hue is chosen to match the accent's lightness and chroma.** `#d03275` is L 58.0 C 0.199
+H 0.2; `#5266eb` is L 57.0 C 0.200 H 272. Only hue differs. Somebody did the math.
+
+### How many of each you actually need
+
+| Family | Count | Notes |
 |---|---|---|
 | Surfaces | **3** + states | `sunken` / `default` / `raised`. A fourth is almost always a mistake. |
-| Borders | **3** | `subtle` (dividers, non-interactive) / `default` / `strong` (focus, hover). |
-| Text | **4** | `primary` / `secondary` / `tertiary` / `disabled`. Mercury ships 4. Linear ships 4. Notion ships 4. |
-| Icon | 0 or 4 | Only split from text if your icons are optically lighter than your text (they usually are at small sizes). |
-| Accent roles | **4** | `fill`, `fill-hover`, `text` (the link/foreground version), `wash` (10% alpha selection tint). |
-| Status | 3–4 × 3 | `success` / `warning` / `danger` (+ `info`), each with `text` / `fill` / `wash`. |
+| Borders | **3** | `subtle` (dividers) / `default` / `strong` (focus, hover). |
+| Text | **4** | `primary` / `secondary` / `tertiary` / `disabled`. Mercury 4, Linear 4, Primer 3, Radix 2. Nobody ships 5. |
+| Icon | 0 or 4 | Split from text only if you'll optically correct. |
+| Accent | **4** | `fill`, `fill-hover`, `text`, `wash`. |
+| Status | 3–4 × 3 | Each of `success` / `warning` / `danger` (+ `info`) needs `text`, `fill`, `wash`. |
 
-**Two structural things worth stealing:**
+### Three values per status, not one with opacity
 
-**1. Wise's three-values-per-status rule.** Every status role has *three separate colors*, not one
-with opacity: a text value dark enough to pass AA, a brighter interactive/fill value, and a wash.
-Measured from `wise.com`:
+Wise's rule, measured live:
 
-```css
---color-content-positive:     #008026;                   /* text: 5.10:1 on white */
---color-interactive-positive: #2EAD4B;                   /* dots, bars, fills */
---color-background-positive:  rgba(54,199,151,0.10196);  /* wash — a THIRD hue */
-```
+| Status | `content-*` (text) | L / C / H | on white | **APCA** | `background-*` (wash) |
+|---|---|---|---|---|---|
+| positive | `#008026` | 52.2 / 0.160 / 146 | 5.10:1 | **74.5** | `#36c797` at 10% (H **166**) |
+| negative | `#cf2929` | 55.6 / 0.201 / 27 | 5.25:1 | **74.3** | `#ff8787` at 10% (H **21**) |
+| warning | `#9a6500` | 55.0 / 0.117 / 73 | 4.96:1 | **74.0** | `#ffac00` at 10% (H 74) |
+| accent | `#0097c7` | 63.3 / 0.126 / 230 | 3.36:1 | 60.4 | `#38c8ff` at 10% (H 229) |
 
-Note the wash is a *different, brighter* hue than either. Deriving the wash by fading the text
-color gives you a muddy, gray-green tint; deriving it from a brighter sibling gives you a wash that
-still reads as green at 10%.
+**The three status foregrounds land within 0.5 Lc of each other** — 74.5 / 74.3 / 74.0. That is the
+tightest tuning in this entire file, and it was done in APCA, not WCAG (whose spread is 0.29).
 
-**2. Notion's alpha ramp.** Notion's entire `tatami` neutral system is alpha-black and alpha-white,
-not opaque grays:
+Every wash is a *brighter, different* color, not the text color faded: positive shifts 20° of hue,
+negative shifts 6°, and all three jump 20–25 L. Fading `#008026` to 10% gives a muddy gray-green;
+`#36c797` at 10% still reads green.
+
+Wise is also the clean example of a brand hue outside the white-text band, handled honestly. Its
+`--color-interactive-accent` is `#9fe870` — chartreuse at L 85.7, where white text scores 1.47:1.
+So the fill takes `#163300` at 9.45:1, and the link color is that same dark green at 13.93:1 on
+white. No blue anywhere in the product. That is what "move off 270°" actually costs and buys.
+
+Primer does the same and switches strategy per theme. In light, washes are opaque pastels
+(`bgColor-success-muted: #dafbe1`). In dark, **they become alpha over the hue**:
+`bgColor-success-muted: #2ea043` at 15%, `bgColor-danger-muted: #f85149` at 10%,
+`bgColor-accent-muted: #388bfd` at 10%. Opaque dark tints look like mud; alpha over a dark ground
+stays chromatic.
+
+### Alpha tokens, and when they bite
+
+Notion's entire neutral system is alpha:
 
 ```
 alpha-black:  5% 10% 20% 30% 54% 59% 75% 90% 95%
 alpha-white:  5% 10% 20% 30% 50% 66% 75% 85% 95%
-text-strong = black 95%   text-normal = black 90%
-text-muted  = black 54%   text-disabled = black 30%
-border-base = black 10%  (dark: white 10–20%)
+text-strong = black 95% (19.44:1)   text-normal = black 90% (17.40:1)
+text-muted  = black 54% (4.61:1)    text-disabled = black 30% (2.12:1)
+border-base = black 10%
 ```
 
-Alpha tokens compose: the same `border-base` works on a white page, on a `#f6f5f4` card, and on a
-colored callout, with no new tokens. **The cost is that they're unstable over images and video, and
-they can't be color-picked against a spec.** Use alpha for borders, dividers, hover overlays and
-scrim; use opaque values for text and for any surface that stacks.
+Alpha composes: one `border-base` works on a white page, an `#f6f5f4` card, and a colored callout
+with no new tokens. **The costs are real and measurable.**
 
-### Elevation
+Compositing math, measured:
 
-**Most elevation should be a border, not a shadow.** Vercel says this in tokens: in dark mode
-every legacy `--shadow-*` token collapses to a border. Literally — `--shadow-smallest`,
-`--shadow-small`, `--shadow-medium`, `--shadow-large`, `--shadow-sticky` are all
-`0 0 0 1px #333` in dark theme, and `--shadow-hover` is `0 0 0 1px #fff`. Their real elevation
-token is named for what it is:
+| Over | 5% | 8% | 10% | 15% | 20% | 25% |
+|---|---|---|---|---|---|---|
+| white → ΔL | −3.8 | −6.1 | −7.7 | −11.5 | −15.5 | −19.5 |
+| `#0a0a0a` → ΔL | +5.7 | +8.9 | **+10.9** | +15.9 | +20.8 | +25.4 |
+
+The same alpha is **~1.4× stronger** in dark. And alpha stacks: two adjacent cards each with a 10%
+black border share an edge that composites to `#cfcfcf` (L 85.3) instead of `#e6e6e6` (L 92.3) — a
+visibly darker seam every time two cards touch. Use alpha for hover overlays, scrims and edges over
+imagery; use opaque values for text and for any surface that stacks.
+
+### Elevation is a border, not a shadow
+
+Vercel says this in tokens. Their real elevation primitive is named for what it is:
 
 ```css
---ds-shadow-border-base:  0 0 0 1px #00000014;   /* light: 8% black */
-                          0 0 0 1px #ffffff25;   /* dark:  15% white */
---ds-shadow-border-small: 0 0 0 1px …, 0px 2px 2px #0000000a;
---ds-shadow-menu:         0 0 0 1px …, 0px 1px 1px …, 0px 4px 8px -4px …, 0px 16px 24px -8px …;
+--ds-shadow-border-base:   0 0 0 1px #00000014;   /* light:  8% black,  ΔL −6.1 */
+                           0 0 0 1px #ffffff25;   /* dark:  15% white,  ΔL +15.9 */
+--ds-shadow-border-small:  0 0 0 1px #00000014, 0px 2px 2px #0000000a;
+--ds-shadow-menu:          0 0 0 1px #00000014, 0px 1px 1px #00000005,
+                           0px 4px 8px -4px #0000000a, 0px 16px 24px -8px #0000000f;
 ```
 
-Only overlays that genuinely float — menus, modals, tooltips, toasts — get a real shadow, and even
-then the border is the first layer. **Caveat, and it's a real one:** `box-shadow` is stripped
-entirely under `forced-colors: active` (I tested this — see Decision 10). A card whose only outline
-is a shadow-border disappears in Windows High Contrast. Use a real `border` on anything structural.
+Every Geist shadow is stacked black at 2–12% alpha. **No hue, ever.** Primer goes further and makes
+the shadow color the darkest ramp step rather than black: dark-mode `shadow-resting-small` is
+`0 1px 1px #01040999` where `#010409` is `bgColor-inset`. And Primer's floating shadow flips
+strategy between themes — light: `0 0 0 1px #d1d9e040` (border at 25% alpha) plus blur layers;
+dark: `0 0 0 1px #3d444d`, a **fully opaque** border. That is the dark-mode border rule shipped in
+production code.
 
----
+Only things that genuinely float — menus, modals, tooltips, toasts — get a real blur shadow, and
+the border is still the first layer. **Caveat, and it's fatal:** `box-shadow` is stripped entirely
+under `forced-colors: active` (measured below). A card whose only outline is a shadow-border
+vanishes. Use a real `border` for anything structural.
 
-## Decision 4 — the accent
+### Scrims are not black
 
-**One.** The allowed uses, exhaustively:
+Two independent products, and this surprised me:
+
+- Linear: `--color-overlay-primary` is **white at 65%** in light mode, `#000000d9` (85% black) in
+  dark.
+- Primer: `--overlay-backdrop-bgColor` is `#c8d1da` (L 85.6) **at 40%** in light, `#212830` at 40%
+  in dark.
+
+A black scrim over a light page reads as "the lights went out." A light scrim reads as "this is
+behind frosted glass," which is what a modal actually is. Worth trying before defaulting to
+`rgba(0,0,0,0.5)`.
+
+### The small tokens nobody defines and everybody notices
+
+From Linear's shipped dark theme:
+
+```css
+--selection-bg:        color-mix(in srgb, #9c9da1 20%, transparent);  /* NEUTRAL, not brand */
+--selection-bg-active: color-mix(in srgb, #5e69d1 40%, transparent);  /* brand only when focused */
+--scrollbar-color:        #ffffff1a;   /* 10% */
+--scrollbar-color-hover:  #ffffff33;   /* 20% */
+--scrollbar-color-active: #ffffff66;   /* 40% */
+--header-bg:              #0b0b0bcc;   /* 80% — sits under a backdrop-filter */
+--focus-ring-outline:     1px solid #5e69d1;
+--focus-ring-offset:      2px;
+```
+
+Text selection defaults to a **neutral 20% gray** and only becomes brand-colored in the focused
+region. That is the opposite of the usual instinct, and it's right: selection appears in bulk, and
+bulk brand color is noise.
+
+## 4. The accent
+
+**One.** The complete list of permitted uses:
 
 - primary action button
 - current selection / active nav item
 - focus ring
 - links in body text
-- the one live/loading indicator
+- one live/loading indicator
 
-**Not allowed:** headings, icons in general, section borders, card backgrounds, "featured" badges,
-avatar backgrounds, chart series 1, hero gradients, illustrations, hover states of neutral things.
+**Not:** headings, icons generally, section borders, card backgrounds, "featured" badges, avatar
+backgrounds, chart series 1, hero gradients, illustrations, hover states of neutral things.
 
-The reason to be this strict: an accent is a *pointer*. Its entire job is "look here." Used
-twelve times on a screen it points nowhere, and you've spent your one loud instrument on
-decoration. Ramp's page uses chartreuse `#E1FC53` exactly twice — one secondary CTA and one count
-badge — and the primary CTA is black (measured in `references/fintech-and-trust.md`).
+An accent is a *pointer*. Its whole job is "look here." Used twelve times it points nowhere.
 
-### Splitting the accent into two roles
-
-This is the mistake most systems make and the fix is small. Your accent needs **two** values,
-because it does two structurally different jobs:
+### Split it into two roles
 
 | Role | Constraint | Target |
 |---|---|---|
-| **Fill** (button background, selected row) | white text must pass on it | L 0.54–0.58 |
+| **Fill** (button bg, selected row) | white text must pass on it | L 0.54–0.58 |
 | **Text** (links, active icons, focus ring on light) | must pass on the page | L 0.50–0.56 light, L 0.65–0.72 dark |
 
-Primer separates them explicitly and the measured values prove why:
+Primer keeps them as separate tokens and the numbers show why: `bgColor-accent-emphasis` moves
+`#0969da` → `#1f6feb` (+2.9 L, because it still carries white text) while `fgColor-accent` moves
+`#0969da` → `#4493f8` (+12.3 L, because it now sits on a dark ground). Same token in light,
+different tokens in dark.
 
-```
-bgColor-accent-emphasis   light #0969da (L 0.540)  →  dark #1f6feb (L 0.569)   ΔL +0.03
-fgColor-accent            light #0969da (L 0.540)  →  dark #4493f8 (L 0.663)   ΔL +0.12
-```
-
-Same token in light, different tokens in dark. The fill barely moves because it still carries white
-text; the foreground jumps because it now sits on a dark ground.
-
-Honest caveat: **Linear's own link color fails WCAG AA.** `#7070ff` on white is 3.85:1 (needs 4.5).
-Great products ship brand-colored links that fail. If your accent's light-mode text version lands
-below 4.5:1, either darken it for the text role only, or accept the failure knowingly and don't
-also use it for the only cue that a control is interactive.
+You also need a fourth value: the **wash**. Mercury derives it as the accent at 10/16/22% alpha.
+Linear ships it as a separate hex per theme (`#f1f1ff` L 96.2 light, `#18182f` L 22.2 dark) because
+a 10%-alpha wash over a near-black page is nearly invisible — the dark tint has to be an opaque
+value about 8 L above the page ground to register.
 
 ### Choosing the hue
 
-Blue-violet 255°–285° is where almost everyone lands (Linear 275–278, Stripe 278, Mercury 272,
-Primer 258, Geist 258). That is not a coincidence — at L 0.55 blue holds high chroma, reads as
-"interactive" from decades of hyperlink convention, and is the safest hue under deuteranopia and
-protanopia.
+Everyone lands in 255°–295° (Linear 278, Stripe 272, Mercury 272, Primer 258, Geist 258,
+Notion 253) and the gamut table above explains why. That also makes it the most generic choice
+available.
 
-**It is also, therefore, the most generic possible choice.** If you want the interface not to look
-like everything else, moving off 270° is the single cheapest differentiator:
-
-| Hue | At L 0.55 | Reads as | Watch out |
+| Hue | Max C at L 0.55 | Reads as | Watch out |
 |---|---|---|---|
-| 25–40 (red-orange) | C up to 0.20 | urgent, retail, consumer | collides with `danger` |
-| 55–80 (amber) | C max ~0.13 | warm, physical, craft | collides with `warning`; can't go light |
-| 145–165 (green) | C max ~0.15 | money, growth, health | collides with `success` |
-| 190–210 (teal) | C ~0.13 | calm, medical, infra | low chroma ceiling; can look washed |
-| 255–285 (blue-violet) | C up to 0.24 | software, trust, default | generic |
-| 300–330 (magenta) | C up to 0.24 | creative, bold | reads consumer/playful |
+| 25–40 red-orange | 0.22 | urgent, retail, consumer | collides with `danger` |
+| 55–80 amber | 0.12 | warm, physical, craft | collides with `warning`; can't carry white text at all above L 0.7 |
+| 145–165 green | 0.17 | money, growth, health | collides with `success`; fill needs dark text |
+| 190–210 teal | 0.09 | calm, medical, infra | lowest chroma ceiling in the spectrum; will look washed |
+| 255–295 blue-violet | 0.25 | software, trust, default | generic |
+| 300–330 magenta | 0.25 | creative, bold | reads consumer/playful |
 
-If you pick a hue that collides with a status color, the fix is to move the status color, not the
-brand. Mercury did exactly this: its error color is `#d03275` at OKLCH hue **0.2°** — the very
-edge of red into pink — and it sits at L 0.580 C 0.199, which is *the same lightness and chroma as
-its primary* `#5266eb` (L 0.570 C 0.200). Only hue differs. That is a system where somebody
-actually did the math.
+**If your brand hue collides with a status color, move the status color, not the brand.** Mercury
+did exactly that: its error is `#d03275` at hue 0.2° — red pushed into pink, at the same L and C as
+the primary.
 
----
+## 5. Status colors
 
-## Decision 5 — semantic status colors
+### Why naive red/yellow/green fails
 
-### Why the naive red/yellow/green is a trap
+1. Pure hues have wildly different lightness — `#ff0000` L 62.8, `#00ff00` L 86.6, `#ffff00` L 96.8.
+   On white: 4.00 / 1.37 / **1.07**. Yellow is invisible. Darkening yellow into brown "fixes" it and
+   now the three don't look like a set.
+2. Green and amber have hard chroma ceilings at usable lightness: at L 0.55 red reaches 0.223,
+   green 0.173, amber 0.116. Insisting on equal saturation forces you to break lightness, which
+   breaks contrast.
+3. Red-versus-green is the exact axis ~6% of men cannot use. Measured under a Machado severity-1.0
+   deuteranopia simulation, **Primer's own dark-mode `#3fb950` (success) and `#f85149` (danger)
+   collapse to ΔE(OKLab) 2.2** — both become roughly `#ac9b4e` mustard. GitHub gets away with it
+   only because every state also carries a distinct glyph.
 
-Three reasons, all measurable:
+### The algorithm
 
-1. **Pure hues have wildly different lightness.** `#ff0000` L 0.628, `#00ff00` L 0.866,
-   `#ffff00` L 0.968. On white, contrast is 4.00 / 1.37 / **1.07**. Yellow is functionally
-   invisible. So people "fix" it by darkening yellow into brown and now the three don't look like
-   a set.
-2. **Green and yellow have a hard chroma ceiling at usable lightness.** At L 0.55 you can get red
-   to chroma 0.21 but green only to ~0.15 and yellow only to ~0.12. If you insist on equal
-   saturation you must break lightness, and then contrast breaks.
-3. **Red/green is the exact axis that ~6% of men cannot distinguish.** A status system whose only
-   cue is red-vs-green is unusable for them.
-
-### The algorithm that works
-
-**Fix lightness, let chroma float.**
+Fix lightness, let chroma float. This is what Primer, Geist, Wise, Mercury and Stripe Sail all
+independently do.
 
 ```css
-/* on-light surfaces: all three at L ≈ 0.55 */
---status-danger-text:  oklch(0.55 0.20  25);   /* red   — chroma ceiling ~0.21 */
---status-warning-text: oklch(0.55 0.12  75);   /* amber — chroma ceiling ~0.13 */
---status-success-text: oklch(0.55 0.15 148);   /* green — chroma ceiling ~0.15 */
+/* on-light: every foreground status at L ≈ 0.55 */
+--status-danger-text:  oklch(0.55 0.20  25);   /* ceiling 0.223 */
+--status-warning-text: oklch(0.55 0.12  75);   /* ceiling 0.116 — do not ask for more */
+--status-success-text: oklch(0.55 0.15 148);   /* ceiling 0.173 */
 --status-info-text:    oklch(0.55 0.19 258);
 
-/* fills that carry white text: same L, no change needed */
+/* fills that carry white text: same lightness, no change needed */
 --status-danger-fill:  oklch(0.55 0.20  25);
 
-/* washes: brighter sibling at ~10% alpha, NOT the text color faded */
---status-danger-wash:  oklch(0.65 0.22  25 / 0.12);
+/* washes: a BRIGHTER sibling at ~10-15% alpha, never the text color faded */
+--status-danger-wash:  oklch(0.66 0.21  25 / 0.12);
+
+/* dark theme: raise foregrounds to L 0.66-0.72, hold fills, keep chroma */
+--status-danger-text:  oklch(0.67 0.20  25);
+--status-warning-text: oklch(0.72 0.14  78);   /* amber climbs furthest */
+--status-success-text: oklch(0.70 0.18 146);
+--status-danger-fill:  oklch(0.58 0.20  27);   /* barely moved */
 ```
 
-Verify: this is exactly where Primer (0.557/0.554/0.552), Wise (0.556 / 0.550 / 0.522) and Geist
-(0.550/0.520/0.515) independently landed.
-
-**In dark mode, raise all three to L 0.66–0.72 and keep chroma.** Primer measured:
-`fgColor-danger` 0.557 → 0.665; `fgColor-attention` 0.554 → **0.720** (and chroma actually *rises*
-0.117 → 0.140). Amber has to climb furthest because it started with the least chroma to work with.
+Amber always has to climb furthest in dark mode (Primer +16.5, Geist +24.4) because it started with
+the least chroma to work with.
 
 ### Never encode state in hue alone
 
-Every status needs a second channel. GitHub gets this right at scale and it's visible in the
-screenshot: open issues carry a *green circle-dot glyph*, closed carry a *purple check-in-circle*,
-draft a *gray outline*. Strip the color and the icons still say it.
+Every status needs a second channel: a glyph, a shape, a label, a position, or a weight. GitHub's
+issue rows pass — open is a green *circle-dot*, closed a purple *check-in-circle*, draft a gray
+*outline*. Strip the color and the icons still say it. Given the ΔE 2.2 measurement above, the
+icons are not decoration; they are the actual state indicator, and the color is decoration.
 
-### Contrarian: you probably need more than four semantic colors, and they are not success/warning/danger
+### Contrarian: you probably need more than four, and they aren't success/warning/danger
 
-Primer ships these semantic families, all with `emphasis` + `muted` variants:
+Primer ships `accent · success · attention · severe · danger · done · sponsors · upsell · open ·
+closed · draft`. `open` is green, `closed` is red, `done` is **purple** (`#8250df`), `draft` is
+gray, `severe` is orange (between attention and danger). Merged-PR purple is one of the most
+recognizable colors in software and it exists because "success" was already taken by "open."
 
-```
-accent  success  attention  severe  danger  done  sponsors  upsell
-open    closed   draft      neutral
-```
+**Name your semantic colors after your domain's states, not after emotions.** A deploy tool needs
+`queued / building / live / rolled-back`, not `info / warning / success / danger`. Deriving from a
+generic four forces you to call a rollback "a warning," which is wrong and unmemorable.
 
-`open` is green, `closed` is red, `done` is **purple**, `draft` is gray, `severe` is orange
-(between attention and danger). Merged-PR purple is one of the most recognizable UI colors in
-software, and it exists because "success" was already taken by "open."
+## 6. Dark mode, done properly
 
-**The lesson: name your semantic colors after your domain's states, not after emotions.** A
-deployment tool needs `queued / building / live / rolled-back`, not `info / warning / success /
-danger`. Deriving them from a generic four forces you to say a rollback is "a warning," which is
-both wrong and unmemorable.
+### Elevation via lightness
 
----
-
-## Decision 6 — dark mode, done properly
-
-### Elevation via lightness, not shadow
-
-In light mode, raised things get *lighter* and cast a shadow. In dark mode a shadow does nothing —
-you cannot cast a darker shadow on an already-dark ground and see it. **So raised surfaces get
-lighter.** Measured Linear dark:
+Measured ladders (OKLCH L, then deltas):
 
 ```
-page      #08090a  L 13.9
-panel     #0f1011  L 17.2   (+3.3)
-card      #1c1c1f  L 22.8   (+5.6)
-control   #232326  L 25.7   (+2.9)
-hovered   #28282c  L 27.8   (+2.1)
+Linear   marketing levels  13.9 → 17.2 → 19.5 → 21.7        (+3.3 +2.3 +2.2)
+Linear   app surfaces      13.9 → 22.8 → 25.7 → 27.8        (+8.9 +3.0 +2.1)
+Primer                     10.4 → 17.6 → 22.0 → 27.4 → 31.1 (+7.2 +4.4 +5.4 +3.7)
+Radix slate                17.9 → 21.3 → 25.2 → 28.3 → 31.2 (+3.5 +3.9 +3.1 +2.9)
+Geist                       0.0 → 14.6 → 21.6 → 23.8 → 28.0 (+14.6 +7.0 +2.2 +4.2)
 ```
 
-Roughly **+3 to +5 points of OKLCH lightness per elevation level**, tapering as you go up. Primer
-does the same: 17.6 → 22.0 → 27.4 → 29.2 → 31.1.
-
-Do not simply invert your light ramp. Inverting Linear's light theme would give you a page at
-L 0 and a card at L 2.0 — a 2-point difference that is invisible. Light-mode surface steps are
-~1.5–2.0 points apart because the eye discriminates finely near white; dark mode needs 3–5.
+**+3 to +5 L per elevation level, tapering as you go up.** Light-mode surface steps are 0.9–2.7
+apart because the eye discriminates finely near white; dark mode needs 3–5. Inverting a light ramp
+gives you a page and a card two points apart, which is invisible.
 
 ### Borders carry the structure
 
-With shadows unavailable and surface deltas small, the border is doing most of the structural work.
-How much alpha it needs is the one place the measured systems genuinely disagree:
+Linear's opaque borders, measured as ΔL from the page ground:
+
+```
+light theme (page #ffffff):   border-primary −6.8   secondary  −8.5   tertiary −10.7
+dark  theme (page #08090a):   border-primary +12.6  secondary +18.8   tertiary +22.7
+```
+
+**Dark-mode borders are 1.8–2.1× stronger in lightness delta than the light-mode equivalents.** The
+same pattern in alpha terms:
 
 | System | Light | Dark | Multiplier |
 |---|---|---|---|
-| Vercel Geist `shadow-border-base` | `#00000014` (8%) | `#ffffff25` (**15%**) | 1.9× |
-| Notion `tatami` border-base | `#0000001a` (10%) | `#ffffff1a`–`#fff3` (10–20%) | 1–2× |
-| Linear `border-translucent-strong` | `#00000014` (8%) | `#ffffff14` (8%) | 1× (Linear leans on opaque borders instead) |
-| Primer `borderColor-translucent` | `#1f232826` (15%) | `#ffffff26` (15%) | 1× |
+| Geist `shadow-border-base` | `#00000014` (8%) | `#ffffff25` (**15%**) | 1.9× |
+| Geist `gray-alpha-500` | 21% black | 24% white | 1.1× |
+| Notion `border-base` | black 10% | white 10–20% | 1–2× |
+| Primer `borderColor-translucent` | `#1f2328` @15% ¹ | `#ffffff` @15% | 1× ² |
 
-**The split is about what else is carrying the edge.** Geist and Notion use alpha borders as the
-*only* structural edge, so they raise the alpha. Linear and Primer keep the same alpha but also
-ship opaque border tokens (`#34343a`, `#3d444d`) that do the real work, with the translucent ones
-reserved for edges over imagery.
+¹ Note Primer's light translucent border is the *text color* at 15%, not pure black.
+² Primer holds alpha constant but also ships opaque `#3d444d` borders that do the real work; its
+dark floating shadow uses an opaque border where light uses a 25%-alpha one.
 
-The reason a straight 1:1 alpha swap often *looks* thin: the two directions are not symmetric in
-perceptual lightness. 8% white over a `#0a0a0a` ground gives `#1e1e1e` — a **+9.0** OKLCH lightness
-step. 8% black over white gives `#ebebeb` — only a **−6.0** step. So the dark border is
-mathematically the *stronger* one and still often reads weaker, because the eye discriminates far
-better near white. If your only edge is alpha, start at 1.5–2× and check by eye.
+**If alpha is your only edge, start at 1.5–2× the light value and check by eye.**
 
 ### Desaturate — but only the roles that need it, and less than you think
 
-The folk advice is "desaturate accents in dark mode." The measured reality is more specific:
+Across Primer's seven semantic pairs, chroma moves by at most 0.041 while foreground lightness
+gains +9.7 to +18.2. Across Geist's four, chroma moves at most 0.036 while lightness gains +14.8 to
++24.4. **The rule is: shift lightness, hold chroma.**
 
-| Token | Light → Dark | ΔL | ΔC |
-|---|---|---|---|
-| Primer `fgColor-accent` | `#0969da` → `#4493f8` | **+0.123** | −0.021 |
-| Primer `fgColor-danger` | `#d1242f` → `#f85149` | **+0.108** | −0.001 |
-| Primer `fgColor-attention` | `#9a6700` → `#d29922` | **+0.165** | **+0.023** |
-| Primer `bgColor-accent-emphasis` | `#0969da` → `#1f6feb` | +0.029 | +0.012 |
-| Primer `bgColor-success-emphasis` | `#1f883d` → `#238636` | −0.006 | +0.002 |
-| Geist `focus-color` | `hsl(212 100% 48%)` → `hsl(210 100% 66%)` | **+0.139** | **−0.062** |
-| Linear brand | `#7070ff` → `#5e6ad2` | −0.054 | −0.049 |
-
-**The real rule: shift lightness, not chroma.** Across Primer's five semantic pairs, chroma moves
-by at most ±0.023 — noise — while foreground lightness gains +0.108 to +0.165. Only two tokens in
-the table genuinely desaturate, Geist's focus ring (−0.062) and Linear's brand (−0.049), and in
-both cases what changed is the token's *role*, not the theme.
-
-Linear is the exception and it's instructive: it goes *darker*, because its dark-mode brand color
-is a **fill** carrying white text. `#7070ff` with white is 3.85:1; `#5e6ad2` is 4.70:1. The roles
-determine the direction, not the theme.
+The two genuine desaturations I measured are Geist's focus ring (ΔC −0.062) and Linear's brand
+(ΔC −0.049), and in both cases what changed is the token's *role* — from text-on-light to
+fill-carrying-white-text — not the theme.
 
 ### Why `#000` backgrounds are usually wrong
 
-Two mechanisms:
-
 1. **Halation.** At maximum lightness contrast, light glyphs bleed optically into the black ground
-   — an effect commonly reported as much worse by people with astigmatism. White `#fff` on `#000`
-   is 21:1 / APCA −108, and none of the seven products measured here ships it: Linear runs 18.7:1,
-   Vercel 17.9, Primer 17.4, Radix 16.3.
-2. **You lose the bottom of your ramp.** If the page is `#000` you cannot make a *sunken* surface.
-   Primer keeps `bgColor-inset: #010409` (L 10.4) below `bgColor-default: #0d1117` (L 17.6) —
-   seven points of headroom for wells, code blocks and empty states.
+   — widely reported as much worse by people with astigmatism. `#fff` on `#000` is 21:1 / Lc −107.9
+   and none of the products measured here ships it: Linear runs 18.73:1, Geist 17.94, Primer 17.39,
+   Radix `slate` 16.25.
+2. **You lose the bottom of your ramp.** If the page is `#000` there is no sunken surface. Primer
+   keeps `bgColor-inset: #010409` (L 10.4) *below* `bgColor-default: #0d1117` (L 17.6) — seven
+   points of headroom for wells, code blocks and empty states.
 
-**When `#000` is right:** OLED-first mobile (real battery savings), video/photo review tools where
-any non-black frame contaminates perceived color, and cinema/media apps. Vercel is the measured
-exception — its `--ds-background-200` is `hsla(0,0%,0%,1)` and body background is `rgb(0,0,0)` —
-but it puts every piece of content on `--ds-background-100` at L 14.5 above that black, and its
-body text is `#ededed` (L 94.6), not white. **If you use a black page, do not also use white text.**
+**When `#000` is right:** OLED-first mobile (real battery savings), video and photo review where any
+non-black frame contaminates perceived color, cinema and media apps. Geist is the measured
+exception and it handles it by putting all content on `#0a0a0a` above the black and setting text to
+`#ededed`.
 
 ### The dark-mode checklist
 
 ```
-[ ] Page ground L 0.14–0.18, not 0.
-[ ] A sunken step exists below the page ground.
-[ ] Elevation steps are +3 to +5 L apart, and go UP.
-[ ] Every card/panel has a visible 1px border, not just a background delta.
-[ ] Borders are visible: either an opaque token (L +12 to +20 above the surface) or alpha at 1.5–2× the light value.
-[ ] Body text L 0.94–0.98, not 1.0.
-[ ] Accent fill kept its lightness; accent text/icon gained +0.11 to +0.17 L.
-[ ] Status washes are alpha over the accent hue (#2ea04326), not opaque tints.
-[ ] Images and illustrations checked — a white-background PNG will detonate the page.
+[ ] Page ground L 0.14–0.18, chroma ≤ 0.015. (Linear #08090a C 0.003, Primer #0d1117 C 0.014.)
+[ ] A sunken step exists below the page.
+[ ] Elevation is lightness, +3 to +5 per level. No shadow doing the work.
+[ ] Every panel has a visible edge: opaque border +12 to +20 L above the surface,
+    or alpha at 1.5–2x the light-mode value.
+[ ] Body text L 0.94–0.97, not 1.0.
+[ ] Accent/status FILL kept its lightness; accent/status TEXT gained +10 to +20 L.
+[ ] Chroma essentially unchanged in both.
+[ ] Status washes are alpha over the hue (#2ea04326), not opaque tints.
+[ ] Shadows are near-black or your darkest ramp step, never hue-tinted.
+[ ] Scrim is #000 at 80–85% (light-mode scrim can be white/light — see above).
+[ ] Images and illustrations checked. A white-background PNG will detonate the page.
 ```
 
-That eighth item is Primer's dark-mode signature and it's worth calling out: in light mode
-`bgColor-success-muted` is opaque `#dafbe1`; in dark it is `#2ea04326` — the success green at 15%
-alpha over whatever is behind it. Opaque dark tints look like mud; alpha over a dark ground stays
-chromatic.
-
----
-
-## Decision 7 — OKLCH and perceptual uniformity
+## 7. OKLCH and perceptual uniformity
 
 ### What the problem actually is
 
-In HSL, `hsl(60 100% 50%)` (yellow) and `hsl(240 100% 50%)` (blue) have the same stated
-"lightness" and differ in actual luminance by roughly 15×. So a ramp built by stepping HSL
-lightness produces steps that look even in some hues and wildly uneven in others — which is
-precisely why a hand-built HSL palette looks fine in blue and broken in yellow.
+In HSL, `hsl(60 100% 50%)` and `hsl(240 100% 50%)` claim the same lightness and differ in actual
+luminance by roughly 15×. A ramp built by stepping HSL lightness looks even in blue and broken in
+yellow. OKLCH fixes the L axis: equal L means equal perceived lightness across all hues. Chroma is
+unbounded and gamut-limited, so `oklch(0.55 0.30 148)` doesn't exist and gets silently clipped —
+which is why you need the gamut ceiling table above.
 
-OKLCH fixes the L axis: equal L means equal perceived lightness across all hues. Chroma is
-unbounded and gamut-limited, so `oklch(0.55 0.30 148)` simply doesn't exist and gets clipped.
+### A complete ramp, authored properly
 
-### What to actually do
-
-**Author in OKLCH.** Baseline browser support has been there since 2023; it is the default in
-Tailwind v4, which ships its entire palette as `oklch()`.
+Every hex below is the browser's own conversion of the `oklch()` beside it; every contrast number
+is computed from that hex. Note three things: steps get *further* apart as they get darker, chroma
+arcs up and back down, and hue drifts.
 
 ```css
-/* A complete warm neutral ramp. Every hex below is the browser's own conversion of the
-   oklch() to its left, and every contrast number was computed from that hex. Note three
-   things: the steps get FURTHER apart as they get darker, chroma arcs up and back down,
-   and hue drifts 90° → 64°. */
 :root {
   --n-50:  oklch(0.990 0.002 90);  /* #fcfcfa   page ground              */
   --n-100: oklch(0.975 0.004 88);  /* #f8f7f4   subtle surface      Δ1.5 */
@@ -681,185 +849,186 @@ Tailwind v4, which ships its entire palette as `oklch()`.
   --n-300: oklch(0.860 0.014 78);  /* #d6d0c7   border subtle       Δ4.0 */
   --n-400: oklch(0.800 0.016 76);  /* #c4bdb3   border default      Δ6.0 */
   --n-500: oklch(0.700 0.017 74);  /* #a59d93   border strong       Δ10  */
-  --n-600: oklch(0.600 0.016 72);  /* #867f76   3.95:1  APCA 67     Δ10  */
-  --n-700: oklch(0.480 0.014 70);  /* #635c55   6.58:1  APCA 83     Δ12  */
-  --n-800: oklch(0.380 0.011 68);  /* #46413c  10.09:1  APCA 93     Δ10  */
-  --n-900: oklch(0.270 0.008 66);  /* #292622  15.06:1  APCA 102    Δ11  */
-  --n-950: oklch(0.175 0.005 64);  /* #12100e  18.98:1  APCA 105    Δ9.5 */
+  --n-600: oklch(0.600 0.016 72);  /* #867f76    3.95:1  Lc 67      Δ10  */
+  --n-700: oklch(0.480 0.014 70);  /* #635c55    6.58:1  Lc 83      Δ12  */
+  --n-800: oklch(0.380 0.011 68);  /* #46413c   10.09:1  Lc 93      Δ10  */
+  --n-900: oklch(0.270 0.008 66);  /* #292622   15.06:1  Lc 102     Δ11  */
+  --n-950: oklch(0.175 0.005 64);  /* #12100e   18.98:1  Lc 105     Δ9.5 */
 }
 ```
 
-The dark counterpart is not the same numbers reversed. Steps near the ground are *wider*
-(+3 to +4.5 instead of +1.5 to +2.5) and steps near the text end are much wider still:
+The dark counterpart is not those numbers reversed — steps near the ground are wider:
 
 ```css
 :root[data-theme="dark"] {
-  --bg-sunken:      oklch(0.115 0.004 64);  /* #060504                            */
-  --bg:             oklch(0.155 0.005 66);  /* #0e0c0a  page               Δ+4.0  */
-  --surface:        oklch(0.200 0.007 68);  /* #181513  card               Δ+4.5  */
-  --surface-2:      oklch(0.245 0.009 70);  /* #23201c  raised             Δ+4.5  */
-  --hover:          oklch(0.275 0.010 72);  /* #2b2722                     Δ+3.0  */
-  --active:         oklch(0.305 0.011 74);  /* #322e29                     Δ+3.0  */
-  --border-subtle:  oklch(0.320 0.011 74);  /* #36322d                            */
-  --border:         oklch(0.375 0.012 74);  /* #45403a  1.90:1 on page            */
-  --border-strong:  oklch(0.450 0.013 74);  /* #5a544d  2.61:1                    */
-  --text-disabled:  oklch(0.545 0.014 72);  /* #756f67  3.93:1  APCA −27          */
-  --text-tertiary:  oklch(0.660 0.014 70);  /* #989189  6.27:1  APCA −43          */
-  --text-secondary: oklch(0.790 0.012 68);  /* #c0b9b3 10.07:1  APCA −65          */
-  --text-primary:   oklch(0.960 0.004 66);  /* #f4f1ef 17.36:1  APCA −99          */
+  --bg-sunken:      oklch(0.115 0.004 64);  /* #060504                          */
+  --bg:             oklch(0.155 0.005 66);  /* #0e0c0a  page             Δ+4.0  */
+  --surface:        oklch(0.200 0.007 68);  /* #181513  card             Δ+4.5  */
+  --surface-2:      oklch(0.245 0.009 70);  /* #23201c  raised           Δ+4.5  */
+  --hover:          oklch(0.275 0.010 72);  /* #2b2722                   Δ+3.0  */
+  --active:         oklch(0.305 0.011 74);  /* #322e29                   Δ+3.0  */
+  --border-subtle:  oklch(0.320 0.011 74);  /* #36322d                          */
+  --border:         oklch(0.375 0.012 74);  /* #45403a  ΔL +22 vs page          */
+  --border-strong:  oklch(0.450 0.013 74);  /* #5a544d                          */
+  --text-disabled:  oklch(0.545 0.014 72);  /* #756f67   3.93:1  Lc −27         */
+  --text-tertiary:  oklch(0.660 0.014 70);  /* #989189   6.27:1  Lc −43         */
+  --text-secondary: oklch(0.790 0.012 68);  /* #c0b9b3  10.07:1  Lc −65         */
+  --text-primary:   oklch(0.960 0.004 66);  /* #f4f1ef  17.36:1  Lc −99         */
 }
 ```
 
-Read the APCA column on that dark ramp: `--text-tertiary` is 6.27:1 by WCAG 2 — comfortably AA —
-but Lc −43, which is *below* the Lc 60 prose floor. That is correct and intentional: tertiary is
-for metadata and column labels, never for a paragraph. Linear's own dark tertiary sits at Lc −42.
-If you need dark-mode body text at Lc 60+, you need `--text-secondary` at 10:1.
+Read the APCA column on the dark ramp. `--text-tertiary` is 6.27:1 — comfortably AA — but Lc −43,
+*below* the Lc 60 floor for even large or secondary text. That is correct and intentional: tertiary is for metadata and column
+labels, never a paragraph. Linear's dark tertiary sits at Lc −41.8, Primer's at −45.8. If you need
+dark-mode body text at Lc 60+, you need `--text-secondary` at 10:1.
 
-**Two things that are not obvious:**
+### Wide gamut: worth it for some hues, not others
 
-**Chroma should not be constant down a ramp.** Radix `slate` runs 0.001 → 0.016 → 0.010: chroma
-peaks in the middle and falls at both ends. That is correct — near white and near black, chroma
-reads as a color cast; in the middle it reads as warmth. Copy the arc.
+Extra chroma available at L 0.55 in Display-P3 versus sRGB:
 
-**Hue drifts on purpose.** Radix `slate` walks 286° → 248° across the ramp. Notion's warm gray
-walks 106° → 62° → 106°. Perfectly constant hue is a tell that a ramp was generated, not designed.
+| Hue | sRGB | P3 | Gain |
+|---|---|---|---|
+| 145 green | 0.173 | 0.235 | **+36%** |
+| 195 cyan | 0.094 | 0.126 | **+34%** |
+| 258 blue | 0.204 | 0.259 | +27% |
+| 75 amber | 0.116 | 0.133 | +15% |
+| 25 red | 0.223 | 0.251 | +13% |
+| 293 violet | 0.277 | 0.297 | **+7%** |
 
-### The tools, and when each is worth it
+P3 helps most exactly where sRGB is weakest. **If your brand is teal, green or cyan, P3 with an
+sRGB fallback is worth the complexity. If it's violet, it buys you 7% and isn't.** Ship it as
+`@supports (color: color(display-p3 1 1 1))` or via `oklch()` with a `@media (color-gamut: p3)`
+override — never as the only definition.
+
+### The tools
 
 | Tool | What it does | Use it when |
 |---|---|---|
-| **Radix Colors** | 12-step scales, light + dark + alpha + P3, with documented step semantics and APCA guarantees | You want a correct system today and don't need brand-exact hues. Best default. |
-| **Tailwind v4 `@theme`** | OKLCH palette + your own tokens as first-class CSS vars | You're already on Tailwind. Add the missing steps. |
-| **Leonardo** (Adobe) | Generates ramps by *target contrast ratio* against a named background | Accessibility is a hard requirement and you must prove each step's ratio. |
-| **Huetone** | Interactive APCA-scored palette editor with a chroma/lightness curve view | You're hand-tuning a brand ramp and need to see the gamut edge. |
-| **APCA / `apca-w3`** | The contrast model | Any dark theme. See Decision 8. |
-| **`color-mix(in oklch, …)`** | Runtime derivation of hover/wash values | Deriving 2–3 states from one token. Linear uses `color-mix(in lch, …)` for selection. |
+| **Radix Colors** | 12-step light + dark + alpha + P3 scales, documented step semantics, APCA guarantees I verified above | You want a correct system today and don't need brand-exact hues. Best default. |
+| **Tailwind v4 `@theme`** | OKLCH palette, your tokens as first-class CSS vars | You're already on Tailwind. Add the missing 250/350 steps. |
+| **Leonardo** (Adobe) | Generates ramps by *target contrast ratio* against a named background | Accessibility is a hard contractual requirement and you must prove each step. |
+| **Huetone** | Interactive APCA-scored editor with chroma/lightness curves and a gamut-edge view | Hand-tuning a brand ramp. |
+| **`apca-w3`** | The contrast model as a package | Any dark theme. |
+| **`color-mix(in oklch, …)`** | Runtime derivation of hover/wash | Deriving 2–3 states from one token. Linear uses `color-mix(in lch, …)` and `in srgb` for selection. |
+| **`light-dark()`** | One declaration, both themes: `color: light-dark(#1f2328, #f0f6fc)` | You've set `color-scheme: light dark` on `:root`. Halves your token file. Requires the `color-scheme` property to be set or it won't resolve. |
 
-**When *not* to reach for a generator:** if you're building a 6-screen internal tool, `slate` +
-one accent from Radix and thirty minutes is the right answer. Generated ramps are for design
-systems that will outlive the person who made them.
+**When not to reach for a generator:** a six-screen internal tool wants Radix `slate` plus one
+accent plus `red/amber/green` at L 0.55, and thirty minutes. Generated ramps are for systems that
+outlive the person who made them.
 
----
+## 8. Contrast: which standard to actually use
 
-## Decision 8 — contrast: WCAG 2 vs APCA
+**Use both. WCAG 2 AA is the compliance floor. APCA is what you tune against for readability,
+especially in dark mode.** WCAG 2's formula is known to be wrong for light-on-dark — that's why
+APCA exists as candidate WCAG 3 guidance — but WCAG 2 AA is what regulation, procurement and audits
+reference today. The Radix table above shows the practical consequence: they hold APCA constant and
+let WCAG float from 4.4 to 11.5.
 
-### The honest summary
-
-**WCAG 2's contrast formula is known to be wrong**, particularly for light-on-dark, and this is not
-a fringe opinion — it is why APCA was developed as candidate guidance for WCAG 3. But WCAG 2 AA is
-what regulation, procurement and audits reference today.
-
-**So: use both. WCAG 2 AA is the floor you must clear for compliance. APCA is the number you tune
-against for actual readability, especially in dark mode.**
-
-The measured proof, again, because it's the crux:
-
-```
-Linear light  #6f6e77 on #fff       WCAG 5.03:1  APCA  75   ← reads fine
-Linear dark   #8a8f98 on #08090a    WCAG 6.13:1  APCA  42   ← reads worse, despite MORE WCAG contrast
-Radix slate-11 on slate-2, light    WCAG 5.65:1  APCA  76
-Radix slate-11 on slate-2, dark     WCAG 8.45:1  APCA  60   ← Radix spent +50% WCAG to hold APCA
-```
-
-### Thresholds
-
-**WCAG 2 (the compliance floor):**
+**WCAG 2 thresholds:**
 
 | | AA | AAA |
 |---|---|---|
 | Body text (< 18.66px regular / < 24px bold) | 4.5:1 | 7:1 |
 | Large text | 3:1 | 4.5:1 |
-| UI component boundaries, focus indicators, icons carrying meaning | 3:1 | — |
+| UI component boundaries, focus indicators, meaningful icons | 3:1 | — |
 | Disabled controls | exempt | — |
 
-**APCA (the readability target):**
+**APCA targets** (sign is polarity; compare magnitudes):
 
 | Lc | Use |
 |---|---|
-| 90 | Body text at minimum weight/size; the "ideal" for reading |
-| 75 | Body text 16px+ at weight 400 — the practical floor for prose |
-| 60 | Larger text, 18px+ / medium weight; column headers, secondary text |
+| 90 | Body text at minimum weight/size; the ideal for reading |
+| 75 | Body text 16px+ weight 400 — practical floor for prose |
+| 60 | 18px+/medium; column headers, secondary text |
 | 45 | Large headings, 24px+ bold |
-| 30 | Non-text: disabled states, dividers, decorative rules — **the absolute floor for anything meaningful** |
-| 15 | Invisible-but-present dividers |
+| 30 | Non-text: disabled states, dividers — absolute floor for anything meaningful |
+| 15 | Present-but-invisible dividers |
 
-Sign is polarity: positive = dark text on light, negative = light text on dark. Compare magnitudes.
+### The five things people get wrong
 
-**Practical rule of thumb**, derived from the measurements above: **in dark mode, add ~2 points of
-WCAG 2 ratio to hit the same perceived readability as light mode.** If your light-mode secondary
-text is 5.0:1, your dark-mode secondary text wants ~7:1, not 5:1.
+1. **Contrast against the *actual* background.** A wash-tinted or hovered row is not the page.
+   Check `text-secondary` on `surface-hover`.
+2. **Placeholder text is text.** It needs 4.5:1. Most in the wild are ~2.5:1.
+3. **Focus rings need 3:1 against both the component and the page.** A blue ring on a blue button
+   fails. Geist solves it with two layers, and the inner layer is the *page background*, not white:
+   `0 0 0 2px hsla(0,0%,100%,1), 0 0 0 4px hsl(212 100% 48%)` in light and
+   `0 0 0 2px hsla(0,0%,4%,1), 0 0 0 4px hsl(210 100% 66%)` in dark. That inner ring guarantees
+   separation regardless of what's underneath. **shadcn's default `--ring: #a1a1a1` is 2.58:1 on
+   the page and 2.37:1 on `--muted` — it fails 3:1 in both.** Its `--border: #e5e5e5` is 1.26:1.
+4. **Disabled text is exempt from WCAG but not from being usable.** Mercury's `text-disabled`
+   `#70707d` is 4.75:1 — comfortably readable. Disabledness is communicated by the cursor and the
+   missing hover, not by illegibility. (Notion's `text-disabled` at black-30% is 2.12:1 / Lc 41.6,
+   which is the other side of that argument.)
+5. **Shipping products fail this too, and knowing is the difference.** Notion's `text-warning`
+   `#ff6d00` is **2.82:1** on white; its `text-error` `#f64932` is 3.55:1; Linear's light link is
+   3.85:1. If you ship a failure, ship it knowingly and never let it be the only cue.
 
-### Things people get wrong
+## 9. Color for data visualization
 
-- **Contrast against the *actual* background.** A wash-tinted row is not white. Check
-  `text-secondary` on `surface-hover`, not just on the page.
-- **Placeholder text is text.** It needs 4.5:1. Most placeholders in the wild are ~2.5:1.
-- **Focus rings need 3:1 against *both* the component and the page** — a blue ring on a blue button
-  fails. This is why Geist's focus ring is two layers: `0 0 0 2px <page bg>, 0 0 0 4px <accent>`.
-  The inner ring in the page color guarantees separation regardless of what's underneath.
-- **Disabled text is exempt from WCAG but is not exempt from being usable.** Mercury's
-  `text-disabled` is `#70707d` = 4.75:1 — comfortably readable. Ship disabled text people can read;
-  the disabled-ness is communicated by the cursor and the missing hover, not by illegibility.
-
----
-
-## Decision 9 — color for data visualization
-
-Chart color is a different problem from UI color and the rules do not transfer.
+Chart color is a different problem and the UI rules do not transfer.
 
 ### Categorical
 
-**shadcn's default `--chart-1` through `--chart-5` are Tailwind `blue-300 / 500 / 600 / 700 / 800`
-— five steps of the same hue.** I verified this by resolving the computed `lab()` values against
-Tailwind's palette; they match exactly. This is a sequential ramp being used as a categorical
-palette, and it's baked into the most-copied default in the ecosystem. Measured: adjacent series
-differ by ΔE(OKLab) of **5.8** in normal vision — two neighbouring bars in a stacked chart are
-nearly the same color.
+**shadcn's default `--chart-1` … `--chart-5` are Tailwind v4 `blue-300 / 500 / 600 / 700 / 800`** —
+I resolved the computed `lab()` values and they match exactly. That is a sequential ramp being used
+as a categorical palette, baked into the most-copied default in the ecosystem, and adjacent series
+differ by ΔE(OKLab) **5.9 in normal vision** — two neighbouring bars in a stacked chart are nearly
+the same color before any vision difference is involved.
 
-**Use a tested set.** IBM's Design Language CVD-safe five is the best performer I measured:
+Minimum pairwise ΔE(OKLab)×100 under Machado 2009 severity-1.0 simulation (higher is better):
+
+| Palette | normal | deuter | protan | tritan | **worst** |
+|---|---|---|---|---|---|
+| shadcn default (blue 300–800) | 5.9 | 5.2 | 5.3 | 6.0 | 5.2 |
+| Tailwind-500 rainbow (red/amber/green/blue/violet) | 13.9 | **1.4** | 5.4 | 10.7 | **1.4** |
+| IBM CVD-safe 5 | 11.4 | 8.4 | 10.7 | 5.2 | 5.2 |
+| **Okabe–Ito 7** | 15.6 | **7.6** | 9.6 | 8.5 | **7.6** |
+| Tol bright 6 | 18.0 | 8.3 | 8.9 | 3.3 | 3.3 |
+| Tol muted 5 | 15.9 | 5.2 | 13.1 | 13.5 | 5.2 |
+
+**The Tailwind rainbow is the worst option and the most common one:** `blue-500` `#2b7fff` and
+`violet-500` `#8e51ff` collapse to ΔE 1.4 under deuteranopia — effectively the same color for ~6% of
+men. **Okabe–Ito 7 has the best worst case** (7.6, the green/pink pair). IBM's set is close behind,
+limited by magenta-vs-orange under tritanopia.
+
+Honest caveat: **the ranking is model-dependent.** Under the older Viénot 1999 dichromat projection
+the same palettes score much lower across the board (Okabe–Ito 1.2, IBM 2.1, Tol muted 3.7) and
+produce out-of-gamut artifacts. What is stable across both models is the *ordering*: mono-blue and
+the Tailwind rainbow are worst; Okabe–Ito, IBM and Tol muted are best. Don't quote a single ΔE as
+gospel; use it to compare.
 
 ```
-#648FFF  oklch(0.673 0.172 266)   blue
-#785EF0  oklch(0.587 0.210 286)   purple
-#DC267F  oklch(0.595 0.222 358)   magenta
-#FE6100  oklch(0.688 0.207  42)   orange
-#FFB000  oklch(0.812 0.170  76)   gold
+Okabe-Ito 7   #e69f00  #56b4e9  #009e73  #f0e442  #0072b2  #d55e00  #cc79a7
+IBM 5         #648fff  #785ef0  #dc267f  #fe6100  #ffb000
+Tol muted 5   #332288  #88ccee  #44aa99  #ddcc77  #cc6677
 ```
 
-Minimum pairwise OKLab distance under simulation, higher is better:
+**Also check grayscale survivability** — printing, photocopying, and a fully useful sanity check.
+Minimum adjacent lightness gap within each palette:
 
-| Palette | normal | deuteranopia | protanopia | tritanopia |
-|---|---|---|---|---|
-| shadcn default (blue 300–800) | 5.8 | 5.7 | 6.3 | 4.5 |
-| Tailwind-500 rainbow (red/amber/green/blue/purple) | 16.3 | **0.6** | 6.5 | 8.4 |
-| Okabe–Ito 7 | 15.6 | 8.0 | 9.1 | **0.6** |
-| **IBM CVD-safe 5** | 11.4 | **8.9** | **12.3** | **7.3** |
+| Palette | L range | min adjacent gap |
+|---|---|---|
+| Tol muted 5 | 35–84 | **2.9** |
+| shadcn default | 42–81 | 2.9 (but only one hue) |
+| Tailwind-500 rainbow | 60–77 | 1.8 |
+| IBM 5 | 59–81 | 0.8 |
+| Okabe–Ito 7 | 53–90 | **0.2** |
 
-Two contrarian findings in that table:
+Okabe–Ito is the best CVD performer and the *worst* grayscale performer. If your charts get
+printed, Tol muted wins. **"Colorblind-safe" is not one property.**
 
-- **The Tailwind rainbow is the worst possible choice**, and it's the most common one. `blue-500`
-  and `purple-500` collapse to ΔE 0.6 under deuteranopia — literally the same color for ~6% of men.
-- **Okabe–Ito, the palette every accessibility guide recommends, fails tritanopia** (`#D55E00` vs
-  `#CC79A7` at ΔE 0.6). It's still the right recommendation, because tritanopia affects ~0.01% of
-  people versus ~6% for deuteranomaly — but "colorblind-safe" is not one property, and if you say
-  a palette is safe you should say safe *for which*.
+**Boundary condition on the light end:** IBM's `#FFB000` is 1.83:1 on white. Fine for filled areas,
+bars and 8px+ dots; useless for 1px lines, small text or thin strokes on a light ground.
 
-**Boundary condition on IBM's set:** `#FFB000` is 1.83:1 on white. It works for filled areas, bars
-and 8px+ dots. It does *not* work for 1px lines, small text, or thin strokes on a light ground.
-For line charts on white, darken the light end or add a stroke.
-
-**Never rely on color alone in a chart.** Direct-label the series, or vary the mark (dashed vs
-solid, square vs circle vs triangle). A legend that maps five colors to five names is already a
-failure for the 6%, and a nuisance for everyone.
-
-**Five is the ceiling.** Past 5–6 categories, no palette separates cleanly. Group the tail into
-"Other" and let the user drill in.
+**Five is the ceiling.** Past 5–6 categories no palette separates cleanly. Group the tail into
+"Other" and let people drill in. And direct-label the series or vary the mark — a legend mapping
+five colors to five names is already a failure for the 6% and a nuisance for everyone.
 
 ### Sequential
 
-One hue, walk lightness monotonically. Verify: sort your stops by OKLCH L and confirm the order
-matches the data order. Do not walk chroma without walking L — a chroma-only ramp is invisible in
-grayscale and to CVD viewers.
+One hue, walk lightness monotonically. Verify by sorting your stops by OKLCH L and confirming the
+order matches the data order. Never walk chroma without walking L — a chroma-only ramp is invisible
+in grayscale and to CVD viewers.
 
 ```css
 --seq-1: oklch(0.96 0.03 258);  /* #e6f3ff   1.13:1 on white */
@@ -870,343 +1039,356 @@ grayscale and to CVD viewers.
 --seq-6: oklch(0.42 0.17 258);  /* #0046a7   8.63:1 */
 ```
 
-Chroma rises to step 5 and then falls — not a mistake. At L 0.42 the sRGB gamut simply does not
-contain chroma 0.19 at this hue, and asking for it silently clips to something you did not choose.
-Walk L; let C follow the gamut.
+Chroma rises to step 5 then falls — not a mistake. At L 0.42 and hue 258 the sRGB gamut ceiling is
+about 0.17 (see the table); asking for 0.19 silently clips to something you didn't choose.
 
 ### Diverging
 
-Two hues, a *neutral* midpoint (not white — use your `n-100`), symmetric lightness on both arms.
-**Do not use red↔green.** Blue↔orange (258° ↔ 42°) or purple↔gold (286° ↔ 76°) survive every CVD
-type and both read as "opposite" without the political/traffic-light baggage.
+Two hues, a *neutral* midpoint (your `n-100`, not white), symmetric lightness on both arms. **Not
+red↔green.** Blue↔orange (258° ↔ 42°) or purple↔gold (293° ↔ 76°) survive every CVD type and read
+as "opposite" without the traffic-light baggage. In double-entry accounting neither side is "good,"
+which is why ledger UIs head debits and credits in two neutrals rather than green and red.
 
-Modern Treasury's ledger UI is the reference here: debits and credits are headed in **slate and
-clay**, not green and red — because in double-entry accounting neither side is "good."
-
----
-
-## Decision 10 — color blindness and forced colors
+## 10. Color blindness and forced colors
 
 ### Color blindness
 
-Prevalence: deuteranomaly/deuteranopia ~6% of men, protan ~2%, tritan ~0.01%. Roughly 1 in 12 men
-and 1 in 200 women.
+Prevalence: deuteranomaly/deuteranopia ~6% of men, protan ~2%, tritan ~0.01%. Roughly 1 in 12 men,
+1 in 200 women.
 
-**The one rule: color is never the only channel.** Add an icon, a shape, a label, a position, a
-weight. GitHub's issue rows pass this test — the state is a distinct glyph, not just a hue.
+**The rule: color is never the only channel.** Icon, shape, label, position, or weight.
 
-**The one test:** simulate. Run your screenshot through a deuteranopia and protanopia filter and
-check that every pair of things that must be distinguished still is. If you don't have a tool
-handy, the Viénot/Brettel LMS matrices are twelve lines of code (the script I used is described at
-the end of this file).
+**The test: simulate.** The Machado matrices are twelve lines (script at the end). Run your
+screenshot through deuteranopia and protanopia and check every pair that must be distinguished.
 
 ### Forced colors
 
 `forced-colors: active` — Windows High Contrast, and increasingly a general OS accessibility mode.
-**I tested this in Chromium 128 and the results are more aggressive than most people assume:**
+I tested this in Chromium 148 with a real page. The results are more aggressive than most people
+assume, and one of them is a surprise:
 
 | Property | Under `forced-colors: active` |
 |---|---|
 | `background-color` | **Forced** to `Canvas`. A `#dcfce7` success badge became white-on-white. |
-| `color` | Forced to `CanvasText`. |
-| `border-color` | Forced to `CanvasText` — **but the border width survives.** |
+| `color` on HTML elements | Forced to `CanvasText`. |
+| `color` on **`<svg>` elements** | **NOT forced.** My `<svg style="color:#e7000b">` kept `rgb(231,0,11)`. Icons using `fill="currentColor"` survive; the text beside them does not. |
+| `border-color` | Forced to `CanvasText` — **but the width survives.** |
 | `border-width` | Preserved. This is what saves you. |
 | `outline-color` / `outline-width` | Color forced, **width preserved** (my 2px ring stayed 2px). |
-| `box-shadow` | **Removed entirely.** `computed boxShadow` was empty. |
-| `background-image` (gradient) | **Removed** in my test — `computed backgroundImage: none`. |
+| `box-shadow` | **Removed entirely.** Computed `boxShadow: none`. |
+| `background-image` (gradient) | **Removed**, and the background became `rgba(255,255,255,0)` — fully transparent, not Canvas. |
+| `forced-color-adjust: none` | Opts the element out entirely; my `#8b5cf6` background and white text survived exactly. |
 
 Concrete consequences, in priority order:
 
-1. **A filled button with no border becomes a bare text label.** `<button style="background:#3b82f6;color:#fff;border:0">`
-   computed to white background, black text, 0px border — indistinguishable from body text. **Give
-   every button a border, even a transparent one:** `border: 1px solid transparent`.
-2. **Shadow-as-border fails.** The Geist/Vercel `0 0 0 1px` technique is elegant and it evaporates.
-   Use a real `border` for anything structural; keep shadows for the soft-blur layer only.
-3. **Focus rings must be `outline`, not `box-shadow`.** An outline ring survives at full width with
-   a system color. A box-shadow ring disappears completely. This is the single highest-impact item
-   here, because a lost focus ring makes the product keyboard-unusable.
-4. **Status badges need a border or a glyph.** Wash-background-only badges vanish.
-5. Use the system color keywords when you need to opt in deliberately: `Canvas`, `CanvasText`,
-   `LinkText`, `ButtonFace`, `ButtonText`, `Highlight`, `HighlightText`, `GrayText`, `Field`,
-   `FieldText`, `AccentColor`, `AccentColorText`. `forced-color-adjust: none` opts an element out
-   entirely — reserve it for things like color swatches and charts where the color *is* the
-   content, and pair it with a visible border so the swatch still has an edge.
+1. **A filled button with no border becomes a bare text label.** Measured:
+   `<button style="background:#2b7fff;color:#fff;border:0">` computes to white background, black
+   text, 0px border. The fix costs nothing: **`border: 1px solid transparent`** computes to
+   `1px solid rgb(0,0,0)` and the button survives. Notion ships exactly this — its `ghost`,
+   `primary` and `secondary` button variants all define `--tatami-color-button-*-border: #ffffff00`,
+   a fully transparent border that exists only so forced-colors has something to paint.
+2. **Shadow-as-border evaporates.** The Geist/Vercel `0 0 0 1px` technique is elegant and it
+   vanishes. Use a real `border` for anything structural.
+3. **Focus rings must be `outline`, not `box-shadow`.** Outline survives at full width with a
+   system color; box-shadow disappears completely. Highest-impact item here — a lost focus ring
+   makes the product keyboard-unusable.
+4. **Wash-background badges vanish.** Add a border or a glyph.
+5. **Do not assume the system colors are the colors their names suggest.** Measured in Chromium's
+   default forced-colors emulation: `GrayText` is **`rgb(96, 0, 0)`** — a dark red. `Highlight` is
+   `rgba(5, 0, 73, 0.8)`. `LinkText` is `rgb(0, 0, 159)`. `AccentColor` and `AccentColorText` both
+   resolved to `rgb(0,0,0)`, i.e. useless for distinguishing anything. Use the keywords for their
+   *roles*, never for their appearance.
 
 ```css
 @media (forced-colors: active) {
-  .btn        { border: 1px solid ButtonText; }
-  .badge      { border: 1px solid CanvasText; }
+  .btn           { border: 1px solid ButtonText; }
+  .badge         { border: 1px solid CanvasText; }
   :focus-visible { outline: 3px solid Highlight; outline-offset: 2px; }
-  .swatch     { forced-color-adjust: none; border: 1px solid CanvasText; }
+  .swatch        { forced-color-adjust: none; border: 1px solid CanvasText; }
 }
 ```
 
----
+The `.swatch` line is the pattern for anything where the color *is* the content — swatches, chart
+marks, image editors. Opt out, but keep a forced border so the element still has an edge.
 
-## Decision 11 — what a palette signals
+Related and cheap: honor `prefers-contrast: more` by swapping `--border-subtle` to
+`--border-strong` and raising text one level. It's a five-line block and it's the only thing many
+low-vision users need.
 
-These are observed correlations across the products I measured, not laws. They're useful because
-they tell you what you're accidentally saying.
+## 11. What a palette signals
+
+Observed correlations across the products measured here, not laws. Useful because they tell you
+what you are accidentally saying.
 
 | Signal | How it's built | Measured example |
 |---|---|---|
-| **Institutional / serious money** | warm low-chroma neutral, near-black text, one blue-violet accent used ~twice per screen | Mercury: beige ramp (hue 88–106), `text-default #272735`, accent `#5266eb` |
-| **Technical / dense / for engineers** | cool blue-tinted neutral, high information density, semantic color per domain state | Primer: neutrals hue 244–255, eleven semantic families |
-| **Brand-free / engineered** | chroma exactly 0, pure grayscale + one focus blue | Geist: `hsla(0, 0%, X%)` throughout |
-| **Calm / document / long-session** | warm neutral, alpha-based tokens, almost no saturated color anywhere | Notion: `tatami` hue 61–106, text as black-at-alpha |
-| **Premium / editorial** | high-contrast near-black on off-white, one restrained accent, generous neutral range | Radix `sand`, Aesop-style |
-| **Consumer-friendly** | brighter accent (L 0.62+), higher chroma, more of it | Linear light-theme brand `#7070ff` L 0.622 C 0.207 vs dark-theme `#5e6ad2` L 0.567 C 0.159 |
-| **AI slop** | violet→blue gradient, `#8b5cf6`, glow, oversaturated dark | see below |
+| Institutional / serious money | warm low-chroma neutral, near-black text, one blue-violet accent used twice a screen | Mercury: beige ramp hue 88–106, text `#272735`, accent `#5266eb` |
+| Technical / dense / for engineers | cool blue-tinted neutral, high density, a semantic color per *domain* state | Primer: neutrals hue 244–258, eleven semantic families |
+| Brand-free / engineered | chroma exactly 0, pure grayscale plus one focus blue | Geist: `hsla(0,0%,X%)` throughout |
+| Calm / document / long-session | warm neutral, alpha-based tokens, almost no saturated color | Notion: `tatami` hue 62–107, text as black-at-alpha |
+| Premium / editorial | high-contrast near-black on off-white, one restrained accent | Radix `sand` |
+| Consumer-friendly | brighter accent (L 0.62+), higher chroma, more of it | Linear light brand `#7070ff` L 62.2 vs dark `#5e6ad2` L 56.7 |
+| AI slop | violet→blue gradient, `#8b5cf6`, glow, oversaturated dark | see below |
 
-Note that these are gradients, not categories. Linear's light theme brand is L 0.622 C 0.207 and
-its dark theme brand is L 0.567 C 0.159 — the same brand, dimmed by a fifth of its chroma, because
-in dark mode it is a fill carrying white text rather than a link on paper. **The role you put a
-color in changes the color.** And the general budget still holds: a marketing page can afford 2–3%
-chromatic pixels; the product behind the login cannot.
+These are gradients, not categories, and **the role you put a color in changes the color** — Linear
+ships the same brand identity at L 62.2 C 0.207 in light and L 56.7 C 0.159 in dark because the
+token's job changed.
 
 ---
 
 ## When this advice is wrong
 
-- **Data-dense monitoring, trading and observability.** These interfaces are *supposed* to be
-  loud. A trading terminal where 15% of pixels are red or green is doing its job. The "0.5%
-  chromatic" target is for interfaces where color means *look here*; when color means *this is the
-  data*, it's a different medium. The rules that still apply: fix lightness across your status
-  hues, never use hue alone, and give the neutral chrome a boring ramp so the data pops.
+- **Monitoring, trading and observability.** These are *supposed* to be loud. A trading terminal
+  where 15% of pixels are red or green is doing its job. What still applies: fix lightness across
+  your status hues, never use hue alone, and give the surrounding chrome a boring ramp so the data
+  pops.
 - **Children's products, games, creative tools, consumer social.** Restraint is not universally
-  virtuous. Figma, Procreate and Duolingo all use far more color than anything measured here and
-  are better for it. The transferable rule is *intentionality*, not scarcity.
-- **Brand-driven marketing pages.** A landing page is an ad. Gradients, big flat color fields and
-  saturated illustration are legitimate there and out of place in the product behind the login.
-  Do not let the marketing palette leak into the app — Cash App is the reference: brand green is a
-  marketing surface only; inside the app the chrome is white/black with neutral gray pills
-  (measured in `references/fintech-and-trust.md`).
+  virtuous. Figma, Procreate and Duolingo use far more color than anything measured here and are
+  better for it. The transferable rule is *intentionality*, not scarcity.
+- **Marketing pages.** A landing page is an ad. Gradients, big flat fields and saturated
+  illustration are legitimate there. Mercury's homepage is 6.60% chromatic and correct; the product
+  behind the login is not. **Do not let the marketing palette leak into the app.**
 - **Charts, maps, image editors, color pickers, design tools.** Color *is* the content. Use
-  `forced-color-adjust: none`, use full-gamut P3 where available, and ignore the chromatic-pixel
-  budget entirely.
-- **You already have a design system.** Read it and use it. A second color language inside one
-  product is worse than an imperfect but consistent one. Extend it with the missing steps rather
-  than importing a new ramp.
-- **Extremely small surfaces.** A three-screen internal tool does not need 12 neutral steps and a
-  semantic layer. Radix `slate` + one accent + `red/amber/green` at L 0.55 is twenty minutes and
-  it's correct.
-- **`#000` and true white.** Right for OLED-first mobile, video/photo review, and cinema. See
-  Decision 6.
-- **"Always use an 8-step scale" / "always use Inter" / "always use `slate`."** All three are
-  fine defaults and all three are why the output is recognizable. Deviate deliberately and
-  document why.
+  `forced-color-adjust: none`, use P3 where it helps (green/cyan/blue — see the table), ignore the
+  chromatic-pixel budget entirely.
+- **Content platforms where users choose colors.** GitHub's neutrality is a *service* to
+  user-authored label colors. If your users color things, your chrome must be quieter than theirs.
+- **You already have a design system.** Read it and use it. Two color languages in one product is
+  worse than one imperfect language. Extend it with the missing steps rather than importing a ramp.
+- **Very small surfaces.** A three-screen internal tool does not need 12 steps and a semantic layer.
+  Radix `slate` + one accent + red/amber/green at L 0.55 is twenty minutes and correct.
+- **`#000` and true white.** Right for OLED-first mobile, video/photo review, cinema.
+- **The 0.55 lightness rule itself.** It targets *light* backgrounds. On a dark-only product,
+  target L 0.66–0.72 for foregrounds and L 0.55–0.58 for fills, exactly as Primer does.
+- **"Always 8-step scales" / "always Inter" / "always `slate`" / "always desaturate in dark."** All
+  four are defaults, and all four are why the output is recognizable. The last one the data
+  actually contradicts.
 
 ---
 
 ## The color of AI-generated UI, and what to do instead
 
-Each of these has a specific measurable signature and a specific fix.
+I built the canonical version and its correction and measured both. Same information, same four
+metrics, same table, same chart.
+
+| | chromatic pixels (C>0.04) | strong (C>0.10) |
+|---|---|---|
+| The AI-default dashboard | **11.60%** | 4.38% |
+| The corrected dashboard | **0.30%** | 0.25% |
+
+**39× less color, and the corrected version is more readable, not less** — because in the default
+version the one thing that is actually wrong ("Contoso Ltd — Past due") is the *least* salient
+element on the screen, an amber pill competing with four saturated stat cards, a five-color bar
+chart and a violet gradient button. In the corrected version there is exactly one red thing on the
+page and you find it in under a second.
 
 ### 1. The violet→blue gradient
 
-**What it looks like:** `linear-gradient(to right, #8B5CF6, #3B82F6)` on the hero, on the primary
-button, on the icon container, on the "AI" badge, and on the empty-state illustration.
-`#8B5CF6` is Tailwind `violet-500`, `oklch(0.606 0.219 293)`.
+`linear-gradient(to right, #8B5CF6, #3B82F6)` on the hero, the primary button, the icon container,
+the "AI" badge and the empty-state illustration.
 
-**Why it's wrong, specifically:** white text on `#8b5cf6` is **4.23:1 — it fails WCAG AA for body
-text.** So does white on `#3b82f6` (3.68:1). A gradient between two failing colors fails everywhere
-along its length. And the gradient is stripped entirely under `forced-colors: active` (measured),
-leaving a white box.
+**Why it's wrong, specifically:** white on `#8b5cf6` is **4.23:1** and white on `#3b82f6` is
+**3.68:1** — a gradient between two failing colors fails everywhere along its length. Tailwind v4's
+updated `violet-500` `#8e51ff` is 4.40:1: still failing. And the gradient is stripped entirely under
+`forced-colors: active` (measured — `backgroundImage: none`, background `rgba(255,255,255,0)`),
+leaving an unstyled box.
 
-**What to do instead:** one flat accent at L 0.54–0.58, used on the primary button only. If you
-genuinely need a gradient, put it behind content as a very low-chroma wash
-(`oklch(0.97 0.02 280)` → `oklch(0.98 0.01 250)`) where nothing sits on it, or use it on a single
-decorative element with no text.
+**Instead:** one flat accent at L 0.54–0.58 on the primary button only. If you genuinely need a
+gradient, put it behind content as a very low-chroma wash (`oklch(0.97 0.02 280)` →
+`oklch(0.98 0.01 250)`) where nothing sits on it, or on one decorative element carrying no text.
 
-**The best counterexample I have:** Linear ships an in-product AI agent panel. In the homepage
-screenshot it is a neutral `#0f1011` panel with a 1px `#ffffff14` border and a small monochrome
-logo. No gradient, no glow, no purple. Mercury's `--surface-magic` — the token literally named for
-its AI surface — resolves to `#5266eb`, which is *the same value as* `--surface-primary`.
-Both companies decided the AI feature should look like the rest of the product.
+**The counterexample, measured:** Linear ships an in-product AI agent panel. In the homepage
+screenshot it is a `#0f1011` surface with a `#ffffff14` hairline and a monochrome logo. Mercury's
+`--surface-magic` — the token literally named for its AI surface — resolves to `#5266eb`, which is
+byte-identical to `--surface-primary`, and its hover and active states are identical too. Both
+companies decided the AI feature should look like the rest of the product.
 
 ### 2. `#8B5CF6` as the accent
 
-**What it looks like:** violet-500 or purple-500 as the brand color because it "feels like AI."
+**Why it's wrong:** it fails at the fill role, it is the single most over-represented hue in
+generated UI, and at chroma 0.219 it is louder than every accent measured here (Linear 0.207,
+Geist 0.214, Mercury 0.200, Primer 0.191, Notion 0.183, Stripe 0.165).
 
-**Why it's wrong:** it fails contrast at the fill role (4.23:1 white-on), it's the single most
-over-represented hue in generated UI, and at chroma 0.219 it's louder than every accent measured
-here except Stripe's (Linear 0.159–0.207, Mercury 0.200, Primer 0.191).
-
-**What to do instead:** if you want violet, take it to L 0.54 where white passes —
-`oklch(0.54 0.20 293)`, whose nearest shipped value is Tailwind `violet-600` `#7c3aed` (L 0.541),
-white-on = **5.70:1**. Better: move the hue. 25°, 75°, 148° and 200° are all under-used and
-instantly less generic. Best: pick the hue from something in the product's actual domain.
+**Instead:** if you want violet, take it to L 0.54 where white passes — Tailwind v3's `violet-600`
+`#7c3aed` (L 54.1) gives 5.70:1; v4's `#7f22fe` gives 5.89:1. Better: move the hue. 25°, 45°, 145°
+and 200° are all under-used and instantly less generic — accepting from the gamut table that
+green/teal fills will need dark text. Best: derive the hue from something in the product's actual
+domain.
 
 ### 3. Glow
 
-**What it looks like:** `box-shadow: 0 0 40px rgba(139,92,246,0.4)` on cards, buttons and inputs;
-sometimes an animated pulse.
+`box-shadow: 0 0 40px rgba(139,92,246,0.4)` on cards, buttons and inputs.
 
-**Why it's wrong:** it's a light-emission metaphor applied to flat surfaces, it makes every element
-compete for foreground, and it's removed entirely in forced-colors mode. No product measured in
-this file uses a colored glow anywhere. Linear's largest shadow is
-`0px 7px 32px #00000059` — black at 35%, no hue. Geist's largest is four stacked black layers at
-6–12% alpha (`#00000014`, `#0000000f`, `#00000014`, `#0000001f`).
+**Why it's wrong:** it's a light-emission metaphor on flat surfaces, it makes every element compete
+for the foreground, and it's removed entirely under forced-colors. **No product measured in this
+file uses a colored glow anywhere.** Every Geist shadow is stacked black at 2–12% alpha; Primer's
+are its own darkest ramp step; Linear's largest is black at 35%.
 
-**What to do instead:** a 1px border and a black-alpha shadow. If something must feel "active," use
-motion (a 200ms opacity fade) or a 2px accent border, not a halo. The one legitimate glow is a
-focus ring, and it should be an `outline`, not a shadow.
+**Instead:** a 1px border and a near-black shadow. If something must feel active, use motion (a
+200ms opacity fade) or a 2px accent border, not a halo. The one legitimate glow is a focus ring, and
+it must be an `outline`.
 
 ### 4. Oversaturated dark mode
 
-**What it looks like:** dark page at `#0f0a1e` or similar (a *tinted* near-black), accents at full
-chroma, `text-secondary` at `#a78bfa`, borders at 5% white.
+Tinted near-black page (`#0f0a1e`), accents at full chroma, secondary text at `#a78bfa`, borders at
+5% white.
 
-**Why it's wrong:** the tinted ground makes every hue on top of it read as a variant of that tint;
-full-chroma accents on near-black are where blue and violet genuinely halate; and 5% borders are
-too weak to separate anything. Computed over an L 0.156 ground: 5% white gives L 0.211
-(**Δ +5.5**), which is the same size as one elevation step, so the edge reads as another surface
-rather than a boundary. 15% gives L 0.311 (**Δ +15.5**), which reads as an edge. Measured dark
-grounds for comparison: Linear `#08090a` chroma 0.003, Primer `#0d1117` chroma 0.014, Radix
-`#111113` chroma 0.004 — all essentially neutral.
+**Why it's wrong, with the numbers:** the tinted ground makes every hue on top read as a variant of
+the tint. And 5% white over an L 14.6 ground gives ΔL **+5.7** — the same size as one elevation
+step, so the edge reads as another surface rather than a boundary. 15% gives ΔL +15.9, which reads
+as an edge. Measured dark grounds for comparison: Linear `#08090a` chroma 0.003, Radix `#111113`
+chroma 0.004, Primer `#0d1117` chroma 0.014 — all essentially neutral.
 
-**What to do instead:** neutral or near-neutral ground at L 0.14–0.18 with chroma ≤ 0.015, borders
-at 15% white, text-role accents raised to L 0.66–0.72 with chroma roughly unchanged. See the
-dark-mode checklist in Decision 6.
+**Instead:** near-neutral ground at L 0.14–0.18, chroma ≤ 0.015; borders at 15% white or an opaque
+value +12 to +20 L above the surface; text-role accents raised to L 0.66–0.72 with chroma
+essentially unchanged.
 
 ### 5. Pure black text on pure white
 
-**What it looks like:** `--foreground: #000` / `--background: #fff`. This is shadcn's shipped
-default — I read it off `ui.shadcn.com`: `--foreground: lab(0% 0 0)`, `--card-foreground: lab(0% 0 0)`.
+`--foreground: #000` / `--background: #fff`. This is shadcn's shipped default — I read
+`--foreground`, `--card-foreground`, `--popover-foreground` and `--sidebar-foreground` all as
+`#000000` off `ui.shadcn.com`.
 
-**What to do instead:** `oklch(0.24–0.29 …)`. `#1c2024`, `#1f2328`, `#282a30`, `#272735` — pick any
-of the measured values. Change the one token and the whole page loses a degree of harshness.
+**Instead:** `oklch(0.24–0.29 …)`. `#1c2024`, `#1f2328`, `#282a2f`, `#272735` — take any measured
+value. One token, and the whole page loses a degree of harshness.
+
+While you're in there: shadcn's `--ring: #a1a1a1` is **2.58:1** against the page — it fails the
+3:1 non-text requirement, so the default focus ring in the most-copied component library in the
+ecosystem is not compliant. Replace it with your accent at L ≤ 0.58 and give it an offset.
 
 ### 6. Every card gets a colored accent
 
-**What it looks like:** the four stat cards on a dashboard, each with a different pastel background
-and a matching colored icon chip. Blue for revenue, green for users, amber for orders, purple for
-"AI insights."
+Four stat cards, four pastel backgrounds, four colored icon chips: blue for revenue, green for
+users, amber for orders, purple for "AI insights."
 
-**Why it's wrong:** the colors are arbitrary — they encode nothing — so they're pure decoration
-that consumes the reader's whole color budget. When something is actually wrong, there's no
-contrast left to signal it with. It also drives chromatic pixel share past 10%.
+**Why it's wrong:** the colors are arbitrary, so they encode nothing, so they are pure decoration
+that consumes the whole color budget. When something is actually wrong there is no contrast left to
+signal it with — demonstrated above, where "Past due" disappears. It also drives chromatic pixel
+share past 10%.
 
-**What to do instead:** all four cards on the same neutral surface with the same neutral border.
-Color enters only when a number is bad. Then the one red card is unmissable.
+**Instead:** all four cards on the same neutral surface with the same neutral border. Color enters
+only when a number is bad. Then the one red card is unmissable.
 
-### 7. Five shades of the same blue as a categorical chart palette
+### 7. Five shades of one blue as a categorical palette
 
-Covered in Decision 9 — it's the shadcn default and it should be replaced with the IBM CVD-safe
-five.
+The shadcn `--chart-1..5` default. ΔE 5.9 between adjacent series in *normal* vision. Replace with
+Okabe–Ito or IBM (Decision 9).
 
-### 8. Semantic colors used as decoration
+### 8. Semantic colors as decoration
 
-**What it looks like:** green checkmarks in a feature list on a pricing page; a red "Popular"
-badge; amber icons for "fast."
+Green checkmarks in a pricing feature list; a red "Popular" badge; amber icons for "fast."
 
-**Why it's wrong:** every time success-green appears where nothing has succeeded, the green means
-less. Semantic color has a budget and marketing decoration spends it.
+**Why it's wrong:** every time success-green appears where nothing has succeeded, green means less.
+Semantic color has a budget and marketing decoration spends it.
 
-**What to do instead:** feature-list checkmarks in `text-tertiary`. Badges in neutral or in the
-accent. Save green for a state that changed.
+**Instead:** feature-list checkmarks in `text-tertiary`. Badges neutral or accent. Save green for a
+state that changed.
+
+### 9. The gradient text heading
+
+`background-clip: text` on a violet→blue gradient. Its contrast is undefined (it varies along the
+glyph), it is unselectable-looking, it disappears in forced-colors, and it is the single fastest
+visual tell in the list. **Instead:** `--text-primary` at 20–24px, weight 600, letter-spacing
+−0.01em. Hierarchy from size and weight, not from hue.
 
 ---
 
 ## Self-check
 
-Run this against your own output before calling it done.
-
 **Measure**
-
-- [ ] Screenshot at 1440 and run the chroma script. Product screen **< 3%**, ideally < 1%. Marketing < 5%.
-- [ ] Count distinct hues in the palette. Neutral + one accent + three status = **five**. More needs a reason.
-- [ ] Grep the codebase for hex literals outside the token file. There should be zero.
+- [ ] Screenshot at 1440 and run the chroma script. Product screen **< 1%**, hard ceiling 3%. Marketing < 6%.
+- [ ] Count distinct hues in the palette. Neutral + one accent + three status = **five**. More needs a written reason.
+- [ ] Grep for hex literals outside the token file. Should be zero.
 
 **Neutral ramp**
-
-- [ ] 10–12 steps, authored in OKLCH, chroma ≤ 0.02 (unless the tint is deliberate, like Stripe).
-- [ ] Surface steps 1.5–2.0 L apart in light, 3–5 L apart in dark.
-- [ ] Three usable border weights exist, not one.
-- [ ] Text is not `#000`. Body text on a dark ground is not `#fff`.
+- [ ] 10–12 steps, authored in OKLCH, chroma ≤ 0.02 unless the tint is deliberate.
+- [ ] Surface steps 0.9–2.7 L apart in light, 3–5 in dark. Not the same numbers reversed.
+- [ ] Three usable border weights exist, not one. (If you're on Tailwind you had to add them.)
+- [ ] Chroma arcs (peaks mid-ramp) and hue drifts. Constant hue reads as generated.
+- [ ] Text is not `#000`. Dark-mode body text is not `#fff`.
 
 **Semantic layer**
-
-- [ ] No component references a ramp step directly. Only semantic names.
-- [ ] Exactly 3 surfaces, 3 borders, 4 text levels. If there's a fifth of anything, delete it.
-- [ ] Every status role has three values (text / fill / wash), and the wash is a brighter sibling at ~10% alpha, not the text color faded.
-- [ ] Status colors all sit within ±0.03 of each other in OKLCH lightness.
-- [ ] Semantic names describe your domain's states, not generic emotions, where the domain has real states.
+- [ ] No component references a ramp step directly.
+- [ ] Exactly 3 surfaces, 3 borders, 4 text levels. A fifth of anything gets deleted.
+- [ ] Every status role has three values (text / fill / wash); the wash is a brighter sibling at ~10–15% alpha, not the text color faded.
+- [ ] All status foregrounds within ±0.03 OKLCH L of each other. All status fills too.
+- [ ] Semantic names describe your domain's states where your domain has real states.
 
 **Accent**
-
-- [ ] One accent. List every place it appears; if the list exceeds five kinds of element, cut.
-- [ ] Fill role and text role are separate tokens.
-- [ ] White text on the fill passes 4.5:1 (or you know it doesn't and have decided).
+- [ ] One accent. List every element type it appears on; if the list exceeds five, cut.
+- [ ] Fill and text are separate tokens. So is the wash.
+- [ ] White on the fill passes 4.5:1 — or you know it doesn't and it isn't the only interactivity cue.
+- [ ] If your accent hue is outside 260–320°, you've decided whether the fill takes dark text.
 
 **Dark mode**
-
-- [ ] Page ground L 0.14–0.18, and a sunken step exists below it.
+- [ ] Page L 0.14–0.18 with a sunken step below it.
 - [ ] Elevation is lightness, not shadow.
-- [ ] Every panel has a visible edge: an opaque border L +12 to +20 above the surface, or alpha at 1.5–2× the light-mode value.
-- [ ] Accent text/icon lightness raised by +0.11 to +0.17; fill lightness unchanged.
-- [ ] Status washes are alpha over hue, not opaque tints.
+- [ ] Every panel has a visible edge: opaque border +12 to +20 L, or alpha at 1.5–2× the light value.
+- [ ] Accent/status text +10 to +20 L; fills unchanged; chroma unchanged in both.
+- [ ] Status washes are alpha over hue.
 
 **Contrast**
-
-- [ ] Body text ≥ 4.5:1 (WCAG 2) **and** ≥ APCA 75 against its real background, not against white.
-- [ ] Dark-mode text carries ~2 more points of WCAG ratio than the light-mode equivalent.
-- [ ] Focus ring ≥ 3:1 against both the component and the page. Two-layer ring if in doubt.
+- [ ] Body text ≥ 4.5:1 **and** ≥ Lc 75 against its *real* background.
+- [ ] Dark-mode text carries ~2 more points of WCAG than its light-mode equivalent.
+- [ ] Focus ring ≥ 3:1 against both component and page. Two-layer ring with the inner layer in the page color if in doubt.
 - [ ] Placeholders ≥ 4.5:1. Disabled text still readable.
 
 **Robustness**
-
 - [ ] Simulate deuteranopia and protanopia. Every must-distinguish pair still distinguishes.
-- [ ] Nothing communicates state by hue alone — icon, label, shape or position backs it up.
-- [ ] `forced-colors: active`: every button has a border, every focus ring is an `outline` not a `box-shadow`, every structural card has a real `border`.
-- [ ] Turn the whole page grayscale. It should still be fully usable. If it isn't, color is carrying meaning it shouldn't.
-
-**AI tells**
-
-- [ ] No violet→blue gradient anywhere.
-- [ ] No `#8B5CF6`, `#a855f7`, `#6366f1` as the accent.
-- [ ] No colored glow.
-- [ ] Not one dashboard card per pastel.
-- [ ] Chart categories are not five shades of one hue.
-- [ ] The AI feature, if there is one, looks like the rest of the product.
+- [ ] Nothing communicates state by hue alone.
+- [ ] Test `forced-colors: active`. Every button has a (possibly transparent) border; every focus ring is an `outline`; nothing structural relies on `box-shadow`.
+- [ ] Chart palette checked against the ΔE table, and series are direct-labeled or mark-varied.
 
 ---
 
-## How the numbers in this file were produced
+## Reproducing any of this
 
-```bash
-# 1. Resolve every custom property a site defines, light and dark.
-#    Collect names from all reachable cssRules, then read the resolved value off
-#    documentElement — this survives minified/hashed variable names and @layer.
-node probe.mjs https://linear.app linear          # colorScheme: 'light'
-node probe.mjs https://linear.app linear --dark
+Extract a live product's real tokens (Typed OM catches runtime-injected variables that parsing the
+stylesheet misses, and sidesteps the CORS error you get from `sheet.cssRules`):
 
-# 2. When stylesheets are cross-origin (cssRules throws), capture the raw CSS
-#    off the network instead and parse the [data-theme] blocks directly.
-node css.mjs https://linear.app linear   # page.on('response') → collect text/css
-
-# 3. Convert to OKLCH and compute WCAG 2 + APCA in Python (no deps).
-python3 oklch.py '#282a30' '#ffffff'
-
-# 4. Chromatic pixel share, from a real screenshot.
-node tools/shot.mjs https://linear.app --widths 1440 --wait 4000 --dark
-python3 chroma.py .cache/shots/linear-1440.png
-
-# 5. Color-blindness audit — Viénot/Brettel/Mollon LMS simulation, then minimum
-#    pairwise OKLab distance across the palette under each CVD type.
-python3 cvd.py
-
-# 6. Forced-colors behavior — Playwright context with forcedColors: 'active',
-#    then read computed styles for background/border/outline/box-shadow.
-node fc.mjs
+```js
+// node probe.mjs https://example.com [--dark]
+import { execSync } from 'node:child_process'; import { createRequire } from 'node:module';
+const req = createRequire(execSync('npm root -g').toString().trim() + '/');
+const { chromium } = req('playwright');
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport:{width:1440,height:900},
+  colorScheme: process.argv.includes('--dark') ? 'dark' : 'light' });
+const p = await ctx.newPage();
+await p.goto(process.argv[2], { waitUntil:'networkidle' });
+await p.waitForTimeout(2500);
+console.log(JSON.stringify(await p.evaluate(() => {
+  const o = {};
+  for (const [k, v] of document.documentElement.computedStyleMap())
+    if (k.startsWith('--')) o[k] = String(v);
+  const c = getComputedStyle(document.body);
+  return { vars: o, body: { bg: c.backgroundColor, color: c.color } };
+}), null, 1));
+await b.close();
 ```
 
-**Related files in this library:** [`system/3-tokens.md`](../system/3-tokens.md) for where the
-color tokens sit in the wider token system; [`references/fintech-and-trust.md`](../references/fintech-and-trust.md)
-for Wise's, Mercury's and Column's full measured palettes;
-[`craft/tables-dashboards-data.md`](tables-dashboards-data.md) for chart layout once the palette is
-settled; [`anti-patterns/vibecode-rubric.md`](../anti-patterns/vibecode-rubric.md) for scoring the
-result.
+Chrome resolves `oklch()` to `lab()` in computed styles, so a `lab()` parser is required to read
+Tailwind v4's palette back — CIE Lab with a **D50** white point, then chromatic adaptation to D65.
+(Validation: `lab(47.7841% -0.393182 -10.0268)` must convert to `#6a7282`, Tailwind v4's
+`gray-500`.)
 
-Where a value came from a stylesheet rather than a computed style I said so. Where I did not
-measure something, it isn't in this file.
+Forced colors: `chromium.launch()` then `newContext({ forcedColors: 'active' })`, `setContent()`
+your markup, and read `getComputedStyle` for `backgroundColor`, `borderTopWidth`, `boxShadow`,
+`outlineWidth` and `backgroundImage`. Probe the system keywords by assigning them to
+`element.style.color` and reading back.
+
+CVD simulation (Machado 2009, severity 1.0) — convert to linear sRGB, apply the matrix, convert
+back:
+
+```
+deuteranopia  [[0.367322, 0.860646,-0.227968],[ 0.280085,0.672501, 0.047413],[-0.011820, 0.042940,0.968881]]
+protanopia    [[0.152286, 1.052583,-0.204868],[ 0.114503,0.786281, 0.099216],[-0.003882,-0.048116,1.051998]]
+tritanopia    [[1.255528,-0.076749,-0.178779],[-0.078411,0.930809, 0.147602],[ 0.004733, 0.691367,0.303900]]
+```
+
+Gamut ceilings: binary-search chroma at fixed OKLCH L and hue until the OKLab→linear-sRGB
+conversion leaves [0, 1]. Swap the matrix for Display-P3's to get the P3 column.
+
+Products probed for this file: `linear.app` (light and dark), `vercel.com/geist/colors` (light and
+dark), `github.com` (light and dark), `radix-ui.com/colors` (light and dark), `mercury.com`,
+`notion.com`, `docs.stripe.com`, `tailwindcss.com/docs/colors`, `ui.shadcn.com`, `wise.com`.

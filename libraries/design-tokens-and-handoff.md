@@ -1,6 +1,7 @@
 # Design tokens, Figma-to-code and the design/engineering seam
 
-**Evaluated:** 2026-09 (measurement passes 2026-09-09 and 2026-09-10)
+**Evaluated:** 2026-09 (measurement passes 2026-09-09 and 2026-09-10; adversarial review pass
+2026-09-10 — see the end of this file)
 
 **Researcher note:** Five things worth stating up front. (1) **The DTCG spec finally shipped
 something implementable** — the 2025.10 release (Format, Color, Resolver), dated 28 October 2025.
@@ -898,33 +899,25 @@ today.
 - **What:** One `tokens.css` in the app repo. Primitive ramp + semantic layer + mode blocks. No
   tool, no build step, no export.
 - **Verdict:** The correct default, and the reason is not simplicity — it's that the repo is the
-  only artefact in this whole seam where a wrong value gets stopped by something other than a human
-  noticing. A stylelint rule, a failing build and a PR review are three enforcement mechanisms
-  Figma structurally cannot have. Everything else in this file is a way of moving values *out* of
-  that enforcement and then trying to move them back. The measured evidence backs the scale, too:
-  Linear runs a product with real theming on ~281 authored custom properties averaging 16
-  characters and two segments deep. That is a hand-authorable number. Nothing about 90 tokens
-  requires a pipeline, and 90 tokens is enough for most products.
+  only artefact in this seam where a wrong value is stopped by something other than a human
+  noticing. A stylelint rule, a failing build and a PR review are three enforcement mechanisms Figma
+  structurally cannot have. Everything else in this file moves values *out* of that enforcement and
+  then tries to move them back. Scale is not the objection: Linear ships real theming on ~281
+  authored properties averaging two segments and 16 characters.
 - **Use when:** one design language, one to three brands, any number of modes, web-first. ·
   **Don't use when:** the same value must land in Swift and Kotlin, or ≥4 independently-maintained
   brands exist.
 - **Scores /5:** visual 5 · interaction 5 · a11y 5 · engineering 4 · maintenance 5 · docs 3 ·
   customization 5 · perf 5 · stability 5 · originality 2
-- **Evidence:** custom properties are Baseline widely available; cascade-composed modes cost zero
-  JS and zero re-renders. Measured comparison set in the reference section above (Linear 419,
-  shadcn 365, Vercel 576, Atlassian 619, Stripe 715, Primer 1,998, Polaris 2,041). Scale is a
-  non-issue: 90 → 2,041 declared properties costs **0.3 ms** on a theme switch across 2,000
-  consuming nodes, measured. The three-axis cascade version of a 90-token system is **186
-  declarations in 5 blocks** where the generated resolver equivalent is 1,080 in 12. The one genuine
-  weakness is silent failure on typos — and it is worse than "renders nothing": a wrong *type*
-  resolves to `rgba(0, 0, 0, 0)`, so the element goes transparent. Mitigate with `@property`
-  (`syntax` + `initial-value`) on the semantic layer, a stylelint allowlist, and a generated `.d.ts`.
-- **Looked at:** the shipped `:root` of fourteen production sites, enumerated via `getComputedStyle`
-  at 1440×900, plus a full stylesheet-text pass for byte weight. The finding that changed my mind
-  runs the other way from the first pass: **Stripe ships 715 custom properties, 436 of them
-  colours, in one clean `--hds-*` grammar and with zero theme selectors.** A top-tier interface with
-  a serious token layer and exactly one theme. What makes it work is the single namespace and the
-  single axis, not the count — and not a pipeline.
+- **Evidence:** all measurements in the reference section above. The one genuine weakness is
+  silent failure, and it is worse than "renders nothing": a wrong *type* resolves to
+  `rgba(0, 0, 0, 0)`, so the element goes transparent. Mitigate with `@property` on the semantic
+  layer, a stylelint allowlist, and a generated `.d.ts`.
+- **Looked at:** the shipped `:root` of fourteen production sites. The finding that changed my mind
+  runs against the first pass: **Stripe ships 715 custom properties, 436 of them colours, in one
+  `--hds-*` grammar with zero theme selectors.** A top-tier interface with a serious token layer and
+  exactly one theme. The single namespace and the single axis are what make it work — not the count,
+  and not a pipeline.
 - **Vibecode risk:** low — but only if you replace the default ramp. See "The generated version".
 - **Link:** `/Users/ayushgarg/Ayush/UI_Library/system/3-tokens.md`
 
@@ -1020,12 +1013,11 @@ today.
   `{"value":120,"unit":"ms"}` `duration` token emitted `[object Object]` into CSS, Swift **and**
   Android XML with `✔︎` and exit 0; `outputReferences` defaults to `false`, flattening every alias
   to a literal.
-- **Looked at:** https://styledictionary.com at 1440 and 390 — teal chameleon mark, oversized
-  black grotesque wordmark, a live four-tab demo (Tokens / Config / Script / Output) that actually
-  compiles DTCG JSON to `/vars.css` in the page, with a format dropdown. The demo is the best part
-  of the site and it's below the fold at both widths. On mobile the four hero buttons reflow into a
-  ragged 1-2-1 stack — "Documentation", then "Migration to Version 4" beside "GitHub", then "v3
-  docs" alone and centred. A tool at 5.5.3 whose mobile hero offers v3 and v4 wayfinding and no v5.
+- **Looked at:** https://styledictionary.com at 1440 and 390 — a live four-tab demo
+  (Tokens / Config / Script / Output) that compiles DTCG JSON to `/vars.css` in the page. It is the
+  best part of the site and it is below the fold at both widths. The hero's four buttons are
+  "Documentation", "Migration to Version 4", "GitHub" and "v3 docs" — a tool shipping 5.5.3 whose
+  fold offers v3 and v4 wayfinding and no v5.
 - **Vibecode risk:** low as a tool. **Medium-high as a habit**, for two reasons now measured
   rather than suspected: the default `css/variables` formatter resolves every alias to a literal
   unless you set `outputReferences: true`, which is how you get Carbon's 668 literals with 27
@@ -1044,12 +1036,10 @@ today.
   `getPermutationID()`, and `@terrazzo/plugin-css` exposes a `permutations` API with the older
   `modeSelectors` marked deprecated. Style Dictionary does not do this at all.
   **Correcting an earlier claim in this file:** the August 2026 "partial CSS output for resolvers"
-  commit does not mean it emits only the varying declarations. I ran it — 90 tokens across a
-  3 × 2 × 2 resolver produced **1,080 declarations in 12 blocks**, every block re-emitting every
-  token, against 186 declarations in 5 blocks for the hand-written cascade. Terrazzo faithfully
-  implements the spec, and the spec materialises permutations. That is the right answer for Swift
-  and Kotlin and the wrong one for a browser. The risk is proportionality: 456 stars,
-  six subscribers, effectively one maintainer. `@terrazzo/plugin-css` pulls 66,216 weekly against
+  commit does *not* mean it emits only the varying declarations — see Decision 4 for the run. It
+  faithfully implements the spec, and the spec materialises permutations: right for Swift and
+  Kotlin, wrong for a browser. The risk is proportionality: 456 stars, six subscribers, effectively
+  one maintainer. `@terrazzo/plugin-css` pulls 66,216 weekly against
   the CLI's 55,239, which suggests it is being consumed as a library inside other builds as much as
   run as a CLI. Adopt it for a new pipeline; don't migrate a working Style Dictionary config to it
   on architecture grounds alone.
@@ -1062,14 +1052,11 @@ today.
   `@terrazzo/cli` 2.7.1 2026-08-11, 55,239 wk npm · `@terrazzo/plugin-css` 2.7.1 2026-08-11, 66,216
   wk npm · resolver commits #815 and #817, both 2026-08-11 · resolver + permutation behaviour run
   locally 2026-09-10 (install 57 MB / 1,911 files / 94 packages; 90 tokens built in 123 ms).
-- **Looked at:** https://terrazzo.app at 1440 and 390 — a cyan blueprint grid across the whole
-  viewport, Memphis-style flat shapes (coral rectangle, lime half-circle, teal/cyan triangle strip)
-  with real Figma selection handles drawn on them, and "Design systems / FOR EVERYONE" in a white
-  box that overlaps the shapes. A hard-edged, un-rounded, un-gradiented aesthetic that is the exact
-  opposite of the category's house style, and it's the most memorable page of the twelve I looked
-  at. The "USED BY" panel lists Figma, HP, The Guardian, LEGO, Snyk, GitButler and WordPress —
-  self-reported, unverified, but a strikingly good list for a 456-star project. At 390 the whole
-  composition reflows cleanly to a single column with the logo grid at 2-up; nothing clips.
+- **Looked at:** https://terrazzo.app at 1440 and 390 — a cyan blueprint grid and hard-edged
+  Memphis shapes with Figma selection handles drawn on them. Un-rounded, un-gradiented, the exact
+  opposite of the category's house style, and the most memorable page of the twelve. The "USED BY"
+  panel lists Figma, HP, The Guardian, LEGO, Snyk, GitButler and WordPress — self-reported and
+  unverified, but a strikingly good list for a 456-star project.
 - **Vibecode risk:** low.
 - **Link:** https://terrazzo.app
 
@@ -1079,9 +1066,11 @@ today.
 - **Verdict:** Finally worth targeting, and almost nobody has noticed because the URL everyone
   links — `tr.designtokens.org/format/` — serves a preview draft whose own banner says "Do not
   attempt to implement this version." The thing you want is
-  `designtokens.org/TR/2025.10/`: Format as a **Final Community Group Report**, Resolver as a
-  **Candidate Recommendation** explicitly marked "considered stable… intended for implementation."
-  The Resolver is the important half; it is the answer to `[RFC] Theming`, issue #2, opened
+  `designtokens.org/TR/2025.10/`, where Format, Color and Resolver all carry the same status —
+  masthead "Final Community Group Report", Status section "Candidate Recommendation… considered
+  stable… intended for implementation". There is no maturity gap between Format and Resolver, and
+  claiming one (as an earlier pass of this file did) makes the Resolver sound provisional when it is
+  not. The Resolver is the important half; it is the answer to `[RFC] Theming`, issue #2, opened
   2019-06-26 and *still open* with 35 comments. Read the arithmetic on that: the format spent six
   years unable to express the thing tokens exist for. Adoption is correspondingly thin — Style
   Dictionary is DTCG-*compatible* (it parses the format) but doesn't implement the Resolver;
@@ -1197,12 +1186,10 @@ today.
 - **Evidence:** `tokens-studio/figma-plugin` ★1,606 · MIT · pushed 2026-09-10 · 248 open issues + 91 PRs ·
   `@tokens-studio/sd-transforms` 2.0.3 published 2025-12-10, 163,156 wk npm ·
   `@tokens-studio/types` 171,219 wk npm · pricing verified on tokens.studio/pricing 2026-09-09.
-- **Looked at:** https://tokens.studio at 1440 and 390 — "DESIGN SYSTEMS, / FULLY AUTOMATED" in
-  black all-caps tight-tracked grotesque at roughly 96px, cyan (#22D3EE-ish) primary button, 3D
-  isometric card renders of token panels floating at the fold's edge. The cookie consent modal
-  occupies the bottom third of the 1440 viewport and covers the product screenshot entirely, with
-  an Intercom bubble reading "Got a question? Leave it here" overlapping it on the right. Two modals
-  and a chat widget over the hero of a design-systems product is a reasonable thing to notice.
+- **Looked at:** https://tokens.studio at 1440 and 390 — "DESIGN SYSTEMS, / FULLY AUTOMATED" at
+  ~96px. The cookie modal covers the bottom third of the 1440 viewport and hides the product
+  screenshot entirely, with an Intercom bubble over it. Two modals and a chat widget across the hero
+  of a design-systems product.
 - **Vibecode risk:** low.
 - **Link:** https://tokens.studio
 
@@ -1227,12 +1214,9 @@ today.
 - **Evidence:** ★91,026 · `storybook` 10.6.0 published 2026-09-02, 19,523,428 wk npm · 10.0.0
   2025-10-28, 9.0.0 2025-05-28 · `@storybook/addon-docs` 15,571,865 wk · `@storybook/addon-themes`
   3,409,150 wk · MIT · pushed 2026-09-10.
-- **Looked at:** https://storybook.js.org/docs/essentials/themes at 1440 — standard three-pane docs
-  with a framework tab row (React / Vue / Angular / Web Components / More) and a "Copy markdown"
-  button top-right, which is a small, well-judged agent affordance. The page's "On this page" nav
-  lists precisely three theme mechanisms, which is the useful summary. The hero illustration is a
-  screenshot of a dark-mode Storybook composited over a stock photo of green leaves — an odd choice
-  that makes the actual UI harder to read than a plain background would.
+- **Looked at:** https://storybook.js.org/docs/essentials/themes at 1440 — a "Copy markdown" button
+  top-right, which is a small well-judged agent affordance, and an "On this page" nav listing
+  precisely three theme mechanisms. That list is the whole integration surface.
 - **Vibecode risk:** medium — the default Storybook example set (`Button` with `primary`/`size`,
   the pink "Acme" header, the "Pages in Storybook" doc) ships in every `storybook init` and shows up
   unedited in an alarming number of real design systems.
@@ -1258,14 +1242,11 @@ today.
   contexts / 1 design system / 1,000 credits per month; **Pro $35/seat/mo** (yearly −22%), ≤15
   seats, 25 MCP consumers, 3,000 credits/seat, 5 pipelines; Enterprise custom, 5,000 credits/seat,
   SAML SSO, code adoption tracking.
-- **Looked at:** https://www.supernova.io at 1440 — dark navy pill navbar floating on a pale grey
-  ground with a faint square-grid pattern, a "News · Introducing Supernova Editor MCP" pill above
-  the fold, and a headline split across two colours (near-black "Design & engineering" over blue
-  "knowledge, ready for AI agents"). The product screenshot is the honest part: a three-pane app
-  with Overview / Documentation / **Contexts** / Pipelines / Insights in the sidebar, and a Drive
-  context panel reading "Design tokens 206 of 324", "Token themes 8 of 12", with a distribution card
-  showing `mcp.supernova.io/google/1337-drive` marked "Internal only". Using Google's Material
-  Design as the demo tenant is a confident choice.
+- **Looked at:** https://www.supernova.io at 1440. The product screenshot is the honest part: a
+  sidebar reading Overview / Documentation / **Contexts** / Pipelines / Insights, and a context panel
+  reading "Design tokens 206 of 324", "Token themes 8 of 12" beside a distribution card for
+  `mcp.supernova.io/google/1337-drive`. Contexts sits above Pipelines in the nav; that is the
+  repositioning stated in information architecture rather than in a headline.
 - **Vibecode risk:** low.
 - **Link:** https://www.supernova.io
 
@@ -1288,13 +1269,9 @@ today.
 - **Evidence:** closed source. Pricing verified 2026-09-09: Free $0 · Starter $0 for 14 days then
   $49/editor/mo annual, $59 monthly, $588/yr, pro-rated minimum 1 editor · Enterprise contact sales
   · MCP server with Standard Search, 500 calls/month, on Free and Starter.
-- **Looked at:** https://zeroheight.com at 1440 — warm cream ground (`#EFEADD`) with a fine dot
-  grid, large soft beige geometric shapes bleeding off all four corners, a very tight-tracked black
-  grotesque headline at roughly 88px, and a coral (`#FF4B4B`-ish) primary button beside a black
-  secondary. A restrained, non-generic palette; the only false note is that the cookie banner is a
-  full-width dark bar occupying the bottom ~12% at 1440. The pricing page sets its H2 at 56px/62
-  with −1.12px tracking in a display face over 20px body — a real type system, which is the least
-  you should expect from this vendor.
+- **Looked at:** https://zeroheight.com at 1440 — warm cream (`#EFEADD`) ground, coral CTA, a
+  restrained non-generic palette, and a pricing page whose H2 runs 56px/62 at −1.12px tracking over
+  20px body. A real type system, which is the least you should expect from this vendor.
 - **Vibecode risk:** low.
 - **Link:** https://zeroheight.com
 
@@ -1316,13 +1293,9 @@ today.
   customization 4 · perf 3 · stability 4 · originality 3
 - **Evidence:** `BuilderIO/builder` ★8,823 · MIT · 1,163 forks · pushed 2026-09-08 ·
   `@builder.io/sdk` 6.3.3 published 2026-08-24 · `@builder.io/dev-tools` 17,838 wk npm.
-- **Looked at:** https://www.builder.io at 1440 — full-black ground with a faint vertical grid,
-  cyan (`#00E5FF`-ish) primary button in uppercase mono-ish type, white display headline with
-  "agents" set in italic inside a cyan selection box complete with resize handles, three coloured
-  collaborator cursors, a floating "Semibold / B I U S" text toolbar, and a `PR #2841 · hero.tsx`
-  card showing `+148 −62  3 files  MERGED`. Logo wall: Harry's, Serasa Experian, Faire, Vistaprint,
-  Alo Yoga, ClickUp, Panasonic, Pendo. It is a well-made page and it is selling an agent, not a
-  converter.
+- **Looked at:** https://www.builder.io at 1440 — the hero mock is multiplayer cursors and a
+  `PR #2841 · hero.tsx` card reading `+148 −62  3 files  MERGED`. Not a Figma frame anywhere. It is
+  a well-made page and it is selling an agent, not a converter.
 - **Vibecode risk:** **high** for any generated output. The Figma-import path produces
   fresh markup, not references to your components.
 - **Link:** https://www.builder.io
@@ -1330,26 +1303,19 @@ today.
 ### Knapsack — `experimental`
 - **What:** Formerly a design-system platform; now, per its own homepage, an AI-conformance and
   evaluation product. Waitlist only.
-- **Verdict:** The pivot is complete and it is worth reading even though you can't buy it. The
-  homepage is a single hero — "Your AI has no idea what good looks like." — over a purple-pink mesh
-  gradient with one "Join the waitlist" button, and the thesis underneath is sharper than most of
-  this category: *"Anyone can put documents in a folder and point an LLM at it. The hard part is
-  knowing which context to trust, measuring whether your AI's answer conforms to your standards, and
-  proving it got better — not just faster."* Their three principles are provenance, analytics,
-  governance, and they explicitly position as an aggregator over GitHub, Figma, Jira, **Supernova**
-  and **Storybook** rather than a replacement. That is the correct read of where the problem
-  actually is in 2026. It is also a waitlist with no pricing, and the old marketing site still lives
-  at the subpages with a "Plans → Contact Sales" nav and a comparison page titled "A Tale of Two
-  Tools: How Knapsack and Storybook Stack up". Do not plan a system around this.
+- **Verdict:** Worth reading even though you can't buy it. The thesis is sharper than most of this
+  category: *"Anyone can put documents in a folder and point an LLM at it. The hard part is knowing
+  which context to trust, measuring whether your AI's answer conforms to your standards, and proving
+  it got better — not just faster."* It positions as an aggregator over GitHub, Figma, Jira,
+  **Supernova** and **Storybook**, not a replacement — the correct read of where the problem
+  actually is in 2026. It is also a waitlist with no pricing. Do not plan a system around it.
 - **Use when:** never, yet. · **Don't use when:** you need something today.
 - **Scores /5:** visual 3 · interaction — · a11y — · engineering — · maintenance 2 · docs 1 ·
   customization — · perf — · stability 1 · originality 5
 - **Evidence:** closed source, no public repo (`KnapsackPro/knapsack` on GitHub is an unrelated Ruby
   project). No published pricing as of 2026-09-09. Homepage claims "Trusted by over 4k+ companies".
-- **Looked at:** https://www.knapsack.cloud at 1440 — a white rounded-rectangle page container
-  inset from a white ground, a floating white pill navbar containing only the wordmark and "Book a
-  demo", a large purple/pink/peach mesh-gradient wash occupying the bottom two-thirds, and a violet
-  pill CTA. Confident and empty; there is no product screenshot anywhere above the fold.
+- **Looked at:** https://www.knapsack.cloud at 1440 — one headline, one CTA, a mesh-gradient wash,
+  and no product screenshot anywhere above the fold. Confident and empty.
 - **Vibecode risk:** — (nothing to ship).
 - **Link:** https://www.knapsack.cloud
 
@@ -1368,12 +1334,10 @@ today.
 - **Scores /5:** visual 3 · interaction 3 · a11y 2 · engineering 3 · maintenance 4 · docs 3 ·
   customization 2 · perf — · stability 3 · originality 2
 - **Evidence:** closed source, no public repo or npm package to verify against.
-- **Looked at:** https://www.locofy.ai at 1440 — a saturated royal-blue full-bleed ground, white
-  display headline, mint-green primary button, and a second-line headline reading "design to {code}
-  in a flash" with "design" inside a drawn Figma selection box and "flash" on a lighter blue chip.
-  A 14-icon framework strip runs along the fold (Figma, Penpot, Adobe XD → React, React Native,
-  Angular, HTML, Flutter, Next.js, Vue, Gatsby, SwiftUI, Compose). The nav includes "LDM Research
-  Paper" — Large Design Models — which is a notable thing to put in a primary nav.
+- **Looked at:** https://www.locofy.ai at 1440 — "design to {code} in a flash" over a 14-icon
+  framework strip (Figma, Penpot, Adobe XD → React, React Native, Angular, HTML, Flutter, Next.js,
+  Vue, Gatsby, SwiftUI, Compose). Breadth is the pitch. The primary nav carries an "LDM Research
+  Paper" link — Large Design Models — which is where the company's attention actually is.
 - **Vibecode risk:** **high.**
 - **Link:** https://www.locofy.ai
 
@@ -1389,12 +1353,11 @@ today.
 - **Scores /5:** visual 4 · interaction 3 · a11y 2 · engineering 3 · maintenance 4 · docs 2 ·
   customization 2 · perf — · stability 3 · originality 2
 - **Evidence:** closed source. Site verified 2026-09-09.
-- **Looked at:** https://www.animaapp.com at 1440 — very dark charcoal ground, a high-contrast serif
-  display headline ("AI with an Eye for Design") which is genuinely unusual and good in this
-  category, violet accent, large blurred violet orbs bleeding from both edges, and a top banner for
-  "AgentGrid.io: A shared drive for humans and agents". Below the fold, four generated-app thumbnails
-  with headlines like "Your Work. Supercharged by AI." and "Keep Your Team In Sync, Anywhere" — which
-  are, ironically, a compact museum of AI-generated marketing copy.
+- **Looked at:** https://www.animaapp.com at 1440 — a serif display headline ("AI with an Eye for
+  Design"), genuinely unusual in this category, over a prompt box and an "AgentGrid.io" banner.
+  Below the fold, four generated-app thumbnails headlined "Your Work. Supercharged by AI." and "Keep
+  Your Team In Sync, Anywhere" — a compact museum of AI-generated marketing copy, on the site of a
+  company selling generation.
 - **Vibecode risk:** **high.**
 - **Link:** https://www.animaapp.com
 
@@ -1528,21 +1491,14 @@ says teams shipping excellent products run 281–619 properties; the ones runnin
 generating, not by deciding. A pipeline lowers the marginal cost of adding a token, which is
 precisely the wrong incentive for an artefact whose value comes from scarcity.
 
-**When it stops being enough.** Five specific triggers, any one of which is sufficient:
+**When it stops being enough.** Decision 1's table, plus two triggers that table does not carry:
+**designers, not engineers, change token values weekly** (the enforcement argument genuinely weakens
+when the values are owned on the design side — Tokens Studio with Git sync, or Penpot, is the honest
+answer), and **the token count passes ~300 for legitimate reasons** — actual distinct decisions
+across many surfaces, not naming inflation.
 
-- **A second non-web platform** ships from the same design language. Swift cannot read your CSS.
-- **Four or more brands**, maintained by different people, on different release cadences.
-- **The design system ships as a versioned package** to five or more consuming apps, which means
-  you need artefacts with a changelog and therefore a build.
-- **Designers, not engineers, change token values weekly.** Then the enforcement argument weakens —
-  the values are genuinely owned on the design side — and Tokens Studio with Git sync becomes the
-  honest answer.
-- **The token count passes ~300 for legitimate reasons** (not naming inflation — actual distinct
-  decisions, which usually means many surfaces or many products). Above that, hand-maintenance of
-  cross-mode consistency becomes error-prone in a way tests can't fully cover.
-
-Notably absent from that list: "we have dark mode", "we have a compact density", "we have two
-brands", "we use Figma", "we want designers to see the tokens". None of those require a pipeline.
+Notably absent: "we have dark mode", "we have a compact density", "we have two brands", "we use
+Figma", "we want designers to see the tokens". None of those require a pipeline.
 
 ---
 
@@ -1559,6 +1515,17 @@ brands", "we use Figma", "we want designers to see the tokens". None of those re
 - **React Native-first products.** RN has no cascade and no custom properties. The JS object is the
   correct primary artefact and the web CSS is the derived one — the inverse of Decision 2. See
   `mobile-and-native.md`.
+- **Canvas-primary products** — whiteboards, maps, node and video editors, games. Most pixels never
+  touch the cascade, so CSS-first inverts too. Same scope as RN; see Decision 2.
+- **Any product that also renders HTML email, PDFs or OG images.** Those artefacts need literals, not
+  `var()`, which passes Decision 1's real test ("one value in two artefacts a compiler cannot both
+  read") on a product with a single platform. See the Decision 1 table.
+- **Data-heavy products.** The 60–120 cap is a chrome budget; categorical and sequential palettes are
+  a separate one. See "If you only apply five things", item 3.
+- **Component libraries consumed by third parties.** Component-scoped tokens are an override API
+  there, not naming inflation. See item 4.
+- **Runtime tenant theming, and any UI that reads token values back into a control.** Don't register
+  those with `@property`; see Decision 2.
 - **Teams already running Style Dictionary successfully.** Do not migrate to Terrazzo on
   architecture grounds. A working pipeline with a bus factor and a CI job is worth more than a
   better data model.
@@ -1689,9 +1656,15 @@ Run against your own output before you call the token work done.
       whole set? Count: `awk '/\{/{n=0} /^\s*--/{n++} /\}/{print n}'`. Every block after the first
       should be small.
 - [ ] Are the semantic colour tokens registered with `@property` (a `syntax` and an
-      `initial-value`)? If not, a wrong value renders transparent instead of falling back.
+      `initial-value`)? If not, a wrong value renders transparent instead of falling back. Exception:
+      tokens whose values arrive from a tenant or a user at runtime — registering those hides the
+      error behind your `initial-value`. Validate on ingest and leave them unregistered.
+- [ ] Count the declarations on `:root` **excluding** categorical and sequential chart palettes.
+      Those are a separate budget; counting them against the chrome cap pushes them into JS.
 - [ ] Did you argue against a large token set on performance grounds? Delete that argument — the
       measured cost of 2,041 vs 90 properties is 0.3 ms.
+- [ ] Did you tell anyone `light-dark()` breaks a manual theme toggle? It doesn't — it follows
+      author-set `color-scheme`. Skip it because it takes only two values, not for that reason.
 - [ ] Do the Figma variable names match the CSS custom-property names exactly, with `codeSyntax`
       set?
 
@@ -1699,38 +1672,15 @@ Run against your own output before you call the token work done.
 
 ## Sources — what I looked at and what I saw
 
-Screenshotted at 1440 (and 390 where noted) with `tools/shot.mjs` and read as images, 2026-09-09:
+Screenshotted with `tools/shot.mjs` at 1440 (and 390 where noted) and read as images. The
+first twelve, 2026-09-09, are written up in their own scorecards and not repeated here:
+**styledictionary.com**, **tokens.studio**, **terrazzo.app**, **supernova.io**, **zeroheight.com**,
+**knapsack.cloud**, **locofy.ai**, **animaapp.com**, **builder.io**,
+**developers.figma.com/docs/code-connect/**, **specifyapp.com**,
+**storybook.js.org/docs/essentials/themes**.
 
-1. **styledictionary.com** (1440 + 390) — teal chameleon, live DTCG→CSS demo below the fold, hero
-   CTAs offering "Migration to Version 4" and "v3 docs" on a site shipping 5.5.3.
-2. **tokens.studio** (1440 + 390) — "DESIGN SYSTEMS, FULLY AUTOMATED" in ~96px black caps, cyan CTA,
-   cookie modal covering the bottom third plus an Intercom bubble over the product shot.
-3. **terrazzo.app** (1440 + 390) — cyan blueprint grid, Memphis shapes with Figma selection handles,
-   "USED BY: Figma · HP · The Guardian · LEGO · Snyk · GitButler · WordPress". Cleanest mobile
-   reflow of the twelve.
-4. **supernova.io** (1440 + 390) — "Design & engineering knowledge, ready for AI agents"; product
-   shot shows Contexts/Pipelines/Insights, "Design tokens 206 of 324", "Token themes 8 of 12",
-   `mcp.supernova.io/google/1337-drive`.
-5. **zeroheight.com** (1440 + 390) — cream `#EFEADD` ground, dot grid, coral CTA, "Get teams and
-   agents building from your design system – not around it".
-6. **knapsack.cloud** (1440) — waitlist page, purple-pink mesh gradient, "Your AI has no idea what
-   good looks like." No product screenshot above the fold.
-7. **locofy.ai** (1440 + 390) — royal blue, "design to {code} in a flash", 14-icon framework strip,
-   "LDM Research Paper" in the primary nav.
-8. **animaapp.com** (1440 + 390) — dark charcoal, serif display headline, prompt box with "Import
-   Figma"/"Clone website", AgentGrid.io banner.
-9. **builder.io** (1440 + 390) — black ground, cyan uppercase CTA, multiplayer cursors, a merged-PR
-   card. Agent platform, not a converter.
-10. **developers.figma.com/docs/code-connect/** (1440) — plan-gate callout rendered above the first
-    line of prose; left nav already labels parsers "Legacy Integration Guides".
-11. **specifyapp.com** (1440) — "Your Design Token Engine" over a dark 3D pipeline render, with a
-    white pill above it reading "Saying Goodbye: The End of Specify". A live marketing site for a
-    product that shut down 2024-11-15.
-12. **storybook.js.org/docs/essentials/themes** (1440) — three theme mechanisms (JSX providers, CSS
-    classes, data attributes), a "Copy markdown" button, and a demo screenshot composited on a stock
-    photo of leaves.
-
-**Second pass, 2026-09-10** — twelve more surfaces screenshotted at 1440 and read as images:
+**Second pass, 2026-09-10** — twelve first-party token-documentation surfaces, none of which has a
+scorecard of its own:
 
 13. **atlassian.design/foundations/design-tokens** — the Tokens nav has five children, two of which
     are "Use tokens in **code**" and "Use tokens in **design**" as separate pages. The seam, made
@@ -1837,3 +1787,186 @@ for every package in the health table.
   2026. Whether MCP endpoints capped at 500 calls/month (zeroheight) or metered in "workspace
   credits" (Supernova) are a business or a feature is unresolved, and the answer determines whether
   half this file's `situational` entries exist in 2028.
+
+
+---
+
+## Review pass (2026-09)
+
+Adversarial second reader, 2026-09-10. Everything below was re-run or re-fetched, not re-read.
+
+### The one factual error, and it is in the first paragraph
+
+The file opened by drawing a maturity distinction between the two DTCG modules: Format a "Final
+Community Group Report", Resolver "a Candidate Recommendation marked 'considered stable'". **That
+distinction does not exist.** Both documents were fetched from `designtokens.org/TR/2025.10/` and
+both carry *both* labels, in identical boilerplate: the masthead and watermark read "Final Community
+Group Report 28 October 2025", and the Status section of each reads "published by the DTCG as a
+Candidate Recommendation… this specification is considered stable… intended for implementation."
+Fixed in the header note, the spec-status table and the DTCG scorecard. The substantive point — that
+2025.10 is implementable and `tr.designtokens.org` is not — survives intact and is now stated without
+the invented gap.
+
+Also corrected on the same fetch: the Format module lists five editors and **six** authors, not seven.
+The copy-paste error the file flags is real — the Format module's copyright line does credit "the
+Contributors to the Design Tokens **Resolver** Module 2025.10 Specification."
+
+### One rule was wrong and produced worse advice
+
+The file told you not to "modernise" a two-block theme into `light-dark()` because "you will lose the
+manual toggle." **`light-dark()` resolves against the *used* value of `color-scheme`, which is
+author-settable, so the manual toggle works fine.** Verified in headless Chromium across all six
+OS-preference × attribute combinations:
+
+| | `data-theme="dark"` | `data-theme="light"` | no attribute |
+|---|---|---|---|
+| OS light | `rgb(16,16,16)` | `rgb(255,255,255)` | `rgb(255,255,255)` |
+| OS dark | `rgb(16,16,16)` | `rgb(255,255,255)` | `rgb(16,16,16)` |
+
+The override wins in both directions. `system/3-tokens.md` already sets `color-scheme` per theme, so
+the corpus's own default was compatible with the feature the file told you to avoid — an internal
+contradiction nobody had caught. Rewritten with the reasons that actually hold: two values only, so
+no third axis; both values locked into one declaration, so no subtree re-map; and coupling to
+`color-scheme`, which also drives UA control rendering.
+
+### The gap: Penpot is not in this file, and it falsifies half the Figma argument
+
+The file's case against a design-tool-origin token system rests on two facts about Figma — four value
+types, and the Variables REST API gated to Enterprise Full seats at $90/user/month. Both are true and
+both were re-verified. Neither is a fact about *design tools*.
+
+**Penpot** (`penpot/penpot`, ★59,827, MPL-2.0, pushed 2026-09-10) ships native DTCG tokens with
+**eleven** types — border radius, colour, dimensions, opacity, sizing, spacing, stroke width,
+rotation, typography, numbers, shadows; gradients listed as not yet available — plus aliases, math,
+themes and token sets, with JSON import/export on a **$0** tier and no plan gate. Its docs tree has
+separate pages for *Basic operators* and *Math functions* inside "Using math in token values", which
+is not the shape of a checkbox feature. Added as a `situational` scorecard, a verdict-table row, a
+line in "Recommendations by need", and a note in Decision 3. It does **not** overturn Decision 3 —
+an exported file is still an artefact nobody reviewed — but "the design tool cannot express your
+tokens" is now correctly scoped to Figma.
+
+Also added: **Code Connect UI**, which the file described only as a CLI. Mapping components inside
+Figma against a connected GitHub repo removes the "write a TypeScript file per component" cost and
+re-introduces the Decision 3 one.
+
+### What reproduced exactly
+
+Every measured number in the reference section was re-taken, and the hit rate is unusually high.
+
+Live `:root` enumeration at 1440×900 after `networkidle`, 2026-09-10: **linear.app 419 / 182
+colour**, **ui.shadcn.com 365** (194 of them `--color-*`), **polaris.shopify.com 2,041 / 1,823**,
+**m3.material.io 158 / 7**, **atlassian.design 619 / 467**, **vercel.com 576**, **primer.style
+1,998 / 1,428**, **stripe.com 715 / 436** — every count to the digit, including modal name depths
+(Linear 2, shadcn 3, Atlassian 4, M3 7) and every "longest name" cell. The average-name-length column
+is measured *including* the `--` prefix; that is now consistent but was never stated.
+
+npm weekly downloads matched to the digit for all thirteen packages (style-dictionary 1,682,990 ·
+@figma/code-connect 1,058,160 · storybook 19,523,428 · @storybook/addon-docs 15,571,865 ·
+@storybook/addon-themes 3,409,150 · @tokens-studio/types 171,219 · @tokens-studio/sd-transforms
+163,156 · @terrazzo/plugin-css 66,216 · @terrazzo/cli 55,239 · token-transformer 45,193 · open-props
+23,452 · theo 11,565 · diez 1,318). Every publish date matched: `sd-transforms` 2.0.3 really is
+2025-12-10, `token-transformer` 0.0.33 really is 2023-05-25, and Style Dictionary's
+v3 2021-05-25 → v4 2024-06-28 → v5 2025-05-16 → 5.5.3 2026-09-06 line is exact.
+
+`gh api`: DTCG ★2,115, 67 contributors, **87 open non-PR issues**, zero releases — all exact, and the
+issue archaeology holds to the day (#2 Theming opened 2019-06-26 with 35 comments; #102 with 45; all
+five still open). Terrazzo ★456 / 6 subscribers. Theo archived 2025-06-09. Diez last push 2022-12-10.
+
+Figma list prices, re-fetched from figma.com/pricing: Professional Full **$16** / Dev **$12** /
+Collab **$3**; Organization **$55 / $25 / $5**; Enterprise **$90 / $35 / $5**. All nine exact.
+
+The Variables REST gate is exact, including the asymmetry almost nobody states — the docs table
+reads GET: Enterprise, *any organisation member*, View access, `file_variables:read`; POST:
+Enterprise, *Full seats, admins*, Edit access, `file_variables:write`. The Code Connect callout
+reads verbatim "Available on a Dev or Full seat on the Organization, and Enterprise plans."
+
+The `@property` probe reproduced exactly as documented: a registered `--accent` given `16px` falls
+back to `rgb(37, 99, 235)` and `color` stays correct; the unregistered `--plain` computes to `16px`
+and `background-color` resolves to `rgba(0, 0, 0, 0)`. The transparency failure mode is real.
+
+M3's "**26 standard color roles** organized into six groups" was read off the live page, not recalled.
+
+### Corrections beyond the two above
+
+- **Style Dictionary "242 open issues" is GitHub's `open_issues_count`, which includes PRs.** The
+  real split is **218 issues + 24 PRs**. `css-and-styling-infra.md` already corrected this exact
+  metric across its whole file and this file repeated the uncorrected number — a corpus
+  inconsistency, now resolved to the corrected figure in both places it appeared.
+- **Tokens Studio "339 open issues"** → **248 issues + 91 PRs**, same cause.
+- **`@property` "since Chrome 85"** understated support and disagreed with
+  `css-and-styling-infra.md`, which dates it Baseline **2024-07-09** (Chrome 85 / Safari 16.4 /
+  Firefox 128). Now cites Baseline and the sibling file.
+- **shadcn's `--color-*` count.** 194 is correct, but the gloss — "Tailwind v4's stock 22-hue ×
+  11-step palette that ships whether you use it or not" — is not: 22 × 11 is 242, so the page carries
+  the *used* subset. The argument (194 colour values nobody chose) is unaffected; the mechanism was
+  wrong.
+
+### Where following this file produces a worse interface
+
+Five products where a rule as written makes the result worse. Each rule now carries its scope inline,
+and all five are indexed in "When this advice is wrong."
+
+1. **An analytics product, against "60–120 declarations."** A serious chart layer is 8–12 categorical
+   hues plus two or three 9–11-step sequential/diverging ramps, in both schemes — 80–150 tokens
+   before any chrome exists. Enforcing a 120-token cap on the total pushes the palette into a JS
+   file, which is precisely the failure Decision 2 spends a page arguing against. **Scope added:**
+   the budget is for chrome; data-encoding palettes are a separate budget.
+
+2. **A billing product with transactional email, against "no pipeline until a second platform."**
+   Email clients drop custom properties; every value must be inlined as a literal. That is one value
+   in two artefacts a compiler cannot both read — Decision 1's own stated test — on a product with
+   exactly one platform. The rule as written ("wait for a second *platform*") tells this team to
+   hand-maintain a parallel literal set, which is the two-sources-of-truth failure the file exists to
+   prevent. **Scope added:** an email/PDF/OG-image row in the Decision 1 table.
+
+3. **A whiteboard or map product, against "CSS custom properties are the source of truth."** When
+   most painted pixels are canvas or WebGL, every token round-trips through a stylesheet parse to
+   become a JS string — and `@property` registration, which the file recommends, silently normalises
+   what comes back. **Scope added:** the test is share of painted pixels, not framework; make the JS
+   object primary and emit the CSS from it.
+
+4. **A white-label storefront, against "register the semantic layer with `@property`."** This one
+   inverts the rule's own justification. Registration turns a bad value from loudly broken
+   (transparent) into quietly wrong — a tenant's invalid brand colour silently renders *your*
+   `initial-value` and the page looks fine. The same normalisation breaks any theme-builder UI that
+   reads a token back into a colour input. **Scope added:** validate on ingest and leave
+   tenant-supplied tokens unregistered; never round-trip an authored value through
+   `getPropertyValue`.
+
+5. **A component library consumed by third parties, against "two layers, never three."** Polaris's
+   audience is developers building embedded Shopify apps who cannot patch Polaris. For them
+   `--Component-Form-*` is a deliberate override API and the alternative is forking components. The
+   file mocks those names without naming the audience that justifies them. **Scope added:** "never
+   three" applies to systems whose consumers can edit the source.
+
+### What was cut
+
+The "Sources" section restated all twelve first-pass screenshot reads verbatim from the scorecards —
+collapsed to an index, with the twelve second-pass surfaces (which have no scorecards) kept in full.
+The "Looked at" lines for Knapsack, Locofy, Anima, Builder.io, zeroheight, Supernova, Tokens Studio,
+Storybook, Style Dictionary and Terrazzo lost their hex codes, gradient descriptions and logo walls
+and kept their judgments. The 0.3 ms measurement, the 1,080-vs-186 permutation result and the Stripe
+715 correction were each stated three or four times; each now has one canonical statement plus
+cross-references. "When it stops being enough" reproduced Decision 1's trigger list; it now carries
+only the two triggers Decision 1 lacks. Net: about 5,500 characters of restatement removed, roughly
+7,000 of new scoping, corrections and the Penpot entry added.
+
+### Screenshots taken independently
+
+`tools/shot.mjs`, 1440 + 390, 2026-09-10, read as images:
+`.cache/shots/design-tokens-and-handoff-v-{1..5}-{1440,390}.png` — penpot.app/design-tokens,
+m3.material.io/styles/color/roles, designtokens.org/TR/2025.10/resolver/, stripe.com,
+help.penpot.app/user-guide/design-tokens/. Two of them changed the file: the Resolver spec's own
+masthead is what exposed the status error, and the Penpot pages are the entry that was missing.
+Stripe's homepage now opens a full-screen "Accept and optimize payments globally" interstitial over
+the hero at 1440, so it yields no useful visual read of the token system the file discusses — the
+`--hds-*` findings stand on the stylesheet-text measurement, not on the screenshot.
+
+### Still unverified
+
+The Terrazzo "USED BY" logo wall (Figma, HP, The Guardian, LEGO, Snyk, GitButler, WordPress) is
+self-reported and was not checked. Knapsack's "Trusted by over 4k+ companies" is unverifiable and
+sits on a waitlist page. The claim that `@figma/code-connect`'s 1,058,160 weekly installs represent
+real adoption rather than CI churn remains open — the number is exact, its meaning is not. The
+"below roughly 10 front-end engineers a pipeline is net negative" line is still judgement, still
+labelled as such, and still the most load-bearing unmeasured claim in the file.
