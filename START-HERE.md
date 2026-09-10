@@ -173,6 +173,23 @@ and it is worse. A restrained, conventional, well-executed interface is a succes
 
 ---
 
+## Which measured numbers you can trust
+
+The corpus is full of values probed from live products. A re-verification pass a year on found they
+split cleanly by kind, and this determines how you should use them:
+
+- **Values read from shipped CSS — type scales, weights, letter-spacing, neutral ramps, radii, row
+  heights, transition durations — reproduced byte-for-byte.** These are durable. Quote them.
+- **Values derived from network timing — LCP, CLS, load and skeleton durations — drifted, and one
+  product moved by 4x.** Re-probe these before relying on them; a CLS figure without its
+  observation window is not even comparable to another CLS figure.
+
+So: the design numbers age well and the performance numbers do not. Where a file states a timing
+value it should name when and how it was measured; where it doesn't, treat it as a signal rather
+than a specification.
+
+---
+
 **Freshness:** every file carries an `Evaluated:` date. The ecosystem moves; a verdict older than
 about six months should be checked before it is trusted. [`automation/`](automation/) holds the
 monthly refresh task that keeps this current.

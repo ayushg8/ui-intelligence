@@ -172,7 +172,7 @@ I rendered the same Japanese sentence three ways at a 260px column:
 - **`word-break: auto-phrase`** — breaks as `…お支払いは / 宿泊施設で。世界各地の / 200万軒以上の…`. Compounds intact. **Same number of lines, same height, zero cost.**
 - **`line-break: strict`** — identical to default. Kinsoku governs *which characters may start or end a line*; it does nothing for word integrity.
 
-`auto-phrase` is Chromium-only. The portable equivalent is **BudouX** (`google/budoux`, Apache-2.0, 1,778★, 46,990 weekly npm installs, last published 2026-08-28), a shipped ML phrase segmenter that inserts zero-width spaces and preserves inline markup across breaks. The corpus already flags this in `libraries/_research/outside-the-bubble.md`. Use `word-break: auto-phrase` as progressive enhancement and BudouX when Japanese is a primary market.
+`auto-phrase` is Chromium-only. The portable equivalent is **BudouX** (`google/budoux`, Apache-2.0, 1,778★, 46,990 weekly npm installs, last published 2026-08-28), a shipped ML phrase segmenter that inserts zero-width spaces and preserves inline markup across breaks. The corpus already flags this in `libraries/outside-the-bubble.md`. Use `word-break: auto-phrase` as progressive enhancement and BudouX when Japanese is a primary market.
 
 ### 7. Webfont payload by script (Google Fonts, one weight, woff2, 2026-09-10)
 
@@ -653,7 +653,7 @@ Measured, not screenshotted:
 - **`Intl`** — Node 24 / ICU 78.2 and Chrome 148, 20 locales, `NumberFormat` / `DateTimeFormat` / `PluralRules` / `ListFormat` / `RelativeTimeFormat` / `Collator` / `Segmenter` / `DurationFormat` / `Locale.getWeekInfo`. `Intl.MessageFormat` is `undefined` in both.
 - **Tooling** — `registry.npmjs.org` and `api.npmjs.org/downloads/point/last-week` for versions, publish dates and unpacked sizes; `gh api repos/…` for stars, open issues and 90-day commit counts.
 
-Related corpus files: `craft/typography.md` §"Non-Latin and i18n" (unicode-range font scoping, the CJK letter-spacing reset — cited above rather than re-derived), `libraries/_research/outside-the-bubble.md` (BudouX, Semi Design's CJK density), `libraries/_research/headless-primitives.md` (React Aria's 40+ calendar systems), `system/5-build.md` (logical properties in the build checklist), `patterns/ai-flows.md` (`Intl.Segmenter` for CJK streaming chunks).
+Related corpus files: `craft/typography.md` §"Non-Latin and i18n" (unicode-range font scoping, the CJK letter-spacing reset — cited above rather than re-derived), `libraries/outside-the-bubble.md` (BudouX, Semi Design's CJK density), `libraries/headless-primitives.md` (React Aria's 40+ calendar systems), `system/5-build.md` (logical properties in the build checklist), `patterns/ai-flows.md` (`Intl.Segmenter` for CJK streaming chunks).
 
 ---
 
@@ -695,7 +695,7 @@ Adversarial re-read. Everything below was re-probed live, not taken from the pre
 
 - **`craft/typography.md` contradicted this file and was wrong.** It read "CJK needs *less* line-height ratio than Latin at the same nominal size" — the opposite of the measured Japanese-native products (1.65–2.125 for prose against Latin's 1.5–1.7). Corrected there and pointed at §3, so there is one number for this in the corpus.
 - `craft/copy-and-voice.md` on lakh grouping, `￥1,235`, `en-GB`'s `Sept`, and 2 → `few` in Russian and Polish: re-verified, all agree with this file.
-- `libraries/_research/outside-the-bubble.md` (BudouX `essential`, 15 KB) and `headless-primitives.md` (React Aria's 40+ calendar systems, `@internationalized/date` at 10.3M/wk) agree with §6 and the tooling table.
+- `libraries/outside-the-bubble.md` (BudouX `essential`, 15 KB) and `headless-primitives.md` (React Aria's 40+ calendar systems, `@internationalized/date` at 10.3M/wk) agree with §6 and the tooling table.
 
 ### Still unverified
 

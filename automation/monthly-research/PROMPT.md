@@ -130,6 +130,21 @@ If nothing met the bar this month, commit only a CHANGELOG entry saying so, with
 **"No changes warranted" is a legitimate and valuable result.** Do not manufacture updates to look
 productive.
 
+## Re-verification: target the numbers that actually rot
+
+Do not spend the month re-probing everything. Measured values split by kind:
+
+- **CSS-derived values** (type scales, weights, tracking, neutral ramps, radii, row heights,
+  transition durations) reproduce byte-for-byte over a year. Spot-check a few; do not sweep them.
+- **Network-timing values** (LCP, CLS, load times, skeleton durations) drift badly — a single
+  product was found to have moved 4x in a year, taking three arguments in one file down with it.
+  **These are the ones to re-probe every run.** A CLS number without its observation window is not
+  comparable to another CLS number; if a file states one without a window, fix that.
+
+Also re-check anything whose argument rests on a product's *current* behaviour rather than its
+design: a marketing page that got rebuilt, a URL that now redirects, a feature that shipped or was
+removed. Those break arguments, not just figures.
+
 ## Constraints
 
 - Do not add a resource without a verdict, a tier, and a reason.

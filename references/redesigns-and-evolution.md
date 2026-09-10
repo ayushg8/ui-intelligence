@@ -72,7 +72,7 @@ could not be verified are marked.
 | **apple.com** whole page | elements with `backdrop-filter` | **2** — nav `saturate(1.8) blur(20px)` over `rgba(250,250,252,0.8)`, plus its curtain. Unchanged from the pre-Liquid-Glass web nav |
 | **linear.app** | elements with `backdrop-filter` | **3** — header `blur(20px)`, two secondary buttons `blur(4px)` on `rgba(255,255,255,0.05)` |
 | **linear.app** | most common border-radius | `9999px` × 76; then `8px` × 31, `50%` × 28, `12px` × 18 |
-| **linear.app** | root CSS custom properties | **419** (~138 machine-hashed, so ≈281 authored — see [`design-tokens-and-handoff.md`](../libraries/_research/design-tokens-and-handoff.md)) |
+| **linear.app** | root CSS custom properties | **419** (~138 machine-hashed, so ≈281 authored — see [`design-tokens-and-handoff.md`](../libraries/design-tokens-and-handoff.md)) |
 | **linear.app** | body type | 16/24, `Inter Variable`, `#f7f8f8` on `#08090a` |
 | **github.com** (repo page) | root CSS custom properties | **1,991** |
 | **github.com** | body type | **14px / 21px**, `Mona Sans VF`, `rgb(31,35,40)` |
@@ -601,7 +601,7 @@ security." Both excluded from measured claims.
 [`keyboard-first-productivity.md`](keyboard-first-productivity.md) ·
 [`developer-platforms.md`](developer-platforms.md) ·
 [`../craft/density-and-hierarchy.md`](../craft/density-and-hierarchy.md) ·
-[`../libraries/_research/design-tokens-and-handoff.md`](../libraries/_research/design-tokens-and-handoff.md) ·
+[`../libraries/design-tokens-and-handoff.md`](../libraries/design-tokens-and-handoff.md) ·
 [`../anti-patterns/vibecode-rubric.md`](../anti-patterns/vibecode-rubric.md).
 
 ---

@@ -317,15 +317,17 @@ goes at the top, preferences about the shell itself go at the bottom.**
 
 ### Width
 
-Pick 280 unless you have a reason. If the rail carries a three-level tree, 300–320. If it carries a
-flat list of ≤8 short labels, 240 (Tailwind). If it is icon-only, 44–52 — VS Code for Web ships a
-**44px** rail with **36×36** targets at a 44px pitch. The rail width is not a grid decision, it is a *longest
-label* decision: measure your longest real label at your real font size and add the icon column,
-the indent, and 24px of trailing room for a chevron or a count.
+Pick 280 unless you have a reason. Three-level tree → 300–320. Iconless, single-word labels → 240
+(Tailwind's nav column, inside a 288px sticky rail). Icon-only → 44–52; VS Code for Web ships a
+**44px** rail with **36×36** targets at a 44px pitch. Width is not a grid decision, it is a *longest
+label* decision: measure your longest real label at your real font size, then add the icon column,
+the deepest indent, and 24px of trailing room for a chevron or a count.
 
-Internal padding matters more than the outer number. Vercel's rail is 300 but the nav inside it is
-288 with `padding: 4px`, and rows are 264 wide starting at x=12 — so the *visible* row column is 264,
-not 300. Sentry declares `--sidebar-width: 300px` and puts rows at x=12 with `padding: 8px`.
+Internal padding matters more than the outer number, and every measured rail is narrower inside than
+out. Vercel's rail is 300, the nav inside it 288 with `padding: 4px`, rows 264 wide at x=12 — the
+visible row column is 264, not 300. Sentry declares `--sidebar-width: 300px` and puts rows at x=12
+with `padding: 8px`. Tailwind's sticky column is 288 with the nav at x=24. Design against the inner
+number; ship the outer one.
 
 ### Rows
 

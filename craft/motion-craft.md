@@ -4,7 +4,7 @@
 published tarball, a live browser probe, or Apple's documentation API. Nothing is recalled. Method
 at the bottom; where a value is derived rather than read it says so.
 
-This is not a library survey (that's `libraries/_research/motion.md`). This is the craft: how long,
+This is not a library survey (that's `libraries/motion.md`). This is the craft: how long,
 how far, which curve, in what order, and — most of the time — whether to animate at all.
 
 The reason this file exists: generated interfaces animate **too much, too far, and too slowly.**
