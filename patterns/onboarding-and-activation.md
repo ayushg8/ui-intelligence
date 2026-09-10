@@ -6,8 +6,11 @@ Scope: everything between "I clicked the button on the marketing page" and "this
 how I work." Signup screens, first-run, empty states, sample data, setup checklists, invitations,
 personalization questionnaires, complex technical setup, and the return visit after six weeks away.
 
-Everything below was walked in September 2026 at 1440px and 390px, or read from the vendor's own
-docs where the flow sits behind a paywall. Screenshots are in `.cache/shots/onb-*`.
+Everything below was walked at 1440px and 390px, or read from the vendor's own docs where the flow
+sits behind a paywall. Screenshots are in `.cache/shots/onb-*`; the September 2026 re-verification
+pass is in `.cache/shots/onboarding-and-activation-v-*` and its findings are at the end of this file.
+Where a claim rests on something that rotates per page load — a testimonial, a logo strip, a
+merchandised card — it is marked as such, because those are the claims that go stale first.
 
 ---
 
@@ -67,7 +70,10 @@ the rest.
 a single input: *"Ask v0 to build or enter a Git repository URL…"*, with four one-tap seeds (Contact
 Form, Image Editor, Mini Game, Finance Calculator) and a refresh icon to reroll them. Below, a two-pane
 split: **Import Git Repository** (GitHub / GitLab / Bitbucket buttons) on the left, **Build your
-solution** template cards on the right.
+solution** template cards on the right (Slack Agent, Express.js on Vercel, Next.js Boilerplate, Flask
+Python Boilerplate). Between the seeds and the split sits a grey line offering a third path that needs
+no account and no provider at all: "You can also drag and drop your project, or choose a **file** or a
+**folder**." Three entry paths — prompt, provider, local folder — one screen, no ordering ceremony.
 
 The load-bearing string is in fine print under the Git buttons:
 
@@ -99,11 +105,19 @@ honest about being a toll booth. `/new` doesn't need to be.
 
 ### Mobile
 
-At 390px Vercel's signup card keeps its 1px border and radius — a bordered card inside a page that is
-already only as wide as the card. Harmless, but it is the tell of a desktop layout ported rather than
-redrawn. The four OAuth buttons stack at full width, 56px tall, which is right. The "Adobe has 6×
-faster preview builds" social-proof strip survives and wraps to two lines, which is a defensible call:
-it is the only third-party evidence on the page.
+At 390px `/signup` keeps the card's 1px border and radius — a bordered card inside a page already only
+as wide as the card. Harmless, but the tell of a desktop layout ported rather than redrawn. The four
+OAuth buttons stack full-width, which is right. Below the card sits one rotating social-proof line —
+on the September 2026 capture, "**stripe** had 100% uptime at peak Black Friday volume"; the logo and
+the claim change per load, so do not build copy that depends on either.
+
+`/new` at 390px makes a worse trade and it is the one to learn from. The provider buttons lose their
+verb: at 1440px they read "Continue with GitHub", at 390px just "**GitHub**". The label was truncated
+to fit a narrower button, which drops the action from the accessible name — the exact failure the
+Accessibility list below warns about, shipped by the reference implementation, on the width where it
+matters most. If a label must shrink, shrink the icon and keep the verb. The template grid ("Build your
+solution") is also pushed below the Git panel rather than dropped, so the mobile page is roughly three
+screens tall before a user sees a template.
 
 ### Accessibility
 
@@ -138,8 +152,8 @@ lands the new account on a dashboard with four zeroed stat cards and a "Welcome!
 
 ## 2. The signup screen is the first onboarding screen
 
-Six signup screens walked in one afternoon, all in the same week, all making different calls. The
-differences are not cosmetic.
+Six signup screens, walked the same week. They disagree about which credential goes first, and each
+disagreement is downstream of what the product does on the next screen.
 
 **Linear** (`linear.app/signup`) — h1 is **"Create your workspace"**, not "Sign up". Three buttons:
 Continue with Google (filled, indigo), Continue with email, Continue with SAML SSO (both white,
@@ -150,6 +164,8 @@ product that does not need to be designed, tested, or supported, bought with one
 
 **Notion** (`notion.so/signup`) — the modal renders over a *blurred skeleton of the real product*:
 sidebar, page title, body blocks, all visible behind the scrim. You can see what you're signing into.
+Two-line h1: **"Notion: your AI workspace."** in black over **"Sign up with your work email"** in grey
+— the positioning claim and the instruction in one block, weighted so the instruction reads second.
 Field label is **"Work email"**, placeholder `name@company.com`. Below the field, a grey callout:
 
 > "**Tip: Use your work email** (if you have one) so it's easier for your team to join you on Notion"
@@ -162,18 +178,33 @@ rejection. OAuth (Google / Microsoft / **ChatGPT**) is demoted below an "or cont
 of a progress bar without occupying pixels or making a promise about step count. Subhead: "We suggest
 using the **email address you use at work**." Email is primary and above OAuth here, inverted from
 Vercel, because Slack's next screen keys off the email domain to find an existing workspace. The field
-order encodes the routing logic.
+order encodes the routing logic. OAuth sits below an "OR" rule in the order Google, **Microsoft**,
+Apple — Microsoft second, ahead of Apple, is the enterprise-chat tell; a consumer product with that
+order has copied the wrong reference.
 
 **Supabase** (`supabase.com/dashboard/sign-up`) — GitHub first, then ChatGPT, then SSO, then inline
-email+password. Right half of the 1440 viewport is a single verbatim tweet with an avatar and handle
-(`@yatsiv_yuriy`), not a curated pull-quote. The Sign up button renders in disabled-green until both
-fields validate. Consent copy discloses the marketing-email side effect in the same sentence as the
-terms — "and to receive periodic emails with updates" — rather than as a pre-ticked checkbox.
+email+password below an "or" rule. The right half of the 1440 viewport is a single verbatim tweet with
+an avatar and handle, not a curated pull-quote — it rotates per load (September 2026: a developer
+crediting the Assistant with fixing a CORS misconfiguration), so the value is the format, not the
+quote. The Sign up button renders in pale disabled-green until both fields validate. Consent copy
+discloses the marketing-email side effect in the same sentence as the terms — "and to receive periodic
+emails with updates" — rather than as a pre-ticked checkbox.
 
-**Figma** (`figma.com/signup`) — h1 "Welcome to Figma", one Google button, one email field, one black
-"Continue with email" button. No password. ~60% of the 900px viewport is empty. Defensible for a brand
-this established; fatal for one that isn't, because empty space where evidence should be reads as "we
-have nothing to show you."
+Supabase's h1, though, is **"Get started"**, with "Create a new account" demoted to a grey subhead —
+the generic headline this document flags as a symptom two sections down. A strong signup can carry a
+weak h1; it is still the weakest thing on the page.
+
+**Figma** (`figma.com/signup`) — h1 "Welcome to Figma", one Google button, an "or" rule, one email
+field, one black "Continue with email" button. No password. Roughly 60% of the viewport is empty.
+Defensible for a brand this established; fatal for one that isn't, because empty space where evidence
+should be reads as "we have nothing to show you."
+
+Two details are not defensible at any brand size. The email field's only label is the word `EMAIL`
+rendered *inside* the input as a placeholder, so the field loses its label the moment the user types —
+and a returning user who tabs back cannot tell an email field from a workspace field. And a
+five-line cookie/CCPA bar occupies the entire bottom of the viewport, ahead of the form in the DOM on
+some loads: on a page with three interactive elements, the consent bar is a third of the interaction
+surface and probably the first tab stop.
 
 **Retool** (`login.retool.com/auth/signup`) — split layout: form left on a warm grey ground, art +
 "Trusted by teams at / ramp, DOORDASH, stripe, amazon, Adobe, OpenAI" right. Email+password inline,
@@ -187,7 +218,7 @@ that guesses.
 |---|---|---|
 | routes on email domain (workspace discovery, SSO detection) | email field | you can't branch without it |
 | completes its first task through a provider (Git, Drive, calendar) | that provider's OAuth | the OAuth grant *is* the setup step |
-| is consumer / single-player | Google + Apple, side by side | Apple is mandatory on iOS if you offer any third-party OAuth |
+| is consumer / single-player | Google + Apple, side by side | App Store guideline 4.8 requires an equivalent private login option where third-party or social login is the *only* option — check the current carve-outs (own-account-system apps, enterprise/education, government ID) before assuming it binds you. Not re-verified this pass. |
 | is enterprise-sold | a visible "Continue with SAML SSO" | its absence is read as "not enterprise-ready" by the buyer |
 | has no password today | keep it that way | every password field you don't ship is a reset flow, a strength meter and a breach surface you don't ship |
 
@@ -196,8 +227,9 @@ that guesses.
 - Notion's tip is the model for any business-motivated field constraint: **state the user's benefit,
   place it under the field, keep it under 15 words, and make the constraint soft** ("if you have one").
 - Slack's "First," is the cheapest progress affordance in this document.
-- Avoid "Sign up" as an h1 when the thing being created has a name in your product. "Create your
-  workspace" (Linear), "Create a new account" (Supabase) both beat it.
+- Avoid "Sign up" or "Get started" as an h1 when the thing being created has a name in your product.
+  "Create your workspace" (Linear) names the object; "Get started" (Supabase's actual h1) names
+  nothing and would fit any product on the internet.
 
 ### How it goes wrong
 
@@ -394,10 +426,18 @@ and unassigned rows, dates spanning Oct 2023 → Jan 2024 rather than all-today,
 differ per row. Uniformly formatted, same-length, same-date, all-assigned rows are the signature of
 generated fixtures and read as fake within two seconds.
 
-**The mobile bug worth naming.** At 390px, Linear's demo drops the "Linear Demo / Sign up" header
-entirely — the conversion CTA vanishes on the device where a large share of first looks happen. The
-row density decision is correct (labels, project chips and dates are dropped; status, title and
-assignee survive; filters collapse to "Active · 2 more"), but losing the CTA is a funnel hole.
+**The mobile bug worth naming.** At 390px the demo drops the "Linear Demo / Sign up" header entirely.
+The top bar becomes product chrome only — sidebar toggle, "Engineering › Issues", star, bell — so two
+things are gone at once: the conversion CTA, and **every trace of the word "demo."** A phone visitor
+sees a working issue tracker for a company called Engineering with no way to sign up and no indication
+this is a sample. That contradicts the pattern the desktop version is admired for below: the mode is
+supposed to be stated permanently, in the place that names the context. If your demo's mode indicator
+lives in a header you collapse on mobile, you have a demo only on desktop.
+
+The row density decision is correct and worth copying: labels, project chips and dates drop; priority
+bars, status icon, title and assignee avatar survive; the filter row collapses to "Active · 2 more".
+Titles truncate mid-word with an ellipsis rather than wrapping to two lines, which keeps the scan
+column straight — the right call for a list, the wrong one for a single-column reading surface.
 
 ### 5b. Seeded sample data in the user's own workspace
 
@@ -420,8 +460,10 @@ can never be confused for the user's data.
 
 ### 5c. Templates (Notion)
 
-Notion's answer to the empty workspace is a marketplace: `notion.com/templates` advertises **"Search
-70,000+ templates"** across Templates / Agents / Consultants / Connections. Notion did not build an
+Notion's answer to the empty workspace is a marketplace. `notion.com/templates` is headed **"Discover
+— Find all the best templates and set-ups built by Notion's community"**, with the inventory count
+demoted into the search placeholder (**"Search 70,000+ templates"**) rather than shouted as a headline,
+across Templates / Agents / Consultants / Connections. Notion did not build an
 onboarding; it built a supply-side market and let the community build 70,000 onboardings.
 
 This works when your product is a general-purpose construction kit whose value depends on what the user
@@ -463,8 +505,7 @@ each with the same six tasks, all created today, all assigned to the user, all c
 
 ## 6. Setup checklists and progress
 
-Three products, three genuinely different philosophies. The differences map to how much of the setup is
-mandatory.
+Three shapes, and which one is right is set entirely by how much of the setup is mandatory.
 
 ### Stripe: checklists as reference documents, outside the product
 
@@ -488,8 +529,8 @@ Three decisions worth stealing:
    incorrect information can result in confused customers creating disputes."
 
 The structural decision underneath all of it: **Stripe defers the expensive checklist entirely.** Per
-`docs.stripe.com/get-started/account/activate`, you get a sandbox immediately and only complete KYC
-activation when you want live mode. The dread-inducing part of the setup (business identity, bank
+`docs.stripe.com/get-started/account/set-up` (the old `/activate` URL now 301s here), you get a sandbox
+immediately and only complete KYC verification when you want live mode. The dread-inducing part of the setup (business identity, bank
 account, verification documents) is moved behind the moment the user has already decided the product
 works. That is the single most important structural move available to any product with heavy
 compliance setup.
@@ -505,9 +546,12 @@ nothing to configure before a page works. A checklist would be manufacturing tas
 
 The full pre-account flow, walked at 390px, in order:
 
-1. `I want to learn…` — 40+ language cards, each with a live learner count (Spanish 42.2M, French 22.8M,
-   English 20.4M, Japanese 18.1M…), **sorted descending by that count**. The sort order is the
-   recommendation; no "recommended" badge needed. Chess and Math appear in the same grid without counts.
+1. `I want to learn…` — 40+ cards, each language carrying a live learner count (Spanish 42.2M, French
+   22.8M, English 20.4M…), **the languages sorted descending by that count**. The sort order is the
+   recommendation; no "recommended" badge needed. Chess and Math are interleaved into that grid with no
+   count at all — Chess sits third, above English — so the sort is a default the merchandiser overrides,
+   not a rule. If you copy this, decide in advance which slots you are reserving; an unexplained
+   count-less card in a count-sorted grid reads as a bug until the user works out it is a promotion.
 2. "Hi there! I'm Duo!" — the mascot introduces itself. Not a feature.
 3. "Let's get this party started!"
 4. **"How did you hear about Duolingo?"** — Friends/family, TikTok, Brawl Stars, TV, News/article/blog,
@@ -650,11 +694,18 @@ toll on the way out. Do not make it a dropdown of 30 items.
 
 ### Mobile
 
-This is a mobile-first surface for most consumer products and it is where the desktop version is the
-neglected one. Duolingo's layout — mascot + speech bubble top, options in the middle third, pinned
-full-width CTA at the bottom above a hairline — is unimprovable at 390px and looks lost at 1440px. If
-your product is mostly desktop, don't import this shape; use a centered column with a max-width around
-480px and keep the CTA in flow, not pinned.
+This is a mobile-first surface for most consumer products, and the desktop version is the neglected one.
+Duolingo's layout — mascot + speech bubble top, options in the middle third, pinned full-width CTA at
+the bottom above a hairline — is the right shape at 390px and looks lost at 1440px.
+
+It is not flawless, and the flaw is instructive. On screen 1 the h1 "I want to learn…" sits at ~270px
+and the first tappable card starts at ~470px of an 844px viewport: a 200px dead band under the heading
+that costs the user a scroll before the second row of options. The generous vertical rhythm that reads
+as calm on a question with four options reads as emptiness on a question with forty. Scale the gap to
+the option count, not to the brand.
+
+If your product is mostly desktop, don't import this shape at all; use a centered column with a
+max-width around 480px and keep the CTA in flow, not pinned.
 
 ### Accessibility
 
@@ -711,7 +762,7 @@ costs the user nothing.
 | Bulk paste or one-at-a-time? | A single textarea accepting comma/newline/space-separated addresses | Three fixed email inputs is the generated version and caps the invite at 3 |
 | Domain suggestions | If you have verified colleagues on the same email domain, list them with checkboxes | The highest-converting variant, and it requires the work-email nudge at signup to work |
 | Copy-link fallback | Always | Many people invite through Slack, not through your email |
-| Role assignment | Not here. Default everyone to the least-privileged useful role and let the admin change it later | Role pickers at invite time triple the decision cost and are usually wrong |
+| Role assignment | Not here. Default everyone to the least-privileged useful role and let the admin change it later | The inviter is guessing at invite time, and a wrong guess is silent — a too-low role reads to the joiner as a broken product, a too-high one as a security finding |
 
 ### States
 
@@ -760,8 +811,9 @@ that is disabled until at least one address is entered.
 
 ## 9. Progressive disclosure of advanced features
 
-The genuinely hard problem: the power features are why people stay, and showing them on day one is why
-people leave.
+The constraint: the features that make a user stay in year two are the features that make the year-one
+navigation unreadable. Progressive disclosure is a scheduling problem, not a hiding problem — the
+question is what *event* reveals each feature, and "the user has been here N days" is never the answer.
 
 **What works, in order of leverage:**
 
@@ -822,7 +874,8 @@ Four transferable decisions:
 2. **Tell people what *not* to do while waiting.** "There is no need to retry the purchase or contact
    support while the domain is pending" is worth more than a progress bar, because the failure mode of a
    5-day wait is the user retrying and creating a second problem.
-3. **Hand over the verification command.** `dig cname www.example.com`. The user can prove the state
+3. **Hand over the verification command.** The docs give `dig example.com` for record checks and
+   `dig -t CAA +noall +answer example.com` for the CAA case. The user can prove the state
    themselves rather than trusting your poller. For a data connection, the equivalent is showing the
    exact query you ran and the error the database returned, verbatim.
 4. **Teach the reversibility trick before the irreversible step.** Vercel's note: lower your existing
@@ -832,7 +885,7 @@ Four transferable decisions:
 
 ### Structural decision: sandbox first
 
-Stripe's shape (`docs.stripe.com/get-started/account/activate`) is the general answer for
+Stripe's shape (`docs.stripe.com/get-started/account/set-up`) is the general answer for
 compliance-heavy setup: **a fully functional sandbox on signup, with the verification work gated to the
 moment the user asks for production.** The developer integrates, tests, and forms an opinion, and only
 then does anyone ask for a business address and a bank account. Note the one thing Stripe warns is
@@ -912,9 +965,10 @@ the full power of Slack's real-time communication, search functionality, and wor
 
 **How it changes the design, concretely:**
 
-1. Every onboarding screen gets a budget: does it raise or lower P(activation)? A "how did you hear
-   about us" costs one tap and no drop-off; a four-screen role questionnaire costs measurable drop-off,
-   and must therefore either produce a different downstream screen or be cut.
+1. Every onboarding screen gets a budget: does it raise or lower P(activation)? Measure it — a
+   one-tap, skippable attribution question and a four-screen role questionnaire are not the same
+   wager, and only your funnel can tell you what each costs. Any screen that cannot show it pays for
+   itself either produces a different downstream screen or gets cut.
 2. The empty state's primary CTA becomes the activation event, verbatim. If the event is "first deploy,"
    the empty state button says "Deploy your first project", not "Get started."
 3. The checklist's items get sorted by their correlation with the event, not by implementation order.
@@ -964,6 +1018,136 @@ plan downgraded needs all three stated separately with three separate recoveries
 
 **Copy:** "Your GitHub connection expired on 12 August. **Reconnect** — until then, deployments won't
 trigger on push." Beats "Reconnect your account." Say the date, say the consequence.
+
+---
+
+## 13. Failure states — the part of onboarding that decides whether they come back
+
+Every section above has a **States** list for its own flow. This section is for the failures that cut
+across all of them, because they arrive from outside the flow: the session dies, the card declines, the
+invite is gone, the stream stops. A first-run flow is judged almost entirely here — a user who hits a
+clean success path has no story to tell, and a user who hits a dead end on day one has one story and
+tells it once, to the person who recommended you.
+
+The rule for all of them: **name what happened, name whose fault it is, name the one action that
+resolves it, and preserve the work.** Generic recovery — "Something went wrong, please try again" — is
+the same message as no message, and in an onboarding flow it is worse than no message, because the user
+has not yet built any belief that the product usually works.
+
+### 13a. Session and auth expiry mid-action
+
+Passwordless signup — Linear, Figma, Notion, Slack all default to it — moves the whole failure surface
+from "wrong password" to "the link." Four failures, four recoveries:
+
+| Failure | What the user sees today | What they need |
+|---|---|---|
+| **Link opened on a different device from the one that requested it** | The phone logs in; the laptop tab that started it spins forever | The requesting tab polls and completes itself, or the request screen says up front which device to open the link on |
+| **Link already consumed by a mail scanner** — Outlook/Gmail link-prefetch follows the URL before the human clicks | "Invalid or expired link", on a link they never clicked | Never let a `GET` consume the token. Land on a confirm page; consume on the `POST` behind a user gesture |
+| **Link expired** (TTL is usually 10–60 min) | "Invalid link" | Say *expired*, say when it expired, and put "Send a new one" on the same screen with the address prefilled |
+| **Session dies mid-wizard**, holding unsaved answers | Redirect to `/login`; answers gone | Re-auth in a modal over the preserved state. If you must navigate, persist wizard state against a pre-account id and rehydrate on return |
+
+A 401 arriving mid-submit needs to be distinguishable from a 403 and from a 500. "Your session ended —
+sign in to finish, your answers are saved" / "You don't have access to this workspace — ask Priya
+Raman" / "That didn't save — retry" are three different sentences with three different buttons. Most
+products ship one.
+
+### 13b. Failed payment during activation
+
+Applies to any card-up-front trial, and to §6's "mandatory but deferrable" branch the moment it stops
+being deferrable.
+
+- **Decline at the end of a wizard.** Never return the user to step 1, and never lose the form. Show
+  the issuer's decline *category* (insufficient funds / card blocked / needs verification) rather than a
+  raw code, and offer the two branches that actually work: another card, or the free tier if one exists.
+- **The 3DS / SCA challenge that never returns.** It opens in an iframe or popup; a blocker, a
+  redirect-loop, or an abandoned bank app all present identically as a hang. Give it a timeout and an
+  explicit "Finish verification with your bank" retry — a spinner here is indistinguishable from a
+  crash.
+- **Charged, but provisioning failed.** The worst state in this document: money moved and there is no
+  product. It gets its own message, states plainly that the payment succeeded, names the retry that is
+  already scheduled, and shows the payment reference the user will need if they contact support. Do not
+  render this as a generic error, and do not render it as a success.
+- **A declined card on a returning user** (§12's list) is an onboarding failure wearing a billing
+  costume. It goes above everything else on return, with the date service stops and the fix inline.
+
+### 13c. Revoked, expired and colliding invites
+
+The invited person is the one user in your product with zero context and zero investment, and the invite
+link is their entire first impression. Every failure here is a hard exit.
+
+- **Revoked before acceptance** — do not 404. "This invitation was withdrawn. **Request access from
+  Priya Raman**" on the same page.
+- **Expired** — put the TTL in the invitation email, and make renewal self-serve: "This invite expired
+  on 3 March. **Ask for a new one**" notifies the inviter without a support ticket.
+- **Seat limit changed between send and accept** — fail *before* they create an account, never after.
+  A joiner who completes signup and is then told there is no seat has given you their details for
+  nothing and has to be told by a colleague what happened.
+- **Domain-capture collision** — they accept an invite to workspace A while their email domain
+  auto-joins workspace B. Ask which; never silently pick.
+- **Address already deprovisioned in the IdP** — the invite bounces, the inviter sees nothing, the
+  onboarding stalls with nobody knowing why. Surface bounces in the member list, not only in a log.
+- **Opened inside an in-app browser.** This is the mobile-specific one and it is common: an invite
+  clicked from Gmail, Slack or LinkedIn on a phone opens in that app's embedded webview, which cannot
+  see your desktop session and which Google blocks outright for OAuth (`disallowed_useragent`). Detect
+  the embedded webview, and either hand off to the system browser or fall back to a code the user can
+  type. A user who taps "Continue with Google" and gets a Google error page blames you.
+
+### 13d. Rate limits, streams and long first runs
+
+For any product whose first value is generated rather than retrieved — which is most AI products, and
+also builds, imports, scans and syncs.
+
+- **Rate-limited before the first token.** A 429 on the first action is the user's entire experience of
+  the product. Say when capacity returns, and offer a queue or a smaller model rather than a wall.
+- **Cut off mid-stream.** Keep the partial output on screen — never blank the pane — and offer Resume
+  and Regenerate as separate actions. Blanking a half-written answer destroys work the user was already
+  reading.
+- **Completed but truncated.** Say it was truncated. A response that stops at a token limit and a
+  response that finished are visually identical and semantically opposite.
+- **Free-tier quota exhausted on the first action.** This is an onboarding failure, not a billing
+  event. The limit belongs on the screen *before* the action, in the units the user is about to spend.
+- **A first run that outlives the tab.** Email or push, and make the result reachable from a URL. An
+  in-app-only completion state for a ten-minute job is a state a large share of users never see (§10
+  makes the same point about asynchronous setup; it applies to generation too).
+
+### 13e. Interrupted, duplicated and abandoned setup
+
+- **Browser back and refresh.** Every wizard step needs its own URL. Duolingo's in-flow back arrow is
+  not a substitute for the browser control — a user who hits the system back button and loses ten
+  screens of answers does not distinguish the two.
+- **Double-submit on create.** Two workspaces, two projects, two subscriptions. Every create call in the
+  onboarding path takes an idempotency key. This is the single most common duplicate-object bug in
+  first-run flows, because the create call is the slowest one in the product and the button is the one
+  users double-tap.
+- **The half-created account** — email captured, no workspace, user gone. This is a state with a
+  recovery, not a gap in your funnel: a resume link that lands them where they stopped. It must never
+  present as "email already in use" on a fresh signup attempt, which is both a dead end and an account
+  enumeration oracle.
+- **Third-party outage during a connect step.** When GitHub, Google or the IdP is down, the return leg
+  fails with an error string you did not write. Catch it, name the provider, link the provider's status
+  page, and keep the other providers live — §1's "the other two provider buttons remain" generalizes to
+  every connect step in the product.
+
+### Copy
+
+| Works | Beats |
+|---|---|
+| "This link expired on 3 March at 14:20. **Send a new one to jordan@acme.com**" | "Invalid or expired link" |
+| "Your payment went through, but we couldn't finish setting up your workspace. We're retrying — reference `pi_3Qa…`. Nothing further is needed from you." | "Something went wrong" |
+| "This invitation was withdrawn. **Request access from Priya Raman**" | a 404 |
+| "You're over the free limit for today. It resets at 00:00 UTC, or **upgrade** to keep going." | "Rate limit exceeded" |
+| "The response was cut off at the length limit. **Continue**" | a response that just stops |
+| "Your session ended. **Sign in to finish** — your answers are saved." | a redirect to `/login` |
+| "GitHub is having an outage ([status](https://www.githubstatus.com)). **Continue with GitLab** instead, or try again later." | "Authentication failed" |
+
+### How it goes wrong
+
+A magic link that a corporate mail scanner burns before the user clicks, presenting as "invalid link"
+with no resend. A card decline on step 6 of 6 that returns the user to step 1 with the form cleared. An
+invite that 404s because an admin removed the inviter last week. A stream that blanks the pane on a
+dropped connection and offers a "Retry" that starts from scratch. A "Something went wrong" toast that
+auto-dismisses after four seconds and appears for session expiry, permission denial, quota exhaustion
+and a 500 alike.
 
 ---
 
@@ -1022,6 +1206,103 @@ Answer in order; take the first match.
 | That you moved something | One coach-mark, on the moved thing, only for users of the old location |
 | A whole feature area | Nothing at first run. Trigger on the threshold that makes it necessary. |
 
+### Where these procedures break
+
+Every fork above was tested against a product where the recommended branch is wrong. Each one has a
+scope; these are the scopes.
+
+**"Never gate the first value behind account creation."**
+Breaks when the first action costs you money or touches the real world. An inference product where an
+anonymous first run is a GPU bill and an abuse vector; a payroll product whose first action files a
+document with a tax authority; anything that sends email on the user's behalf. Anonymous-first there is
+a spam subsidy with a signup form attached.
+*Scope:* ungate when the first action is cheap, reversible and confined to the user's own browser.
+Gate when it spends money, sends something, or creates an obligation — and when you gate, gate at that
+specific action with the reason named, not at the front door.
+
+**"Make the OAuth grant the signup" (§1, Vercel).**
+Breaks when the scope you need is the scariest thing you will ever ask for. Vercel gets away with it
+because reading a repo to deploy it is self-evidently the job. A product that opens with `repo:write`,
+full Gmail read, or admin consent on a Microsoft tenant is asking for maximum trust at the moment of
+minimum trust — and in the tenant case, asking for something the user is not allowed to grant.
+*Scope:* this branch holds only when the grant is narrow, obviously entailed by the task the user just
+chose, and grantable by the person in front of you. Otherwise authenticate cheaply, show value, and
+request the scope at the feature that needs it.
+
+**"No password today? Keep it that way" (§2, Linear).**
+Breaks on shared and locked-down devices: a hospital workstation, a warehouse floor, a school lab, a
+field engineer with no signal. It also breaks for the user whose account *is* the lost mailbox — a
+password gives them a second factor of recovery; a magic link gives them none.
+*Scope:* passwordless is right for knowledge work on a personal device with reliable mail. Everywhere
+else, offer at least one credential that does not depend on receiving an email right now.
+
+**"A separate, browser-local demo workspace" (§5a, Linear).**
+Breaks when the product's value is in the user's data rather than the product's mechanics. A demo
+workspace of invented issues proves Linear's mechanics because the mechanics *are* the product. The
+same demo for an analytics tool, a BI product, a security scanner or an observability platform proves
+nothing — the user's question is "what would this find in *my* estate", and fake findings answer it
+backwards.
+*Scope:* demo-with-fake-data for products whose value is the mechanic. For products whose value is the
+finding, the equivalent move is a read-only connect that takes under a minute and shows real results
+before asking for anything else.
+
+**"Never seed example objects into the user's real workspace" (§5b).**
+Breaks in a single-player consumer product with no team, no counts that matter, no exports and no
+billing by object — a habit tracker, a notes app, a recipe box. One seeded "Welcome" note that is
+removed by the same swipe that removes any other note costs less than a first-run empty state and
+teaches the gesture.
+*Scope:* the prohibition holds wherever seeded objects can be shared, counted, exported, billed, or
+seen by a second person. That is most B2B products and almost no consumer ones.
+
+**"Sandbox now, verification at the request for production" (§6, Stripe).**
+Breaks when verification lead time is longer than the evaluation window. A lender, an insurer or a
+regulated healthcare product with a five-day underwriting or credentialing review defers the wall to
+exactly the moment the user has decided to commit — and then makes them wait a week with the product
+switched off.
+*Scope:* defer verification when it completes in minutes or hours. When it takes days, start it in
+parallel on day one, say how long it takes up front (the GOV.UK "check a service is suitable" move),
+and keep the sandbox running throughout so the wait is not dead time.
+
+**"The invite step belongs after the first artifact exists, and never before" (§8).**
+Breaks where an artifact cannot exist without the second person. A scheduling tool whose first object
+is a shared availability, a two-sided marketplace, a shared inbox, a 1:1 feedback product, a
+signature-collection flow — in all of them the invitation *is* the first artifact, and "create
+something first" is an instruction the product cannot satisfy.
+*Scope:* "after the artifact" holds only where a solo user can produce something worth looking at. If
+they cannot, the invite is step one — and then it needs the strongest possible reason-to-send in the
+message, because the sender has nothing to show yet either.
+
+**"Run the wizard before account creation" (§7, Duolingo).**
+Breaks when the answers must survive a device change or attach to a verified identity. Duolingo's ten
+screens work because the whole flow fits one session in one tab; a B2B flow where the evaluator starts
+on a phone and finishes on a laptop loses everything held in `sessionStorage`, and a regulated flow
+cannot bind pre-account answers to an unverified person at all.
+*Scope:* pre-account wizards for single-session, single-device, low-stakes flows. Otherwise capture
+identity early enough to persist, and pay the conversion cost knowingly.
+
+**"Maximum 3 tour steps" (§3).**
+Breaks for migration onboarding and for mandatory disclosure. A user moving off ten years of muscle
+memory in a competing tool is not learning a product, they are unlearning one, and a three-step cap on
+"here is where the five things you use hourly now live" is a cap on the wrong axis. A clinical, trading
+or safety-critical product may be required to present acknowledgements in sequence.
+*Scope:* three steps is a cap on *discovery* tours for new users. Migration guidance and required
+disclosures are different genres — but they are still not tours: the first is a mapping table the user
+can return to, the second is a consent flow.
+
+**"An illustration in a first-run empty state" (§4).**
+Breaks in dense professional surfaces. A trading terminal, an IDE panel, an observability console at
+information density where every other pixel is data — an illustration there reads as a different
+product leaking in.
+*Scope:* illustrate first-run empties in spacious consumer-facing archetypes. In dense tools, one line
+of text and a button is the whole component, at every empty-state kind.
+
+**"Attribution early, one tap" (§7).**
+The placement advice holds; what breaks is what you do with the answer. Asking at the highest-compliance
+moment maximizes response rate and minimizes accuracy — the user answers before they have thought about
+it, and "Google" absorbs everything they cannot recall.
+*Scope:* self-reported attribution is a directional supplement to click attribution and a way to find
+channels your pixels cannot see. It is never a channel split you report as a number.
+
 ---
 
 ## The generic version
@@ -1047,6 +1328,11 @@ You can diagnose your own build against this. If four or more apply, the flow wa
 - A "Connect your database" modal with a spinner, no timeout, and a red "Failed" with no reason string.
 - Tour state in `localStorage`, so it replays on every device the user owns.
 - The whole thing at 390px is the 1440px layout with `flex-direction: column`.
+- One "Something went wrong" toast, auto-dismissing after four seconds, serving session expiry,
+  permission denial, quota exhaustion and a 500 alike.
+- A magic link that a mail scanner can burn, with no "send a new one" on the failure screen.
+- A card decline on the final step that clears the form and returns the user to step 1.
+- A revoked invite that 404s.
 
 ---
 
@@ -1104,10 +1390,28 @@ Run these against your implementation.
 26. Does the invited person land on the artifact, or on the creator's first-run flow?
 27. Do pending, bounced, and seat-limited invites each have a visible state?
 
+**Failure states (§13)**
+28. Request a magic link, then open it in a different browser from the one that requested it. Does the
+    original tab ever finish, or does it spin forever?
+29. Fetch your own magic link with `curl` before clicking it, then click it. Does it still work? (If
+    not, a corporate mail scanner will burn every link you send into that tenant.)
+30. Decline a card at the last step of your paid signup with a test card. Are the form's answers still
+    there? Is the decline category named? Is there a second path that is not "try again"?
+31. Force a success on the charge and a failure on provisioning. Does the resulting screen say that
+    money moved?
+32. Revoke an invite, then open its link. 404, or a request-access path?
+33. Open an invite link inside the Gmail or Slack mobile app. Does OAuth complete, or does Google
+    return `disallowed_useragent`?
+34. Kill the connection halfway through your first streamed or long-running result. Does the partial
+    output survive on screen? Is Resume distinct from Regenerate?
+35. Double-tap the create-workspace button on a slow connection. How many workspaces exist?
+36. Trigger session expiry, permission denial, quota exhaustion and a 500 in turn. Count how many
+    distinct messages your product produced. It should be four.
+
 **Return**
-28. Expire an integration token and come back. Are you told, before anything else, with the consequence
+37. Expire an integration token and come back. Are you told, before anything else, with the consequence
     named and a fix on the same screen?
-29. Do you get the first-run tour again? (You should not.)
+38. Do you get the first-run tour again? (You should not.)
 
 ---
 
@@ -1133,9 +1437,10 @@ Walked in September 2026 — screenshots in `.cache/shots/`:
   machine for a hard setup flow: **Invalid Configuration**, **Pending**, **Pending verification**;
   24–48h nameserver propagation; "up to 5 days" for some TLDs with "no need to retry"; ICANN's 60-day
   transfer lock; the lower-your-TTL-first rollback tip; exact CAA value.
-- [docs.stripe.com/get-started/account/activate](https://docs.stripe.com/get-started/account/activate) —
-  sandbox on signup, KYC deferred to live mode; "you can't change the business origin country" after
-  activation.
+- [docs.stripe.com/get-started/account/set-up](https://docs.stripe.com/get-started/account/set-up) —
+  re-verified Sept 2026; `/get-started/account/activate` now 301s here. Sandbox on signup, KYC deferred
+  to live mode; verbatim: "After activating a Stripe service on a live account, you can't change the
+  business origin country."
 - [docs.stripe.com/get-started/account/checklist](https://docs.stripe.com/get-started/account/checklist)
   and [/checklist/website](https://docs.stripe.com/get-started/checklist/website) — logged-out
   checklists; "the state of each checkbox is stored within your browser's cache"; every item states the
@@ -1162,8 +1467,9 @@ Walked in September 2026 — screenshots in `.cache/shots/`:
   390px: language grid sorted by live learner counts (Spanish 42.2M … High Valyrian 1.02M), mascot
   intro, attribution survey at step 4, motivation, self-assessed level, composed payoff screen, daily
   goal with named tiers, placement fork, personalized section placement, then the first lesson ("Tap the
-  matching pairs") before any account exists. Cookie consent covers ~40% of the mobile viewport and
-  blocks the first choice.
+  matching pairs") before any account exists. The cookie-consent sheet that covers ~40% of the mobile
+  viewport and blocks the first choice appears on EU/UK requests; a US-IP capture in September 2026
+  showed none, so treat it as a jurisdiction-dependent obstruction, not a property of the flow.
 - [cash.app](https://cash.app) — mobile-first marketing; single "Download Cash App" CTA pinned to the
   bottom; onboarding itself is app-only.
 - [superhuman.com](https://superhuman.com) — now Superhuman Go; the original 1:1 concierge onboarding is
@@ -1194,3 +1500,95 @@ Research and teardowns cited:
 - Hacker News practitioner comments (via hn.algolia.com), quoted in §3 and §1: the guided-tour pacing
   complaint, the permanent-JIRA-tooltip complaint, the tour-maintenance complaint, and "most people use
   apps because they have to, to get shit done and pay the rent."
+
+---
+
+## Review pass (2026-09)
+
+Adversarial re-read plus a live walk of nine flows at 1440px and 390px on 9 September 2026.
+Screenshots: `.cache/shots/onboarding-and-activation-v-1…v-11-{1440,390}.png`.
+
+### Claims re-verified against the live product
+
+| # | Claim | Result |
+|---|---|---|
+| 1 | `vercel.com/new` loads logged-out; "Let's build something new"; four rerollable seeds (Contact Form, Image Editor, Mini Game, Finance Calculator); GitHub/GitLab/Bitbucket; the "by proceeding, you agree to creating a Vercel account" fine print | **Confirmed verbatim.** Added: a third entry path the file had missed — "drag and drop your project, or choose a file or a folder" |
+| 2 | `linear.app/signup` — "Create your workspace"; Google (filled indigo) / email / SAML SSO; no password field | **Confirmed exactly** |
+| 3 | `notion.so/signup` — modal over a blurred render of the real product; "Work email" label; the work-email tip verbatim, below the field; Google/Microsoft/ChatGPT demoted | **Confirmed.** Added the two-line h1 the file omitted |
+| 4 | `slack.com/get-started` — "First, enter your email" / "We suggest using the email address you use at work" | **Confirmed.** Added the OAuth order (Google, Microsoft, Apple) |
+| 5 | `supabase.com/dashboard/sign-up` — GitHub → ChatGPT → SSO → email+password; disabled-green Sign up; marketing consent inside the terms sentence | Structure confirmed. **Two errors fixed** — see below |
+| 6 | `vercel.com/signup` at 390px — OAuth order, email demoted under "Show other options" as a blue link, bordered card | Confirmed. **Social-proof claim was wrong** — see below |
+| 7 | `linear.app/demo` at 390px — header CTA disappears; row density | Confirmed, and worse than stated — see below |
+| 8 | `figma.com/signup` — "Welcome to Figma", Google + email, no password, mostly empty viewport | Confirmed. Added two defects the file had missed |
+| 9 | `notion.com/templates` — "Search 70,000+ templates"; Marketplace / Templates / Agents / Consultants / Connections; editorial cards including "Top creator: Teka" | **Confirmed.** Added the "Discover" h1 and the fact that the count lives in the search placeholder, not a headline |
+| 10 | `vercel.com/docs/domains/troubleshooting` — 24–48h nameserver propagation, "up to 5 days"/"no need to retry", ICANN 60-day lock, `0 issue "letsencrypt.org"`, the partial-propagation language | **All confirmed verbatim in the live docs.** The `dig` command shape was wrong — fixed |
+| 11 | Stripe checklist — "stored within your browser's cache", "You can log in to see some of your current settings", SIM-swapping, "confused customers creating disputes" | **All confirmed verbatim** |
+| 12 | Stripe activate — sandbox on signup, KYC at live mode, "you can't change the business origin country" | Content confirmed verbatim. **URL had moved** — fixed |
+| 13 | `retool.com/signup` returns 404 while `login.retool.com/auth/signup` is canonical | **Confirmed** (HTTP 404, no redirect) |
+| 14 | Duolingo screen 1 — language cards with live learner counts, Spanish 42.2M / French 22.8M / English 20.4M, sorted by count | Confirmed. **Sort claim was too strong** — fixed |
+
+### Errors corrected
+
+1. **Supabase's h1 is "Get started"**, not "Create a new account" — that string is a grey subhead. The
+   copy table had been holding Supabase up as an example of naming the object; it is an example of the
+   opposite, and the file now says so.
+2. **The Supabase testimonial handle was wrong** (`@yatsiv_yuriy`). The panel rotates per load; the
+   September 2026 capture was a different developer on a different subject. Handle removed — a
+   rotating asset should never be cited as a fixed fact.
+3. **Vercel's social-proof strip is not "Adobe has 6× faster preview builds."** On this capture it read
+   "stripe had 100% uptime at peak Black Friday volume." Also rotating; also now marked as such.
+4. **`docs.stripe.com/get-started/account/activate` 301-redirects to `/get-started/account/set-up`.**
+   Three references updated. The quoted content survived the move intact.
+5. **`dig cname www.example.com` is not what Vercel's docs give.** They give `dig example.com` and
+   `dig -t CAA +noall +answer example.com`. Corrected.
+6. **Duolingo's language grid is not purely count-sorted** — Chess is interleaved third, above English,
+   with no count. Rewritten as "a default the merchandiser overrides," with the design consequence.
+7. **The Duolingo cookie-consent claim is jurisdiction-dependent.** A US-IP capture showed no consent
+   sheet at all. Scoped to EU/UK rather than presented as a property of the flow.
+8. **The App Store "Apple is mandatory" line was stated too flatly.** Guideline 4.8 has carve-outs.
+   Rewritten as a pointer to the current guideline and explicitly marked not re-verified this pass.
+
+### Mobile findings added
+
+- **Vercel `/new` at 390px drops the verb from its provider buttons** — "Continue with GitHub" becomes
+  "GitHub". The reference implementation ships, at mobile width, the exact accessible-name failure the
+  file's own Accessibility list warns against.
+- **Linear's demo at 390px loses more than the CTA.** The top bar collapses to "Engineering › Issues";
+  the word *demo* appears nowhere on screen. A phone visitor sees an unlabelled issue tracker with no
+  signup path — which contradicts the pattern the desktop version is praised for.
+- **Figma's signup uses `EMAIL` as an in-field placeholder** (the label vanishes on typing), and a
+  five-line consent bar occupies the bottom of a viewport that holds three interactive elements.
+- **Duolingo's first screen has a ~200px dead band** between the h1 and the first tappable card, on a
+  question with forty options. The "unimprovable at 390px" claim was replaced with the measurement and
+  the rule it implies: scale vertical rhythm to option count.
+
+### Sections added
+
+- **§13 Failure states** — the identified gap. The file had per-flow `States` lists but nothing
+  cross-cutting. Now covers session and magic-link expiry (including mail-scanner link burn and the
+  wrong-device link), failed payment during activation (decline-at-step-6, the 3DS hang, and the
+  charged-but-not-provisioned state), revoked/expired/colliding invites (including the in-app-webview
+  `disallowed_useragent` failure), rate limits and interrupted streams, and duplicated or abandoned
+  setup. With a copy table and a `How it goes wrong`.
+- **Where these procedures break** — every fork in the file tested against a product where its
+  recommended branch is wrong, with the scope written in. Eleven forks; the sharpest counterexamples
+  are the OAuth-as-signup branch against a `repo:write` or tenant-admin scope, the browser-local demo
+  against an analytics or security product whose value is the finding rather than the mechanic, the
+  invite-after-artifact rule against products where the invite *is* the first artifact, and
+  sandbox-first against a five-day underwriting review.
+- Nine new self-check items covering the §13 failures, and six new lines in the generic-version
+  diagnostic.
+
+### Cut
+
+Filler openers on §2 and §6; the §9 aphorism ("power features are why people stay…") replaced with the
+actual constraint; two unsourced quantifications ("role pickers triple the decision cost", "attribution
+costs no drop-off") replaced with the reasoning that survives without a fabricated number.
+
+### Still unverified
+
+The Duolingo screens 2–12 (mascot intro, attribution question, motivation, self-assessment, payoff
+screen, daily goal, placement fork, first lesson) were not re-walked this pass — screen 1 was confirmed
+live and the rest are carried from the original walk. The Slack ~2,000-message activation figure is
+Amplitude's published number, not something observable from outside. Linear's Start Guide quote and the
+HN practitioner comments were not re-fetched.

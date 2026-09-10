@@ -33,7 +33,14 @@ const widths = (wi === -1 ? '1440,390' : argv[wi + 1]).split(',').map(Number);
 const AXE_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.2/axe.min.js';
 const C = { red: (s) => `\x1b[31m${s}\x1b[0m`, yel: (s) => `\x1b[33m${s}\x1b[0m`, grn: (s) => `\x1b[32m${s}\x1b[0m`, dim: (s) => `\x1b[2m${s}\x1b[0m`, b: (s) => `\x1b[1m${s}\x1b[0m` };
 
-const browser = await chromium.launch();
+let browser;
+try {
+  const { readFileSync: rf, existsSync: ex } = await import('node:fs');
+  const { resolve: rs, join: jn } = await import('node:path');
+  const wsFile = jn(rs(new URL('..', import.meta.url).pathname), '.cache', 'browser-ws');
+  if (ex(wsFile)) browser = await chromium.connect(rf(wsFile, 'utf8').trim(), { timeout: 8000 });
+} catch { browser = undefined; }
+if (!browser) browser = await chromium.launch();
 let hardFailures = 0;
 
 for (const width of widths) {

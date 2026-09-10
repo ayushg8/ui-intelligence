@@ -53,7 +53,19 @@ const clickSel = flag('click', null);
 
 mkdirSync(outDir, { recursive: true });
 
-const browser = await chromium.launch();
+// Reuse the shared browser (tools/browserd.mjs) when it is running: with many
+// agents screenshotting at once, one browser process beats N.
+import { readFileSync as _rf, existsSync as _ex } from 'node:fs';
+import { resolve as _res, join as _join } from 'node:path';
+let browser, sharedConn = false;
+try {
+  const wsFile = _join(_res(new URL('..', import.meta.url).pathname), '.cache', 'browser-ws');
+  if (_ex(wsFile)) {
+    browser = await chromium.connect(_rf(wsFile, 'utf8').trim(), { timeout: 8000 });
+    sharedConn = true;
+  }
+} catch { browser = undefined; }
+if (!browser) browser = await chromium.launch();
 const written = [];
 
 for (const width of widths) {
@@ -99,6 +111,6 @@ for (const width of widths) {
   }
 }
 
-await browser.close();
+await browser.close();   // on a connected browser this disconnects; the server stays up
 written.forEach((f) => console.log(f));
 if (!written.length) process.exit(2);

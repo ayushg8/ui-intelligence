@@ -1,6 +1,6 @@
 # Charts & data visualization
 
-**Evaluated:** 2026-09 · **Researcher note:** The category split in two. One half is *chart engines* (ECharts, Chart.js, Plotly, uPlot, D3) that are technically strong and visually stuck in 2015; the other half is *design-system chart layers* (shadcn charts, Tremor, Bklit UI, LayerChart) that own the taste and delegate the math. The interesting news of 2026 is TanStack Charts arriving in July as a typed grammar-of-graphics that explicitly targets AI authorship, and Tremor — the thing everyone still recommends — quietly not shipping an npm release since January 2025. Almost nothing in this category gives you a good chart out of the box; you are choosing which fight you'd rather have.
+**Evaluated:** 2026-09 · **Researcher note:** The category split in two. One half is *chart engines* (ECharts, Chart.js, Plotly, uPlot, D3) that are technically strong and visually stuck in 2015; the other half is *design-system chart layers* (shadcn charts, Tremor, Bklit UI, LayerChart) that own the taste and delegate the math. The interesting news of 2026 is TanStack Charts arriving in July as a typed grammar-of-graphics that explicitly targets AI authorship, and Tremor — the thing everyone still recommends — quietly not shipping an npm release since January 2025. Almost nothing in this category gives you a good chart out of the box; you are choosing which fight you'd rather have. **Challenge pass 2026-09** (see the section at the end) re-verified every top-tier number — they held — and added the two stories the first pass missed: **ApexCharts left MIT in July 2025** for a $2M-revenue-gated license while doing ~2.4M weekly downloads, and **Perspective left FINOS**, deprecating the `@finos/perspective` package everyone still installs.
 
 ## Verdict at a glance
 | Library | Tier | One-line verdict | Vibecode risk |
@@ -12,18 +12,25 @@
 | visx | `strong` | Not a chart library — the best React primitive kit, and what most good bespoke charts are secretly built on. | low |
 | uPlot | `strong` | 100k points at 60fps in ~50KB. Spartan, honest, and you style it entirely yourself. | low |
 | LayerChart | `strong` | Best-designed Svelte option; honest linear defaults, SVG *and* Canvas from one component. | low |
-| TanStack Charts | `experimental` | The most thoughtful new design in the category — question-first docs, one grammar across nine frameworks. v0.17, alpha, 7 contributors. | low |
+| MUI X Charts | `strong` | The best *information* defaults of any big React kit — annotated bands, linear paths, real axes. Material house style and a Pro paywall on half the chart types. | medium |
+| TanStack Charts | `experimental` | The most thoughtful new design in the category — question-first docs, one grammar across nine frameworks. v0.18, alpha, 7 contributors. | low |
 | Bklit UI | `experimental` | Swiss-monochrome design-engineered chart set on visx. Genuinely tasteful, genuinely young. | medium |
 | Highcharts | `situational` | Best accessibility in the industry, and a commercial license for any for-profit app. | medium |
 | Nivo | `situational` | Enormous surface area, opinionated pastel house-style you will spend a day undoing. | high |
 | unovis | `situational` | Framework-agnostic and CSS-variable themed, but the defaults look like matplotlib. | low |
-| Perspective (FINOS) | `situational` | A WASM analytical engine with charts attached; wrong tool for a marketing dashboard. | low |
+| Perspective (perspective-dev) | `situational` | A WASM analytical engine with charts attached; wrong tool for a marketing dashboard. Left FINOS — install `@perspective-dev/*`, not `@finos/*`. | low |
 | Plotly.js | `situational` | Scientific/3D coverage nothing else matches; 3MB+ and a modebar you'll want to hide. | high |
 | AntV G2 | `situational` | Real grammar-of-graphics depth, Ant Design house-style, half-translated docs. | high |
 | Lightweight Charts | `situational` | The right answer for candlesticks and nothing else. | low |
+| AG Charts | `situational` | Genuinely MIT community tier at 1.5M/wk — the real free alternative to Highcharts. Visual defaults unverified (site 403s headless). | medium |
+| Vega-Lite | `situational` | The canonical declarative grammar and the one LLMs write best. Default look is 1990s academic: box frame, both-axis grids, rotated bold axis titles. | low |
+| Mantine Charts | `situational` | Recharts wrapper with *honest* defaults where shadcn's are pretty — linear curve, real y-axis, curve/grid controls beside every demo. | medium |
+| Carbon Charts (IBM) | `situational` | Design-system chart layer with real a11y investment; you inherit IBM's Carbon look wholesale. | medium |
+| Charts.css | `situational` | Zero-JS charts from pure CSS. Tiny scope, but the only no-JavaScript answer here. | low |
 | Tremor | `reference-only` | Beautiful defaults; `@tremor/react` last published 2025-01-13. Read it, don't install it. | high |
 | Mafs | `reference-only` | Interactive math, not data viz. Last push March 2025. | low |
-| Victory | `reference-only` | Now at Nearform; one patch release in 20 months. | medium |
+| Victory | `reference-only` (web) | Web frozen at v37.3.6 since 2025-01. But `victory-native` v42 (2026-08) is current — don't write off the native line. | medium |
+| ApexCharts | `avoid` (new work) | **No longer MIT** — relicensed 2025-07-09, free only under $2M revenue. Its gradient-fill + smoothed-curve stock look is a primary source of the generic dashboard aesthetic. | high |
 | Chart.js | `avoid` (for product UI) | Fine for a blog embed; canvas-only, no DOM styling, and its defaults are the reason people think charts are ugly. | high |
 | Chartist | `avoid` | 13k stars of nostalgia; nothing it does isn't done better now. | medium |
 
@@ -31,11 +38,15 @@
 - **Default choice:** shadcn/ui charts — you inherit your app's tokens, fonts and dark mode for free, and Recharts v3 underneath is a much better engine than its reputation. Budget an hour to undo its two bad defaults (see scorecard).
 - **Best engineering:** Apache ECharts. 67k stars, 30+ contributors, Apache-2.0, shipping 6.x, and it will render a million points without complaint. Nothing else in the free tier is close on breadth.
 - **Best visual quality out of the box:** Observable Plot. It is the only library that ships zero gridlines, zero plot frame and automatic axis labels by default.
+- **Best defaults you can actually ship in a React product:** MUI X Charts, then Mantine Charts. Both ship linear interpolation and a real y-axis; shadcn ships neither. If you take one thing from this file, take that the two most-copied React chart defaults (shadcn, ApexCharts) are the two least honest.
 - **Best accessibility:** Highcharts. Screen-reader descriptions, keyboard navigation, sonification, tactile export, WCAG 2.2 as stated guideline — it is not close. Recharts v3 is the best free answer (`accessibilityLayer` now defaults to on).
 - **Most customizable / least house-style:** visx. It has no default look because it has no defaults; you get scales, shapes and axes and compose the rest.
 - **Lightest:** uPlot (~50KB, no framework). TanStack Charts claims a 16.48 KiB gzip React line chart, unverified independently.
 - **Promising newcomer:** TanStack Charts.
-- **Premium/paid worth it:** Highcharts, but only if accessibility is a contractual requirement. Otherwise AG Charts' MIT community tier covers most of what teams actually buy Highcharts for.
+- **Best for agent/LLM authorship:** Vega-Lite, because a published JSON schema is the thing models get right; TanStack Charts is the better-designed bet once it stabilizes.
+- **Only zero-JavaScript option:** Charts.css.
+- **Premium/paid worth it:** Highcharts, but only if accessibility is a contractual requirement. Otherwise **AG Charts' community tier — verified genuinely MIT at v14.1.0, 1.52M wk downloads — covers most of what teams actually buy Highcharts for** (now scorecarded below rather than recommended in passing). If a11y is the driver but the budget isn't there, Carbon Charts is the free option with real accessibility investment behind it.
+- **Licensing landmine:** ApexCharts left MIT at v5.2.0 (2025-07-09) and is now free only under $2M revenue. Check your lockfile.
 
 ## Scorecards
 
@@ -64,7 +75,7 @@
 - **Verdict:** The v3 line deserves a reputation reset. The rewrite added ~4,000 unit/integration tests and 220 visual regression tests, moved to a real state store, added tooltip/legend portals, and — most importantly — flipped `accessibilityLayer` to **on by default**, so charts are keyboard-navigable with arrow keys without any work. That makes it the best free accessibility story in React charting. What did not improve is the aesthetic: the stock chart is still a poor advertisement for the library.
 - **Use when:** React, standard business charts, <2k points, and you intend to style it yourself. · **Don't use when:** Streaming data, >5k points, or you need Canvas — it has no first-party Canvas renderer.
 - **Scores /5:** visual 2 · interaction 4 · a11y 4 · engineering 4 · maintenance 5 · docs 3 · customization 4 · perf 3 · stability 4 · originality 2
-- **Evidence:** ★27,550 · 3.10.x stable, 3.11.0-canary.3 2026-09-09 · last push 2026-09-09 · 48,533,567 wk npm · 30+ contributors · MIT
+- **Evidence:** ★27,550 · 3.10.1 stable 2026-07-25, 3.11.0-canary.3 2026-09-09 · last push 2026-09-09 · 48,533,567 wk npm · 30+ contributors · MIT
 - **Looked at:** https://recharts.org/en-US/examples — the hero chart on their own homepage has **dashed gridlines on both axes**, `monotone` smoothing applied to a *categorical* A–F x-axis (inventing curvature between discrete categories, which is straightforwardly wrong), a filled dot on every data point, a hard black axis rule, and a periwinkle-and-mint pair that is not a designed palette. Two of the four are chart-junk defaults and one is a data-integrity default.
 - **Vibecode risk:** medium raw, high if you accept the demo styling. Kill `CartesianGrid` vertical lines, set `type="linear"`, drop the dots above ~30 points.
 - **Link:** https://recharts.org
@@ -109,12 +120,22 @@
 - **Vibecode risk:** low — the violet fill is the only tell and it's a one-prop fix.
 - **Link:** https://www.layerchart.com
 
+### MUI X Charts — `strong`
+- **What:** The charts package of MUI X (`@mui/x-charts`), MIT community tier with Pro/Premium upsells. Bars, lines, pie, scatter, sparkline, gauge, radar free; heatmap, funnel, sankey Pro; candlestick, radial, map Premium.
+- **Verdict:** Added in this challenge pass because the original file skipped it entirely at 906,809 weekly downloads. It deserves better than the "it's just Material" dismissal: its stock examples have the most *honest* information defaults of any large React kit I looked at. The v9 hero line chart plots US unemployment against GDP per capita with shaded recession bands, direct in-chart era labels ("Early 2000s", "Great Recession", "COVID-19"), unsmoothed linear paths and two properly-labelled y-axes — an editorial-grade default that shadcn, Nivo and ApexCharts do not come close to. The costs are real: you inherit Material Design (Roboto, MUI palette, MUI spacing), and the chart-type menu is tier-gated, so "we'll add a sankey later" is a purchase decision.
+- **Use when:** You're already on MUI, or you want strong defaults without a design pass. · **Don't use when:** You're not on MUI — the theme weight isn't worth importing for charts alone — or you need Pro-tier chart types for free.
+- **Scores /5:** visual 4 · interaction 4 · a11y 3 · engineering 4 · maintenance 5 · docs 5 · customization 3 · perf 3 · stability 5 · originality 3
+- **Evidence:** repo mui/mui-x ★5,845 · `@mui/x-charts` v9.13.0 2026-09-04 · MIT (community tier) · 906,809 wk npm · `@mui/x-charts-pro` 98,986 wk · last push 2026-09-09
+- **Looked at:** https://mui.com/x/react-charts/lines/ (1440 + 390, this pass) — described above. Sidebar makes the tier split explicit with per-item Pro/Premium icons, which is honest merchandising. At 390px the docs shell collapses cleanly. Note it uses the same rotated-90° y-axis titles this file criticized unovis for; here they're earned, because the chart is genuinely dual-axis.
+- **Vibecode risk:** medium — a MUI chart looks like MUI (Roboto + `#1976d2`), which reads as "corporate React app" rather than "AI-generated", but it is absolutely recognizable. Restyle the palette and swap the font before shipping anything brand-sensitive.
+- **Link:** https://mui.com/x/react-charts/
+
 ### TanStack Charts — `experimental`
 - **What:** A framework-neutral typed visualization grammar over granular D3 primitives, with React/Octane adapters and an experimental React Native target. Tanner Linsley's replacement for the archived `react-charts`.
-- **Verdict:** The most interesting thing to happen to this category in years, and also six weeks old. The design brief is explicit about two audiences — humans and AI agents composing charts — which matters a lot for a corpus like this one: a typed grammar with no hidden series model is far easier for an agent to get right than Recharts' prop soup. It is genuinely alpha: v0.17.0, 7 contributors, APIs changing between minors, and its own docs say so. `@tanstack/charts` is already at 149k weekly downloads six weeks in, which tells you about Linsley's distribution, not about stability.
+- **Verdict:** The most interesting thing to happen to this category in years, and also six weeks old. The design brief is explicit about two audiences — humans and AI agents composing charts — which matters a lot for a corpus like this one: a typed grammar with no hidden series model is far easier for an agent to get right than Recharts' prop soup. It is genuinely alpha: v0.18.0 — the 34th release in six weeks — 7 contributors, APIs changing between minors, and its own docs say so. `@tanstack/charts` is already at 149k weekly downloads six weeks in, which tells you about Linsley's distribution, not about stability.
 - **Use when:** A side surface, a prototype, or you want to learn the grammar now. · **Don't use when:** It's load-bearing before 1.0.
 - **Scores /5:** visual 4 · interaction 4 · a11y 4 (claimed) · engineering 4 · maintenance 4 · docs 5 · customization 5 · perf 4 · stability 1 · originality 5
-- **Evidence:** ★723 · created 2026-07-28 · v0.17.0 2026-09-09 · last push 2026-09-10 · 149,204 wk npm · 7 contributors · MIT · predecessor TanStack/react-charts is archived (★3,136, last release a 2023 beta)
+- **Evidence:** ★723 · created 2026-07-28 · v0.18.0 2026-09-10 (34 releases since 0.0.0 on 2026-07-29) · last push 2026-09-10 · 149,204 wk npm · 7 contributors · MIT · predecessor TanStack/react-charts is archived (★3,136, last release a 2023 beta)
 - **Looked at:** https://tanstack.com/charts/latest/docs/examples and /examples/lines-and-areas — the docs are the strongest signal. The gallery is "organized by analytical question, not by package export" ("How does a total divide into contributions?" → Stacked and Composed). Section headings inside the line-chart page read *"Show a derived trend honestly"*, *"Compare two boundaries at their exact crossings"*, *"Production checks"*, and one page-level heading is literally *"Use an example without inheriting accidental choices."* That is a stated anti-vibecode posture, in the docs, as an organizing principle. The live previews compile in-browser and were still spinning after 6s — the docs are heavy.
 - **Vibecode risk:** low — the whole information architecture is built to stop you inheriting defaults thoughtlessly.
 - **Link:** https://tanstack.com/charts
@@ -154,17 +175,17 @@
 - **Verdict:** The architecture is right — separating data logic from visual logic and theming via CSS custom properties means dark-mode switching costs nothing and no re-render. The reality of the defaults does not match the "clean professional SaaS UI" reputation the SEO listicles give it. It is maintained (1.6.7 in July 2026, pushed today) and Apache-2.0, but adoption is thin at ~9k weekly downloads for the React package, so you're early-adopting a corporate side project.
 - **Use when:** You need one chart layer across Angular *and* React, or you specifically want CSS-variable theming. · **Don't use when:** You want defaults you can ship.
 - **Scores /5:** visual 2 · interaction 3 · a11y 2 · engineering 4 · maintenance 4 · docs 3 · customization 4 · perf 4 · stability 3 · originality 3
-- **Evidence:** ★2,846 · 1.6.7 2026-07-29 · last push 2026-09-09 · @unovis/react 9,365 wk npm · 26 contributors · Apache-2.0
+- **Evidence:** ★2,846 · 1.6.7 2026-06-28 · last push 2026-09-09 · @unovis/react 9,365 wk npm · 26 contributors · Apache-2.0
 - **Looked at:** https://unovis.dev/gallery — every example draws a **full box frame around the plot area** plus gridlines on both axes, and puts a rotated-90° axis title down the left ("Temperature (celsius)", "National Cereal Production, tons"). That is a scientific-plotting convention, not a product-UI one. Palette is blue/red/yellow, which reads as traffic-light. One genuinely good default: the data-gaps example uses direct end-of-line labels ("China", "USA") instead of a legend. The Basic Timeline chart's row labels are ~7px and unreadable.
 - **Vibecode risk:** low — nobody will recognize it, because almost nobody uses it.
 - **Link:** https://unovis.dev
 
-### Perspective (FINOS) — `situational`
+### Perspective — `situational`
 - **What:** A C++/WASM streaming analytical engine (Apache Arrow) with a pivot grid and chart viewer on top. Originated at J.P. Morgan.
-- **Verdict:** Categorized as a chart library and mostly isn't one — it's a client-side OLAP engine that happens to draw. If your problem is "pivot and aggregate 10M rows in the browser and let the user re-slice interactively," this is close to the only answer. If your problem is "put a line chart on a dashboard," it's absurd overkill: a WASM payload and a workspace UI you did not ask for. Very actively maintained (v5.4.0 shipped today).
+- **Verdict:** Categorized as a chart library and mostly isn't one — it's a client-side OLAP engine that happens to draw. If your problem is "pivot and aggregate 10M rows in the browser and let the user re-slice interactively," this is close to the only answer. If your problem is "put a line chart on a dashboard," it's absurd overkill: a WASM payload and a workspace UI you did not ask for. Very actively maintained (v5.4.0 shipped 2026-09-09). **The project has left the FINOS foundation**: the repo now resolves to `perspective-dev/perspective`, and the npm scope moved with it. `@finos/perspective` is frozen at 3.8.0 (2025-09-03) and carries an explicit npm deprecation notice — *"This package is no longer maintained. Please upgrade to @perspective-dev/client"*. Any agent or listicle still saying "FINOS Perspective, `npm i @finos/perspective`" is sending you to a dead package a full major version behind.
 - **Use when:** Financial/trading blotters, live streaming pivot analysis, huge in-browser datasets. · **Don't use when:** Anything else.
 - **Scores /5:** visual 3 · interaction 5 · a11y 2 · engineering 5 · maintenance 5 · docs 3 · customization 2 · perf 5 · stability 4 · originality 5
-- **Evidence:** ★11,177 · v5.4.0 2026-09-09 · last push 2026-09-09 · 11,696 wk npm · 30+ contributors · Apache-2.0
+- **Evidence:** ★11,177 (repo `perspective-dev/perspective`) · v5.4.0 2026-09-09 · last push 2026-09-09 · 30+ contributors · Apache-2.0 · current packages `@perspective-dev/client` / `-viewer` / `-react` @ 5.4.0 · **deprecated** `@finos/perspective` stuck at 3.8.0 (2025-09-03), 11,696 wk npm — that download figure is the *old* package and should not be read as current adoption
 - **Looked at:** Reviewed a prior capture of https://perspective.finos.org in this corpus's shot cache (`tables-perspective-*`) — dense grid chrome, workspace-style split panes, an engine UI rather than a design-system component.
 - **Vibecode risk:** low.
 - **Link:** https://perspective.finos.org
@@ -194,10 +215,60 @@
 - **Verdict:** Best-in-class for exactly one job. Candlestick and time-scale behavior (crosshair, price scale, autoscaling, logarithmic price axis) is right because it's extracted from a product that lives or dies on it. It is not a general charting library and does not pretend to be — TanStack's own comparison notes it lacks animation transitions and requires host composition for legends. 930k weekly downloads with 17.2k stars is a real, working ecosystem.
 - **Use when:** Price/candlestick charts, trading UIs, crypto dashboards. · **Don't use when:** Anything that isn't financial time-series.
 - **Scores /5:** visual 4 · interaction 5 · a11y 1 · engineering 5 · maintenance 5 · docs 4 · customization 3 · perf 5 · stability 5 · originality 3
-- **Evidence:** ★17,223 · last push 2026-09-09 · 930,167 wk npm · 30+ contributors · Apache-2.0
+- **Evidence:** ★17,223 · v5.2.1 2026-08-12 · last push 2026-09-09 · 930,167 wk npm · 30+ contributors · Apache-2.0
 - **Looked at:** Not screenshotted this pass — its output is the TradingView chart, which is the reference implementation of the form.
 - **Vibecode risk:** low in context (financial charts are expected to look like this); high if used outside finance.
 - **Link:** https://github.com/tradingview/lightweight-charts
+
+### AG Charts — `situational`
+- **What:** AG Grid's charting sibling, split into `ag-charts-community` (MIT) and `ag-charts-enterprise` (commercial). Framework wrappers for React/Angular/Vue.
+- **Verdict:** Promoted into the rankings during this challenge pass because the original file **recommended it twice in "Recommendations by need" without ever ranking, scoring or looking at it** — an unranked recommendation is the exact shape of inherited opinion this corpus is supposed to catch. The good news for that recommendation: the central claim survives verification. `ag-charts-community` really is **MIT**, at v14.1.0 (2026-08-05), doing **1,520,530 weekly downloads** — more than Highcharts' 1.61M is above it by only a hair, and vastly more than most of this file's `strong` tier. It is a legitimate free alternative for teams that would otherwise buy Highcharts, provided they don't need the enterprise-only chart types (`ag-charts-enterprise` itself does 1,189,747 wk, so plenty of teams do pay). The repo's 480 stars are misleading — it was split out of the ag-grid monorepo and carries none of the parent's 14k.
+- **Use when:** You're already on AG Grid, or you want a maintained, free, corporate-backed chart suite without Highcharts' license. · **Don't use when:** You need the enterprise chart types but not the enterprise budget — check the split before committing.
+- **Scores /5:** visual — (unverified) · interaction 4 · a11y 3 · engineering 4 · maintenance 5 · docs 4 · customization 4 · perf 4 · stability 5 · originality 2
+- **Evidence:** repo ag-grid/ag-charts ★480 (monorepo split; not a popularity signal) · `ag-charts-community` v14.1.0 2026-08-05, **MIT** (license field verified on the published package) · 1,520,530 wk npm · `ag-charts-enterprise` 1,189,747 wk · `ag-charts-react` 230,667 wk · last push 2026-09-09
+- **Looked at:** **Nothing — visual verdict unverified.** https://www.ag-grid.com/charts/gallery/ returns a CloudFront **403** to headless capture, so I could not form an independent visual opinion and will not borrow one. Anyone extending this file should screenshot it from a real browser session before assigning a visual score.
+- **Vibecode risk:** medium (provisional) — AG's house style is enterprise-neutral rather than trendy, so the failure mode is "looks like a data grid vendor," not "looks generated." Not confirmed visually.
+- **Link:** https://www.ag-grid.com/charts/
+
+### Vega-Lite — `situational`
+- **What:** A declarative JSON grammar of interactive graphics from UW IDL; compiles to Vega, which renders via Canvas or SVG. The engine behind Altair (Python), Streamlit charts, JupyterLab and Observable's older stack.
+- **Verdict:** The most consequential omission from the original file, and it fails on exactly the axis the file cares about most. Its *distribution* is enormous — 818,610 wk for `vega-lite` plus 486,447 for `vega-embed` — and because it is a plain JSON spec with a published schema, it is the chart format LLMs emit most reliably. For an agent-authored chart, "emit a Vega-Lite spec" is often the highest-accuracy path available. But its untouched visual defaults are academic-1990s, and consistency demands I score them the way this file scored unovis for the identical sins: a **full box frame around the plot area, gridlines on both axes, bold rotated-90° axis titles, and the `#4c78a8` steel-blue** default mark. The file penalized unovis (2,846★, 9k downloads) for exactly this and never mentioned the vastly more famous library doing the same thing — a popularity-bias miss corrected here.
+- **Use when:** Agent- or notebook-generated charts, analysis, statistical graphics, faceting/small multiples, or anywhere a portable spec beats a component. · **Don't use when:** Product UI without a theme pass — the defaults are unshippable in a designed app.
+- **Scores /5:** visual 2 · interaction 4 · a11y 2 · engineering 5 · maintenance 4 · docs 5 · customization 4 · perf 3 · stability 5 · originality 5
+- **Evidence:** ★5,479 · v6.4.3 2026-04-24 · last push 2026-09-08 · BSD-3-Clause · 818,610 wk npm (`vega` 651,175, `vega-embed` 486,447)
+- **Looked at:** https://vega.github.io/vega-lite/examples/ and .../line_monotone.html (1440 + 390, this pass) — the gallery index is a bare bulleted TOC with no thumbnails, which is a genuine discoverability failure for a visual library. The chart page renders the box-framed, double-gridded, bold-rotated-axis-title default described above in a small ~480×420 canvas. Notably the canonical example is *named* "Line Chart with Monotone Interpolation" — the library ships false smoothing as a headline demo.
+- **Vibecode risk:** low — nobody mistakes a Vega-Lite default for a designed product chart; it reads as "a scientist made this," which is a different failure mode from "an AI made this." Apply a config theme and it disappears entirely.
+- **Link:** https://vega.github.io/vega-lite/
+
+### Mantine Charts — `situational`
+- **What:** `@mantine/charts`, a Recharts wrapper in the Mantine ecosystem — the same architectural bet as shadcn charts, made by a different design system.
+- **Verdict:** Worth ranking precisely because it is the controlled experiment against shadcn: same engine, same wrapper idea, different taste. Mantine wins on honesty. Its AreaChart demo ships **linear interpolation and a real y-axis with four labelled ticks**, where shadcn ships monotone smoothing and no y-axis at all. Better still, the docs put a live control panel *beside* every example exposing **Curve type / Tick line / Grid axis** as first-class choices — the same "make the interpolation decision visible" instinct this file praised Bklit UI for, shipped by a much larger project. It also publishes per-component "LLM docs" links, which matters for agent authorship. The knock: three overlapping semi-transparent area fills is a muddy default at any density, and you're adopting all of Mantine to get it.
+- **Use when:** You're on Mantine, or you want shadcn's architecture with defaults you don't have to fix first. · **Don't use when:** You're not on Mantine — it isn't standalone.
+- **Scores /5:** visual 4 · interaction 4 · a11y 3 · engineering 4 · maintenance 5 · docs 5 · customization 4 · perf 3 · stability 4 · originality 3
+- **Evidence:** repo mantinedev/mantine ★31,692 · `@mantine/charts` v9.6.1 2026-09-09 · MIT · 412,945 wk npm · last push 2026-09-09
+- **Looked at:** https://mantine.dev/charts/area-chart/ (1440 + 390, this pass) — described above. y-ticks at 900/1800/2700/3600, dashed horizontal gridlines only, dots on every point, blue/violet/teal translucent fills that muddy where they cross.
+- **Vibecode risk:** medium — Mantine's `#228be6` blue and its rounded control chrome are recognizable, and the tri-color translucent stack is a generic-dashboard tell. But the *structural* defaults are honest, so it starts ahead of shadcn.
+- **Link:** https://mantine.dev/charts/getting-started/
+
+### Carbon Charts (IBM) — `situational`
+- **What:** `@carbon/charts` (+ `-react`, `-svelte`, `-angular`), the chart layer of IBM's Carbon Design System, built on D3.
+- **Verdict:** The most serious *institutional* a11y effort in the free tier, and the closest free thing to Highcharts' reason-to-exist. Carbon is an accessibility-audited design system and the charts inherit that discipline rather than bolting it on. Small adoption (42,233 wk) and a hard constraint: it looks like IBM, because it is IBM — the Carbon palette, IBM Plex type and Carbon spacing are the product, not a starting point. Actively developed (pushed 2026-09-08).
+- **Use when:** You're on Carbon, or accessibility matters and the Highcharts license doesn't fit. · **Don't use when:** You have your own brand — undoing Carbon is more work than starting from visx.
+- **Scores /5:** visual 3 · interaction 4 · a11y 4 · engineering 4 · maintenance 4 · docs 4 · customization 2 · perf 3 · stability 4 · originality 3
+- **Evidence:** ★1,048 · `@carbon/charts-react` v1.27.19 2026-09-08 · Apache-2.0 · 42,233 wk npm · last push 2026-09-08
+- **Looked at:** Not screenshotted this pass — flagged as a gap for the next extension. Verdict rests on repo/registry evidence and the known Carbon house style, not on an independent visual read.
+- **Vibecode risk:** medium — unmistakably IBM. That is the opposite of AI-generic, but it is still someone else's brand on your product.
+- **Link:** https://carbondesignsystem.com/data-visualization/
+
+### Charts.css — `situational`
+- **What:** A CSS-only charting framework. You write a semantic `<table>`, add utility classes, and CSS custom properties do the drawing. No JavaScript at all.
+- **Verdict:** Added because the original file had no non-JavaScript option anywhere in it, and this category needs one. The idea is genuinely good: the chart is a real HTML table, so it is accessible, crawlable, printable, SSR-native, inspectable in DevTools and zero-KB of runtime — the exact opposite of the canvas problem this file (correctly) holds against ECharts and Chart.js. The limits are equally real: bar/line/area/pie only, no tooltips or interaction without writing your own, no scales computed for you (you set `--size` per cell yourself, which means precomputing normalized values server-side), and the project's release cadence is slow — v1.2.0 in July 2025, repo last pushed April 2026.
+- **Use when:** Static sites, emails-adjacent HTML, RSC/SSR output, print, or anywhere shipping a chart runtime is disproportionate. · **Don't use when:** You need interaction, tooltips, live data or automatic scales.
+- **Scores /5:** visual 3 · interaction 1 · a11y 5 · engineering 3 · maintenance 3 · docs 4 · customization 4 · perf 5 · stability 4 · originality 5
+- **Evidence:** ★6,579 · v1.2.0 2025-07-21 · last push 2026-04-04 · MIT · 10,683 wk npm
+- **Looked at:** Not screenshotted this pass. Included on architectural merit and verified registry/repo evidence; the visual verdict is provisional.
+- **Vibecode risk:** low — almost nobody uses it, and a CSS table-chart doesn't resemble any library's default output.
+- **Link:** https://chartscss.org
 
 ### Tremor — `reference-only`
 - **What:** Tailwind + Radix dashboard components with charts. Founders joined Vercel's Design Engineering team on 2025-01-22; all products were made free/MIT.
@@ -211,23 +282,33 @@
 
 ### Mafs — `reference-only`
 - **What:** React components for interactive mathematics — coordinate planes, plotted functions, draggable points, vectors.
-- **Verdict:** Beautifully made and miscategorized. This is a tool for explorable explanations and math education, not data visualization; there is no notion of a dataset, a scale from data, or a tooltip over a series. Last push 2025-03-30 (17 months) and the site footer still reads © 2024. Keep it in the corpus so an agent knows *not* to reach for it when asked for a chart.
+- **Verdict:** Beautifully made and miscategorized. This is a tool for explorable explanations and math education, not data visualization; there is no notion of a dataset, a scale from data, or a tooltip over a series. Last npm publish 2024-10-20 — 23 months, not the 17 the repo's last push (2025-03-30) suggests — and the site footer still reads © 2024. Keep it in the corpus so an agent knows *not* to reach for it when asked for a chart.
 - **Use when:** Interactive math explainers, teaching tools, geometry demos. · **Don't use when:** You have data.
 - **Scores /5:** visual 4 · interaction 5 · a11y 2 · engineering 4 · maintenance 2 · docs 4 · customization 3 · perf 4 · stability 3 · originality 5
-- **Evidence:** ★3,430 · v0.21.0 · last push 2025-03-30 · 20,912 wk npm · MIT
+- **Evidence:** ★3,430 · v0.21.0 published **2024-10-20** (23 months) · last push 2025-03-30 · 20,912 wk npm · MIT
 - **Looked at:** https://mafs.dev — a Riemann-sum demo: blue function curve with green rectangles above the axis and magenta below, draggable magenta endpoint handles with soft halos, a serif ⟨Mafs⟩ wordmark. Elegant, clearly a teaching artifact.
 - **Vibecode risk:** low.
 - **Link:** https://mafs.dev
 
 ### Victory — `reference-only`
 - **What:** Composable React/React Native chart components, originally Formidable Labs, now under Nearform.
-- **Verdict:** Once the answer for React Native chart parity, now coasting. **v37.3.6 shipped 2025-01-14** and the repo last saw a push 2025-12-19 — one patch in twenty months from a 30-contributor project. Nearform says it's maintained; the commit history says maintenance-only. Notably, `victory-native` (406k/wk) and the separate, more active `victory-native-xl` are where the remaining energy is; on the web, Recharts or visx now dominate the same lane.
-- **Use when:** You're already on Victory and it works. On React Native, evaluate `victory-native-xl` instead. · **Don't use when:** Starting fresh on the web.
+- **Verdict:** Once the answer for React Native chart parity, now coasting. **v37.3.6 shipped 2025-01-14** and the repo last saw a push 2025-12-19 — one patch in twenty months from a 30-contributor project. Nearform says it's maintained; the commit history says maintenance-only. The split matters and is widely misreported: **there is no `victory-native-xl` package on npm** — the XL rewrite *is* `victory-native` from v40 onward (repo `FormidableLabs/victory-native-xl`), and it is at **42.0.1, published 2026-08-31, MIT**. So the React Native line is current and maintained while the web packages are frozen; `victory` (web) does 406,199 wk and `victory-native` 424,807 wk. On the web, Recharts or visx now dominate the same lane.
+- **Use when:** You're already on Victory and it works. On React Native, `victory-native` v42 is a live, reasonable choice. · **Don't use when:** Starting fresh on the web.
 - **Scores /5:** visual 3 · interaction 3 · a11y 3 · engineering 3 · maintenance 2 · docs 3 · customization 4 · perf 2 · stability 3 · originality 2
-- **Evidence:** ★11,240 · v37.3.6 2025-01-14 · last push 2025-12-19 · victory 406,199 wk / victory-native 424,807 wk · 30+ contributors · license reported as "Other"
+- **Evidence:** web ★11,240 · v37.3.6 2025-01-14 · last push 2025-12-19 · license reported as "Other" · victory 406,199 wk · **native line separate and alive: `victory-native` 42.0.1 2026-08-31, MIT, 424,807 wk, repo FormidableLabs/victory-native-xl**
 - **Looked at:** Not screenshotted — deprioritized in favor of live options once the release gap was confirmed.
 - **Vibecode risk:** medium — Victory's grey-axis, muted-palette default is dated and recognizable.
 - **Link:** https://commerce.nearform.com/open-source/victory
+
+### ApexCharts — `avoid` (for new work)
+- **What:** An SVG charting library with React/Vue/Angular wrappers, long marketed as the friendly MIT alternative to commercial suites.
+- **Verdict:** **The single largest omission in the original file, and it fails this corpus on both axes at once.** First, licensing: ApexCharts **is no longer MIT**. The registry shows the license field flipping at **v5.2.0 on 2025-07-09**, and the current LICENSE is a revenue-gated dual license — the Community tier is free only for organizations under **$2M USD annual revenue**, with everyone above required to buy Pro/Premium/OEM, and redistribution and "competing charting products" prohibited outright. Everything at v5.0.x and below is still MIT. At a combined ~2.4M weekly downloads (`apexcharts` 1,448,297 + `react-apexcharts` 936,532) there are a great many teams on 5.2+ who have not noticed they are now out of compliance. Second, taste: its stock output is one of the primary sources of the generic AI-dashboard look, which makes its absence from a vibecode-focused file a serious gap.
+- **Use when:** You're pinned to ≤5.0.x under MIT and it already works, or you're under $2M revenue and have read the license and accepted it. · **Don't use when:** Starting fresh — the license risk and the visual default both cut against you.
+- **Scores /5:** visual 2 · interaction 4 · a11y 2 · engineering 4 · maintenance 5 · docs 4 · customization 3 · perf 3 · stability 4 · originality 2
+- **Evidence:** ★15,152 · v7.1.0 2026-08-31 · last push 2026-09-09 · **license: MIT through v5.0.x, "ApexCharts License" from v5.2.0 (2025-07-09) onward** (verified by walking the `license` field across every published version) · 1,448,297 wk npm + `react-apexcharts` 936,532 wk
+- **Looked at:** https://apexcharts.com/javascript-chart-demos/area-charts/ (1440 + 390, this pass) — this is the vibecode archetype in its purest form. Nearly every demo pairs a **blue-to-transparent gradient area fill with spline smoothing**; the "Stacked Area" example smooths a stacked series, which invents curvature and breaks the stacking read. Every chart carries a **hamburger export menu** in the top-right and most add a rounded zoom/pan toolbar you did not ask for. In-canvas bold title + grey subtitle. Y-axis labels default to trailing decimals ("8000.00", "9500.00") on integer share prices. The teal/green/amber stacked palette is the stock SaaS analytics run.
+- **Vibecode risk:** **high** — and specifically load-bearing for this corpus. The gradient-fill-plus-smoothed-curve signature that makes shadcn and Tremor charts recognizable did not originate with either; ApexCharts shipped it to millions of dashboards first. If a generated app has a chart with a gradient area, a smoothed line and a little hamburger in the corner, this is usually what drew it.
+- **Link:** https://apexcharts.com
 
 ## Rejected / avoid
 - **Chart.js (for product UI)** — 67.7k stars and 11.2M weekly downloads, and still the wrong default. Canvas-only means zero DOM styling, no CSS control over typography, nothing to inspect or test in the DOM, and no tabular figures. Its stock look — heavy 3px lines, `rgba` pastel fills, a big centered legend with square swatches, gridlines everywhere — is *the* reason "charts look bad by default" is a truism. Last release v4.5.1 2025-10-13. Fine for a marketing blog embed; do not build an analytics product on it.
@@ -235,6 +316,12 @@
 - **react-vis** — Uber's old React viz kit. Effectively unmaintained for years; do not start anything on it.
 - **`@tanstack/react-charts`** — explicitly **archived** (★3,136, last release a 3.0.0-beta in Nov 2023, last push 2025-03-10). Its author replaced it with TanStack Charts. Agents will find it in old blog posts; it must not be recommended.
 - **`@tremor/react` in production** — see scorecard. Frozen at 3.18.7 since 2025-01-13.
+- **ApexCharts for new work** — see scorecard. ~2.4M wk downloads and **not MIT since v5.2.0 (2025-07-09)**; free only under $2M annual revenue. Pin ≤5.0.x if you need the MIT terms.
+- **`@finos/perspective`** — **deprecated on npm** ("no longer maintained… upgrade to @perspective-dev/client"), frozen at 3.8.0 since 2025-09-03 while the live project ships 5.4.0 under `@perspective-dev/*`. Agents will find the FINOS name everywhere; it is the wrong install.
+- **`victory-native-xl` as a package name** — it doesn't exist on npm. The XL rewrite ships as `victory-native` v40+ (currently 42.0.1, 2026-08-31, MIT). The repo is named victory-native-xl; the package is not.
+- **VisActor VChart** — ByteDance's ECharts competitor (MIT, v2.1.6 2026-08-13, ★1,836, 38,520 wk). Real engineering and genuinely active, but adoption is ~1% of ECharts' and the docs carry the same partial-translation problem as G2. Watch it; don't bet on it.
+- **Frappe Charts** — ★15,075 and 65,218 wk, but last push 2025-07-02. Charming SVG look, no longer moving.
+- **billboard.js / amCharts 5** — billboard.js (★6,007, 30,230 wk) is a maintained C3 successor with nothing to distinguish it in 2026; amCharts 5 is commercial-licensed with only 445★ on the repo. Neither earns a slot over the ranked options.
 - **FusionCharts / AnyChart / LightningChart** — these dominate the "best charting library 2026" search results because they buy that real estate with comparison-blog SEO. Treat any listicle that ranks them highly as marketing, not evaluation.
 
 ## What surprised me
@@ -244,6 +331,10 @@
 - **Recharts v3 quietly became the best free accessibility story in React charting.** `accessibilityLayer` now defaults to **on** (it was off in 2.x), giving keyboard arrow-key navigation with zero configuration — plus ~4,000 tests and 220 visual regression tests from the rewrite. Its reputation as "the easy but sloppy one" is out of date; only its visual defaults still deserve it.
 - **PostHog's own product-analytics marketing screenshot is a textbook anti-pattern**: a stacked area chart with ~50 rainbow breakdown series, an explicit "Breakdown limited to 50 — more available / Set to 100" control, and 45°-rotated full date labels ("23-Jul-2025"). The company whose product this is ships it as the hero image. Excellent evidence that nobody is immune.
 - **Vercel doesn't plot raw analytics data — it plots a fitted polynomial.** Their published approach selects polynomial order adaptively using `error = max(MSE(train), MSE(test))` on an odd/even index split, and derives the delta from the fitted curve rather than the first and last points. That's a materially different technique from the `monotone` spline smoothing that shadcn/Recharts hand you, and it's why Vercel's charts read as "trend" while smoothed Recharts charts read as "wobble."
+- **ApexCharts quietly stopped being MIT.** The `license` field flips at v5.2.0 on 2025-07-09; the current terms are free only under $2M annual revenue. At ~2.4M weekly downloads across `apexcharts` and `react-apexcharts`, this is the highest-exposure licensing change in the category and essentially nobody is talking about it.
+- **Perspective left FINOS and took its npm scope with it.** `@finos/perspective` is explicitly deprecated and two majors behind (3.8.0, 2025-09-03) while the project ships 5.4.0 as `@perspective-dev/*`. The old package's 11,696 weekly downloads are people installing a dead thing.
+- **`victory-native-xl` is a repo name, not a package name.** The XL rewrite has shipped as `victory-native` since v40 and is at 42.0.1 (2026-08-31, MIT). Victory's web line is frozen; its native line is current — a distinction almost every "is Victory dead?" post gets wrong.
+- **Vega-Lite commits the exact sins this file used to condemn unovis for** — box frame, gridlines on both axes, bold rotated axis titles — at 90× the downloads. The original pass penalized the obscure library and never mentioned the famous one. That is what popularity bias looks like from the inside.
 - **Bklit UI exists**: 1.6k stars, created January 2026, MIT, in Vercel's OSS program — a monochrome-by-default, visx-based chart set with a Swiss technical-drawing site. It is the only chart library I found that treats *color* as a decision you must make rather than a default you inherit.
 
 ## Open questions
@@ -252,4 +343,27 @@
 - **Whether Observable Plot is stable-by-design or stalled.** Nineteen months without a release is ambiguous. The signal that would settle it: an open milestone or a maintainer statement in `observablehq/plot` discussions. I did not find one.
 - **Highcharts real-world pricing.** The $1.5k–$5k/yr figures come from vendor-aggregator blogs, not Highcharts' own price list — **unverified**. A quote request would settle it.
 - **Actual production usage.** I verified no "used by <company>" claim for any library here. Bklit's "TRUSTED BY PEOPLE AT_ Stripe/Vercel/Supabase/Framer" is individuals, not corporate adoption, and should not be repeated as such. Public GitHub dependency graphs or engineering-blog citations would be the evidence.
+- **AG Charts' visual defaults.** ag-grid.com returns a CloudFront 403 to headless capture, so its scorecard carries no visual score. It is the only ranked entry here with an unverified visual verdict — resolve it from a real browser session.
+- **Carbon Charts and Charts.css visual reads.** Both were added on architectural and registry evidence this pass without a screenshot. Their visual scores are provisional.
+- **ApexCharts license enforcement.** The terms are unambiguous; what's unknown is whether Apex is actually pursuing the >$2M cohort, and whether the v5.0.x MIT fork path is viable long-term. Nothing public found either way.
 - **How each library handles empty / loading / no-data states.** This was in the brief and I could not evaluate it from demo pages — every gallery shows the happy path. Determining it requires rendering each library with `data={[]}` and a `null`-heavy series. My expectation, unverified: only Highcharts and ECharts ship a real `noData` affordance; the rest render an empty axis frame or throw.
+
+## Challenge pass (2026-09)
+
+An adversarial re-verification of every `essential` and `strong` entry, plus a search for what the first pass missed. Method: `gh api repos/*`, `api.npmjs.org` download points, full `registry.npmjs.org` version/license histories, and six fresh screenshots at 1440 + 390 (`charts-and-dataviz-check-1…6`).
+
+**What survived.** The first pass's numbers are unusually good. Every star count, weekly-download figure, release date and push date I re-pulled for the `essential`/`strong` tier matched exactly: shadcn 123,460★, Recharts 27,550★ / 48,533,567 wk / canary 3.11.0-canary.3, ECharts 67,288★ / 4,606,173 wk / 6.1.0, Observable Plot 5,373★ / 0.6.17 on 2025-02-14 / 550,718 wk, visx 21,041★ with the 4,635,092 vs 3,603,455 vs 76,014 scale/shape/meta split, uPlot 10,479★ / 494,316 wk, LayerChart 1,313★ / 2.5.0. Tremor's headline finding re-verified precisely — `@tremor/react` 3.18.7, 2025-01-13, both repos' push dates as stated. The Recharts-v3-accessibility and Observable-Plot-defaults verdicts survive scrutiny; so does every tier assignment in the top two tiers. No demotions.
+
+**Corrections applied.**
+1. **Perspective is no longer a FINOS project.** Repo resolves to `perspective-dev/perspective`; `@finos/perspective` is deprecated on npm and frozen at 3.8.0 (2025-09-03). The old evidence line stapled the new repo's v5.4.0 to the dead package's download count. Entry renamed, evidence rewritten, rejected-list warning added.
+2. **`victory-native-xl` is not an npm package.** The XL rewrite ships as `victory-native` v40+, currently 42.0.1 (2026-08-31, MIT). The prose also attributed `victory`'s 406k downloads to `victory-native` (424,807). Victory's native line is alive; only the web line is frozen. Table row and scorecard corrected.
+3. **unovis 1.6.7 published 2026-06-28**, not 2026-07-29.
+4. **TanStack Charts is at v0.18.0** (2026-09-10), not 0.17.0 — 34 releases in six weeks, which sharpens the instability point rather than softening it.
+5. **Mafs' npm gap is 23 months, not 17** — v0.21.0 published 2024-10-20; the 2025-03-30 date was a repo push, not a release.
+6. Added missing release pins: Lightweight Charts v5.2.1 (2026-08-12), Recharts stable 3.10.1 (2026-07-25).
+
+**Popularity bias found.** Two instances. (a) **Vega-Lite was absent entirely** at 818,610 wk while unovis was scored `visual 2` and mocked for a box frame, both-axis gridlines and rotated axis titles — I screenshotted Vega-Lite's canonical line example and it does all three, so it now carries the same visual score. Penalizing the obscure library for what the famous one also does is the bias this corpus exists to catch. (b) **AG Charts was recommended twice in "Recommendations by need" with no table row, no scorecard and no screenshot.** Its central claim held up on verification (community tier genuinely MIT, v14.1.0, 1,520,530 wk), so it is now ranked properly — but its visual verdict is marked **unverified** because ag-grid.com 403s headless capture, and I would not borrow an opinion I could not form.
+
+**Additions (7).** ApexCharts, MUI X Charts, Vega-Lite, AG Charts, Mantine Charts, Carbon Charts, Charts.css. Plus rejected-list entries for VisActor VChart, Frappe Charts, billboard.js and amCharts 5.
+
+**Vibecode column hardened.** The original file was honest about shadcn, Tremor, ECharts, Nivo, Plotly and G2 — those verdicts stand. But it missed the biggest offender in the category: **ApexCharts, at ~2.4M weekly downloads, ships the gradient-fill + spline-smoothing + corner-hamburger combination that *is* the generic dashboard look**, and predates shadcn and Tremor in doing so. Added at `avoid` with vibecode `high`, alongside the finding that it left MIT at v5.2.0 (2025-07-09) for a $2M-revenue-gated license. Also added the cross-cutting note that the smoothed-gradient-area signature is one look with three vendors, not a shadcn invention. Independent screenshots additionally established that **MUI X and Mantine ship materially more honest defaults than shadcn** (linear interpolation, real y-axis), which is now stated in the recommendations.

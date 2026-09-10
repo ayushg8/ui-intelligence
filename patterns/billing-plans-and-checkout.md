@@ -81,15 +81,14 @@ Screenshots: `.cache/shots/bpc-vercel-pricing-1440.png`, `-390.png`.
 |---|---|---|
 | One global billing toggle, or one per plan? | Notion and Shopify: one global segmented control (`Pay monthly` / `Pay yearly`). **Linear and Figma: one toggle per paid column.** | Per-column wins when plans have different billing constraints. Linear's Free column shows `Free for everyone` and Enterprise shows `Annual billing only` **in the same vertical slot** where Basic and Business show their `Billed yearly` switch, so all four columns' feature lists still start on the same y. A global toggle forces you to either hide the constraint or footnote it. |
 | Toggle or segmented control? | Notion/Shopify use a two-segment pill. Linear/Figma use a switch. | A switch has an implicit off-state and reads as "turn on a discount"; a segmented control has two equally-named options. If the annual price is the default shown, use a segmented control — a switch that is already on is a lie about the default. |
-| Where does the CTA sit? | **Notion and Shopify put the CTA above the feature list.** Vercel and Linear put it below. | Above wins when the list is longer than about six rows. Notion's Business column has an 11-row list; a below-list CTA there is 900px down. Shopify's mobile card puts `Start for free` directly under the price with all five features beneath it. |
-| Show the discount as a % or as a price? | Notion: `Save up to 20% with yearly` as a separate blue link beside the toggle, prices stay whole-dollar. | "up to 20%" beside the control beats a struck-through monthly price inside every column: one string instead of four, and it survives the plans having different discount rates. |
+| Where does the CTA sit? | **Notion and Shopify put the CTA above the feature list.** Vercel and Linear put it below. | Above wins when the list is longer than about six rows. Notion's Business column has an 11-row list; a below-list CTA there is 900px down. Shopify's mobile card puts `Start for free` directly under the price with all five features beneath it. **Scope:** below wins when the feature list is the argument rather than a reminder — a product whose visitors do not already know what it does, or where one row disqualifies most of them (a region, a compliance certification). Then the list has to be read before the button is worth pressing, and a CTA above it converts people who will churn. |
+| Show the discount as a % or as a price? | Notion: `Save up to 20% with yearly` as a separate blue link beside the toggle, prices stay whole-dollar. | "up to 20%" beside the control beats a struck-through monthly price inside every column: one string instead of four, and it survives the plans having different discount rates. **Scope:** show the money instead when the absolute number is the persuasive one — a $2,400/yr plan saving $480 should say `$480`, because 20% of an unknown base is not a number anyone can feel. Percentages win on cheap plans, absolute amounts on expensive ones; the crossover is roughly where the annual saving exceeds a monthly payment. |
 | Currency | Notion and Figma both print **`Price in USD`** right-aligned on the toggle row. | Two words that prevent an entire category of support ticket. Nobody else in the set does it. |
 
 **Why most pricing pages are interchangeable.** They are three bordered cards with a drop shadow,
 a lifted middle column with a "Most Popular" ribbon, identical tick lists of 5/8/12 rows, and a
-monthly/annual switch that says "Save 20%". That template is not wrong; it is *empty*, because every
-decision in it was made by the template rather than by the product. The pages above differ from it
-in one specific way each — Vercel by deleting all card chrome and giving every feature its own icon,
+monthly/annual switch that says "Save 20%". The template is not wrong; it is *empty*, because no
+decision in it was made by this product. The pages above each break it in exactly one place — Vercel by deleting all card chrome and giving every feature its own icon,
 Linear by moving the billing control into each column so the constraint is visible, Notion by
 grouping four plans into two narrative buckets, Figma by nesting seat types inside plan columns.
 Pick one structural decision that the template can't express and make it.
@@ -127,9 +126,18 @@ Two viable structures, and the set contains both:
 Choose the carousel only if you also ship `Compare all features` as a separate full-width view.
 Shopify does. A carousel with no comparison view hides the thing four-plan buyers came to do.
 
-**Observed mobile failure, Notion at 390:** the "Chat with us" launcher floats over the bottom-right
-of the feature list and occludes text. Any fixed support widget must be offset above the safe area
-and must not overlap scrollable content on the one page where the user is reading small print.
+**What actually changes at 390 (Notion, re-measured 2026-09).** The desktop toggle row is three
+things on one line — the `Pay monthly` / `Pay yearly` pill, the `Save up to 20% with yearly` link,
+and `Price in USD` right-aligned. At 390 it becomes two rows: the pill goes full-width, then the
+discount link sits left and `Price in USD` right beneath it. That is the right collapse and it is
+worth naming, because the lazy version drops the currency label entirely at the breakpoint — the one
+string on the page that prevents an entire category of support ticket, deleted by a media query.
+
+**Observed mobile failure, Notion at 390 (still present, re-verified 2026-09):** the "Chat with us"
+launcher floats over the bottom-right of the feature list and occludes the `Databases including
+dependencies, custom properties and more` row. Any fixed support widget must be offset above the
+safe area and must not overlap scrollable content on the one page where the user is reading small
+print. Screenshot: `.cache/shots/billing-plans-and-checkout-v-6-390.png`.
 
 ## Accessibility
 
@@ -185,8 +193,8 @@ which is also what makes the higher tier look inevitable when it actually is.
 **Notion, four plans, grouped into two.** Free and Plus sit in one white card under the heading
 *"Essentials for staying organized."*; Business and Enterprise sit in a light-blue card under *"The
 AI workspace for work that matters."* Business carries a blue `Recommended` chip. Four columns
-become two decisions: *do I need the AI workspace?* then *which size?* This is the cheapest solve
-for the four-plan legibility problem and almost nobody uses it.
+become two decisions: *do I need the AI workspace?* then *which size?* One of the four pages in this
+set does it; the other three keep four columns abreast and spend the legibility instead.
 
 **Figma, four plans × three seat types × nine products.** The hardest grid in the set. Figma nests
 **seat rows inside each plan column** — `Full seat $16/mo`, `Dev seat $12/mo`, `Collab seat $3/mo` —
@@ -231,15 +239,17 @@ Four columns cannot be four columns at 390. Three real options, in order of pref
 2. **Accordion by feature group.** Each group (Security, Integrations, Support) collapses; inside,
    each row is a label with four small values beneath. Verbose but honest.
 3. **Horizontal scroll with a frozen first column.** Works, but the frozen column must actually
-   freeze — `position: sticky; left: 0` with an opaque background and a right-edge shadow. Half-built
-   versions of this are the most common mobile pricing bug in the wild.
+   freeze — `position: sticky; left: 0` with an opaque background and a right-edge shadow. The
+   half-built version has the sticky rule and a transparent background, so plan values scroll
+   *under* the feature label and the row becomes unreadable at exactly the moment it is being read.
 
 Do not render a 6-column table at 390 and let the page body scroll sideways. That breaks the whole
 document, not just the table.
 
 ## Accessibility
 
-This is where the set fails hardest, and it is measurable. Read from the live DOM, 2026-09-09:
+This is where the set fails hardest, and it is measurable. Read from the live DOM, 2026-09-09, and
+re-run against the same four pages in the 2026-09 review pass — every number below reproduced:
 
 | Page | `<table>` | `role="table"` | `<th>` | `th[scope]` | bare `<svg>` with no label and no sibling text |
 |---|---|---|---|---|---|
@@ -247,6 +257,10 @@ This is where the set fails hardest, and it is measurable. Read from the live DO
 | figma.com/pricing | 0 | 1 | 0 | 0 | 56 |
 | notion.com/pricing | 0 | 0 | 0 | 0 | 199 |
 | linear.app/pricing | 0 | 1 | 0 | 0 | 281 |
+
+Sticky-positioned elements on the same run: Vercel 3, Figma 3, Linear 1, Notion 10. Figma's one
+`role="switch"` carries the accessible name `Show only key features` and nothing else on the page
+does — it is the only column-header-adjacent affordance in the set that a screen reader can find.
 
 What to build instead:
 
@@ -282,13 +296,14 @@ reader hears "check check check check" 188 times with no idea which plan it is i
 
 ## The job
 
-This is the genuinely hard one. The user is trying to answer a question the pricing page structurally
-cannot answer — *what will I actually pay?* — because the answer depends on their behaviour. The
-business needs the rate card to be accurate and complete, which makes it long, and needs the
-headline to be small, which makes the rate card feel like a trap.
+The user is trying to answer a question the pricing page structurally cannot answer — *what will I
+actually pay?* — because the answer depends on their behaviour. The business needs the rate card to
+be accurate and complete, which makes it long, and needs the headline to be small, which makes the
+rate card feel like a trap.
 
-The gap between those two is where trust dies. From the September 2026 Hacker News thread on
-Vercel's pricing, a customer who had just been on a contract call:
+The failure mode is specific: the headline unit and the billed unit are different, and the
+conversion between them is not published. From the September 2026 Hacker News thread on Vercel's
+pricing, a customer who had just been on a contract call:
 
 > "MIUs are 1 unit = $1, but the rate at which MIU are consumed vary by SKU. Which SKUs do you need,
 > which are you using? Best of luck figuring that out. Cache hit? Fast Data Transfer. Cache miss?
@@ -310,15 +325,24 @@ Per-second, `Nvidia B300` reads `$0.001972 / sec`; `Physical core (2 vCPU equiva
 `$0.0000131 / core / sec`; memory is `$0.00000222 / GiB / sec`. Seven significant figures are
 unreadable as a comparison and unavoidable as a billing unit, so Modal ships both and lets you pick.
 Directly under the CPU rate, in small grey type on the same card, sits the gotcha: **`*minimum of
-0.125 cores per container`**. The constraint that changes your bill is disclosed at the rate, not in
-an FAQ.
+0.125 cores per container`**, and under Volumes, `*includes 1 TiB / mo free`. The constraint that
+changes your bill is disclosed at the rate, not in an FAQ.
+
+The one thing to *not* copy: Modal's default segment is **`Per second`**, so a first-time visitor
+lands on `$0.0000131 / core / sec` — the billing unit, which is the unreadable one. Ship the toggle;
+default it to the unit a human can compare (`Per hour`, `$0.047 / core / hr`), and let the person
+reconciling an invoice switch to the other.
 
 **OpenAI, `platform.openai.com/docs/pricing` — the axis segmented control.** Four modes across the
 top (`Standard` / `Batch` / `Flex` / `Fast mode`), then a table whose columns are grouped under two
 spanning headers, `Short context` and `Long context`, each with `Input`, `Cached input`,
 `Cache writes`, `Output`. The unit is stated once, in prose, above the table: **`Prices per 1M
-tokens.`** Rates for the same model differ by 2× between the context groups — putting that in a
-column group rather than in separate rows is what keeps a 4-model × 8-price grid readable.
+tokens.`** The two groups are not a 2× uplift across the board and the grid is what makes that
+visible: on `gpt-5.6-sol`, input goes $4.00 → $8.00 (2×) while output goes $20.00 → $30.00 (1.5×).
+Putting the second axis in a column group rather than in duplicate rows is what keeps a 4-model ×
+8-price grid readable. Under the table, two dated prose lines carry the volatility the grid can't:
+`Priority processing was renamed Fast mode on July 30, 2026.` and `GPT-5.6 Sol's promotional pricing
+is available at least through November 21, 2026.` (both re-read live 2026-09-09).
 
 **Twilio — geography first.** The first interactive control on the SMS pricing page, above every
 rate, is `Send and receive messages in [🇺🇸 United States]`. Country selection is upstream of price,
@@ -335,12 +359,13 @@ Screenshots: `.cache/shots/bpc-modal-pricing-1440.png`, `bpc-openai-platpricing-
 | One unit or several? | If your smallest billable unit produces more than four leading zeros, ship a unit toggle (Modal's per-hour/per-second). If not, pick the unit the user's mental model uses, not the one your meter uses. |
 | Calculator on the pricing page? | Yes, and it must be **seeded from real numbers the user already has** ("how many seats", "monthly requests"), output a single monthly figure, and show the arithmetic. A slider with no shown formula is a slot machine. |
 | Where do the limits live? | Inline, or one click away and linked from the price. From the same HN thread: *"they SHOULD link to the /limits docs from here"*. A rate without its cap is half a rate. |
-| Rate card completeness | Every SKU that can appear on an invoice must appear on the pricing page under the same name it will have on the invoice. This is the single highest-value rule in this section and the one most often broken. |
+| Rate card completeness | Every SKU that can appear on an invoice must appear on the pricing page under the same name it will have on the invoice. Test: take last month's invoice, and find every line on the public pricing page by string match. Vercel's HN thread is what failing that test looks like — `Fast Data Transfer` and `Fast Origin Transfer` bill together on a cache miss and the page does not say so. |
 
 ## The states — this is most of the work
 
 Usage-based pricing is not really a pricing-page problem; it is an **in-product metering UI**
-problem. The pricing page is read once; the usage dashboard is read every month, in fear.
+problem. The pricing page is read before purchase; the usage dashboard is read on every invoice, and
+it is the only surface that can catch a bill before it is charged.
 
 **Vercel's Spend Management is the reference** (documented at `vercel.com/docs/spend-management`,
 walked 2026-09-09). Its shape:
@@ -367,15 +392,30 @@ Copy the shape, including the disclosures. The states you must design:
 | Anomalous spike | If today's rate is >Nx the trailing 7-day median, say so on the usage page before the invoice does. The $23,000 DDoS bill and the $1,141 viral-post bill both had 24 hours of visible signal. |
 | Free tier exhausted | Distinct from "paid cap hit". This is an upgrade moment, not an incident. |
 | Meter unavailable | Usage data is aggregated with lag. Show the lag (`Usage through Sep 8, 23:00 UTC`), never a stale number presented as live. |
+| Rate-limited or quota-exhausted mid-request | A metered API that streams has to fail *inside a response the client is already reading*. The 429 body must carry which limit (requests, tokens, concurrency), the reset time as an absolute timestamp, and whether the partial work is billed. In-product, the same event needs a row in the usage view within the lag window — a developer who sees 429s in their logs and a green usage dashboard stops trusting the dashboard. |
+| Cap raised while paused | Vercel's disclosure is the rule: raising the cap does not unpause. Whatever your equivalent is, state the resume as a separate, explicit, per-resource action or make it automatic and say which. |
 
 ## The mobile version
 
-Rate cards are the worst thing on a phone. Rules:
+**Measured at 390 on `modal.com/pricing`, 2026-09.** The rate card itself survives the phone: it is
+already a two-column list (`Nvidia B300` left, `$0.001972 / sec` right) and it reflows without a
+scroller. Two things break, and both are the reference implementation failing its own rule:
+
+1. **The `Per hour` / `Per second` control scrolls away.** It sits inline in the `Resource costs`
+   header row and is not sticky. One screen of scrolling puts eleven GPU rows on screen with no
+   visible unit control and no repeated unit label in the section header — the `/ sec` suffix on
+   each row is the only surviving evidence of which mode you are in.
+2. **The sticky nav pill covers two rate rows.** Modal's floating rounded header overlays the list
+   as you scroll; at 390 it sits on top of the `Nvidia B200` and `Nvidia A100, 80 GB` rows, hiding
+   both the name and the price. A sticky chrome element over a list of numbers is worse than over a
+   list of prose: there is no partial word to infer from.
+
+So the rules:
 
 - Never render a 9-column rate table at 390. Collapse to a per-item card: resource name as the row
   title, unit price right-aligned, secondary units on a second line.
-- The unit toggle must remain visible while scrolling the rate list — sticky, at the top of the list
-  container.
+- The unit toggle must remain visible while scrolling the rate list — sticky at the top of the list
+  container, *and* offset below any sticky app chrome, tested by actually scrolling.
 - The usage dashboard, not the rate card, is the mobile surface that matters: a big current-spend
   number, a projection, days remaining, and one control (`Manage spend limit`). Everything else can
   be desktop-only.
@@ -407,7 +447,8 @@ Rate cards are the worst thing on a phone. Rules:
 A headline of "Starts at $20/mo", a slider whose output is a number with no formula, a rate card on
 a separate `/pricing/details` page using SKU names that don't match the invoice, no published caps,
 no in-product projection, no threshold alerts, and a first notification that is the invoice itself.
-The support thread that follows is not about the price. It is about the surprise.
+Diagnostic: if the first time a customer learns a number is on the invoice, every one of the six
+states above is missing.
 
 ---
 
@@ -429,8 +470,12 @@ object, not on a billing dashboard.
 Two structurally different upgrade paths exist and products should ship both:
 
 1. **In-context (the limit-reached surface).** Triggered by the action. Names the specific limit and
-   the specific number. Offers exactly one plan — the next one up — with its price and what it
-   raises the limit to. Has a secondary escape that is not "cancel": *"Remove a member instead"*,
+   the specific number. Offers exactly one plan — **the cheapest plan that actually raises *this*
+   limit**, which is not always the next one up — with its price and the number the limit becomes.
+   Getting this wrong is a specific, common bug: SAML and audit logs are usually Enterprise-only, so
+   a member who hits the SSO wall and is offered "Business, $16/seat" upgrades and hits the same
+   wall. If the plan you offer does not clear the limit that produced the wall, you have sold a
+   support ticket. Has a secondary escape that is not "cancel": *"Remove a member instead"*,
    *"Archive old issues"*.
 2. **The billing page.** For the deliberate, budgeted, admin-initiated change. Shows all plans, the
    current one marked, proration previewed, seat count editable.
@@ -444,12 +489,12 @@ unlock more".
 
 | Fork | Rule |
 |---|---|
-| Block, or allow-and-warn? | Warn at 80%, warn harder at 100%, block only on the action that would exceed a *hard* limit (billable capacity, licence count). Never block retroactively — data already created above a limit stays readable. |
+| Block, or allow-and-warn? | Warn at 80%, warn harder at 100%, block only on the action that would exceed a *hard* limit (billable capacity, licence count). Never block retroactively — data already created above a limit stays readable. **Scope:** this is a rule about *monetised* limits. An abuse or safety rate limit is not an upgrade moment; selling a higher tier at the throttle teaches abusers the price of the throttle. Those get a plain 429 with a reset time and no CTA. |
 | Modal or inline? | Inline if the limit is on one field (a file too large → a band under the uploader). Modal only if the action was destructive-adjacent or the whole workspace is affected (seat limit on invite). A modal over a half-written document is the worst option and the most common. |
-| Who can upgrade? | Most users hitting the wall cannot buy. The permission wall is the real state: name the admins by name, and give a one-tap `Ask Priya to upgrade` that sends a request containing what the requester was trying to do. |
+| Who can upgrade? | In any product with an admin/member split, the wall is usually hit by someone without the billing role — they are the ones doing the work that hits limits. The permission wall is the real state: name the admins by name, and give a one-tap `Ask Priya to upgrade` that sends a request containing what the requester was trying to do. Single-seat consumer products can skip this whole branch. |
 | One plan or all plans? | One. The user is mid-task. A four-column grid inside a modal is a context switch. |
 | What happens after? | Return to the exact action, and **retry it automatically**. The upload resumes; the invite sends; the issue is created. If the user has to redo the action, the flow failed. |
-| Attribution | The upgrade record should carry the triggering limit. It is the only reliable signal for which limit is priced wrong. |
+| Attribution | The upgrade record should carry the triggering limit and the number at the time. Without it, "which limit converts" is unanswerable from billing data alone, and the plan boundary gets moved on argument rather than evidence. |
 
 ## The states
 
@@ -461,6 +506,8 @@ unlock more".
 | Requested, awaiting approval | Show the pending state on the wall itself, with the request time. Do not let them re-request into a loop. |
 | Payment in flight | The upgrade button must go to a determinate busy state and the underlying action must not be lost if the tab closes. |
 | Payment failed at the wall | The worst state in the flow. Keep the work, keep the wall, show the decline reason in human words, offer a different payment method. |
+| Session expired while the wall was open | The wall is often open for minutes while someone finds a card. Re-authentication must happen *without* unmounting the wall or losing the in-escrow work: authenticate in a popup or a nested step, then continue. A redirect to `/login` that returns to the app root destroys the draft and the purchase in one move. |
+| Paid, entitlement not yet propagated | Payment confirmation and entitlement are different systems and the second one lags — typically the webhook round trip. The wall must poll for the entitlement, not for the payment, and must say `Payment confirmed. Unlocking your workspace…` with a bounded wait and a fallback (`Still working — we'll email you within a minute, your payment is safe`). Retrying the blocked action against a stale entitlement produces a second wall immediately after paying, which reads as being charged for nothing. |
 | Upgraded, limit raised | Confirm the new limit numerically (`Now 50 seats`), then get out of the way. |
 | Downgraded back below the limit | Over-limit content becomes read-only, never deleted, with an explicit count: `12 issues above your Free limit are read-only.` |
 
@@ -470,8 +517,9 @@ unlock more".
   content the user is trying to keep in view, and it can be dragged to peek at what's behind.
 - Show the price and the one CTA above the fold of the sheet. Feature lists go below the fold.
 - The wallet button (Apple Pay / Google Pay) belongs at the top of the sheet: on mobile it converts a
-  three-screen card entry into one biometric confirmation. Stripe measured Apple Pay at **+22.3%
-  conversion and +22.5% revenue** on eligible checkouts (April 2025).
+  three-screen card entry into one biometric confirmation (numbers in §6). It must render
+  conditionally — on a device where no wallet is available, an empty slot above an `OR` divider is
+  worse than no divider.
 - Keyboard: if card entry is needed, the numeric keypad opening must not push the pay button off
   screen. Test at 390×667, not 390×844.
 
@@ -512,9 +560,11 @@ handling of the case where the user isn't an admin, and — after a successful u
 ## The job
 
 The user wants to evaluate without risk and without a calendar reminder. The business wants a
-payment method on file, because trials with a card convert several times better and trials without
-one produce a much larger top of funnel. These genuinely conflict; the honest resolutions are (a)
-pick one and be loud about it, and (b) whichever you pick, make the end date unmissable.
+payment method on file, because a card on file converts the trial by default instead of requiring a
+second decision — and wants a large top of funnel, which the card suppresses. (The direction is not
+in dispute; the published magnitudes are vendor benchmarks, not measurements, so no number is quoted
+here.) These genuinely conflict; the honest resolutions are (a) pick one and be loud about it, and
+(b) whichever you pick, make the end date unmissable.
 
 ## The reference implementations
 
@@ -545,7 +595,7 @@ Screenshots: `.cache/shots/bpc-spotify-premium-390.png`, `bpc-twilio-sms-1440.pn
 | Fork | Take |
 |---|---|
 | Card, or no card? | Card if the product's value is obvious in minutes and support cost per trial is high. No card if activation takes days of setup (most B2B infrastructure). If you take a card: the post-trial price and date must both be on the payment screen, in the same visual weight as the $0. |
-| Trial of the top plan, or of the plan they picked? | Trial the plan they picked, and say what they're missing. A trial of Enterprise that silently downgrades to Starter on day 15 produces a feature-loss support ticket, not a conversion. |
+| Trial of the top plan, or of the plan they picked? | Trial the plan they picked, and say what they're missing. A trial of Enterprise that silently downgrades to Starter on day 15 produces a feature-loss support ticket, not a conversion. **Scope:** invert this when one gated feature decides whether the product works at all for that buyer — SSO, an admin API, a data-residency region. If evaluation is impossible without it, trial the tier that has it and say the trial tier is above what they picked, with the day-15 difference named in advance. |
 | Length | Whatever it is, express it as a **date** everywhere after signup, not a countdown of days. `Trial ends Friday 26 September` survives the user not opening the app for a week; "7 days left" does not. |
 | Extend? | Have a one-click extend for support to grant, and expose it to the user exactly once, at expiry, if they were active in the last 72 hours. |
 | Day-after behaviour | Read-only, not deleted, not locked out. See below. |
@@ -570,12 +620,21 @@ Screenshots: `.cache/shots/bpc-spotify-premium-390.png`, `bpc-twilio-sms-1440.pn
 - The trial chip belongs in the header row, not as a full-width band eating 56px of a 390-wide
   viewport for 14 days.
 - Expiry warnings escalate to a bottom sheet on the last day only.
-- If the trial requires a card, use the wallet path: Apple Pay / Google Pay at the top of the sheet.
-  Stripe's Link measured **+14% conversion** for businesses with large returning-customer bases and
-  **+7%** from autofill alone; a saved-wallet path is worth more than any copy change here.
+- If the trial requires a card, use the wallet path: Apple Pay / Google Pay at the top of the sheet
+  (numbers in §6).
 - iOS/Android app-store trials have their own legally-mandated strings and their own cancellation
   path (Settings → Subscriptions). If you sell both ways, the in-app cancel UI must detect the
   store-billed case and deep-link to it rather than showing a cancel button that cannot work.
+
+**Measured at 390 on `spotify.com/us/premium/`, 2026-09.** The material-terms paragraph — *"Premium
+Individual only. Free for 3 months, then $12.99 per month after… Offer ends September 23, 2026."* —
+is the last element above the fold, in the smallest type on the screen, and Spotify's floating
+audio-player control sits on top of its bottom-right corner. A locale interstitial (`Estados Unidos
+(Español)`) takes the top ~100px, pushing everything down. Two lessons: the disclosure that has to
+be *"in a manner they can actually notice and understand before they are charged"* is the element
+your fixed overlays will land on, because it is the one at the bottom; and a locale or cookie band
+at the top of a 390 viewport moves the fold by 12%, so test the disclosure's position with those
+bands present, not on your dismissed-everything dev machine.
 
 ## Accessibility
 
@@ -611,9 +670,12 @@ Then, when they cancel, a card charge they can't reconcile because the invoice a
 
 ## The job
 
-The user wants to be finished. Every element on the page is either helping them finish or costing
-conversion. The business needs a payment method, a billing address for tax, and — for
-subscriptions — consent to recurring charges that will hold up in a chargeback.
+The user wants to be finished. The business needs a payment method, a billing address for tax, and —
+for subscriptions — consent to recurring charges that will hold up in a chargeback. The measurable
+version of "helping them finish" is field count: Baymard's average US checkout is 11.3 fields
+against an achievable 8, and users judge complexity by fields on screen rather than by step count.
+Anything on the page that is not a field, the total, or a wallet button is being paid for out of
+that budget.
 
 **The numbers** (Baymard Institute, aggregating 50 studies and its own large-scale checkout research):
 
@@ -639,8 +701,12 @@ subscriptions — consent to recurring charges that will hold up in a chargeback
 
 ## The reference implementation
 
-**Stripe Checkout**, walked live at `checkout.stripe.dev/checkout` on 2026-09-09. What it actually
-does, in order down the page:
+**Stripe Checkout**, walked live at `checkout.stripe.dev/checkout` on 2026-09-09 and re-walked
+2026-09 for this pass; every string below is unchanged. The demo's default configuration produces
+this screen — `One-time payment`, `Promotion codes`, `Calculate tax` and `Shipping address` on;
+`Recurring payment`, `Phone`, `Billing address`, `Shipping options`, `Save payment details`, `Tax ID
+or VAT`, `Terms of service`, `Custom fields`, `Suggest product` off; `Button text: Pay`. Change any
+of those and the page below changes; the inventory is the point. In order down the page:
 
 1. Merchant logo, small, top-left. No merchant nav. No footer links out.
 2. Product name in small grey type, then **the total in large type** — `Pure Glow Cream` /
@@ -656,10 +722,16 @@ does, in order down the page:
    category by promising that tax will appear here, and it removes the "is tax included?" question
    entirely.
 7. `Total due … $28.80`, then a `Hide ⌃` control that collapses the whole summary.
-8. **Apple Pay, full width, black, above an `OR` divider**, then the form.
+8. **Apple Pay, full width, black, above an `OR` divider**, then the form. Note what this costs to
+   copy honestly: the demo advertises a wallet unconditionally, but a real Checkout renders the
+   button only where the browser reports a usable wallet. Your implementation needs the
+   availability check to gate the button **and** the divider, or the majority of desktop buyers get
+   an `OR` with nothing above it.
 
-Mobile (390) is the same document with the summary expanded by default and `Hide` available — the
-wallet button and the summary both fit above the fold; the address form follows.
+Mobile (390) is the same document with the summary expanded by default and `Hide` available; the
+Apple Pay button lands at ~650 CSS px, inside a 390×844 fold but below a 390×667 one. `Shipping
+information` is the first form heading and it is already below the fold on the smaller device —
+which is the correct trade, because the summary is what prevents the 40%-of-abandonment category.
 
 **The configurable surface** is itself a useful inventory — this is the complete list of decisions
 Stripe thinks a checkout has, read off the demo configurator:
@@ -677,17 +749,18 @@ Screenshots: `.cache/shots/bpc-stripe-hosted-checkout-1440.png`, `-390.png`,
 
 | Fork | Rule | Evidence |
 |---|---|---|
-| Guest checkout? | Yes, and offer account creation **after** payment on the confirmation screen. | Forced account creation is **18%** of abandonment; **84%** of sites don't defer it. |
+| Guest checkout? | Yes, and offer account creation **after** payment on the confirmation screen. **Scope:** this is a one-time-commerce rule. For a subscription the account *is* the thing being bought — there is nothing to deliver to a guest — so the correct version is "collect an email and nothing else at checkout, set the password after payment". A B2B checkout that must bind the purchase to an existing workspace has no guest branch at all; it has a workspace picker. | Forced account creation is **18%** of abandonment; **84%** of sites don't defer it. |
 | One page or several? | Fields matter more than steps. If you must split, put payment last and never re-ask a field. | Average 5.1 steps; complexity judged by fields. |
-| Name: one field or two? | One `Full name`. | **42%** of test users typed a full name into "First name"; **89%** of sites still split it. |
+| Name: one field or two? | One `Full name`. **Scope:** split only where a downstream system requires the split and will reject a guess — airline and rail ticketing (name must match travel document), some AVS/3-DS issuer checks, KYC. If you must split, label them `Given name` / `Family name`, not `First` / `Last`, and never assume the order. | **42%** of test users typed a full name into "First name"; **89%** of sites still split it. |
 | Address line 2 | Hide behind a link (`+ Apartment, suite, etc.`). | **30%** of participants hesitated at it; **75%** of sites don't hide it. |
 | Billing address | Default to "same as shipping", checkbox to differ. | **24%** of sites don't default it. |
 | Coupon field | Collapse it behind a link; never a wide empty box labelled "Promo code". | **35%** of sites don't collapse it. An open coupon field sends users out of checkout to hunt for a code. |
-| Wallets | Above the form, above the fold, above an `OR` divider. Never below the card fields. | Apple Pay +22.3% conversion on eligible checkouts. |
+| Wallets | Above the form, above the fold, above an `OR` divider — **rendered conditionally on availability**, divider included. A Chrome-on-Windows buyer seeing an `OR` with blank space above it has been shown a broken page. **Scope:** in an invoice/PO/ACH B2B checkout, wallets are noise; the top slot belongs to `Pay by invoice`. | Apple Pay +22.3% conversion on eligible checkouts. |
 | Card fields | Use the provider's unified element (Payment Element / equivalent), not a hand-rolled card form. | +10.5% revenue vs. the older single-card element, n=5,000 per arm. |
 | Tax display | Render the row before you can fill it. | 40% + 12% of abandonment is "cost appeared late". |
 | Validation | On blur, not on keystroke, and never only on submit. Never wipe the card field on a decline. | Card declined is **10%** of abandonment; a decline that clears the form converts a retry into an exit. |
 | Terms/consent for subscriptions | Explicit, adjacent to the pay button, stating amount + interval + how to cancel. | CARL (as amended, in force 1 July 2025) requires consent to the auto-renewal terms *themselves*, not to an agreement containing them. |
+| Disable the pay button? | Never *before* submit (see Accessibility). Always *after* submit, for the duration of the in-flight request, paired with a client-side idempotency key — the two rules are about different moments and people conflate them into "never disable", which is how double charges happen. | Card declined is 10% of abandonment; a double charge is a chargeback. |
 
 ## The states
 
@@ -701,6 +774,9 @@ Screenshots: `.cache/shots/bpc-stripe-hosted-checkout-1440.png`, `-390.png`,
 | Session expired | Checkout sessions expire. Re-create rather than 404. `This checkout expired. We've started a new one with your cart intact.` |
 | Abandoned and returned | Cart, address and selected method restored. Baymard's largest single category. |
 | Already purchased | Detect and say so rather than charging twice. |
+| Wallet unavailable | No wallet button, no `OR` divider, no empty slot. Decide this before first paint, not after a flash. |
+| Paid, confirmation not yet received | The payment succeeded and your webhook has not landed. Show `Payment received. Setting up your account…` with a bounded poll and an email fallback, never a generic spinner and never a second pay button. This is the same failure as the entitlement lag in §4 and it needs the same treatment. |
+| Off-session SCA on a renewal | `authentication_required` on a stored card is a hard decline that no retry can clear (§8). The in-app version is not "payment failed" — it is `Your bank needs you to confirm this payment`, with a button that re-opens the challenge. Treating it as a decline sends the customer to replace a card that works. |
 | Zero-amount (100% coupon, trial) | The pay button must not say "Pay $0". Say `Start trial` or `Confirm`. Stripe exposes `Button text` as a configuration for exactly this reason. |
 
 ## The mobile version
@@ -709,8 +785,9 @@ Screenshots: `.cache/shots/bpc-stripe-hosted-checkout-1440.png`, `-390.png`,
 - The order summary starts **expanded** with a `Hide` control (Stripe's choice) rather than collapsed
   with `Show` — a collapsed summary is where the "extra costs" abandonment happens.
 - Card number field: `inputmode="numeric"`, `autocomplete="cc-number"`, `pattern="[0-9\s]*"`. Expiry
-  `cc-exp`, CVC `cc-csc`, name `cc-name`, postal `postal-code`. Getting `autocomplete` right is worth
-  more than any layout change; it enables the OS card autofill.
+  `cc-exp`, CVC `cc-csc`, name `cc-name`, postal `postal-code`. These are what let iOS and Android
+  offer the saved-card and scan-card sheets; without them the buyer types sixteen digits from a
+  physical card. It is a one-line change per field and there is no counter-argument.
 - The sticky pay button must sit above the keyboard, not behind it. Use `env(safe-area-inset-bottom)`
   and test with the numeric keypad open at 390×667.
 - Do not put the email field before the card field on a one-page mobile checkout if the email
@@ -791,7 +868,7 @@ the design: a billing page is four jobs, not a dashboard.
 
 | Fork | Rule |
 |---|---|
-| Statement descriptor | Show it in the app, on the row: `Appears as ACME*SUBSCRIPTION on your statement`. This is the single most effective anti-chargeback UI element and almost nobody ships it. |
+| Statement descriptor | Show it in the app, on the row: `Appears as ACME*SUBSCRIPTION on your statement`. It is the only string that lets a customer match a bank line to your product without contacting you, and card networks treat "unrecognised charge" as a dispute reason in its own right. It costs one field from your payment provider. |
 | Row granularity | One row per charge, matching one line on the card statement. If you charge twice in a month (subscription + overage), that is two rows, not one summed row. |
 | PDF | Always available, always with an invoice number, always downloadable without re-authenticating. |
 | Email address for invoices | Separate from the account email, and editable. Finance is not the buyer. |
@@ -853,11 +930,11 @@ product.
 
 ## The job
 
-The most neglected flow in SaaS, and the one with the most revenue attached. The customer usually
-doesn't know anything is wrong — the card expired, the bank flagged a foreign transaction, the
-corporate card rotated. The business wants the money and wants to not churn a happy customer over an
-expiry date. There is **no conflict here at all**; this flow is neglected purely because nobody is
-assigned to it.
+The customer usually doesn't know anything is wrong — the card expired, the bank flagged a foreign
+transaction, the corporate card rotated. The business wants the money and wants to not churn a happy
+customer over an expiry date. There is **no conflict here at all**, which is the whole point: this
+is the only flow in this document where the user's interest and the business's interest are
+identical, and it is still the one most often shipped as three emails and nothing in the product.
 
 ## The reference behaviour
 
@@ -901,6 +978,7 @@ window is a UI state, and it is the one nobody builds.
 | First failure, soft decline, retry scheduled | Amber band. `We couldn't charge your card for $64. We'll try again on 12 September. Update payment method →` |
 | Retry 3 of 8 | Same band, updated date. Do not escalate colour for every retry — escalate at the 50% point of the window. |
 | Hard decline | Red band immediately, retry language removed. |
+| `authentication_required` | Technically a hard decline, but the fix is not a new card — it is the cardholder completing a challenge. Its own band, its own copy (`Your bank needs you to confirm this payment`), and a button that opens the challenge rather than the card form. Lumping it in with `stolen_card` sends a customer to replace a perfectly good card. |
 | Window nearly over (last 48h) | Red band, states the consequence and its date: `On 24 September your workspace becomes read-only.` |
 | Window over → `unpaid` | Read-only. All data visible. Export works. Band states what happens and when data is removed. |
 | Window over → `canceled` | Same read-only surface, plus an explicit `Reactivate` that restores the exact prior plan and seat count. |
@@ -986,8 +1064,8 @@ flexible. If your invoices show a credit for money the customer never paid, that
 
 | Fork | Rule |
 |---|---|
-| Add a seat: charge now or next invoice? | Charge now (`always_invoice`) if access is immediate. Show the amount before the button. |
-| Remove a seat: refund or credit? | Credit against the next invoice is standard and defensible. Say it: `You'll see a $12.44 credit on your 1 October invoice.` Silent no-refund is the thing that generates complaints. |
+| Add a seat: charge now or next invoice? | Charge now (`always_invoice`) if access is immediate. Show the amount before the button. **Scope:** wrong for invoice/PO customers on net terms, where every mid-term charge needs a purchase order and an out-of-band charge is an accounts-payable incident. For those accounts, accumulate prorations onto the next invoice (`create_prorations`) and show the running adjustment in the seat editor instead of a charge. Decide by billing method, not by plan name. |
+| Remove a seat: refund or credit? | Credit against the next invoice is standard and defensible in B2B. Say it: `You'll see a $12.44 credit on your 1 October invoice.` Silent no-refund is the thing that generates complaints. **Scope:** a credit against a *next* invoice is worth nothing to a customer who is also cancelling, and consumer-facing subscriptions in some jurisdictions owe a pro-rata refund rather than a credit. If the same action can be a downgrade or an exit, ask which. |
 | Seat count as a number input or a member list? | Both, and they must be the same object. An admin who removes a member from the members list and then finds they're still paying for 12 seats has met the worst version of this flow. |
 | Preview placement | Inline, in the same panel, updating as the number changes. Not on a confirmation page. |
 | Pending changes | If a downgrade takes effect at period end, show it as a scheduled change with a date and a cancel-the-change action. |
@@ -1003,16 +1081,22 @@ flexible. If your invoices show a credit for money the customer never paid, that
 | Committed, charged | Confirm the amount and link the invoice. |
 | Committed, credit issued | State the credit and where it lands. |
 | Scheduled downgrade | `Dropping to 8 seats on 1 October. Undo` |
-| Seat added but invite not accepted | Are you billing for it? Say which. Most products bill on invite; most admins assume acceptance. |
+| Seat added but invite not accepted | Are you billing for it? Say which, on the seat editor, in words: `Billing starts when the invite is sent` or `…when it's accepted`. Seat-based billing on a Stripe-style quantity bills the moment the quantity increases, which is on invite — admins reliably assume acceptance. |
+| Invite revoked or expired before acceptance | The seat must come back, and the credit or the un-charge must be visible in the same interaction that revoked the invite: `Invite to sam@acme.com revoked. Seat released — you'll see a $9.31 credit on your 1 October invoice.` The silent version leaves an admin paying for a person who never existed, and it is invisible because there is no member row to notice. Expiry is the same event with no human triggering it, so it needs the same accounting and an email. |
+| Invite accepted after the plan already downgraded | Decide and state it: does acceptance fail, or does it push the workspace over the seat ceiling and trigger §4? Failing silently at accept time gives the *invitee* an error for the admin's billing state. |
 | At the plan's seat ceiling | This is a limit-reached state — see section 4. |
 | Payment fails on a seat addition | Do not add the seat and then leave it unpaid. Roll back and say so. |
 
 ## The mobile version
 
-Seat management is an admin desktop task in practice, but the two things that must work at 390 are:
-(1) removing a member — the destructive action people do from a phone after someone leaves — with the
-billing consequence stated in the confirmation; and (2) the preview amounts, which must not be
-truncated or hidden behind a tooltip.
+Seat management is mostly a desktop task, with two exceptions that are both time-sensitive and
+therefore phone-shaped: **offboarding** (someone left this morning; removing them is done from a
+phone, and the billing consequence has to be in the confirmation, not discovered later) and
+**approving a seat request** (§4's `Ask Priya to upgrade` lands as a push notification, so the
+approve path must be completable at 390 including the preview amounts — which must not be truncated
+or hidden behind a tooltip). Everything else, including the full seat matrix, can be desktop-only.
+**Scope:** invert this for products sold to field or shift managers, where the roster changes daily
+from a phone and seat editing is the primary billing surface.
 
 ## Accessibility
 
@@ -1109,9 +1193,9 @@ textarea.
 |---|---|
 | Where does Cancel live? | In billing settings, at the same level as `Change plan`. Not in a footer, not behind "Advanced", not requiring search. |
 | How many steps? | Reason (optional, skippable) → one offer (skippable in one click) → confirm. Three screens maximum, and each must have a visible `Cancel my subscription` continuing action. |
-| Immediate or period-end? | Default to **period-end** — they paid for the period. Offer immediate as a secondary for people who want out now, and be explicit about whether that refunds. |
+| Immediate or period-end? | Default to **period-end** — they paid for the period. Offer immediate as a secondary for people who want out now, and be explicit about whether that refunds. **Scope:** invert for usage-based or hybrid pricing, where staying active until period end keeps *accruing* charges. There, "cancel" defaulting to period-end can hand someone a bill after they cancelled, which is the worst possible last interaction. Default to immediate, and say what happens to work in flight. |
 | Save offers | One. A discount, a pause, or a plan downgrade — pick the one that matches the stated reason. `It's too expensive` → offer the cheaper plan, not a feature tour. |
-| Pause | The highest-value alternative and the least-shipped. `Pause for 3 months` retains more revenue than any discount and is honest. |
+| Pause | The honest alternative, and rare. `Pause for 3 months` keeps the account and does not require permanently discounting it. **Scope:** pause is wrong where the product's value is a continuous record — monitoring, uptime checks, analytics, backups, security scanning. A three-month hole in the data makes the product less useful on return than it was at cancellation, so pausing manufactures the churn it was meant to prevent. Those products should offer a cheaper retention tier that keeps collecting, not a pause. |
 | Data | State what happens and when. Export must work after cancellation, during the read-only period. |
 | Confirmation | On screen **and** by email, with the end date and the final amount. Germany and the EU both require the email; everyone should send it. |
 | Reactivation | One click, restores the prior plan and seat count, for as long as the data exists. |
@@ -1177,9 +1261,10 @@ seat count. Each of those is separately a violation under CARL, separately actio
 ## The job
 
 Something went wrong and the customer wants money back. The business wants to know whether it owes
-the money and wants the interaction to cost less than the refund. Almost every refund UI failure is
-actually a **status-visibility** failure: the refund was issued, the money hasn't appeared, and the
-customer opens a second ticket.
+the money and wants the interaction to cost less than the refund. The structural failure is
+**status visibility**: card refunds settle in days, not immediately, so between "we refunded you"
+and the money appearing there is a multi-day window in which the customer has no evidence anything
+happened. Every ticket in that window is caused by a missing string, not a missing refund.
 
 ## The decisions
 
@@ -1199,9 +1284,9 @@ customer opens a second ticket.
 | Eligible, self-serve | Amount, method, timeline, one button. |
 | Not eligible | Say why, with the rule: `This charge is from 14 March, outside our 30-day window.` Then offer the ticket. |
 | Requested, pending review | A visible row with a status, not just an email. |
-| Issued, not yet settled | **The critical state.** `Refunded $64 on 12 September. Expect it on Visa •••• 4242 within 5–10 business days.` This one string prevents most refund follow-ups. |
+| Issued, not yet settled | **The critical state**, and the one the whole section exists for. `Refunded $64 on 12 September. Expect it on Visa •••• 4242 within 5–10 business days.` It converts a multi-day silence into a stated wait. |
 | Settled | Status becomes `Refunded`, with the date. |
-| Refund failed (closed card) | Explain and offer an alternative (bank transfer, credit). This happens more than teams expect. |
+| Refund failed (closed card) | Explain and offer an alternative (bank transfer, credit). A refund to a card cancelled since the charge can bounce back weeks later, by which point the customer has stopped watching — so this state has to generate an email, not only a row. |
 | Partial | Original row plus a linked `Refund −$32.00` row; the invoice total is unchanged. |
 | Refund of a subscription mid-period | State what happens to access. Refunding does not automatically cancel; cancelling does not automatically refund. Say which you did. |
 
@@ -1232,6 +1317,88 @@ refund issued with no in-product trace, a bank settling four days later, and two
 between.
 
 ---
+
+---
+
+# 12. The failure states that cross every flow
+
+Sections 1–11 each list the states of one flow. These are the ones that belong to no flow and break
+all of them, and they are the reason billing bugs get reported as "it charged me twice" rather than
+as a named state. Each is a distributed-systems fact with a UI consequence.
+
+## The gap between "paid" and "entitled"
+
+Payment confirmation and entitlement live in different systems, and the second one lags the first by
+a webhook round trip. Every purchase surface in this document has this seam: the upgrade wall (§4),
+checkout (§6), the seat editor (§9), the trial's first charge (§5).
+
+| | |
+|---|---|
+| **Never** | Poll the payment. It succeeded; polling it tells you nothing you need. |
+| **Always** | Poll the entitlement, bounded (say 10s), with a stated fallback: `Payment confirmed. Unlocking your workspace…` → `Still working — we'll email you the moment it's ready. Your payment went through.` |
+| **Never** | Re-run the blocked action against a stale entitlement. A second wall immediately after paying reads as being charged for nothing — the user has a card statement and a locked feature at the same time, which is the exact shape of a chargeback. |
+| **Never** | Show a second pay button while the first payment is unresolved. |
+| **Always** | Make the success state idempotent — a reload during the gap must not start a second purchase. |
+
+## Session and auth expiry mid-action
+
+Every one of these flows has a step where the user leaves the keyboard: finding a card, asking an
+admin, reading a legal paragraph. Sessions expire in that gap.
+
+- **Re-authenticate in place.** A popup or a nested step that returns to the exact surface. A
+  full-page redirect to `/login` that lands on the app root destroys both the in-escrow work (§4)
+  and the purchase intent in one move.
+- **Never 404 an expired checkout session.** Re-create it with the cart intact and say so (§6).
+- **Never require re-auth to download an invoice PDF** (§7) — the finance person opening it is
+  following an emailed link, weeks later, on a different device.
+- **Warn before you expire.** WCAG 2.2.1: two minutes' notice and a way to extend. A payment form
+  that silently expires while a card is being fetched from a wallet is the version everyone ships.
+
+## Provider outage and webhook loss
+
+Your billing provider will be down or slow while someone is trying to pay.
+
+| Symptom | What the UI must do |
+|---|---|
+| Payment intent creation fails | Say it is your side, not their card: `We couldn't reach our payment processor. Nothing was charged. Try again in a moment.` Never `Payment failed` — that sends them to their bank. |
+| Webhook never arrives | The entitlement gap above, escalated: a support-visible state and an email, not an indefinite spinner. |
+| Provider degraded mid-dunning | Do not escalate the band on a retry that never executed. Retry-count-driven UI must read the retry *result*, not the schedule. |
+| Usage meter ingestion stalled | Show the lag explicitly (`Usage through Sep 8, 23:00 UTC`, §3). A projection computed on stalled data is worse than no projection. |
+
+## Rate limits, throttles and metered streams
+
+Distinct from spend caps (§3), and the distinction is the whole design.
+
+- A **spend cap** is a commercial limit the customer set. Hitting it is an upgrade or a
+  raise-the-cap moment, and the copy is about money.
+- A **rate limit** is an operational or abuse limit you set. Hitting it is not a sales opportunity;
+  selling a higher tier at an abuse throttle prices the abuse. The copy is about time: which limit,
+  the reset as an absolute timestamp, and whether partial work was billed.
+- A limit hit **mid-stream** has to fail inside a response the client is already consuming. Ship the
+  reason in the stream, not only in a header nobody reads, and make the partial-billing answer
+  explicit — "you were charged for the tokens you received" is fine; silence is not.
+
+## Two people acting at once
+
+Billing state is shared and admins act in parallel.
+
+- Two admins editing seats: the second commit must re-preview against current state, not apply a
+  stale delta. This is the same pinning problem as `proration_date` (§9), one layer up.
+- One admin cancels while another upgrades: last write wins is not an answer the customer can read.
+  Show the resulting state and who changed it, in billing history.
+- A member accepts an invite as the workspace crosses its seat ceiling: decide whether acceptance
+  fails or the workspace goes over, and never surface the admin's billing state as an error to the
+  invitee.
+
+## Dates, clocks and renewals
+
+- Every renewal, trial-end and finalisation date the user sees must carry a timezone or be rendered
+  in theirs. `Your trial ends Friday 26 September` is a promise; if it ends at 00:00 UTC that is
+  Thursday evening for a US customer and the charge lands a day "early".
+- Monthly anniversaries on the 29th, 30th and 31st. State the rule you use in the billing page, once.
+- A card that expires *between* the failure and the last retry (§8) is a common real case: the retry
+  schedule outlives the card. Detect it and switch to hard-decline copy early rather than promising
+  eight attempts that cannot succeed.
 
 # Decision procedures
 
@@ -1285,6 +1452,32 @@ Did the user hit a limit while doing something?
 | 12–13 | Red band, `role="alert"` | Names the consequence and its date |
 | 14 | Read-only + export CTA | Reassuring about data, explicit about reactivation |
 | Any day, hard decline | Red band immediately, no retry language | `Your bank blocked this card and won't accept retries.` |
+
+---
+
+
+## Where these rules break
+
+Every fork above has a product where the recommended branch is wrong. The scope is part of the rule;
+a decision procedure that never loses is a decision procedure nobody tested.
+
+| Rule | A product where it is wrong | The scoped version |
+|---|---|---|
+| The limit-reached state is the upgrade page (§4) | An API throttle that exists to stop scrapers. Offering an upgrade at the throttle publishes the price of the abuse. | Only for limits you are willing to sell more of. Operational and abuse limits get a 429 with a reset time and no CTA. |
+| Offer the next plan up at the wall | SSO is Enterprise-only; the wall offers Business; the user pays and hits the same wall. | Offer the cheapest plan that raises *this specific* limit, computed from the entitlement, not from the plan ladder. |
+| Guest checkout, account after payment (§6) | A subscription. There is no product to deliver to a guest — the account *is* the purchase. | One-time commerce only. For subscriptions: email at checkout, password after payment. For B2B: a workspace picker, no guest branch. |
+| One `Full name` field (§6) | Air travel, rail, KYC — the name must match a document and a wrong split is rejected downstream. | Split only when a downstream system will reject a guess, and label `Given name` / `Family name`. |
+| Wallets above the form (§6) | A B2B checkout billed by invoice on net-30 terms; nobody is paying $40k with Apple Pay. | Conditional on availability *and* on the buying motion. For invoiced B2B the top slot is `Pay by invoice`. |
+| Never disable the pay button (§6) | Any checkout without idempotency, where an impatient second click double-charges. | Never disable *before* submit. Always disable *during* the in-flight request, with an idempotency key behind it. |
+| Charge seat additions immediately (§9) | An enterprise on PO and net terms, where an unexpected card charge is an accounts-payable incident. | Decide by billing method: `always_invoice` for self-serve card accounts, `create_prorations` for invoiced accounts. |
+| Credit seat removals to the next invoice (§9) | A customer who is removing seats *because* they are leaving. A credit on an invoice that will never be issued is worth zero. | Ask whether this is a downgrade or an exit, and refund pro-rata for consumer subscriptions where the jurisdiction requires it. |
+| Cancel defaults to period-end (§10) | Usage-based pricing. Remaining active until period end keeps accruing charges, so the "generous" default bills someone after they cancelled. | Default to immediate wherever remaining active can increase the bill; state what happens to in-flight work. |
+| Offer a pause instead of a cancel (§10) | Monitoring, uptime, analytics, backups. A three-month gap in the record makes the product less useful on return than at cancellation. | For continuous-record products, offer a cheaper tier that keeps collecting, never a pause. |
+| Trial the plan they picked (§5) | An enterprise buyer evaluating a product they cannot connect to their IdP without the Enterprise-only SSO. | Trial the tier containing the feature that decides whether evaluation is possible, and name the day-15 difference in advance. |
+| Show the discount as a percentage (§1) | A $2,400/yr plan. "Save 20%" of an unknown base is not a number anyone can feel. | Percentages on cheap plans, absolute amounts once the annual saving exceeds a monthly payment. |
+| CTA above the feature list (§1) | A product whose visitors don't yet know what it does, or where one row (a region, a certification) disqualifies most of them. | Above when the list is a reminder; below when the list is the argument. |
+| Group four plans into two buckets (§2) | Four plans on one ladder for one buyer, where the "two decisions" framing invents a distinction that isn't there. | Group only when two plans genuinely serve different buyers. Otherwise keep them abreast and shorten the lists. |
+| The seat editor is a desktop surface (§9) | Field-service and shift-work products, where the roster changes daily and the manager only has a phone. | Desktop-first only when headcount changes monthly. Phone-first when it changes daily. |
 
 ---
 
@@ -1397,6 +1590,26 @@ Run these against your own implementation. Each is verifiable in a browser or a 
 46. A refunded charge shows the settlement expectation (`5–10 business days`) and the destination
     method in the row, not in a tooltip.
 
+**Cross-flow failures (§12)**
+47. Block the entitlement webhook and complete a purchase. The UI polls the *entitlement*, states
+    `Payment confirmed`, bounds the wait, and offers an email fallback — no infinite spinner, no
+    second pay button.
+48. Reload during that gap. No second charge is started.
+49. Expire the session with the upgrade wall open, then pay. Re-auth happens in place and the
+    in-escrow work survives.
+50. Make the payment provider unreachable at intent creation. The message says nothing was charged
+    and blames your side, not the card.
+51. Trigger a metered rate limit mid-stream. The 429 names the limit, gives an absolute reset time,
+    and states whether partial work was billed. It does *not* offer an upgrade if it is an abuse
+    limit.
+52. Open the seat editor in two tabs and commit both. The second re-previews rather than applying a
+    stale delta.
+53. Revoke a pending invite. The seat is released and the credit is stated in the same interaction.
+54. Set a renewal date to the 31st and advance a month. The billing page states the rule it used.
+55. Render every user-visible billing date in the viewer's timezone, or with an explicit one.
+56. Simulate `authentication_required` on a renewal. The band says the bank needs confirmation and
+    opens the challenge — it does not ask for a new card.
+
 ---
 
 # Sources
@@ -1421,6 +1634,20 @@ Run these against your own implementation. Each is verifiable in a browser or a 
 | `vercel.com/docs/spend-management` | 50/75/100% thresholds; web/email/SMS; pause-all-projects; `503 DEPLOYMENT_PAUSED`; webhook payload `{budgetAmount,currentSpend,teamId,thresholdPercent}`; the two honest disclosures about non-instant pausing and manual per-project resume. | `bpc-vercel-spend-docs-1440.png` |
 | `docs.stripe.com/payments/checkout/pricing-table` | Embeddable pricing table; supported models flat-rate / per-seat / tiered / free trials. | `bpc-stripe-pricingtable-docs-1440.png` |
 
+**Re-verified in the 2026-09 review pass.** Screenshots
+`.cache/shots/billing-plans-and-checkout-v-1…v-8-{1440,390}.png`:
+
+| Claim re-checked | Result |
+|---|---|
+| Stripe Checkout: total above itemisation, `SAVE10` tag chip with `10% off` sub-label, `Tax ⓘ Enter address to calculate`, `Total due`, `Hide ⌃`, Apple Pay above an `OR` divider; 13 toggles + one `Button text` select | Confirmed, string for string, at 1440 and 390 (`v-1`) |
+| Vercel: `$0` / `$20` / `Custom`, `Popular` chip inline with `Pro`, `All Hobby features, plus:`, a distinct icon per feature row, hairline dividers, CTA below the list | Confirmed; mobile is a vertical stack in source order (`v-2`) |
+| Linear: per-column `Billed yearly` switch, `Free for everyone` and `Annual billing only` in that same slot, `250 issues` → `Unlimited issues`, Enterprise column of concrete nouns, no "most popular" | Confirmed; longest column list is 9 rows (`v-3`) |
+| Spotify: `Try 3 months of Premium Individual for $0, then $12.99/month. Cancel anytime.` plus the full material-terms paragraph ending `Offer ends September 23, 2026.` | Confirmed verbatim (`v-4`) |
+| Modal: `Per hour` / `Per second` control, `$0.001972 / sec`, `$0.0000131 / core / sec`, `$0.00000222 / GiB / sec`, `*minimum of 0.125 cores per container` | Confirmed. **New:** the default segment is `Per second`, and at 390 the control scrolls away while the sticky nav pill covers two rate rows (`v-5`, `v-7`) |
+| Notion: `Pay monthly` / `Pay yearly` pill defaulting to yearly, `Save up to 20% with yearly`, `Price in USD`, two narrative cards, `Recommended` on Business, CTA above the list | Confirmed; the chat widget still occludes the feature list at 390 (`v-6`) |
+| OpenAI: `Standard`/`Batch`/`Flex`/`Fast mode`, `Short context` / `Long context` column groups, `Prices per 1M tokens.`, the two dated prose footnotes, last column clipped at 1440 | Confirmed. **Corrected:** the two groups are not a uniform 2× — on `gpt-5.6-sol`, input doubles ($4.00→$8.00) and output rises 1.5× ($20.00→$30.00) (`v-8`) |
+| The four-page accessibility measurement below | Re-run 2026-09; `<table>` 0/0/0/0, `<th>` 0/0/0/0, bare `<svg>` 294/56/199/281 all reproduced exactly. Notion's sticky count drifted 9 → 10 |
+
 **Measured from the live DOM (Playwright, 1440px, 2026-09-09):** across vercel.com/pricing,
 figma.com/pricing, notion.com/pricing and linear.app/pricing — `<table>`: 0/0/0/0; `role="table"`:
 0/1/0/1; `<th>`: 0/0/0/0; `th[scope]`: 0/0/0/0; unlabelled `<svg>` with no sibling text:
@@ -1430,9 +1657,13 @@ font-weight: 450; font-family: GeistSans; letter-spacing: -3.36px`.
 **Research and documentation**
 
 - Baymard Institute, *Cart Abandonment Rate* (aggregate of 50 studies) — 70.22% average; the ten
-  abandonment reasons and their percentages; 12–14 ideal form elements / 7–8 fields vs. a US average
-  of 23.48 elements / 14.88 fields; 35.26% average available conversion uplift; $260bn recoverable.
-  <https://baymard.com/lists/cart-abandonment-rate>
+  abandonment reasons and their percentages; 35.26% average available conversion uplift; $260bn
+  recoverable. <https://baymard.com/lists/cart-abandonment-rate>
+  *Note on the field counts:* two Baymard figures circulate and this file uses the newer one. The
+  older benchmark is 23.48 form **elements** / 14.88 **fields** for an average US checkout against a
+  12–14 element / 7–8 field ideal; the 2024 measurement in the checkout-form-field study is 11.3
+  fields average against 8 achievable. Elements and fields are not the same unit — a state
+  `<select>` and its label are elements — so do not mix the two series.
 - Baymard Institute, *Checkout form field optimization* — 11.3 average fields (2024), 8 achievable
   (−29%); 42% typed full names into "First Name"; 30% hesitated at Address Line 2; adoption gaps of
   89% / 75% / 35% / 24% / 84%; average 5.1 checkout steps.
@@ -1488,3 +1719,80 @@ Management docs) plus the observed public surfaces, and every claim about them i
 Stripe's embedded Checkout iframe would not render under a headless browser at the default wait; the
 live capture required extracting the iframe `src` and loading `checkout.stripe.dev/checkout`
 directly.
+
+
+---
+
+## Review pass (2026-09)
+
+Adversarial pass over the whole file. What changed and why.
+
+**Verified live, in a browser, at 1440 and 390.** Eight surfaces re-walked with
+`tools/shot.mjs` (screenshots `billing-plans-and-checkout-v-1` … `v-8`), plus a re-run of the
+four-page DOM measurement. Everything reproduced except one drift and one imprecision:
+
+- **Stripe Checkout** (`checkout.stripe.dev/checkout`) — confirmed string for string, including
+  `Tax ⓘ  Enter address to calculate`, the `SAVE10` tag chip with `10% off` beneath it, `Total due`,
+  the `Hide ⌃` control, and Apple Pay above an `OR` divider. At 390 the summary is expanded by
+  default with `Hide` present; the wallet button lands at ~650 CSS px.
+- **Vercel, Linear, Notion, Modal, Spotify, OpenAI** — all headline claims confirmed, including
+  Spotify's material-terms paragraph verbatim (`Offer ends September 23, 2026.`), Modal's
+  `*minimum of 0.125 cores per container`, and OpenAI's two dated prose footnotes.
+- **The accessibility measurement re-ran clean**: `<table>` 0/0/0/0 and `<th>` 0/0/0/0 across
+  Vercel, Figma, Notion and Linear; bare unlabelled `<svg>` 294/56/199/281. Figma's single
+  `role="switch"` is still `Show only key features`. Notion's sticky-element count drifted 9 → 10;
+  noted rather than silently updated.
+- **Corrected:** the claim that OpenAI's context groups differ by 2× was too broad. On
+  `gpt-5.6-sol`, input doubles and output rises 1.5×. Fixed in §3.
+- **Reconciled:** two Baymard series (form *elements* vs form *fields*) were being quoted as if they
+  were one. The Sources block now says which is which and warns against mixing them.
+
+**Failure states — the main gap, now filled.** The per-flow state tables were good; the states that
+belong to no single flow were missing entirely. New **§12** covers the gap between "paid" and
+"entitled" (webhook lag, the second-wall-after-paying bug), session and auth expiry mid-action,
+billing-provider outage and lost webhooks, rate limits and metered streams as distinct from spend
+caps, concurrent admin edits, and date/clock/renewal edge cases. Individual states added inside the
+existing sections: session expiry with the upgrade wall open and entitlement lag after payment (§4);
+wallet unavailable, paid-but-unconfirmed, and off-session SCA (§6); `authentication_required` as its
+own dunning band rather than a `stolen_card` lookalike (§8); rate-limited mid-request and
+cap-raised-while-paused (§3); invite revoked or expired before acceptance, and invite accepted after
+a downgrade (§9). Ten new self-check items (47–56) exercise them.
+
+**Mobile — three measured findings replacing assertions.** The 390 sections were the thinnest and
+were mostly rules with no observation behind them. Now: Modal's `Per hour` / `Per second` control is
+not sticky and scrolls away after one screen, while Modal's own floating nav pill covers two rate
+rows — the reference implementation failing this file's rule, which is more useful than the rule
+alone. Spotify's legally-required material-terms paragraph is the last element above the fold, in
+the smallest type, with the floating player control sitting on its corner, and a locale band takes
+the top ~100px. Notion's toggle row collapses correctly into two rows at 390 and keeps `Price in
+USD` — worth naming because the lazy breakpoint deletes exactly that string.
+
+**Decision procedures — every fork now carries its scope.** New *Where these rules break* table:
+fifteen forks, each with a realistic product where the recommended branch is wrong. The two that
+were outright wrong as written rather than merely unscoped: "offer the next plan up" at a limit wall
+(the correct rule is the cheapest plan that raises *that* limit — offering Business to someone who
+hit an Enterprise-only SSO wall sells a support ticket), and "never disable the pay button", which
+conflated *before* submit (never) with *during* the in-flight request (always, plus an idempotency
+key). Scopes also added inline for guest checkout, single-name fields, wallet placement, seat-add
+proration, seat-removal credits, cancellation defaults, pause offers, trial-tier choice, discount
+presentation, CTA placement, and block-vs-warn.
+
+**Cuts.** Sentences true of any product and actionable for none: "This is the genuinely hard one",
+"the gap between those two is where trust dies", "rate cards are the worst thing on a phone", "the
+support thread that follows is not about the price", "this flow is neglected purely because nobody
+is assigned to it", "the pricing page is read once; the usage dashboard is read every month, in
+fear", "every element on the page is either helping them finish or costing conversion". Unsourced
+superlatives were either scoped or given a mechanism: "the single most effective anti-chargeback UI
+element", "the single highest-value rule in this section", "the most common mobile pricing bug in
+the wild", "almost nobody uses it", "worth more than any layout change", "worth more than any copy
+change", "almost every refund UI failure", "this happens more than teams expect", "most users
+hitting the wall cannot buy", "trials with a card convert several times better" (direction kept,
+the vendor-benchmark magnitude dropped). The Apple Pay and Stripe Link figures were repeated in
+three places and two; they now live once, in §6, cross-referenced.
+
+**Still unverified, and marked as such.** In-product billing settings, seat editors, dunning bands,
+proration previews and cancellation flows for Linear, Notion, Figma and Shopify remain behind
+authenticated paywalls; those sections are built from vendor documentation, as the Sources block
+already stated. The legal timeline (FTC vacatur, ANPRM, CARL, §312k BGB, Directive 2023/2673) is
+from law-firm client alerts, not primary sources, and is the part of this file most likely to be
+stale first — re-check the FTC's replacement rule before relying on the federal position.

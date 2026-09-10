@@ -1,6 +1,7 @@
 # AI interaction flows: chat, generation, agents, trust
 
-**Evaluated:** 2026-09
+**Evaluated:** 2026-09 · **Adversarially reviewed and re-verified:** 2026-09 (see
+[Review pass](#review-pass-2026-09) at the end for what was corrected, cut and added)
 
 Walked: v0.app (desktop + mobile), t3.chat (desktop + mobile), Linear for Agents, Notion AI,
 Granola, Raycast AI, Vercel AI Elements (19 component pages with live previews), Streamdown,
@@ -13,8 +14,8 @@ libraries that clone them, and are marked as such.
 
 ## If you only get five things right
 
-1. **The confirmation before a side effect is the whole product.** Everything else in this
-   document is polish. Show the *literal artifact* the action will produce — the actual recipient
+1. **The confirmation before a side effect is the whole product.** Show the *literal artifact*
+   the action will produce — the actual recipient
    and subject line, the actual SQL, the actual file path, the actual dollar amount — not a
    sentence describing it. Claude Code's rule is the one to steal: it offers "don't ask again"
    **only when the prompt can render everything that option would allow**. A command too long to
@@ -28,8 +29,8 @@ libraries that clone them, and are marked as such.
    spinner" loses the two states that matter: *waiting on you* and *refused*.
 
 3. **Stream at the word, not the token, with a 150ms per-word fade.** Streamdown's default is a
-   per-word `fadeIn` at 150ms `ease`; the AI SDK's `smoothStream` buffers to word chunks with a
-   10ms release delay. Both exist because raw SSE arrives in ragged batches and looks broken.
+   per-word `fadeIn` with a 150ms default duration; the AI SDK's `smoothStream` buffers to word
+   chunks with a 10ms release delay. Both exist because raw SSE arrives in ragged batches and looks broken.
    Vercel ships a `blurIn` variant specifically for fast models, because "the blur masks the batch
    appearance better than pure opacity." Then remove the animation wrappers entirely when the
    stream ends — a finished message should have zero animation DOM.
@@ -74,9 +75,14 @@ user can read without arithmetic. It survives the mobile collapse (the model chi
 the `(0905)` version string and keeps `Kimi K2 $$`), which tells you the team ranked cost
 legibility above version precision.
 
-**v0.app** (walked). Placeholder `Ask v0 to build…`, model selector bottom-left as `⊙ v0 Max ⌄`,
-mic bottom-right. On 390px the model selector loses its **label entirely** — just the provider
-glyph and a chevron. That is the right call: on mobile the model is a setting, not a decision.
+**v0.app** (re-walked 2026-09, 1440 and 390). Placeholder `Ask v0 to build…`, model selector
+bottom-left as `⊙ v0 Max ⌄`, mic bottom-right. The detail worth stealing: **there is no send button
+at rest.** The mic occupies that slot until you type, so an empty composer offers dictation instead
+of a dead disabled arrow. t3 takes the opposite bet — a permanently visible, permanently disabled
+send arrow. v0's is the better one: the disabled control teaches nothing, the mic is a second way in.
+
+On 390px the model selector loses its **label entirely** — just the provider glyph and a chevron.
+That is the right call: on mobile the model is a setting, not a decision.
 
 **AI Elements `PromptInput`** (walked) formalizes the anatomy: `PromptInputHeader` (attachment
 chips), `PromptInputBody` (textarea), `PromptInputFooter` → `PromptInputTools` (action menu with
@@ -91,11 +97,11 @@ two variants, chosen by location.
 |---|---|---|
 | Enter vs Shift+Enter | **Enter sends, Shift+Enter newlines** on desktop chat. Invert only if your primary artifact is long-form. | Universal now. Breaking it costs more than any newline convenience buys. |
 | Enter while the agent is working | **Cursor inverts it: Enter queues, Cmd+Enter sends immediately.** | Once responses take minutes, the common intent is "add this to the list", not "interrupt". Cursor's immediate message is *appended to the most recent user message* rather than starting a new turn. |
-| Textarea min-height | Reserve 2–3 lines even when empty (v0 does; t3 does) | Prevents the toolbar row from jumping down on the first wrapped line — the single most common composer jank. |
+| Textarea min-height | Reserve 2–3 lines even when empty (v0 does; t3 does) | Prevents the toolbar row from jumping down on the first wrapped line. |
 | Textarea max-height | Cap at ~40% of viewport, then scroll internally | A pasted stack trace must not push the send button off screen. |
 | Model selector | Command palette with fuzzy search once you exceed ~6 models (AI Elements' `ModelSelector` is `cmdk`-based, grouped by provider); a plain chip below that | A `<select>` of 30 model IDs is unusable and untypeable. |
 | Where model/mode live | **Inside the composer border, bottom-left.** | It's a property of the message you're about to send, not of the app. Putting it in a top nav makes people forget which model answered. |
-| Slash commands | Trigger on `/` **only at position 0** of an empty composer | `/` mid-sentence is a date, a path, or a fraction. Triggering there is the most common false-positive in AI composers. |
+| Slash commands | Trigger on `/` **only at position 0** of an empty composer | `src/app`, `1/2` and `24/7` all carry a `/` the user did not mean as a command. |
 | `@` mentions | Trigger on `@` at any word boundary; search across *all* attachable context in one list, not a submenu per type | Linear's picker returns humans and agents in one "Users" list. Cursor's returns files, folders, docs, `@Branch`, and web in one list. A user who has to first pick a category has to know your taxonomy. |
 | Token/cost display | A ring, not a number, and only past ~50% | See §Context below. |
 
@@ -123,7 +129,7 @@ ration their questions, which is the opposite of what you want in month one.
   be dropped: `This thread is near its limit. Older messages will be summarized.` Discovering it
   after the send is the failure users describe as "it forgot everything."
 - **Offline / send failed** → keep the text in the field. Never clear the composer optimistically
-  before the request is accepted. The single most-hated bug in this category.
+  before the request is accepted; the text exists nowhere else and the user cannot get it back.
 
 ### Mobile
 
@@ -143,8 +149,8 @@ Present it as a sheet from the bottom that pushes the keyboard down.
 - The textarea is a real `<textarea>` with an accessible name, not a `contenteditable` div. If you
   need rich mentions, use `contenteditable` with `role="textbox" aria-multiline="true"` and accept
   that you now owe an IME test on Japanese and Korean input — Enter-to-send fires on the *commit*
-  keypress of an IME composition unless you check `event.isComposing`. This is the single most
-  common accessibility bug in AI composers and it makes the product unusable in CJK.
+  keypress of an IME composition unless you check `event.isComposing`. Without the check, every
+  Japanese and Korean user sends a half-converted message on their first candidate selection.
 - Slash/`@` popovers are `role="listbox"` with `aria-activedescendant` on the textarea. The
   textarea keeps focus throughout; focus must never move into the popover.
 - Send button has a text label available to screen readers even when it renders as an arrow glyph,
@@ -189,10 +195,15 @@ divided list — `How does AI work?`, `Are black holes real?`, `How many Rs are 
 "strawberry"?`, `What is the meaning of life?`. The list rows are plain text with hairline
 dividers, not cards. Picking a category swaps the four examples.
 
-**v0.app** (walked): `What do you want to create?` plus four *artifact-shaped* suggestions —
-`Contact Form`, `Image Editor`, `Mini Game`, `Finance Calculator` — each with an icon, followed by
-a **circular refresh button** that reshuffles the four. Then, below the fold, a real gallery of
-community templates with author avatars and fork counts (`6.6K` uses, `729` likes).
+**v0.app** (re-walked 2026-09): `What do you want to create?` plus four *artifact-shaped*
+suggestions — `Contact Form`, `Image Editor`, `Mini Game`, `Finance Calculator` — each with an icon,
+followed by a **circular refresh button** that reshuffles the four. Then `Start with a template`:
+a filterable gallery (`Apps and Games` / `Landing Pages` / `Components` / `Dashboards`) of community
+work with author avatars and real counts (`6.6K` uses, `729` likes on the top card).
+
+The counts are the load-bearing part. A suggestion chip asserts the product can do a thing; a
+template with 14.4K uses and a screenshot proves it, and shows what the output looks like before
+the user spends a prompt finding out.
 
 Two different products, two correct and opposite answers. v0's suggestions are *nouns* because v0
 builds things. t3's are *questions* because t3 answers things. Copy the structure, not the strings.
@@ -275,7 +286,7 @@ how much they matter:
 
 1. **Per-word `<span>` mount animation.** A rehype transformer splits each text node into
    per-word spans carrying `data-sd-animate`. React's reconciliation means only newly-mounted
-   spans animate. Default: `fadeIn`, **150ms**, `ease`. Alternatives: `blurIn` (opacity + blur;
+   spans animate. Default: `fadeIn`, **150ms**. Alternatives: `blurIn` (opacity + blur;
    documented as the choice for fast models because "the blur masks the batch appearance better
    than pure opacity") and `slideUp` (fade + 4px rise).
 2. **The animation is removed entirely when streaming stops.** `isAnimating={false}` excludes the
@@ -292,9 +303,12 @@ how much they matter:
    the closing fence arrives. Streamdown closes the block speculatively so it renders as code the
    whole time. The same applies to a half-typed `**bold`, an unclosed link `[text](htt`, and an
    unclosed table row.
-6. **Caret.** Two built-in styles — block `▋` and circle `●` — auto-positioned at the end of the
-   last rendered element, shown only while `isAnimating`. The circle is the better default for
-   prose; the block reads as a terminal.
+6. **Caret, and the caret gotcha.** Two built-in styles — block `▋` and circle `●` —
+   auto-positioned at the end of the last rendered element, shown only while `isAnimating`. The
+   circle is the better default for prose; the block reads as a terminal. But the renderer, in its
+   own words, "doesn't know about roles or message ordering," so you scope the caret per message
+   yourself — `caret={isAssistant && isLast ? 'circle' : undefined}`. Skip that and every assistant
+   message in the transcript grows a cursor at once.
 7. **Link safety.** External links open a confirmation modal showing the full URL with `Copy link`
    / `Open link`, enabled *by default*, with an `onLinkCheck` safelist hook. This is a
    prompt-injection control, not a nicety: a model that was fed a poisoned page can emit a link,
@@ -305,7 +319,7 @@ how much they matter:
 | Fork | Answer |
 |---|---|
 | Character-by-character or word-by-word? | **Word.** `smoothStream`'s default chunking is `'word'` with `delayInMs: 10`. Character-level looks like a typewriter gimmick and triples the DOM churn. |
-| CJK? | `'word'` chunking is documented as broken for CJK. Use `Intl.Segmenter` chunking for Chinese, Japanese, Korean, Vietnamese, Thai. Shipping word-chunking to a CJK market means the whole paragraph appears at once. |
+| CJK? | **Two independent bugs; fixing one does not fix the other.** (a) *Chunking:* `smoothStream`'s `'word'` mode is documented as not working for languages that don't delimit words with spaces — Chinese, Japanese, Korean, Vietnamese, Thai — so the paragraph lands in one block. Pass a locale `Intl.Segmenter` instead. (b) *Parsing:* CommonMark fails to close emphasis adjacent to ideographic punctuation, so `**太字**。` renders as literal asterisks mid-answer. Streamdown ships `@streamdown/cjk` (remark-cjk-friendly) for exactly this. |
 | Should markdown reflow mid-stream? | **Yes, but only forward.** Speculatively close open blocks so a paragraph never *becomes* a code block retroactively. The unacceptable case is text that has already been read moving. |
 | Cursor treatment | A caret at the tail while streaming, removed on completion. Do not blink it faster than 1Hz and honor `prefers-reduced-motion` by rendering it static. |
 | Autoscroll | Follow the stream **only if the user is already at the bottom** (within ~40px). The instant they scroll up, stop following and show a `Scroll to bottom` pill — AI Elements' `Conversation` ships exactly this: auto-scroll plus a button "that appears when not at the bottom". |
@@ -428,9 +442,13 @@ a tool hangs, the user needs to know which. `Denied` must remain visible in the 
 forever: a conversation where a rejected action silently vanishes is one where the user can't
 verify their own refusal held.
 
-Default collapse behavior, from the docs: `Completed` and `Error` collapse; `Awaiting Approval`
-and `Running` stay open. That is the correct rule generalized — **collapse the past, expand the
-present, and never collapse anything waiting on the user.**
+**Correction from this pass: AI Elements does not ship the collapse rule the previous pass
+attributed to it.** In the live preview (re-walked 2026-09, 1440 and 390) the only expanded row is
+`Pending` — input still streaming — while `Awaiting Approval`, `Responded`, `Running`, `Completed`
+and `Error` are all collapsed, including the one blocked on the user. Build the rule yourself:
+**collapse the past, expand the present, and never collapse anything waiting on the user or
+anything that failed.** Copying the demo's default buries the approval that is holding up the run
+behind a chevron.
 
 **AI Elements `Reasoning`** (walked): "automatically opening during streaming and closing when
 finished." Trigger line reads `Thought for a few seconds`. One important note buried in its docs:
@@ -485,8 +503,12 @@ information; a generic `Searching…` is not.
 
 ### Mobile
 
-Tool rows are the first thing to over-narrow. On 390px: keep the status pill, keep the tool name,
-drop the parameters preview from the collapsed row entirely. Never truncate a file path from the
+Tool rows are the first thing to over-narrow, and AI Elements shows the limit rather than
+avoiding it: at 390px the `database_query` + `Awaiting Approval` row has *zero* gap left between
+name and pill — on a 14-character tool name and a two-word status. `search_customer_records` does
+not fit. Budget accordingly: on 390px keep the status pill, keep the tool name, drop the parameters
+preview from the collapsed row entirely, and shorten the *status label* before the tool name
+(`Awaiting` beside an amber clock still reads; `datab…query` does not). Never truncate a file path from the
 right — `src/components/settings/Billin…` is useless; truncate from the *left*
 (`…/settings/BillingForm.tsx`) so the filename survives.
 
@@ -588,14 +610,14 @@ same object.
 ### Mobile
 
 Hover cards do not exist. On touch, an inline pill must open a **bottom sheet** with title,
-domain, snippet, and `Open`. Do not make the pill a direct navigation — a mis-tap on a 20px pill
-that yanks the user to an external site mid-read is the most common citation complaint on mobile.
-Make the pill's tap target ≥44px even though its visual is smaller.
+domain, snippet, and `Open`. Do not make the pill a direct navigation: a mis-tap on a 20px pill leaves the product, and coming
+back restores the thread at the top, not at the sentence being read. Make the pill's tap target
+≥44px even though its visual is smaller.
 
 ### Accessibility
 
 - The pill is a `<button>` (opens a card) or an `<a>` (navigates) — not a `<span>` with an
-  onClick, which is the most common implementation and is invisible to keyboard users.
+  onClick, which no keyboard and no screen reader can reach.
 - Accessible name must be the source, not the marker: `aria-label="Source: stripe.com, Pricing
   and fees"`. A screen reader announcing "link, 3" fourteen times in a paragraph is why users turn
   citations off.
@@ -613,8 +635,8 @@ Make the pill's tap target ≥44px even though its visual is smaller.
 ### How it goes wrong
 
 A `Sources:` heading at the bottom followed by twelve bare URLs, none of which map to any sentence.
-Or superscript numbers that link nowhere. Or — the worst and most common — citations the model
-generated as *text*, never validated against a real retrieval result, so `[2]` points at a URL that
+Or superscript numbers that link nowhere. Or citations the model generated as *text*, never
+validated against a real retrieval result, so `[2]` points at a URL that
 does not exist. If your citations are not derived from actual retrieval metadata, do not render
 them at all; a fabricated citation is a lie with a UI affordance attached.
 
@@ -622,8 +644,9 @@ them at all; a fabricated citation is a lie with a UI affordance attached.
 
 ## 6. Confirmation before side effects
 
-**The single most important pattern in this document.** Everything else degrades gracefully.
-This one fails catastrophically: an agent sends the wrong email once and the account is gone.
+**The single most important pattern in this document.** Every other failure here is recoverable
+inside your product. This one lands outside it — a sent email, a charged card, a dropped table —
+where your undo does not reach.
 
 ### The job
 
@@ -665,9 +688,14 @@ critically, deny/ask rules "apply when any subcommand matches them, including a 
 inside a subshell, a command substitution, or a control-flow body." An approval cannot be smuggled
 through `$(...)`.
 
-**4. Rejection carries a reason.** On Yes or No, `Tab` opens a comment field so the user can tell
-the agent what to do instead, submitted with the answer. Rejecting without being able to say why
-forces a second round-trip and is why users pick "approve" out of fatigue.
+**4. Rejection carries a reason, and the reason is what keeps the agent alive.** On Yes or No,
+`Tab` opens a comment field submitted with the answer. `Yes` delivers the note after the result;
+`No` delivers it as the reason for the denial and **the agent keeps working** — while a bare `No`
+with no comment, from the main conversation, **stops the turn**. That asymmetry is the whole
+mechanism: the cheapest path back into flow is to say why you refused, so the interface stops
+being a gate and starts being a steering wheel. Note also where the field is deliberately absent —
+WebFetch and browser prompts, and any option that saves a rule or grants for the session. You may
+annotate one decision; you may not annotate a standing grant.
 
 **5. Modes are a first-class concept, not a settings toggle:** Manual (ask), `acceptEdits`
 (auto-accept file edits and `mkdir`/`touch`/`mv`/`cp` within the working directory),
@@ -681,8 +709,10 @@ still prompt. **There is always a floor.**
 request sentence with the *literal target inlined as code* — `This tool wants to delete the file
 /tmp/example.txt. Do you approve this action?` — and two buttons right-aligned: `Reject` (outline)
 and `Approve` (solid). Post-decision it collapses to `You approved this tool execution` /
-`You rejected this tool execution`. States: `approval-requested`, `approval-responded`,
-`output-denied`, `output-available`.
+`You rejected this tool execution`. The page documents three example states — Approval Request,
+Approved, Rejected — rendered by `ConfirmationRequest` / `ConfirmationAccepted` /
+`ConfirmationRejected`, driven by the AI SDK `ToolUIPart` states (`approval-requested`,
+`approval-responded`, `output-denied`, `output-available`).
 
 **And here is what's wrong with it, precisely** — use it as the diagnostic for your own:
 
@@ -737,10 +767,12 @@ This is where products fail hardest, because the naive design is a queue of iden
   pattern in agent UX is "Approve all" positioned as the primary on a batch the user hasn't read.
   If you offer `Approve all`, it must be secondary and it must require the user to have expanded
   at least one row.
-- **A pending-actions inbox** for anything asynchronous. Linear's agent view groups sessions by
-  status with counts — `In progress`, `Needs information · 2` — which is exactly the right shape:
-  the agent's blocked work is a *list with a count*, surfaced outside the conversation, so it
-  doesn't depend on the user having the thread open.
+- **A pending-actions inbox** for anything asynchronous. Linear's agent inbox (re-walked 2026-09)
+  groups work under `Assigned` / `Created` tabs with a collapsible `In progress` group of issue
+  rows. *The `Needs information · 2` count cited in the previous pass was not visible on
+  `linear.app/agents` this time — treat the count as the recommendation, not as observed Linear
+  behavior.* The shape is what matters: the agent's blocked work is a **list with a count**,
+  surfaced outside the conversation, so it doesn't depend on the user having the thread open.
 - **Expire pending approvals.** An approval request that has sat for 3 days should expire with a
   visible `Expired — the agent stopped waiting`, not execute when someone finally clicks it.
 
@@ -905,14 +937,17 @@ wants the chat to remain the primary surface because that's where the next promp
 
 ### When output should leave the stream
 
-Promote to a side panel when **two or more** hold:
+Score it — the criteria are not equal weight, and an unweighted count gets this wrong:
 
-- The output will be **iterated** rather than read once (code, a doc, a design).
-- It exceeds roughly **one viewport** of the chat column.
-- It has its own **actions** (run, download, deploy, copy-as-file).
-- It will be **referenced while typing the next message** — this is the decisive one. If the user
-  must see it *and* the composer simultaneously, it cannot live in the scroll.
-- It has **versions** the user will compare.
+- **Iterated** rather than read once — code, a doc, a design. **+2**
+- **Referenced while typing the next message.** If the user must see it *and* the composer at the
+  same time, it cannot live in the scroll. **+2**
+- Exceeds roughly **one viewport** of the chat column. **+1**
+- Has its own **actions** — run, download, deploy, copy-as-file. **+1**
+- Has **versions** the user will compare. **+1**
+
+**Three or more → panel. Under three → inline.** Note what that excludes: a long output with a
+download button scores 2 and stays inline, correctly — length alone has never justified a pane.
 
 Keep it inline when it's a snippet, a table, a single image, or anything the user will read once
 and move past. Promoting a 6-line function to a panel is worse than leaving it — it costs a
@@ -1043,8 +1078,8 @@ guidance to revert and refine the plan rather than fix mid-implementation.
 
 **Linear's agent sessions** (walked): a floating panel with minimize / expand / close, agent name +
 model badge (`Opus 5`), and — the detail worth copying — a line under the user's message reading
-`⚓ API launch  added to context` before `Thinking...`. **Show what was auto-attached, as its own
-line, before the work starts.** It's the cheapest correction opportunity in the whole flow.
+`⚓ API launch  added to context` — a dimmed line of its own, under the prompt and above any
+output. **Show what was auto-attached, as its own line, before the work starts.** It's the cheapest correction opportunity in the whole flow.
 
 ### What to show, by elapsed time
 
@@ -1078,7 +1113,7 @@ it isn't, show only elapsed and the current step.
   it to the sessions list with a count (Linear: `Needs information · 2`) and notify.
 - **Agent is looping** (same tool, same args, 3+ times) — detect it and surface it:
   `Retried the same search 3 times.` with a stop suggestion. Users watching an agent loop for ten
-  minutes is a support ticket every time.
+  minutes arrives as a support ticket, not a bug report.
 - **Agent finished but the result is empty** — say so explicitly rather than showing a completed
   checklist with no output.
 - **Rate-limited mid-run** — pause, don't fail. Show `Paused — rate limited. Resuming at 3:14 PM.`
@@ -1131,7 +1166,7 @@ different actions and a generic error supports none of them.
 The business wants failures to not read as brokenness. The resolution is **specificity**: a precise
 limit stated plainly reads as a working system with a boundary; a vague error reads as a bug.
 
-### The taxonomy, and what each needs
+### Taxonomy A: failures before anything happened
 
 | Failure | What the user must learn | Required affordance |
 |---|---|---|
@@ -1142,6 +1177,73 @@ limit stated plainly reads as a working system with a boundary; a vague error re
 | **Model overloaded** | It's transient | Auto-retry with visible backoff, then a model switch |
 | **Network/stream drop** | The partial is preserved | Retry that resumes, not restarts |
 | **Content filter on output** | Which part was blocked | The un-blocked portion, still visible |
+
+Nothing in that table costs the user anything but time. The next one does.
+
+### Taxonomy B: failures *after* the user said yes
+
+This is the half most products have no design for, and it is the half where the money is. Every row
+below is a state in which **consent exists and execution did not follow**. Collapsing any of them
+into a generic error destroys the most important fact in the transcript — that the user agreed to
+this — and every one of them destroyed makes the next approval harder to get.
+
+| Failure | Why it is its own state | Render |
+|---|---|---|
+| **Auth expired between approval and execution** | The user's session, not the agent, is the problem | Re-auth in place, then resume *that* pending action |
+| **Payment declined** | The decline code names a different user action each time | The code, the amount that did *not* move, no auto-retry |
+| **Grant revoked mid-run** | Retry can never succeed | Who revoked what and when; halt; request-access, no retry |
+| **429 arriving mid-stream** | There is already text on screen | Paused, not failed; partial kept; absolute resume time |
+| **Partial batch success** | "Error" and "Done" are both lies | Per-row terminal status; retry scoped to the failures |
+| **Payload went stale while pending** | Consent was to a payload, not to an instruction | Re-validate at execution; if changed, stop and re-ask |
+| **Upstream provider incident** | It is not their quota and not their fault | Name the layer; offer the other provider |
+
+**Auth expiry mid-action.** The user approved `Send invoice to acme.com` at 2:11. The OAuth token
+expired at 2:12. The send failed at 2:13. Three rules. (a) The payload survives: re-auth returns to
+*this* pending action, not to a fresh thread. (b) The re-auth prompt names the work it unblocks —
+`Reconnect Gmail to send the invoice you approved at 2:11 PM`, not `Session expired`. (c) The run
+must survive the redirect. An agent tied to the page's socket dies when OAuth navigates away, and
+the user returns to an empty thread having approved something that never happened. Expire a token
+mid-run and watch what your product does; almost nothing survives it the first time.
+
+**Payment declined after approval.** The confirmation showed `$1,240.00`; the charge returned
+`card_declined`. The decline code is the whole message, because each one implies a different user
+action: `insufficient_funds` → another card, `expired_card` → update the card, `do_not_honor` → the
+issuer, which the product cannot fix and should not pretend to. State the amount that was **not**
+charged, or the user will see the pending authorization hold on their statement and open a dispute.
+And never auto-retry a card: a retried soft decline is how one purchase becomes two.
+
+**Grant revoked mid-run.** The connector was disconnected, the admin removed the app, the invite
+the agent was acting under was rescinded, the agent was removed from the workspace. What makes this
+its own state is that **retry will never work**, so a retry button is a lie that costs the user
+three clicks to discover. Name what was revoked and, if you know, by whom and when
+(`Your admin disconnected Gmail at 9:42 AM`). Halt and keep the completed work — do not roll back
+six successful steps because the seventh lost its grant. The only honest action is request-access.
+
+**Rate-limited mid-stream.** A 429 on token 400 is a different problem from a 429 before send,
+because there is already an answer on screen and it is probably good. Pause, do not fail: keep the
+partial, switch the caret to a static paused variant, and show
+`Paused — rate limited. Resuming at 3:14 PM.` with auto-resume. If you genuinely cannot resume
+mid-completion, say so *before* discarding anything: `Can't resume from here — [Retry from the start]`,
+so the user knows the second answer will not be the first one continued. Replacing 400 good words
+with a red box is the version everyone ships and the version everyone complains about.
+
+**Partial batch success.** Four emails approved: two sent, one bounced, one still queued. Lead with
+the number — `2 of 4 sent` — give every row a terminal status, and scope retry to the failures
+only. This is where idempotency stops being a backend concern: a single `Retry` on a partial batch
+re-sends the two that already landed, and a user who double-sends to a customer once stops
+approving batches forever.
+
+**The payload went stale while the approval was pending.** The request sat 40 minutes; the issue
+was closed, the row was deleted, the price changed, the recipient left the company. Re-validate at
+execution time, not at approval time, and when it no longer matches, refuse to execute:
+`The total changed from $1,240.00 to $1,395.00 since you approved this. [Review again]`. An
+approval is consent to a specific payload, not a standing instruction. (§6 covers the related case:
+an approval that has sat long enough should expire rather than fire.)
+
+**Upstream vs. you.** `The model provider is having an incident`, `You've hit your limit`, and
+`Our API is down` are three different sentences, with three different user actions, that a shared
+`Something went wrong` collapses into "this product is broken." Name the layer. When it is the
+provider, the answer is the other provider, offered inline.
 
 ### Refusals
 
@@ -1190,8 +1292,7 @@ What works, in order of preference:
 1. **Ground it and cite it** (§5). A citation is a better uncertainty signal than any hedge,
    because it's checkable.
 2. **Say what wasn't found**, explicitly: `I couldn't find anything in your workspace about Q3
-   pricing — this is from general knowledge.` This is the single most valuable sentence in a
-   RAG product and most of them don't emit it.
+   pricing — this is from general knowledge.` Most RAG products never emit it.
 3. **Scope the claim in the prose**: `As of my training data` / `The 2024 filing says X; I don't
    have 2025.`
 4. **Do not render a confidence percentage.** A model's self-reported "87% confident" is not
@@ -1210,12 +1311,26 @@ What works, in order of preference:
   model] [Report]`. Infinite silent retry burns quota and looks like a hang.
 - **Degraded mode** (search down, one connector failing) → answer with what works and name the gap:
   `Web search is unavailable right now — answering from what I know.`
+- **The failure lands after the user left the page** → the outcome has to exist somewhere they will
+  find it: the sessions list, a notification, an email. A failure that only ever rendered into a
+  tab nobody has open did not get reported.
+- **Retry that would re-run a side effect** → the retry button must carry the idempotency key of
+  the original attempt, and must say what it will not repeat: `Retry the 1 that failed` beats
+  `Retry`.
 
 ### Mobile
 
 Errors must not be toasts on mobile — they're missed, and the retry affordance goes with them.
 Render inline in the transcript with a full-width retry button. A rate-limit reset time must be
 readable without expanding anything.
+
+The post-approval failures are worse on mobile for one structural reason: **the recovery usually
+requires leaving the app.** Re-auth opens a browser, a declined card opens the wallet, a revoked
+grant needs an admin in Slack. Each of those is an app switch, and iOS may evict your tab. So:
+persist the pending action server-side before you send anyone to a redirect, resume by URL rather
+than by in-memory state, and make the return landing show the pending action first, not the top of
+the thread. A confirmation the user has to scroll back up to find, after an OAuth round trip, is
+one they abandon.
 
 ### Accessibility
 
@@ -1236,6 +1351,11 @@ readable without expanding anything.
 | `Context length exceeded` | `This thread is too long to continue. [Start a new chat with a summary]` |
 | `I'm sorry, I cannot help with that.` | `I can't give medical dosing advice. I can explain what the study you linked found.` |
 | `AI can make mistakes.` (under every message) | per-claim citations |
+| `Payment failed` | `Card declined — insufficient funds. $1,240.00 was not charged. [Try another card]` |
+| `Session expired` | `Reconnect Gmail to send the invoice you approved at 2:11 PM. [Reconnect]` |
+| `Error` (on a batch) | `2 of 4 sent. 1 bounced (mailbox full), 1 queued. [Retry the 1 that failed]` |
+| `Access denied` | `Your admin disconnected Gmail at 9:42 AM. [Request access]` — and no retry button |
+| `Rate limited` (mid-stream) | `Paused — rate limited. Resuming at 3:14 PM.` with the partial still on screen |
 
 ### How it goes wrong
 
@@ -1244,6 +1364,14 @@ a warning triangle. A rate limit expressed as a duration, or not at all. Silent 
 Infinite auto-retry with no visible attempt count. A confidence percentage. The composer clearing
 on failure so the user's message is gone. And the compound failure: a generic error that also
 deletes the partial response, so the user loses both the answer and the prompt.
+
+After the yes, it gets worse. `Session expired — please log in again`, which drops the approved
+action on the floor. A `Retry` button on a revoked grant that can only ever fail. A batch that
+reports `Error` when three of four succeeded, then re-sends all four when the user clicks retry. A
+declined card reported as `Payment failed` with no code, so the user cannot tell whether to try
+another card or call their bank, and no statement that nothing was charged. A 429 mid-stream that
+discards 400 words of a finished-looking answer. And the one that ends the account: an approval
+that executes against a payload that changed while it was pending.
 
 ---
 
@@ -1279,7 +1407,10 @@ Walked. Four decisions, each of which is the integration answer:
    `Cursor linked Restore User Presence · 3min ago`. No separate "AI activity" tab. This is what
    makes an agent auditable by a teammate who wasn't watching.
 4. **Context attribution is explicit and pre-emptive.** The session panel shows
-   `⚓ API launch  added to context` under the user's message, before `Thinking...`.
+   `⚓ API launch  added to context` as a dimmed line under the user's message, before any output.
+   Re-walked 2026-09: the same pattern runs across every session in the strip — `Mobile Triage
+   added to context`, `Notification Grouping added to context`, `ENG-2844 added to context`. One
+   grammar, one slot, every time.
 
 The session panel itself is a floating window with minimize / expand / close — not a docked drawer
 — and its composer has a `Skills ⌄` selector where a chat product would put a model selector.
@@ -1389,17 +1520,22 @@ One-handed, in a hurry, on an unreliable connection, with 40% of the screen take
 - **Enter inserts a newline; a send button sends.** On a touch keyboard the return key is a
   newline. Enter-to-send on mobile causes constant accidental sends.
 - **Composer position in the empty state:** t3.chat centers it vertically rather than pinning it to
-  the bottom (walked, 390px), so the pre-keyboard and post-keyboard layouts are close together.
-- **Control budget:** model chip + one `+` + send. Everything else goes in the `+` sheet.
-  (t3.chat collapses `Instant`/`Search`/`Attach` into `+`; v0 drops the model label entirely.)
-- **Suggestions:** t3.chat drops both suggestion tiers on mobile. If you keep them, three max, one
-  line each.
-- **Message actions:** long-press → sheet, not a hover row.
-- **Citations:** tap → bottom sheet, never direct navigation.
-- **Artifacts:** full-screen sheet with a drag handle and a route back to the composer.
-- **Approvals:** stacked full-width buttons, destructive on top, 16px gap, and never in the position
-  the send button just occupied.
-- **Agent sessions:** a task list, not a conversation list; push notification carrying the outcome.
+  the bottom (re-walked 2026-09 at 390), so the pre-keyboard and post-keyboard layouts are a short
+  transition apart. Neither t3 nor v0 bottom-pins an *empty* composer; both leave the bottom third
+  free for the keyboard that is about to arrive.
+- **Control budget:** model chip + one `+` + send. Two placement details from the re-walk, both
+  worth copying. t3 puts the `+` **leading** — left of the model chip, at the thumb's inner reach —
+  rather than trailing next to send, where a mis-tap costs an accidental send. And t3 does not
+  collapse its mode switcher into the `+` sheet: it promotes `Chat ⌄` out of the composer entirely,
+  into the center of the top bar. When one control cannot survive the collapse, move it up, don't
+  bury it.
+- **Model chip:** t3 drops the version string and keeps the cost glyph — `Kimi K2 (0905) $$·`
+  becomes `Kimi K2 $$·`. v0 drops the label and keeps the glyph. Both teams chose *what the control
+  is for* over *what the control is named*.
+
+Everything else that is mobile-specific is stated where it belongs and indexed here rather than
+repeated: suggestions §2, streaming and scroll §3, tool rows §4, citation sheets §5, approvals §6,
+message actions §7, artifact sheets §8, agent sessions §9, post-approval recovery §10.
 
 ### States specific to mobile
 
@@ -1420,15 +1556,42 @@ One-handed, in a hurry, on an unreliable connection, with 40% of the screen take
 - VoiceOver rotor should be able to move by message: each message a `<article>` with a heading or
   label naming the speaker.
 
+### Copy
+
+Shorter everywhere. `Attach` not `Attach a file`. `Resets at 3:00 PM` not `You have reached your
+usage limit and will be able to send messages again at 3:00 PM`. The model chip shows the name and
+nothing else. Any string that wraps to three lines on 390px is too long for a control.
+
+### How it goes wrong
+
+`100vh` so the composer sits under the keyboard. Enter bound to send, so every attempt at a second
+paragraph fires a message. A 28px send button. Hover-only message actions, which means no message
+actions. Citation pills that navigate away on a mis-tap. A full-screen artifact route with no path
+back to the composer. Errors as toasts that vanish before a thumb reaches them. And a desktop
+composer scaled down: four toolbar chips, a model dropdown with the full version string, and a
+suggestion grid, all squeezed into 390px.
+
 ---
 
 ## Decision procedures
+
+Each fork below carries the product where its recommended branch is wrong. A procedure without a
+scope is a superstition, and every one of these has an edge where following it produces a worse
+interface than ignoring it.
 
 **Should this be a chat interface at all?**
 If the user's input is a *choice among known options*, it's a form or a menu, not a prompt. If it's
 an open-ended intent in their own words, chat earns its place. If it's a transformation of an
 object they already have (summarize this, rewrite this, tag these), it's an inline action on that
 object — Granola, not ChatGPT. If they'll do it once a quarter, it's a command palette entry.
+→ **Wrong when the option space is known to you and unknown to the user.** A homeowners-insurance
+claim has perhaps thirty valid claim types; the claimant does not know that "water coming up
+through the slab" is one of them, and a thirty-item menu is a wall. Chat is right here even though
+the input is a choice among known options, because *the mapping* is the hard part — but the output
+of that mapping must be shown as the chosen option for confirmation, not answered in prose. The
+rule is not "open-ended input → chat." It is **chat when translating the user's words into your
+taxonomy is the work.** Second scope: when a wrong answer is asymmetrically expensive (dosing, a
+filing deadline, a wire), chat collects the intent and a form commits it.
 
 **Should this action require confirmation?**
 Ask in order: (1) Does it affect anything outside this session? No → don't ask. (2) Is it
@@ -1436,29 +1599,77 @@ reversible within the same UI, in one click, for at least 30 seconds? Yes → do
 (3) Does it cost money, message another human, or destroy data? Yes → confirm every time, and never
 offer a persistent grant broader than the exact payload shown. (4) Otherwise → confirm once, and
 offer a grant scoped to something the dialog can fully display.
+→ **Step 2 is wrong whenever anything outside your database observed the action.** A Slack message
+is trivially reversible in your store and has already lit up a lock screen; a "sent" email you can
+unsend from your own UI still fired an SMTP transaction. Gmail's undo works only because it
+*delays* the send. Amend step 2 to: reversible **and** nothing outside the system has observed it —
+if you cannot delay it, you do not have an undo, you have a delete.
+→ **Step 1 is wrong in a shared session.** In a Linear agent thread or a shared workspace, "inside
+this session" is not "inside one person's awareness." An action scoped to the session is still a
+surprise to the second human reading it.
 
 **Should the tool call be visible?**
 Visible and expanded if it's waiting on the user or it failed. Visible and collapsed if a user
 could act on knowing it happened — check the source, notice the wrong file, spot the wrong table.
 Invisible if the answer is no. Do not show infrastructure.
+→ **"Invisible" is a statement about the transcript, never about the record.** In a lending
+decision, a clinical decision aid, or anything that must be explained to a regulator months later,
+every retrieval has to be reconstructable whether or not a user would ever have acted on it. Scope:
+**invisible in the UI, never absent from an exportable log.**
+→ Second scope: a call is only "infrastructure" if it cannot be wrong in a way the user could
+catch. An embedding lookup that silently returns another tenant's documents is not infrastructure,
+and the reason nobody noticed is that it was classified as such.
 
 **Inline or side panel?**
-Score: iterated (+2), exceeds one viewport (+1), has its own actions (+1), referenced while typing
-the next message (+2), has versions (+1). Three or more → panel. Under three → inline.
+Score: iterated (+2), referenced while typing the next message (+2), exceeds one viewport (+1), has
+its own actions (+1), has versions (+1). Three or more → panel. Under three → inline.
+→ **The score assumes a two-pane desktop product and an artifact with a second turn.** On mobile
+there is no panel at all (§8). And a read-once artifact can clear 3 points on width, actions and
+versions alone — a 40-page compliance report with export, signature and revision history — while a
+60% column is the worst possible place to read it. If "referenced while typing" is a hard no, cap
+the total at 2 and give the artifact a full-width route or a download instead. The score is asking
+whether the output needs **co-visibility with the composer**, not whether it is big.
 
 **Enter or Cmd+Enter to send?**
 Responses under ~10s and one turn at a time → Enter sends, Shift+Enter newlines. Responses over
 ~30s, or an agent that keeps working → Cursor's inversion: Enter queues, Cmd+Enter sends now, and
 show the queue.
+→ **Scope by P90, not by median.** An assistant that usually answers from context in 4s and
+occasionally goes searching for three minutes will punish Enter-sends exactly on the turns that
+matter. Either pick the binding from the slow tail, or make it adaptive: Enter sends until a run
+passes ~30s, at which point the composer switches to queue mode **and says so in the placeholder** —
+a binding that changes silently is worse than either binding.
+→ Also wrong for any product whose users write multi-paragraph prompts by default (legal drafting,
+incident write-ups), and on every touch keyboard (§12).
 
 **What "thinking" indicator?**
 <1s nothing. 1–10s a shimmer on a sentence naming the work. 10–30s add elapsed + stop. >30s a step
 list with a counter. Never a fake percentage.
+→ **The shimmer requires a noun, and a bare LLM call does not have one.** With no tools, no
+retrieval and no plan, there is nothing honest to put between 1s and first token; a shimmering
+`Thinking…` is precisely the theater §4 says to delete, only animated. There, show nothing under
+~3s, then a caret, then elapsed past ~5s. **No noun, no shimmer.**
 
 **How many models in the picker?**
 1 → no picker; name it in the footer. 2–4 → a chip with a popover. 5+ → a `cmdk` command palette
 grouped by provider with fuzzy search. Always show the current model in the composer, never only in
 settings.
+→ **Count the models this user can select after policy filtering, not the catalogue.** An
+enterprise tenant with thirty models and an admin allowlist of two needs a chip; a fuzzy search
+across twenty-eight models the user cannot pick is worse than no search, because every miss reads
+as a bug.
+→ Second scope: when models differ in **capability** rather than quality — one takes images, one
+has the long context, one is the only one cleared for customer data — a flat picker is wrong at any
+count. Group by what they can do and label it, because the user is choosing a capability and your
+picker is offering brands.
+
+**Should the agent be allowed to run unattended?**
+Yes if every side effect it can reach sits behind a confirmation that will *wait* (§6) and the
+outcome lands somewhere durable (§9). No if any tool can fire without a human and the only record
+is an open tab.
+→ **Wrong for a read-only agent, where unattended is the entire product.** Scope by the reachable
+tool set, not by the run length: a four-hour research run that can only read is safer unattended
+than a nine-second run that can send.
 
 ---
 
@@ -1558,6 +1769,19 @@ Run these against your own implementation.
 - [ ] No error message contains the string "Something went wrong".
 - [ ] No confidence percentage is rendered anywhere.
 
+**Failure after the yes** (run these against a real expired token and a real declined card)
+- [ ] Expire the auth token between approval and execution → the payload survives, the re-auth
+      prompt names the action it unblocks, and the return lands on the pending action.
+- [ ] The agent survives an OAuth redirect; the run is not tied to the page's socket.
+- [ ] A declined card shows the decline code, states the amount that was **not** charged, and does
+      not auto-retry.
+- [ ] A revoked grant shows who revoked what and when, and offers request-access — **not** retry.
+- [ ] A 429 mid-stream pauses with the partial intact and an absolute resume time.
+- [ ] A batch where 2 of 4 succeed reports `2 of 4`, per-row, and retry re-sends only the 2 that
+      failed.
+- [ ] An approval that has gone stale is re-validated at execution and refuses rather than firing.
+- [ ] A failure that happens after the user closed the tab is findable afterwards.
+
 **Integration**
 - [ ] The AI entry point inherits the context of what's on screen without the user restating it.
 - [ ] Output lands in the object being worked on, with accept/reject — not as text to copy.
@@ -1585,47 +1809,23 @@ Walked and screenshotted (`.cache/shots/aif-*.png`):
   `Adrien delegated to Cursor · 5min ago` / `Cursor moved from Triage to In Progress · 4min ago`;
   session composer with a `Skills ⌄` selector and a filled-square stop button; agent inbox grouped
   as `In progress` / `Needs information · 2`.
-- **https://ai-sdk.dev/elements/components/tool** — the seven tool states rendered as stacked rows:
-  Pending (grey circle), Awaiting Approval (amber clock), Responded (blue check-circle), Running,
-  Completed (green check), Error (red ⊗), Denied. Each row: wrench glyph, monospace tool name,
-  status pill, chevron.
-- **https://ai-sdk.dev/elements/components/confirmation** — `This tool wants to delete the file
-  /tmp/example.txt. Do you approve this action?` with `Reject` (outline) and `Approve` (solid blue
-  primary). States: approval-requested / approval-responded / output-denied / output-available.
-  Critiqued above for the blue primary on a delete and the absence of blast radius, reversibility
-  and scope.
-- **https://ai-sdk.dev/elements/components/context** — circular SVG ring showing `31.3%`, hover card
-  breaking down input/output/reasoning/cached tokens plus cost via `tokenlens`.
-- **https://ai-sdk.dev/elements/components/prompt-input** — full composer anatomy: Header
-  (attachments) / Body (textarea) / Footer (tools + model select + submit).
-- **https://ai-sdk.dev/elements/components/reasoning** — "automatically opening during streaming and
-  closing when finished"; guidance to consolidate multiple reasoning parts into one block.
-- **https://ai-sdk.dev/elements/components/chain-of-thought** — steps with complete/active/pending
-  status, each carrying its evidence (domain badges, images) inline.
-- **https://ai-sdk.dev/elements/components/task** — completed-vs-total counter, rows like
-  `Scanning 52 files` → `Scanning 2 files`.
-- **https://ai-sdk.dev/elements/components/plan** — plan as a reviewable card with a `Build ⌘↩`
-  commit action.
-- **https://ai-sdk.dev/elements/components/checkpoint** — `Restore checkpoint` as a rule across the
-  transcript, explicitly modeled on VS Code Copilot's checkpoints.
-- **https://ai-sdk.dev/elements/components/queue** — `7 Queued` / `5 Todo` collapsible sections with
-  hover-revealed row actions.
-- **https://ai-sdk.dev/elements/components/inline-citation** — hover-card pill rendering as
-  `example.com +5`.
-- **https://ai-sdk.dev/elements/components/sources** — collapsed trigger `Used 3 sources`.
-- **https://ai-sdk.dev/elements/components/artifact** — header with title, `Updated 1 minute ago`,
-  and `Run / Copy / Regenerate / Download / Share`.
-- **https://ai-sdk.dev/elements/components/attachments** — three variants (grid / inline / list) for
-  the same data, chosen by location.
-- **https://ai-sdk.dev/elements/components/conversation** — auto-scroll plus a scroll-to-bottom
-  button "that appears when not at the bottom".
-- **https://ai-sdk.dev/elements/components/message** — `MessageActions` limited to Retry and Copy on
-  the last assistant message; branching explicitly *not* provided ("you have full flexibility to
-  design and manage multiple response paths").
-- **https://ai-sdk.dev/elements/components/shimmer** — CSS-gradient sweep, 2s default,
-  `text-transparent` + `background-clip`.
-- **https://ai-sdk.dev/elements/components/model-selector** — `cmdk` command palette, fuzzy search,
-  grouped by provider.
+- **https://ai-sdk.dev/elements/components/** — 19 component pages walked with their live previews;
+  `tool` and `confirmation` re-walked 2026-09 at 1440 and 390 (see Review pass). Each page's
+  finding is stated in the body rather than repeated here: `tool` §4 (seven states; and the
+  collapse-default correction), `confirmation` §6 (anatomy, plus its four design faults),
+  `context` §1 (`31.3%` SVG ring, hover card with input/output/reasoning/cached + `tokenlens`
+  cost), `prompt-input` §1 (Header/Body/Footer anatomy), `reasoning` §4 (auto-open on stream;
+  consolidate multiple reasoning parts), `chain-of-thought` §4 (steps carrying their own evidence),
+  `task` §4/§9 (completed-vs-total counter; `Scanning 52 files` → `Scanning 2 files`), `plan` §9
+  (reviewable card with `Build ⌘↩`), `checkpoint` §7 (`Restore checkpoint` as a transcript rule,
+  modeled on VS Code Copilot), `queue` §9 (`7 Queued` / `5 Todo`), `inline-citation` §5
+  (`example.com +5` hover pill), `sources` §5 (`Used 3 sources`), `artifact` §8 (`Updated 1 minute
+  ago` + Run/Copy/Regenerate/Download/Share), `attachments` §1 (three variants for one payload,
+  chosen by location), `conversation` §3 (auto-scroll + scroll-to-bottom pill), `message` §7
+  (MessageActions = Retry + Copy on the last assistant message; branching explicitly not provided —
+  "you have full flexibility to design and manage multiple response paths"), `shimmer` §3 (2s
+  gradient sweep, `text-transparent` + `background-clip`), `model-selector` §1 (`cmdk`, fuzzy,
+  grouped by provider).
 - **https://ai-sdk.dev/docs/reference/ai-sdk-core/smooth-stream** — `delayInMs: 10`,
   `chunking: 'word'`, `Intl.Segmenter` required for CJK.
 - **https://streamdown.ai/docs/animation, /carets, /memoization, /link-safety, /security** —
@@ -1695,3 +1895,101 @@ chatgpt.com, www.perplexity.ai, lovable.dev, gamma.app. Claims about ChatGPT, Pe
 in §5 and §3 are attributed to their own documentation and to the component libraries that
 reproduce their behavior (Streamdown's link-safety modal is documented as "similar to ChatGPT's
 implementation"), and are marked as such in the text.
+
+---
+
+## Review pass (2026-09)
+
+An adversarial pass over the whole file: re-screenshot the named products, break the decision
+procedures, fill the failure-state gap. Everything below is either something this file got wrong,
+something it was vague about, or something it was missing.
+
+### What was re-verified, by looking
+
+Screenshots at 1440 and 390 in `.cache/shots/ai-flows-v-*.png`; documentation pages fetched and
+read as text.
+
+| Claim | Source | Result |
+|---|---|---|
+| t3.chat composer: `Kimi K2 (0905) $$·` with the cost glyph in green, then `Instant` / `Search` / `Attach`, circular send right | t3.chat @1440 | **Holds, verbatim** |
+| t3.chat @390 drops both suggestion tiers, drops `(0905)`, keeps `Kimi K2 $$`, collapses three chips to one `+` | t3.chat @390 | **Holds** — and the `+` is *leading*, not trailing, and a `Chat ⌄` mode pill moves to the top bar. Both added to §12 |
+| v0: `Ask v0 to build…`, `⊙ v0 Max ⌄` bottom-left, four artifact-shaped chips, circular reshuffle | v0.app @1440 | **Holds** — plus there is no send button at rest; the mic holds the slot. Added to §1 |
+| v0 @390 drops the model label to glyph + chevron | v0.app @390 | **Holds, exactly** |
+| AI Elements `Tool`: seven states with icon + word, wrench glyph, monospace name, chevron | ai-sdk.dev @1440 | **Holds** |
+| AI Elements `Tool` default collapse: "Awaiting Approval and Running stay open" | ai-sdk.dev @1440/@390 | **WRONG — corrected in §4.** Only `Pending` is expanded; the approval row is collapsed |
+| AI Elements `Confirmation`: literal path inlined, `Reject` outline / `Approve` solid blue | ai-sdk.dev @1440 | **Holds** — the critique of it stands. State names re-attributed in §6 |
+| Streamdown: 150ms default, `fadeIn`/`blurIn`/`slideUp`, skips `pre`/`svg`/`math`/`annotation`, inline code animated, zero DOM when done, `▋`/`●` carets, link modal on by default with full URL + Copy/Open + Esc | streamdown.ai docs | **Holds, including the `blurIn` quote** |
+| `smoothStream`: `delayInMs` 10, `chunking: 'word'`, CJK caveat | ai-sdk.dev reference | **Holds** — the caveat names exactly Chinese, Japanese, Korean, Vietnamese, Thai |
+| Claude Code permission table and its asymmetric persistence | code.claude.com/docs | **Holds, row for row** |
+| "offers those options only when the prompt can show you everything they would allow" + the three withholding cases | code.claude.com/docs | **Holds, verbatim** |
+| Linear: `Opus 5` badge, minimize/expand/close, `⚓ API launch added to context`, `@cha` → `ChatPRD [Agent]` / `Charlie` / `Charlotte` under one `Users` heading, agent indented under the human assignee, `Adrien delegated to Cursor · 5min ago`, `Skills ⌄` in the composer, filled-square stop | linear.app/agents @1440 ×4 | **Holds, every one** |
+| Linear agent inbox `Needs information · 2` | linear.app/agents | **Not visible this pass.** Marked in §6 as the recommendation, not observed behavior |
+
+### Corrections made
+
+1. **§4, the tool-collapse rule.** The previous pass credited AI Elements with "collapse the past,
+   expand the present." It does not ship that. The rule is right; the attribution was wrong, and
+   anyone copying the demo's default ships an approval buried behind a chevron.
+2. **§6, `Confirmation` state names.** `approval-requested` / `output-denied` etc. are AI SDK
+   `ToolUIPart` states, not the component's; the page documents Approval Request / Approved /
+   Rejected via `ConfirmationRequest` / `ConfirmationAccepted` / `ConfirmationRejected`.
+3. **§6, the Claude Code comment field.** The old text made it a politeness feature. It is a control
+   flow mechanism: `No` **with** a reason keeps the agent working, `No` **without** one stops the
+   turn — and the field is deliberately unavailable on any option that saves a rule.
+4. **§6, Linear's `Needs information · 2`.** Downgraded to unverified.
+5. **§3, `ease` easing on Streamdown's fade.** The docs state the 150ms duration; they do not state
+   the easing. Dropped.
+6. **§8 contradicted itself.** "Promote when two or more hold" and the weighted score in Decision
+   procedures disagreed — viewport + versions is two criteria (panel) but two points (inline). §8
+   now carries the weighted score, and the score gained the scope it was missing.
+
+### What was cut
+
+Nine unsupported superlatives — "the single most common composer jank," "the most common
+false-positive in AI composers," "the single most-hated bug in this category," "the single most
+common accessibility bug," "the most common citation complaint on mobile," "the most common
+implementation," "the worst and most common," "a support ticket every time," "the single most
+valuable sentence in a RAG product" — each replaced with the mechanism that made the claim
+interesting in the first place. Also cut: "Everything else in this document is polish" (false —
+a stream that reflows is not polish), and the §12 bullet list that restated eight other sections
+verbatim, now an index. The AI Elements source roll-up was compressed from twenty entries
+duplicating the body into one cross-referenced entry.
+
+### What was added
+
+- **§10, Taxonomy B: failures after the user said yes.** The file had a good taxonomy of failures
+  that happen while the model is talking and nothing on the ones that happen after consent, which
+  are the expensive half. Seven new states with their required rendering: auth expiring between
+  approval and execution, a declined card, a grant revoked mid-run, a 429 arriving mid-stream, a
+  partially successful batch, a payload that went stale while pending, and provider-vs-you. Plus
+  the mobile corollary — every one of those recoveries requires leaving the app, so the pending
+  action must be server-side and resumable by URL before you send anyone to a redirect.
+- **Scopes on every decision procedure.** Each fork now names a real product where its branch is
+  wrong: insurance claim intake (chat is right even though the options are known — the *mapping* is
+  the work); Slack (reversible in your database, already on someone's lock screen, so no undo
+  exists); regulated lending (invisible in the UI never means absent from the log); a 40-page
+  compliance report (scores 3 but wants full width, because "referenced while typing" is the
+  question the score is actually asking); an assistant with a 4s median and a 3-minute P90 (bind by
+  the tail, not the median); a bare LLM call (no noun, no shimmer); an enterprise allowlist of two
+  models out of thirty (count what the user can pick, not the catalogue). One new fork: should the
+  agent run unattended, scoped by the reachable tool set rather than the run length.
+- **Mobile findings from the 390px pass:** the `+` in t3's composer is leading, not trailing;
+  t3 promotes its mode switcher out of the composer into the top bar rather than burying it;
+  neither t3 nor v0 bottom-pins an empty composer; AI Elements' tool row at 390 has *zero* gap left
+  between a 14-character tool name and `Awaiting Approval`, which is the measured version of "tool
+  rows over-narrow first" and gives a real budget to design against.
+- **Two Streamdown gotchas** the previous pass missed: carets are not scoped for you (the renderer
+  knows nothing about roles or message order, so every message grows a cursor unless you gate it),
+  and CJK is two independent bugs — chunking in `smoothStream` and emphasis parsing next to
+  ideographic punctuation, which needs `@streamdown/cjk`.
+- **A self-check block for post-approval failures**, written to be run against a genuinely expired
+  token and a genuinely declined card rather than read.
+
+### Still unverified
+
+ChatGPT, Perplexity, Lovable and Gamma remain behind Cloudflare human-verification for a headless
+browser, so §5's Perplexity and ChatGPT citation claims are still documentation-and-clone
+attributions, marked as such in the text. Claude's block-level, span-anchored citations in §5 are
+also documentation-attributed. Linear's `Needs information · 2` is noted above. Cursor's queue,
+steering and checkpoint behaviors are from its docs, not from a driven session — the queue's
+drag-to-reorder in particular is a claim about an interaction nobody in this pass performed.

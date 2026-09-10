@@ -2,7 +2,7 @@
 
 **Evaluated:** 2026-09 · re-verified 2026-09-09 (see *Review pass (2026-09)* at the end for what changed under us)
 
-Walked: Linear (Inbox, Notifications, Members & roles, Invite members, Private teams, Team owners, Pulse, Audit log, SCIM), GitHub (notification inbox, inbox filters, configuring notifications, repository transfer, org roles), Figma (share modal + share settings sub-sheet, seat types), Google Drive (share dialog, general access, request-access flow), Notion (sharing & permissions, members/admins/guests, teamspaces), Slack (notification preferences, per-channel notifications, ownership transfer, the engineering post on the notifications rebuild), Discord (permission model). Screenshots in `.cache/shots/tpn-*`.
+Walked: Linear (Inbox, Notifications, Members & roles, Invite members, Private teams, Team owners, Pulse, Audit log, SCIM), GitHub (notification inbox, inbox filters, configuring notifications, repository transfer, org roles), Figma (share modal + share settings sub-sheet, seat types), Google Drive (share dialog, general access, request-access flow), Notion (sharing & permissions, members/admins/guests, teamspaces), Slack (notification preferences, per-channel notifications, ownership transfer, the engineering post on the notifications rebuild), Discord (permission model). Screenshots in `.cache/shots/tpn-*` (original walk) and `.cache/shots/teams-permissions-and-notifications-v-1…v-10-{1440,390}*.png` (2026-09-09 verification pass, ten pages at both widths).
 
 ---
 
@@ -12,7 +12,7 @@ Walked: Linear (Inbox, Notifications, Members & roles, Invite members, Private t
 
 2. **Ship three roles, and put the fourth axis somewhere else.** Admin / Member / Guest covers most collaboration tools. It does not cover products where the permission model *is* the surface people came for — see *Where each default breaks* under Decision procedures before you take this one. GitHub, by contrast, ships 6 organization roles (owner, member, moderator, billing manager, security manager, App manager) plus 5 repository roles (Read, Triage, Write, Maintain, Admin) plus team maintainer plus outside collaborator plus custom org roles — roughly 13 concepts a new admin must hold. Linear resolves the same needs with 3 workspace roles plus a *scoped* role (Team owner) and four per-team toggles. Scope beats role count.
 
-3. **Never let a user find a wall by walking into it.** The permission-denied state is a design failure that already happened upstream. Prevent it: disable-with-reason instead of erroring, show the escalation path (Linear ships `View workspace admins` in ⌘K and at `/settings/view-admins` precisely so a blocked user knows *whom* to ask), and where you can't prevent it, make the request first-class — Notion routes page access requests into the owner's Inbox with approve/reject inline; a member without invite rights sees "request to add a member" instead of a dead Invite button.
+3. **Never let a user find a wall by walking into it.** The permission-denied state is a design failure that already happened upstream. Prevent it: disable-with-reason instead of erroring, show the escalation path (Linear ships `View workspace admins` in ⌘K and at `/settings/view-admins` precisely so a blocked user knows *whom* to ask), and where you can't prevent it, make the request first-class — Notion gives a locked page a **No access** control that requests access from that page's creators or editors, and a view-only page a **Request edit access** item in the Share dropdown, routed to the page creator. A member without invite rights sees "request to add a member" instead of a dead Invite button.
 
 4. **The inbox is not the feed.** Linear runs both and keeps them apart: **Inbox** = things addressed to you, with read/unread/snooze/delete semantics and a hard 2,000-item cap; **Pulse** = a feed of project and initiative updates with For me / Popular / Recent tabs, no per-item read state, which *digests into* the Inbox once a day at ~6:00 AM local. Conflating them produces an inbox nobody can clear, and a badge that means nothing.
 
@@ -95,7 +95,7 @@ Invitation is a desktop-weighted task, but *acceptance* is overwhelmingly mobile
 
 ## How it goes wrong
 
-The AI-generated version: a modal titled "Invite Team Member" with one email input, one role `<select>` containing every role in the system including Owner, and a blue "Send Invitation" button. No chips, so you can invite exactly one person. No teams/projects, so the invitee lands in an empty workspace. No pending state anywhere — the member list shows only accepted users, so the inviter re-invites the same person three times. No resend, no revoke, no copyable link. Success is a green toast that says "Invitation sent successfully!" and the modal stays open. Seat cost appears on the next invoice.
+The AI-generated version: a modal titled "Invite Team Member" with one email input, one role `<select>` containing every role in the system including Owner, and a blue "Send Invitation" button. No chips, so you can invite exactly one person. No teams/projects, so the invitee lands in an empty workspace. No pending state anywhere, so the inviter re-invites the same person three times; no resend, no revoke, no copyable link. Success is a green toast reading "Invitation sent successfully!" and the modal stays open. Seat cost appears on the next invoice.
 
 ---
 
@@ -105,7 +105,7 @@ The AI-generated version: a modal titled "Invite Team Member" with one email inp
 
 **User (admin):** express "this person should be able to do their job and not delete the company" in under thirty seconds, without reading a permissions matrix.
 
-**Business:** enterprise buyers ask for granularity in procurement; support cost rises with every role; misconfigured roles are the source of most self-inflicted data exposure.
+**Business:** enterprise buyers ask for granularity in procurement; support cost rises with every role. Every role you add is a row in a matrix a customer's security reviewer will read out loud in a call.
 
 **Resolution:** ship a small role set, and satisfy granularity demands with *scope* (which team/project the role applies to) and a handful of *named workspace toggles* — not with more roles.
 
@@ -158,7 +158,7 @@ Role management is legitimately desktop-first, and the honest mobile version is 
 
 ## Copy
 
-Name roles by what they do, not by rank. "Can edit" beats "Level 2". Write one sentence per role in the dropdown itself, the way Figma writes `Can view and comment on this file.` under the View radio — the sentence is the documentation, and it's the only documentation anyone reads.
+Name roles by what they do, not by rank — "Can edit" beats "Level 2" — and put one sentence per role in the dropdown itself. It is the only documentation anyone reads.
 
 Real examples that work:
 - "**Member** — Can create and edit anything in teams they join."
@@ -310,7 +310,7 @@ This is the control that gets built wrong most often. Rules:
 
 ## The states
 
-- **Loading the access list** — skeleton rows, not an empty list. An empty "Who has access" that later fills with 12 people has already been misread.
+- **Loading the access list** — skeleton rows. An empty "Who has access" that later fills with 12 people has already been misread.
 - **Link copied** — inline confirmation on the button ("Copied"), 2s, no toast. This action happens 10× a day.
 - **Scope change in flight** — optimistic UI is wrong here. Show the pending state and confirm from the server; a failed permission write that appeared to succeed is a security bug.
 - **Sharing outside the org** — Figma names the guard ("The 'Anyone' option doesn't appear in my share settings… your organization admin has disabled public links"). If a scope is admin-disabled, show it disabled with the reason, not absent.
@@ -494,7 +494,7 @@ Note the sharp edge GitHub documents: a saved notification older than 5 months t
 - **Query language as the filter model.** `is:unread`, `reason:mention`, `repo:octo-corp/octo-project reason:participating`. Default saved filters ship with emoji names: 🎯 Assigned (`reason:assign`), 💬 Participating, ✋ Mentioned, 🙌 Team mentioned, 👀 Review requested. Up to **15 custom filters**. You build one by typing a query in the inbox and clicking **Save**, which opens the filter dialog pre-filled — filter creation is a *promotion of an existing view*, never a blank form.
 - **Grouping** by repository or by date, chosen by the user, "to get a quick overview with less context switching."
 - **Bulk triage bar**: "2 selected | ✓ Done | 🔕 Unsubscribe | ⋯".
-- **Reason labels on each row** ("See one of the latest reasons you're receiving a notification… with a `reasons` label") — same insight as Linear's reason line.
+- **Reason labels on each row** — the same load-bearing element as Linear's reason line, shipped by the other reference independently.
 - **The prerequisite GitHub states and nobody copies:** "To use the notifications inbox on GitHub and GitHub Mobile, you must enable notifications for both **Email** and **On GitHub**." The in-product inbox is coupled to the email channel, which is a strange dependency — but it is *disclosed*, so a user who turned email off knows why their inbox emptied. Any coupling like this in your own system needs the same sentence, or the empty inbox reads as data loss.
 
 ## The decisions
@@ -701,7 +701,7 @@ Give users the control, and make the control name the *scope* rather than on/off
 - **Never reorder or reflow the list under the cursor.** Insert a sticky pill at the top: "3 new notifications — click to show". Apply on click, or on scroll-to-top.
 - **Never steal focus.** No auto-focus, no modal, no toast that intercepts a click.
 - **Rate-limit the interruption, not the data.** Write everything to the inbox; coalesce the *alert* — one desktop notification per burst per thread.
-- **Presence-aware suppression** removes more noise than any preference setting: if the user is looking at the object right now, don't notify them about it. Slack's mobile timing settings are the user-facing expression of this.
+- **Presence-aware suppression:** if the user is looking at the object right now, don't notify them about it. This is invisible when it works and indistinguishable from a bug when it misfires, so pair it with the disclosure Linear ships in its FAQ — "Notification delivery may be routed to an active desktop app or browser session" — and a Send-test-notification button. Suppression without an explanation is how you get "notifications are broken" tickets from users whose notifications are working perfectly on the other machine.
 - **Reconnect reconciliation:** on websocket resume, fetch a delta and merge by ID; a naive replay double-posts.
 
 ## @-mentions
@@ -710,7 +710,7 @@ The subscription semantics matter more than the autocomplete:
 
 - **Linear:** @mention in an issue description or comment auto-subscribes you to the issue. But an @mention *inside a comment thread* subscribes you **to the thread, not to the whole issue**. This distinction is what stops a mention from turning into a firehose.
 - **GitHub:** `reason:mention` and `reason:team-mention` are separate filters, because "someone typed my name" and "someone typed @frontend-team" carry different urgency. Unsubscribing from a thread still lets it back in when you're @mentioned, your team is @mentioned, or review is requested — the mute has a deliberate override.
-- **Prevent the impossible mention.** Linear: you cannot @mention someone into an issue in a private team if they're not a member. Handle it at composition — grey the name in the autocomplete with "Not a member of Security" and offer "Invite to team" — rather than sending a notification to a page they'll get a 403 on.
+- **Prevent the impossible mention** at composition, not at delivery — grey the name in the autocomplete with "Not a member of Security" and offer "Invite to team". (§3, *Permission wall inside a deep link*.)
 - **@-everyone needs friction.** Confirm with the count: "This will notify 240 people. Send?"
 - Mentions of a *group* should show the resolved member count in the autocomplete row, the same way Notion shows "Teamspace · 37 people" in the share dialog.
 
@@ -742,7 +742,7 @@ Linear runs both, as separate sidebar items, with a defined bridge between them.
 
 **The bridge:** Pulse doesn't notify per item. It **digests into the Inbox** daily or weekly, arriving ~6:00 AM local, and only for projects you're a member of, that roll up to an initiative you own, that you explicitly subscribed to, or that fall under a team/initiative subscription. One item in the inbox, many updates inside it. (There's even an audio playback of the summary from the Inbox — the feed is being treated as *reading*, the inbox as *work*.)
 
-**The routing distinction, one more time, via Linear's project notifications:** the bell on a project page has two independent destinations. *Personal notifications* go to your Inbox (new issue created, description changed, issue completed/cancelled, project update posted). *Slack channel notifications* post to a channel where anyone can see them — including people who aren't in the Linear workspace at all. Same source events, two different audiences, two separate toggles. Never route a broadcast through a personal inbox.
+**One bell, two destinations.** Linear's project bell has independent *personal* (→ your Inbox) and *Slack channel* (→ a public channel readable by people who aren't even in the workspace) toggles over the same source events. Never route a broadcast through a personal inbox.
 
 **Design rules:**
 - If an item has no action and no addressee, it belongs in the feed.
@@ -881,24 +881,24 @@ Every fork above is a default, and a default with no stated scope is advice you 
 
 # The generic version
 
-You can self-diagnose against this. If three or more are true, nobody thought about this flow:
+Self-diagnose against this. Three or more true means nobody thought about this flow:
 
 1. **One share dropdown** with fused audience × capability ("Anyone with the link can edit"), and no helper sentence under it.
-2. **No pending-invite state.** The member list shows only accepted users; there's no resend, no revoke, and no copyable invite link, so the inviter invites the same person three times.
+2. **No pending-invite state**, no resend, no revoke, no copyable invite link.
 3. **Roles are a flat alphabetised `<select>`** with no descriptions, so "Admin" is first and everyone becomes one. No scoped role exists, so team leads get workspace admin.
 4. **Inherited access is invisible.** The dialog lists three people; forty more have access via the parent folder or the org. Removing someone appears to work and doesn't.
 5. **The notification list has no reason line.** Every row says "New activity on Task 42". You must open each one to know if it's yours.
-6. **Opening the notification panel marks everything read**, so the badge is permanently zero and carries no information.
+6. **Opening the notification panel marks everything read**, so the badge is permanently zero.
 7. **Read/unread is the only state.** No Done, no snooze, no unsubscribe, no bulk actions, no undo on mark-all-read.
 8. **Preferences are an N×M checkbox grid** of raw backend event names, all on by default, with a Save button below the fold.
 9. **The same event arrives four times** — desktop, push, email, badge — with no dedup on read state.
 10. **The badge counts feed items,** so it never reaches zero.
 11. **Notifications and the activity feed are the same list,** rendered twice with different CSS.
-12. **The permission-denied page is a centred lock icon** saying "Access Denied", with no object name, no owner, and no request path.
-13. **Gated buttons are fully styled and live**; clicking returns a red "Forbidden" toast.
-14. **On mobile, every one of these is the desktop layout at 60% scale.** The share modal scrolls horizontally; the notification panel is a 320px column pinned right; there are no swipe verbs.
-15. **No audit log**, or one with no filter for login events, so it's unreadable.
-16. **Deleting a member deletes their history**, so old issues show "Unknown user".
+12. **The permission-denied page is a centred lock icon** with no object name, no owner, and no request path — and the gated buttons that led there were fully styled and live, returning a red "Forbidden" toast.
+13. **On mobile, every one of these is the desktop layout at 60% scale.** The share modal scrolls horizontally; the notification panel is a 320px column pinned right; there are no swipe verbs.
+14. **No audit log**, or one with no filter for login events, so it's unreadable.
+15. **Deleting a member deletes their history**, so old issues show "Unknown user".
+16. **Nothing half-works gracefully.** Every bulk action ends in one green toast or one red one; a failed payment revokes access to the data; a session that expired mid-save loses the change and the user never learns which state won.
 
 ---
 
@@ -980,8 +980,8 @@ Run these against your own build.
 Walked and screenshotted 2026-09-09. Screenshots in `/Users/ayushgarg/Ayush/UI_Library/.cache/shots/tpn-*` and `<scratchpad>/figma-share-*.png`, `<scratchpad>/gh-*.png`.
 
 **Linear**
-- https://linear.app/docs/inbox — Priority/Other tabs with counts, reason lines, the full keyboard verb set (`g i`, `j/k`, `u`, `⌥U`, `h`, `Backspace`, `⇧Backspace`, `⇧S`, `⌘F`), snooze vs reminders, display options, the 2,000-notification cap, "we don't support archiving".
-- https://linear.app/docs/notifications — channels as Desktop/Mobile/Email/Slack with green/grey dots; grouped categories you cannot decompose ("You cannot select only status changes"); **email digests only sent if the in-app notification is unread**; thread-mention vs issue-mention subscription split; browser/macOS badge FAQ.
+- https://linear.app/docs/inbox — re-read and re-screenshotted 2026-09-09. Priority/Other tabs with counts, reason lines, the keyboard verb set (`g i`, `j/k`, `u`, `⌥U`, `h`, `Backspace`, `⇧Backspace`, `⌘F`, `Esc`), the Display options panel (Enable priority inbox / Include in priority inbox / **Badge count** / **Group unreads by** / Ordering / Show snoozed / Show unread first), the snooze preset menu with resolved dates beside each preset plus the typed-custom grammar, the 2,000-notification cap, "You cannot choose which notifications go to your Inbox", and "We don't support archiving notifications at this time" — **which now contradicts the Notifications page.**
+- https://linear.app/docs/notifications — re-read and re-screenshotted 2026-09-09. Channel rows with green/grey dot **and a summary sentence** ("Enabled for assignments, status changes, 9 others"); "Notifications will always go to your Linear inbox"; **Send test notification**; email digests "only sent if you haven't already read the Linear inbox notification" (verbatim); thread-mention vs issue-mention subscription split; `⇧S` subscribe / `⌘⇧S` unsubscribe; the routed-to-an-active-session FAQ; browser and macOS-dock-badge FAQs. **Status changes now documented as "issue completions and cancelations" with finer control punted to a view subscription — the previously cited "You cannot select only status changes" wording and the urgent-priority/blocking-relationship bundle are gone from this page and have been removed from this file.** And: "Linear retains up to 2,000 open notifications… When this limit is exceeded, notifications are automatically archived" — contradicting the Inbox page.
 - https://linear.app/docs/invite-members — invite modal anatomy, `Invite as…` + team multi-select, deliverability allowlist, approved email domains + the domain-transfer warning, persistent/reusable invite links with Reset, **Invite & Assign**.
 - https://linear.app/docs/members-roles — Workspace owner / Admin / Team owner / Member / Guest; suspend semantics (immediate, next billing cycle, stays in list, tokens revoked); Members page filters; `View workspace admins` in ⌘K and at `/settings/view-admins`.
 - https://linear.app/docs/team-owner — scoped ownership; the four configurable per-team toggles; the three team-owner-only operations; non-inheritance to sub-teams.
@@ -993,26 +993,28 @@ Walked and screenshotted 2026-09-09. Screenshots in `/Users/ayushgarg/Ayush/UI_L
 
 **GitHub**
 - https://docs.github.com/.../managing-notifications-from-your-inbox — the five triage verbs with exact retention (Done 5 months, Saved indefinite, the unsave-after-5-months-disappears-within-a-day edge); `is:` query language; 15 custom filter cap; filter creation as promotion of an existing view; grouping by repo/date.
-- https://docs.github.com/.../configuring-notifications — inbox/mobile/email as three synced surfaces; email→inbox read sync via image from `notifications@github.com`; participating vs watching; per-repo custom event types; 10,000-repo watch cap.
+- https://docs.github.com/.../configuring-notifications — re-read 2026-09-09. Inbox/mobile/email as three synced surfaces; **the stated prerequisite that both Email and On GitHub must be enabled for the inbox to work**; email→inbox read sync, verbatim: "To enable this sync, your email client must be able to view images from `notifications@github.com`"; participating vs watching; per-repo custom event types (issues, PRs, releases, security alerts, discussions); 10,000-repo watch cap.
 - Screenshots: `custom-filter-example.png` (default filters 🎯 Assigned / 💬 Participating / ✋ Mentioned / 🙌 Team mentioned / 👀 Review requested with their queries), `triage-multiple-notifications-together.png` (the "2 selected | Done | Unsubscribe | ⋯" bar).
 - https://docs.github.com/.../transferring-a-repository — Danger Zone, type-the-name, "I understand, transfer this repository", what transfers, old owner → collaborator, redirects.
 - https://docs.github.com/.../roles-in-an-organization — 6 org roles + repo roles + team maintainer + outside collaborators + custom roles.
 
 **Figma**
 - https://help.figma.com/hc/en-us/articles/360040531773-Share-files-and-prototypes — full share-modal spec; the annotated screenshots (`article_attachments/35463302707223`, `.../35463302710551`) showing `Share this file` with Copy link in the header, the mixed "Who has access" list with `›` vs `⌄`, and the `Share settings` sub-sheet with Who has access / What they can do / Additional security / Advanced and a Cancel–Save footer; the disabled-public-links troubleshooting entry.
+- Re-read and re-screenshotted 2026-09-09. The annotated share-modal and `Share settings` screenshots still match the file's description exactly. Corrections made: the audience options are **Anyone / [Organization name] (Org+Enterprise) / [Workspace name] (Enterprise) / Only invited people** — not a folder scope, which is a separate inherited row in the list. Additions: the search-visibility control and its interlock with Anyone-in-[Workspace]; and the verbatim boundary statement, "This will not include everyone who has access to the file via the organization, team, or folder."
 - Seat model (Full / Dev / Collab / View) as a billing axis crossed with the permission axis.
 
 **Google Drive / Docs**
-- https://support.google.com/drive/answer/2494822 — General access (Restricted / Anyone with the link) + separate Viewer/Commenter/Editor; "Email people on this file"; advanced settings preventing editors from re-sharing and viewers from downloading; owner name and email visible on link shares; anonymous animals.
+- https://support.google.com/drive/answer/2494822 — re-read and re-screenshotted 2026-09-09. General access (Restricted / Anyone with the link) + separate Viewer/Commenter/Editor; "Email people on this file"; advanced settings preventing editors from re-sharing and viewers from downloading; owner name and email visible on link shares; anonymous animals. **Newly captured hard caps: 600 individual email addresses per file, and 100 open tabs/devices editing concurrently before only the owner and some editors can edit.**
 - https://support.google.com/drive/answer/6211862 — the request-access flow: what the owner's email carries, the notify-on-decision control, and the documented silent-outcome branch.
 
 **Notion**
-- https://www.notion.com/help/sharing-and-permissions — Share/Publish tabs; person rows with a secondary identity line; General access (Only people invited / Everyone at {workspace} + Hide in search / Anyone on the web + Link expires); six access levels including Can edit content and Can create; permission-change requests approvable from the Inbox.
+- https://www.notion.com/help/sharing-and-permissions — re-read and re-screenshotted 2026-09-09. Share/Publish tabs; person rows with a secondary identity line; General access (Only people invited / Everyone at {workspace} + Hide in search / Anyone on the web + Link expires); six access levels, with Can edit content and Can create both database-page-only and Can create gated to Business/Enterprise; Enterprise owners can kill public links via Settings → Security. **Newly captured and added to the file: the "Notion respects the broadest level of access given to a user" override rule; the three ways an Anyone-with-link page is reachable without the link (mentioned from a broader page, two-way relation, nested under a broader page); the avatar-bar presence display; and the two distinct request affordances — a `No access` control on an inaccessible page (goes to creators/editors) versus `Request edit access` in the Share dropdown (goes to the creator).** The previously cited "approve and reject those requests from your Inbox" sentence is no longer on this page; the file no longer claims it.
 - https://www.notion.com/help/add-members-admins-guests-and-groups — three workspace roles; secret invite link with a disable toggle; allowed email domains; **Temporary member** with expiry ≤1 year not consuming a seat; the guest-request approval queue (requester, role, page, email); pre-invite hover disclosure of member-vs-guest; bulk "Upgrade {#} guest(s) to member" + Suggestions tab; guest-limit failure reasons; 30-day rejoin restore window.
 
 **Slack**
 - https://slack.engineering/how-slack-rebuilt-notifications/ — four conflicting mental models; decoupling what from how; the before/after preference schema; read-time migration of "Off" → "Mentions" + push off; auto-save replacing the save modal; **5× settings engagement**, fewer per-channel overrides, "Mentions and DMs" as the predominant default; notifications as a **top-three CX ticket driver**.
-- https://slack.com/help/articles/201355156-Guide-to-desktop-notifications — the four-block hierarchy (How to notify you / What to notify you about / Also notify you about / mobile overrides); badge checkbox; mobile timing options and the concrete default (1 min after screen lock, 10 min after cursor inactivity).
+- https://slack.com/help/articles/201355156-Guide-to-desktop-notifications (now titled "Configure your Slack notifications") — re-read 2026-09-09. Confirms the four-block hierarchy (How to notify you / What to notify you about / Also notify you about / mobile overrides), the badge checkbox and its per-workspace scope, and adds two blocks this file previously missed: **What to show in Activity** and **Channel keywords** (exact match, case-insensitive, threads excluded). Also confirms VIP exceptions are paid-plans-only and points at **notification schedules** for quiet hours.
+- ~~https://slack.com/help/articles/218335077-Set-your-mobile-notification-timing~~ — **404 as of 2026-09-09.** The mobile timing options and the "1 min after screen lock / 10 min after cursor inactivity" default previously cited from this article are no longer documented anywhere reachable. Treated as retired, not as current behaviour.
 - https://slack.com/help/articles/360056534254 — per-conversation All new posts / Just mentions / Mute.
 - https://slack.com/help/articles/204401633-Transfer-workspace-ownership — password re-auth, immediate effect, Primary Owner → Owner, must transfer before self-deactivation.
 
@@ -1025,3 +1027,59 @@ Walked and screenshotted 2026-09-09. Screenshots in `/Users/ayushgarg/Ayush/UI_L
 **Not reachable**
 - Height (height.app) did not respond to headless navigation during this session; its inbox is not covered here from first-hand observation and is deliberately not cited.
 - Discord's Help Center (support.discord.com) is behind Cloudflare bot verification; the Discord material above comes from the developer documentation instead.
+
+---
+
+## Review pass (2026-09)
+
+Adversarial re-read on 2026-09-09. Every named-product claim in this file was treated as a hypothesis. Ten pages were re-walked and re-screenshotted at 1440px and 390px (`.cache/shots/teams-permissions-and-notifications-v-1` … `-v-10`), then read back as images and cross-checked against the live page text.
+
+### Claims re-verified, unchanged
+
+- **Linear's dedup rule.** Verbatim, still live: "Email digests send with time delays based on urgency, and are only sent if you haven't already read the Linear inbox notification." The single most transferable rule in the file.
+- **Linear's inbox verb set and 2,000 cap.** `g i`, `j/k`, `u`, `⌥U`, `h`, `Backspace`, `⇧Backspace`, `⌘F` all confirmed on the page. "You cannot choose which notifications go to your Inbox. All notifications will arrive there" — confirmed verbatim.
+- **Linear's channel-organised preferences.** Desktop / Mobile / Email / Slack, green dot for enabled, grey for disabled. Confirmed, and upgraded: each row also carries a state sentence, which is the better half of the pattern.
+- **Figma's share modal and `Share settings` sub-sheet.** Both annotated screenshots match this file's description element for element: `Share this file` with **Copy link** as a header link beside the close X; the `Emails, comma separated` field with a greyed Invite; the mixed "Who has access" list with `›` for drill-in and `⌄` for inline edit; the sub-sheet's Who has access / What they can do / Additional security / Advanced stack with a helper sentence under each and a greyed **Save** in the footer. The Figma section needed no structural correction.
+- **Figma's deliverability workaround**, verbatim: "you can resend access by copying the file or prototype link and sharing it directly with them."
+- **GitHub's five triage verbs and their retention.** Save (indefinite, `is:saved`), Done (5 months, `is:done`), Unsubscribe (with the @mention / team-mention / review-request override), Read/Unread (`is:read` excludes Done), and the sharp edge that an unsaved notification older than 5 months disappears within a day. All confirmed. So is the 15-custom-filter cap and filter-creation-as-promotion ("create a query in your inbox view and click **Save**").
+- **GitHub's email→inbox read sync**, verbatim: "To enable this sync, your email client must be able to view images from `notifications@github.com`."
+- **Slack's four preference blocks** — How to notify you / What to notify you about / Also notify you about / mobile overrides — with the three named exceptions (thread replies, VIP while paused or in focus mode, huddle starting) intact.
+- **Slack's ownership transfer**, verbatim: password to confirm, immediate, Primary Owner → Owner, and "Need to deactivate your account? You'll need to transfer primary ownership first."
+- **Notion's General access triple** and the six access levels.
+
+### Claims that were wrong or stale, now fixed
+
+1. **Linear's 2,000-notification cap.** The file said "older ones aren't retained" and "no archive." Linear's own two docs now disagree with each other: the Inbox page still says not-retained and no-archiving; the Notifications page says "When this limit is exceeded, notifications are automatically archived." Both live on the same day. Rewritten as a finding rather than a fact, with the lesson attached — a data-loss rule described in two places will drift, so render it from one string and show it at the boundary.
+2. **Linear's snooze.** The file claimed custom dates are "typed, not picked." Wrong. The menu is four presets *with their resolved dates spelled out beside them* (An hour from now · Tue, 11 Feb, 21:47), and only **Custom…** is a parser. The resolved-date-beside-the-preset detail is the better lesson and it was missing.
+3. **Linear's `status-changes` bundle.** The quoted "You cannot select only status changes," and the claim that the category covers urgent-priority changes and blocking-relationship changes, are not on the page any more. Replaced with the current wording ("issue completions and cancelations") and the current escape hatch ("consider setting up a view subscription"). The design point survives; the fabricated-sounding specificity is gone.
+4. **Linear's `⇧S`.** The file called it unsubscribe. It's subscribe; `⌘⇧S` is unsubscribe, and both act on the object, not the row.
+5. **Figma's audience options.** The file listed "Anyone in <folder>" as one of the four dropdown values. It isn't — the four are Anyone / [Organization name] (Org+Enterprise) / [Workspace name] (Enterprise) / Only invited people, and folder access is an *inherited row in the list*, not a dropdown value. Two plan gates added.
+6. **"Figma's dialog is 40% helper text by area."** An unmeasurable number presented as a measurement. Replaced with the countable version: four controls, three helper sentences, no help link.
+7. **Notion's request-access routing.** The file said page permission-change requests land in the owner's Inbox with approve/reject inline, quoting a sentence that is no longer on the page. What actually ships is two different affordances with two different approvers — a **No access** control on an inaccessible page (goes to creators/editors) and **Request edit access** in the Share dropdown (goes to the creator) — plus the honest post-grant line, "try refreshing the page if you're not able to edit it."
+8. **Slack's mobile notification timing.** The four timing options and the concrete default (1 min after screen lock, 10 min after cursor inactivity) came from an article that now **404s**. Removed from the mobile section and struck through in Sources. The replacement material is Slack's **notification schedule**, which is documented and does the same job.
+
+### Claims added because looking found something better
+
+- **Notion's conflict-resolution rule** — "Notion respects the broadest level of access given to a user." Union, not intersection. The file had no answer at all for what happens when two grants disagree, which is the first question anyone implementing this hits.
+- **Notion's link-leak disclosure** — an Anyone-with-link page is reachable without the link via a mention from a more broadly shared page, a two-way relation, or nesting. No other product in this set discloses third-party reachability.
+- **Figma's search-visibility interlock** — you can't turn search-visibility off while the file is shared with Anyone in [Workspace], and Figma writes out why. The best example in the corpus of a dominated setting explained rather than silently disabled.
+- **Figma's boundary statement** — the people list "will not include everyone who has access to the file via the organization, team, or folder." Honest, and it means the dialog structurally cannot answer "how many humans can open this?".
+- **Google's two hard caps** — 600 email addresses per file, 100 concurrent editing tabs/devices. Both disclosed. Almost every collaborative product has the second limit and none names it.
+- **GitHub's inbox prerequisite** — the in-product inbox requires the *email* channel to be enabled. A strange coupling, but a disclosed one.
+- **Slack's "What to show in Activity"** and **Channel keywords** — the badge-scope control and a subscription primitive, both named blocks that ship today and neither of which the file mentioned.
+- **Linear's channel state sentences** and **Send test notification**, plus the FAQ line "Notification delivery may be routed to an active desktop app or browser session" — which is the real cause behind most "notifications are broken" reports.
+
+### Structural changes
+
+- **New §11, "The failure states that cut across all of these."** This was the file's biggest gap: every section had a states list, but the five states these flows are actually judged by belong to no section — session expiry mid-action, access revoked over unsaved work, failed payment / expired trial / downgrade, rate limits and reconnection, and partial success. Each is written as a sequence, not a principle.
+- **New "Where each default breaks"** under Decision procedures. Twelve of the file's forks now name a real product where the recommended branch is wrong: three roles is wrong when the permission model *is* the product (Discord is right and the file was condescending about it); one-dialog invites are wrong on a compliance-gated external path; reusable invite links are wrong when a forwarded link is the attack; two controls are wrong when the two axes are genuinely fused; never-default-to-public is wrong for a product whose job is publishing; thread-by-object is wrong for approval queues; two-tabs-max is wrong for a shared inbox; drop-the-email-if-read is wrong when email is the system of record; auto-save is wrong for a preference with an invisible cost; domain auto-join is wrong at an agency; suspend-never-delete is wrong under a GDPR erasure request.
+- **Mobile filled in where it was thin.** §6 (ownership, deactivation, audit) previously had no mobile section at all; it now names the four actions that must work from a phone and the two mobile-specific confirmation problems — password re-auth breaking on a password-manager round-trip, and type-the-name confirmations being defeated by autocorrect. §7's mobile section lost an unsourced superlative and gained the two things the screenshots supported: state sync as the actual requirement, and the fact that a typed snooze grammar can't survive a touch keyboard. §8's mobile section gained the observation from Slack's own mobile screens — the mobile preference tree is *shorter*, because "How to notify you" is not a question on the device you're holding.
+- **Five self-check items for §11**, plus three more under the inbox.
+
+### Still unverified — do not repeat these as fact
+
+- **Discord's 53 permission flags and the 8-step overwrite resolution order.** Sourced from the developer docs previously; not re-walked this pass. The Help Center remains behind Cloudflare bot verification. Directionally safe (the count is large and the resolution is multi-step), but treat the exact number as of unknown vintage.
+- **Slack's 5× settings-engagement figure** and the top-three-CX-tickets claim. Both come from a 2019-era engineering post that is not a live product surface and cannot be re-verified by walking anything. Attributed clearly, still cited, not treated as current.
+- **The Bosco et al. badge study.** Peer-reviewed and stable, but it measures clicks, not benefit, and the paper says so. The file says so too; keep it that way.
+- **Notion's temporary members, guest upgrade flow and 30-day rejoin window**, and **Linear's SCIM, audit-log and private-team behaviour.** These live on pages not re-walked this pass. They were first-hand at original capture and nothing observed this pass contradicts them, but they are a pass older than everything above.
+- **Every mobile claim in this file is inferred from documentation and desktop-rendered help screenshots, not from driving the native apps.** Nobody screenshotted the Linear iOS inbox or the Figma mobile share sheet. The 390px captures in this pass are responsive *documentation*, which is evidence about the doc, not about the product. That is the honest ceiling of this pass and the obvious target for the next one.

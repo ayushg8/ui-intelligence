@@ -6,7 +6,9 @@ Walked live: Airbnb search + filter modal (desktop 1440, mobile 390), Linear fil
 in-product captures, GitHub search results + zero-results + advanced search, react.dev (Algolia
 DocSearch) desktop and mobile, Vercel docs ⌘K, Stripe docs search (two queries), Raycast root search
 + manual, VS Code palette on vscode.dev, Newegg faceted results, plus Slack and Notion help
-documentation. Measurements below are from those sessions, not from memory.
+documentation. Measurements below are from those sessions, not from memory. Re-walked 2026-09-09
+(review pass at the foot of this file): Airbnb, GitHub, Stripe, Vercel, react.dev and VS Code were
+re-measured live; one claim was falsified and rewritten.
 
 ---
 
@@ -18,27 +20,40 @@ documentation. Measurements below are from those sessions, not from memory.
    merge them force everyone through the wrong one. VS Code does the same split with `⌘P` (go to
    file) and `⇧⌘P` (run command) — which is literally `⌘P` pre-seeded with `>`.
 
-2. **Never fuzzy-match without a relevance floor.** Stripe's docs search for `refund` returns, in
-   order: "Receive Stripe events in your webhook endpoint", "Strong Customer Authentication
-   readiness", "Stripe reporting", "Revenue Recognition", "Product release phases". Not one is the
-   refunds doc. Type `refunds` and the top hit is "Refund and cancel payments". One character.
-   Character-subsequence scoring with no floor and no stemming turns a working index into noise.
-   Stem first; if the best score is below threshold, show zero-results-with-recovery, not garbage.
+2. **Never match without a relevance floor.** VS Code's palette scores on raw substring: with no
+   folder open, `>format` returns exactly two commands (measured 2026-09-09) and one of them is
+   `Remote Repositories: Export Debug In**format**ion`. Fifty percent noise, on the surface where
+   the user is least willing to read. Stem, score, then cut: if the best score is below threshold, show
+   zero-results-with-recovery rather than the tail of the ranking. **Scope:** a floor is for corpora
+   the user has not memorised. A palette over a closed set of verbs the user already knows the names
+   of wants loose subsequence matching and no floor at all — `ghp` → `Git: Push` is the feature.
 
 3. **The applied scope must be a removable chip, not prose.** GitHub gets its zero-result page half
-   right: `0 results (21 ms) in [facebook/react ×]`. The thing that was too narrow is the one thing
-   on screen you can click off. Everything else on that page is generic advice, and Baymard's
-   no-results research is explicit that users "rarely read" search tips.
+   right: `0 results (6 ms) in [facebook/react ×]` — the elapsed number is per-query, the pattern is
+   not. The thing that was too narrow is the one thing on screen you can click off. Everything else
+   on that page is generic advice, and Baymard's no-results research is explicit that users "rarely
+   read" search tips. **Scope:** chips are for scopes the user chose. A hard tenant boundary
+   (org-scoped enterprise search) must not render as removable — offering to remove it promises
+   results that will never come.
 
 4. **Filter state lives in the URL.** Linear's docs: "The applied filters are also reflected in the
    browser URL. You can copy the browser address to share the filtered view." If your filters live
    only in React state, back-button, refresh, share, and open-in-new-tab all silently discard the
-   user's work.
+   user's work. Linear's own carve-out is the thing to copy carefully: "Only the main filters are
+   included in the URL. View options, quick filters, and Insights filters aren't included" — so a
+   shared link does *not* reproduce what the sender saw, and nothing on screen says so. Either
+   serialise everything or label the link `Copy link to filters` rather than `Share view`.
+   **Scope:** stop at the URL when filter values are identifiers you don't want in a support
+   ticket, a Slack channel or a server access log — a healthcare or HR tool wants a server-side
+   saved view with an opaque id, not `?patient=...` in every pasted link.
 
 5. **Show why each result matched.** Baymard: 96% of e-commerce sites ship no contextual snippet, and
    57% of test participants became confused about relevance and pogo-sticked between results and
    product pages to work out why an item was there. A result row without a match rationale is a
-   guess the user has to verify by clicking.
+   guess the user has to verify by clicking. **Scope:** when the title *is* the answer — a command
+   palette, a file switcher, a person picker — a snippet is noise per row and costs a line of
+   scanning. And a snippet over a corpus where the body is more sensitive than the title (HR files,
+   legal holds) leaks by design; show the breadcrumb instead.
 
 ---
 
@@ -49,19 +64,25 @@ Two populations use the same box. The **navigator** knows exactly what they want
 `ENG-116`, "Billing settings") and is using search as a faster URL bar; their success metric is
 time-to-first-result and they will hit Enter on row 1 without reading rows 2–10. The **querier** does
 not know what exists and is using search to survey a space; they need counts, facets, sorting and a
-results *page* they can refine. The business wants the navigator to never leave (retention) and the
-querier to convert (search-exit rate).
+results *page* they can refine.
 
 These conflict on one decision: **does Enter navigate or does Enter run a query?** The best products
 refuse to choose and give the navigator a top-ranked exact hit that Enter takes, while the querier
 gets a "View more results" / "See all results for X" escape into the full page.
 
 ### The reference implementation
-**Stripe docs search** does the two-population split cleanly in one dropdown. For `refunds` it shows
-five navigational rows, then a blue `View more results` link, then a group headed `Ask AI Assistant`
-with five generated questions, then a group headed `Code example`. Three answer *types* in one
-surface, each labelled, each with its own row shape. Navigator takes row 1; querier drops into the
-results page or into the AI.
+**Stripe docs search** does the two-population split cleanly in one dropdown (re-verified
+2026-09-09). For `refunds` it shows five navigational rows, then a blue `View more results` link,
+then a group headed `Ask AI Assistant` with five generated questions, then a group headed
+`Code example`. Three answer *types* in one surface, each labelled, each with its own row shape.
+Navigator takes row 1; querier drops into the results page or into the AI. `refund` and `refunds`
+now return the same five rows in the same order — the index stems, and the highlighter stems with
+it, colouring both `refund` and `refunds` in title, snippet and breadcrumb.
+
+The one defect on that surface is in the AI group: the generated questions interpolate the raw
+query, so `refund` produces `Can you tell me about refund?` — ungrammatical, and the first row of
+the group. If you template a question from user input, either template from the stemmed/expanded
+form or write questions that survive any noun (`What can I do with "refund"?`).
 
 **Raycast** is the purest navigator tool: the root list is ranked, the footer names the primary
 action for the selected row ("Open Command ↵"), and `⇥` at the right of the input hands the raw query
@@ -93,9 +114,11 @@ to Quick AI when nothing in the index matches. The escape hatch is visible befor
 - **Resumed later:** the query survives back-navigation from a result. This is the single most common
   break — user clicks result 3, hits back, and the box is empty and the scroll position is at the top.
 - **Permission wall:** show the result with a lock and the reason, not silence. GitHub logged-out
-  gives you `Sign in to search code on GitHub` — which is honest — but simultaneously renders `0`
-  against Issues, Pull requests, Discussions, Commits, Packages and Wikis in the left rail. Those are
-  not zeros, they're unknowns, and rendering them as `0` tells a truthful-looking lie.
+  renders `0` against Issues, Pull requests, Discussions, Commits, Packages and Wikis in the left
+  rail for a query it never ran. Those are unknowns rendered as zeros — a truthful-looking lie. The
+  tell that this is a bug and not a policy: on the same rail, `Code` renders `…` instead of a
+  number, because that one facet's unknown-ness was modelled. One rail, two conventions for the
+  same state (measured 2026-09-09).
 
 ### The mobile version
 The input is the whole screen. DocSearch on 390×844 opens full-bleed (measured: modal 390×844 at
@@ -130,8 +153,8 @@ found` when the array is empty. It looks finished in a screenshot and fails on t
 ## 2. Instant vs submit: the latency decision
 
 ### The job
-The user wants the list to reflect their intent with the least work. The business wants to not run a
-full-corpus query on every keystroke.
+Every keystroke is a decision about whether to spend a round-trip. Type-ahead trades server cost and
+result churn for the feeling that the list is reading your mind.
 
 ### The decisions — pick by measured p95, not by taste
 
@@ -143,10 +166,23 @@ full-corpus query on every keystroke.
 | > 1 s | **Submit on Enter.** Stop searching per keystroke | Skeleton rows matching final row height; count appears first |
 | > 10 s | Submit + job status | Percent-done and a cancel; past 10s "users will shift attention elsewhere" |
 
-Concrete anchors from the walk: GitHub prints its own search time in the results header —
-`0 results (21 ms) in facebook/react`. Publishing the number is itself a design decision: it makes
-the engine's speed part of the product's felt quality, and it gives you a reason not to hide a slow
-query behind a spinner.
+Concrete anchor: GitHub prints its own search time in the results header — `0 results (6 ms) in
+facebook/react` on 2026-09-09, `21 ms` on an earlier walk. Publishing the number makes the engine's
+speed part of the product's felt quality, and it gives you a reason not to hide a slow query behind
+a spinner. It also commits you: a header that has printed `6 ms` for a year cannot quietly start
+printing `900 ms`.
+
+**Latency is only the first axis. The second is what a query costs.** The table above assumes a
+query is free and side-effect-free. Read the second axis before you apply it:
+- **Metered or model-backed** (an LLM re-ranker, a paid API, a per-query-billed warehouse): eight
+  queries per intent is eight times the bill. Submit-on-Enter at any latency, or type-ahead against
+  a cheap local index with the expensive path behind Enter — this is why Stripe's `Ask AI Assistant`
+  rows are rows you click, not results that stream as you type.
+- **Audited**: in a tool where every query against customer or patient records is logged for
+  compliance, per-keystroke search writes eight audit rows for one human intent and makes the log
+  useless as evidence. Submit-on-Enter is a compliance requirement, not a performance choice.
+- **Mutating**: if the search path warms a cache, claims a lock, or increments a "viewed" counter,
+  it is not a read. Do not fire it on keystrokes.
 
 ### More decisions
 - **Debounce on the trailing edge only, and cancel in-flight requests.** The classic bug is result
@@ -159,9 +195,10 @@ query behind a spinner.
   click lands on whatever slid into place. Freeze reordering while the pointer is inside the list.
 
 ### The states
-Slow-first-paint: render the *count* and the group headers before the rows if your API can return
-them cheaply — the count is the thing the querier reads first. Empty-while-loading is worse than
-stale-while-loading in every case except when the query changed types (e.g. user switched scope).
+Slow first paint: render the *count* and the group headers before the rows if your API can return
+them cheaply — the count is what the querier reads first. Empty-while-loading is worse than
+stale-while-loading in every case except when the query changed types (the user switched scope), at
+which point stale results are answers to a question no longer being asked.
 
 ### The mobile version
 Every keystroke costs battery and often runs on a worse network. Raise the debounce to 300–350 ms and
@@ -185,7 +222,8 @@ The user is deciding *which one* and *whether any*. Every row must answer: what 
 live, why did it match, and is it the one I mean.
 
 ### The reference implementation
-**Algolia DocSearch on react.dev.** Desktop modal measured 768 px wide. Anatomy per row: a 16px type
+**Algolia DocSearch on react.dev.** Desktop modal measured 768 × 868 px at top 16, rows 52 px
+(2026-09-09). Anatomy per row: a 16px type
 icon (page vs anchor), the title with matched substrings rendered in link-blue *inline* (not a yellow
 background), and a second line giving the parent page as breadcrumb. Related anchors nest under their
 parent page with an ASCII-style tree connector, so the result is a small hierarchy rather than five
@@ -203,31 +241,43 @@ contain the query.
   title into a barcode when the query has 3+ tokens. Pick one and use it in titles, snippets *and*
   breadcrumbs — Stripe highlights all three, which is why its breadcrumb is useful.
 - **Snippet source:** the snippet must be a window around the match in the *body prose*. Vercel's
-  fails this: the row "Domain Management" shows
-  `title: domain-management product: vercel url: /docs/rest-api/sdk/examples/domain-…` — raw
-  frontmatter, indexed as body text. If your indexer eats YAML, your snippets will print YAML.
-- **Deduplicate before rendering.** Vercel's `domain` query returns "Get availability for a domain"
-  and "Get availability for a domain (Vercel SDK)" with byte-identical snippets, two rows apart.
-- **Truncate to preserve the match.** react.dev on mobile renders `… Might Not Need an Effect` —
-  leading ellipsis, because the match is at the end. Trailing-only truncation hides the very word the
-  user searched for.
+  fails this, still, on 2026-09-09: `domain` returns "Domain Management" with the snippet
+  `title: domain-management product: vercel url: /docs/rest-api/sdk/examples/domain-…` and "Get
+  Information for a Single Domain" with the same shape. Raw frontmatter, indexed as body text —
+  two of seven rows. If your indexer eats YAML, your snippets will print YAML.
+- **Deduplicate before rendering.** The same query returns "Get availability for a domain" (row 5)
+  and "Get availability for a domain (Vercel SDK)" (row 7) with byte-identical snippets — the same
+  endpoint documented twice, presented as two answers.
+- **Truncate to preserve the match.** react.dev on mobile picks the ellipsis end per row: `use
+  state` yields `Comparing useState and use …` (match early, trailing cut) and `… in memory with
+  useState` (match late, leading cut) in the same list. Trailing-only truncation hides the very word
+  the user searched for.
 - **Metadata slots: three, maximum.** Raycast's rows carry exactly icon / command name / owning
   extension / right-aligned type label. VS Code carries category-prefixed name + right-aligned
   keybinding chips. Adding a fourth turns the row into a table with no header.
 
 ### The states
 - **Result exists but is inaccessible:** show it with a lock icon and `You don't have access — request
-  from #team-eng`. Silently filtering it produces the worst bug class in enterprise search: the user
-  knows the document exists and concludes search is broken.
+  from #team-eng`. Silently filtering it means a user who knows the document exists concludes search
+  is broken, and files that as a bug you cannot reproduce.
 - **Result is deleted/archived:** Linear's search Display panel has an explicit `Include archived`
   toggle rather than silently including or excluding. Make the choice visible.
 - **Too many results:** cap the dropdown at 8–10 rows and make the last row `View all 1,284 results`.
-  react.dev renders 10 on mobile; Stripe shows 5 plus `View more results`.
+  Stripe shows 5 plus `View more results`. react.dev instead renders an uncapped scrolling list with
+  no "see all" row and no results page behind it — defensible for a docs site whose whole corpus is
+  the nav, and wrong for anything with a results page worth landing on. Vercel's ⌘K makes the same
+  choice with less justification: 7 rows, no escape to a full-results view at all.
 
 ### The mobile version
-Drop to one line plus (optionally) one metadata line. 52px row height, which is above the 44pt touch
-target minimum with room for the divider. Drop the keyboard-hint footer entirely — there is no
-keyboard. Keep the type icon: it's the cheapest per-row disambiguator when the title is truncated.
+Measured on react.dev at 390×844 (2026-09-09): modal 390×844 at 0,0 — full-bleed, not a sheet; rows
+52 px; `Cancel` is a 69×40 text button at x=301, y=12, outside the field, iOS convention rather than
+an `×` inside it; the desktop footer legend (`↵ to select / ↓↑ to navigate / esc to close`) is gone,
+leaving only the Algolia attribution. Drop to one line plus at most one metadata line. Keep the type
+icon: it's the cheapest per-row disambiguator when the title is truncated.
+
+The bug to not copy: the selected row still renders the `↵` glyph at its right edge on a phone,
+where nothing can press Enter. Keyboard affordances have to be conditioned on there being a
+keyboard, not on the row being selected.
 
 ### The accessibility requirements
 Rows are `role="option"` inside `role="listbox"`, each with a stable `id` referenced by
@@ -253,8 +303,8 @@ flat so the list looks like a stutter.
 ## 4. Scoping: chips, sigils and query language
 
 ### The job
-The user wants to narrow without leaving the keyboard. The business wants a query language for power
-users without stranding the other 95%.
+The user wants to narrow without leaving the keyboard, and someone else in the same product wants to
+narrow without ever learning a syntax. One field has to serve both.
 
 ### The reference implementation
 **Linear** runs all three at once and they compose. In the search field you type free text and then a
@@ -283,8 +333,9 @@ what lands in the search box. The form is a syntax tutorial that happens to also
   invisible to the eye scanning the field and impossible to remove with one click. Linear's inset
   background inside the input is the minimum; a full chip with an `×` is better.
 - **Backspace on a chip deletes the chip, not the character.** First backspace selects the chip
-  (visible selected state), second deletes it. Deleting a whole `assignee:matthijs` on one keypress
-  with no visual selection step is the most-reported paper cut in chip inputs.
+  (visible selected state), second deletes it. One keypress that silently removes a whole
+  `assignee:matthijs` gives the user no way to tell an intended edit from a slip, and the undo path
+  is retyping.
 - **The typeahead for a token value must be scoped and grouped.** Linear heads the dropdown
   `Assignee` — you're not picking a person in general, you're filling a slot.
 - **Never require the language.** Every operator needs a pointing device path. Slack's `Filters`
@@ -324,15 +375,16 @@ screen reader user.
 ### How it goes wrong
 A single text input where typing `in:project` searches for the literal string "in:project" and returns
 nothing, with no hint that the syntax exists; or a query language with no GUI equivalent, documented
-only in a help article, so 95% of users never filter at all.
+only in a help article, so the only people who filter are the ones who read the help article.
 
 ---
 
 ## 5. Empty state, recents and suggestions
 
 ### The job
-Before the user types, the box is the highest-traffic real estate in the product and it is doing
-nothing. The user's real job at this moment is usually "get back to the thing I had open yesterday."
+Between focus and the first keystroke there is a populated dropdown or an empty one, and the choice
+costs nothing to make. In a workspace tool the intent at that moment is usually re-access — "the
+thing I had open yesterday" — which the product can serve without a query at all.
 
 ### The reference implementation
 **Notion**: `⌘P` (or `⌘K` when the cursor isn't in a block) opens onto *recently viewed pages*, and
@@ -355,6 +407,9 @@ in the search bar rather than showing them by default.
 - **Curated fallback for the cold start.** Never render an empty dropdown. Vercel's logged-out
   suggestions are the right instinct.
 - **Never show recents *after* the user starts typing.** They compete with results for the same rows.
+  **Scope:** this inverts in commerce and search-first products, where recent and popular *queries*
+  are the completion mechanism — the row is a reformulation, not a destination, and it belongs above
+  the product results with its own header. The rule holds wherever the rows are objects.
 
 ### The states
 - **Zero history (new user):** curated suggestions, labelled `Popular` or `Suggested`, never
@@ -362,6 +417,10 @@ in the search bar rather than showing them by default.
 - **History from another device:** if recents are server-side, they'll appear on a fresh device and
   look like someone else's activity. Label the group `Recently viewed` and it reads as correct.
 - **Private mode / cleared storage:** fall back silently to curated, no error.
+- **Shared or supervised device:** a shared iPad on a shop floor, a clinical workstation, a
+  screen-shared demo. Server-side recents become someone else's history on a stranger's screen. Gate
+  recents on a per-session identity, and give products with a shared-device deployment a way to turn
+  the whole group off — this is the one case where an empty dropdown beats a populated one.
 
 ### The mobile version
 Recents matter more, not less: typing costs more, so re-access is a larger share of intent. Show them
@@ -392,7 +451,7 @@ element on this screen exists to make reformulation cost one click.
 
 ### The reference implementation
 Nobody walked here does it fully. **GitHub** gets the single most important piece right and nothing
-else: the header reads `0 results (21 ms) in [facebook/react ×]`, so the scope that was too narrow is
+else: the header reads `0 results (6 ms) in [facebook/react ×]`, so the scope that was too narrow is
 a chip you can dismiss in one click. Then it fails: the body is three *collapsed* accordions —
 `Search across repositories`, `Search across an organization`, `Saved searches` — plus `You could try
 an advanced search.` Generic advice, collapsed, requiring a click to even read. Baymard's no-results
@@ -425,8 +484,13 @@ it, and roughly 50% of sites fail to implement any of the five recovery strategi
 - **Zero at a specific facet:** never present a facet that yields zero (see §8).
 
 ### The mobile version
-Everything above the fold, no accordions, and the primary recovery action (`Clear filters` or
-`Search all of GitHub`) as a full-width button — not a text link inside a paragraph.
+GitHub at 390 (measured 2026-09-09) does the structural half right and the content half wrong: the
+left rail collapses into a single line above the fold — `Filter: [Issues 0 ▾] in [facebook/react ×]`
+— so the type facet becomes a dropdown and the scope stays a removable chip, both reachable with one
+thumb. Then it spends the entire viewport on the illustration and ships the same three collapsed
+accordions, so the recovery actions are below the fold *and* behind a tap. Keep GitHub's rail-to-
+dropdown move; put the recovery action (`Clear filters`, `Search all of GitHub`) above the
+illustration as a full-width button, not a text link inside a paragraph.
 
 ### The accessibility requirements
 Announce via `aria-live="polite"`: `No results for refund. 3 suggestions available.` A silent
@@ -451,8 +515,7 @@ a sidebar the user has already scrolled past.
 
 ## 7. Filters: two excellent, opposite solutions
 
-Airbnb and Linear are the two ends of the design space and both are right for their product. Dissect
-both before choosing.
+Airbnb and Linear sit at opposite ends of the design space and both are right for their product.
 
 ### 7a. Airbnb: the filter sheet (browsing an unknown inventory)
 
@@ -461,12 +524,16 @@ they set is a hypothesis about inventory that may or may not have supply behind 
 needs them to keep going rather than filter themselves into zero results and leave.
 
 **What it actually does** (measured, 1440×900 and 390×844, Sept 2026):
-- Results page carries a chip rail under the search bar: `Filters` button (84×34px, sliders icon) then
-  ten quick chips at 34px height — desktop order `1+ bathrooms, Free parking, Washer, Allows pets,
-  Wifi, Air conditioning, Instant Book, Self check-in, Dryer, Heating`.
+- Results page carries a chip rail under the search bar: `Filters` button (measured 83.6×34px,
+  sliders icon) then quick chips at 34px height — desktop order `1+ bathrooms, Free parking, Washer,
+  Allows pets, Wifi, Air conditioning, Instant Book, Self check-in, Dryer, Heating`. At 1440 only
+  eight fit; the rest are cut off at the right edge with no overflow control and no scroll
+  affordance, so `Dryer` and `Heating` exist only at wider viewports. A rail that silently drops
+  options by viewport width is a facet set that changes with the window.
 - Clicking `Filters` opens a centred modal measured **568 × 820 px, top offset 40px** in a 900px
-  viewport — 91% of viewport height, deliberately not full-screen, so the results stay visible behind
-  as context.
+  viewport — 91% of viewport height, deliberately not full-screen. The results behind are dimmed
+  under a scrim rather than hidden: readable as context, not as a live count you can watch update.
+  The live count lives on the CTA instead.
 - **First control inside the modal is a search field: `Search all filters`.** When the facet set is
   large enough to scroll, search the facets.
 - Then `Recommended for you` — the same quick chips as large icon tiles (4 on desktop, 3 on mobile
@@ -487,13 +554,23 @@ needs them to keep going rather than filter themselves into zero results and lea
 and setting them is a deliberate episode, not a continuous adjustment. A modal makes it one task with
 one commit point, which is why `Clear all` and `Show N` can be a footer.
 
-**Mobile:** the same sheet, measured at top 12, height 832 of an 844 viewport — a near-full-screen
-sheet with a 12px inset that keeps the "this is a layer" affordance. Identical footer. The `Filters`
-button in the header becomes icon-only. The results page itself inverts: map on top, listings in a
-draggable sheet beneath.
+**Mobile (measured 390×844, 2026-09-09):** the same sheet at top 12, 390×832 — a near-full-screen
+sheet with a 12px inset that keeps the "this is a layer" affordance. Identical footer, `Show 1,000+
+places` still the filled primary. `Recommended for you` drops from four tiles to three; `Type of
+place` keeps all four segments; the price histogram survives at full width and gains explicit
+`Minimum $50` / `Maximum $4000+` numeric fields under the handles, which is the right call — a
+20px-wide drag target on glass needs a typed fallback. `Clear all` renders greyed until something is
+applied, so the footer never offers a no-op. The `Filters` button in the header becomes icon-only
+(`aria-label="Show filters"`) and carries no applied-count badge — the one number the collapsed
+control should carry. The results page itself inverts: map on top, listings in a draggable sheet
+beneath, chip rail above the map with the last chip clipped mid-word as its scroll affordance.
 
 **States:** `Show 0 places` must never be reachable silently — if a combination yields zero the count
-on the CTA says so before you dismiss, which is the whole point of committing the count to the button.
+on the CTA says so before you dismiss, which is the whole point of committing the count to the
+button. The corollary nobody ships: the CTA count is a query per toggle. Decide what it says while
+that query is in flight (keep the last number, dim it — never flash `Show 0`) and what it says when
+that query fails (keep the last number and let the user commit anyway; a failed count must not block
+applying filters).
 
 **Copy that works:** `Show 1,000+ places` (count + noun on the CTA). `Clear all` (two words, no
 confirm). `Trip price, includes all fees` under `Price range` — pre-empts the objection the control
@@ -520,7 +597,9 @@ discoverability.
   / Last created`, plus `Include archived` and `Display properties`. Filtering changes *which*, display
   changes *how* — different menus.
 - `⌘F` is a different feature from `/`: a temporary in-view title filter that doesn't touch the saved
-  view.
+  view. Its exit is worth copying — Linear's docs: "Press Esc to clear the search and show all of
+  your issues." `Esc` on a temporary filter restores the full list; `Esc` on a persistent filter bar
+  must not, or one keypress discards composed state.
 
 **Why a bar and not a sheet:** filters here are persistent working state, adjusted continuously, and
 their exact semantics matter. A modal would hide the current state behind a click; the bar makes the
@@ -545,6 +624,14 @@ sentence. `assignee: [3]` is a data structure.
 | Result is a saved/shared view | yes | rarely | rarely |
 | Primary device is mobile | no | yes | no |
 | Facet counts available cheaply | either | either | yes — the rail's whole advantage |
+
+Read the table as a veto list, not a score: `Primary device is mobile` and `>6 facet groups` each
+kill the filter bar outright regardless of how the other rows land, because a four-clause bar does
+not fit 390px and a bar with nine groups behind it is a menu with extra steps. Everything else is
+weighting. The realistic hard case is a product that scores Linear on every row *and* ships
+mobile-first — a field-service or clinical tool where technicians know the schema exactly and work
+on a phone. Neither column wins: the answer is Linear's semantics with Airbnb's container — a sheet
+whose contents are subject/operator/value clauses, entered from a single `Filters · 3` chip.
 
 Two structural rules that apply to all three: **applied filters are always visible outside the
 control that set them**, and **there is always a single `Clear all`**. Newegg violates the first in a
@@ -573,9 +660,18 @@ value of faceted navigation over a set of dropdowns.
 - **Never render a zero-count facet as clickable.** Options: hide it, or show it disabled with the
   `0`. Hide when the facet list is long and the option is obscure; show-disabled when the option is
   well known and its absence is information ("no 4K models in this price band" is worth saying).
-- **Never render an *unknown* count as `0`.** This is GitHub's live bug: logged out, the left rail
-  reads `Issues 0 · Pull requests 0 · Discussions 0 · Commits 0 · Packages 0 · Wikis 0` for a query
-  against facebook/react. Those counts were never computed. Render `—` or omit the badge.
+  **Two scopes.** (1) Inside a multi-select facet whose values OR together, a `0` next to an
+  unselected value is arithmetically impossible unless that value has no items in the base set at
+  all — if you are rendering zeros there, your counts are computed with the wrong conjunction, not
+  your inventory. Fix the query before you disable the row. (2) On live inventory — seats, flights,
+  on-call slots, ad impressions — a zero is a timestamp, not a fact. Disable it with the count and a
+  freshness line (`0 as of 14:32`), and re-enable on refresh rather than hiding the option, or
+  users learn the facet list itself is unstable.
+- **Never render an *unknown* count as `0`.** GitHub's live bug, re-checked 2026-09-09: logged out,
+  the left rail reads `Issues 0 · Pull requests 0 · Discussions 0 · Commits 0 · Packages 0 · Wikis 0`
+  for a query it never ran against facebook/react. One row on the same rail — `Code` — renders `…`
+  instead, which is the correct treatment sitting three pixels from six wrong ones. Render `—` or
+  `…`, or omit the badge; never a number you did not compute.
 - **Cap and expand.** Show the top 6–10 values by count, then `Show more` (Newegg's `SHOW MORE`), and
   put a filter-the-facet input above the list once it exceeds ~15 values. Airbnb's `Search all
   filters` is this idea applied to the whole modal.
@@ -607,14 +703,12 @@ this filter` on a disabled zero option, on hover/focus.
 ## 9. Command palettes
 
 ### The job
-The user wants to do a thing whose name they know without learning where it lives. The business wants
-to ship features that don't fit the navigation, and to make power users fast enough to stay. The
-failure mode the business must resist: using the palette as a dumping ground so that bad IA never gets
-fixed.
+The user wants to do a thing whose name they know without learning where it lives. The failure mode
+to resist: the palette becomes the place features go when nobody wants to argue about the
+navigation, and the IA never gets fixed because nothing forces it to.
 
 ### The reference implementation
-**Raycast**, whose ranking is documented precisely and is the best default any product could copy.
-Root search orders by, in strict priority:
+**Raycast**, whose ranking is documented precisely. Root search orders by, in strict priority:
 
 1. exact alias match
 2. alias prefix match
@@ -647,12 +741,13 @@ selected by first character. Rows are `Category: Command Name` with keybinding c
 individual key caps (`⇧ ⌥ ⌘ G`), and a gear icon appears on the selected row only, for rebinding.
 
 Two VS Code behaviours worth copying and one worth avoiding:
-- **Copy:** commands are filtered by context. With no folder open, `>format` returned exactly two
-  results — every formatting command was hidden because its precondition was unmet. Hiding an
-  inapplicable command beats showing it disabled, in a palette, because the palette is a search over
-  verbs and a disabled verb is a wrong answer.
-- **Copy:** the list shrinks to the height of its content — two results render as a two-row box, so
-  "almost nothing matched" is legible without reading.
+- **Copy:** commands are filtered by context. With no folder open, `format` returns exactly two rows
+  — `File: Save without Formatting` and `Remote Repositories: Export Debug Information` — because
+  every actual formatting command's precondition was unmet and it was hidden, not disabled. In a
+  palette that's right: the palette is a search over verbs, and a disabled verb is a wrong answer.
+- **Copy:** the list shrinks to the height of its content — measured 2026-09-09, the widget goes
+  from 602×407 on the empty palette to 602×93 on a two-result query, so "almost nothing matched" is
+  legible from the shape before you read a word.
 - **Avoid:** matching is naive substring, so `format` also returns `Remote Repositories: Export Debug
   In**format**ion`. On a two-result list that's 50% noise.
 
@@ -682,9 +777,10 @@ Diagnostic questions, answered honestly:
 - Is the palette the only place a feature is announced? Then that feature has no discovery path at
   all.
 
-Vercel's docs `⌘K` is the honest counter-example of scope discipline: it's a search box in a
-palette's clothing (placeholder `What are you searching for?`, an `Esc` pill inside the input, one
-`Results` group, no commands). Calling it a command palette would be the lie; it doesn't.
+Vercel's docs `⌘K` shows the discipline from the other side: it wears a palette's clothes
+(placeholder `What are you searching for?`, an `Esc` pill inside the input) and contains no commands
+at all — one `Results` group of documents. It is a search box on a palette shortcut, and it doesn't
+claim otherwise. Borrowing `⌘K` does not oblige you to invent verbs to put behind it.
 
 ### The states
 - **Slow index:** render the palette instantly with recents, and stream results in. The palette must
@@ -693,16 +789,23 @@ palette's clothing (placeholder `What are you searching for?`, an `Esc` pill ins
   (`Merge — requires write access`). Never a silently inert row.
 - **Command needs an argument:** transition the palette into an argument step with the command name
   pinned as a breadcrumb chip in the input, and `Esc` or backspace-at-position-0 returning to the
-  command list — not closing the palette. Losing the whole palette on `Esc` from a sub-step is the
-  most-hated palette bug.
-- **Action failed:** the palette has closed by then, so the error belongs in a toast that names the
-  command: `Couldn't archive 3 issues — you don't have permission in ENG.`
+  command list — not closing the palette. `Esc` that discards the whole palette from a sub-step
+  throws away the command the user already found.
+- **Action failed:** see §10 — the palette has closed by then, so the error has to find the user
+  somewhere else.
 
 ### The mobile version
-Command palettes are a keyboard-first pattern and mostly should not exist on mobile. If the product
-is mobile-first, the honest translation is a full-screen search sheet with the *navigation* half of
-the palette and the top 5–8 *actions* as a horizontally scrollable row of chips at the top, sized for
-touch. Don't ship a 602px centred box with a keyboard-hint footer to a phone.
+Command palettes are a keyboard-first pattern and mostly should not exist on mobile. The honest
+translation is a full-screen search sheet with the *navigation* half of the palette and the top 5–8
+*actions* as a horizontally scrollable row of chips at the top, sized for touch. Don't ship a 602px
+centred box with a keyboard-hint footer to a phone — and if you ship the sheet, strip the `↵` glyphs
+and shortcut chips with it, which is exactly the step react.dev's mobile DocSearch skips.
+
+**Scope:** two mobile contexts do want the real thing. A tablet with a hardware keyboard attached
+(detectable — a physical keyboard changes the visual viewport behaviour on focus) should get the
+desktop palette, shortcut chips and all. And a conversational or agent surface, where the input is
+already a text field the user types intent into, is a palette by another name; there the right move
+is inline command suggestions in the composer, not a second modal on top of it.
 
 ### The accessibility requirements
 - `role="combobox"` on the input; `role="listbox"` on the list; `aria-activedescendant` for the
@@ -729,6 +832,91 @@ A `⌘K` modal containing eleven hardcoded navigation links, no recents, no frec
 displayed, `filter(item => item.title.toLowerCase().includes(q))` as the entire ranking algorithm, no
 `Esc` handling, focus never trapped, and — the tell — the same eleven links that are already in the
 sidebar three pixels away.
+
+---
+
+## 10. Failure states: everything after the first successful query
+
+The per-section state notes above cover the happy-ish path. These are the ones that decide whether
+people trust the feature, and they are all downstream of one line of code: `if (results.length === 0)`.
+
+### Empty, forbidden, and broken are three different screens
+An empty array, a 403, and a 500 collapse into `No results found` whenever the client branches on
+array length instead of on the response. They need different words, different recovery, and
+different instrumentation:
+- `200 []` → zero-results surface (§6), with the constraint chips.
+- `401` → keep query and chips on screen, re-auth in place, re-run.
+- `403` → `No results you can access` plus, if your threat model allows the number, how many exist.
+- `429` → see below; not an error screen, a mode change.
+- `5xx` → `Search is unavailable. Your filters are saved.` with a retry button and an error ref.
+Log them as separate events too, or your "zero-result rate" dashboard is silently measuring outages.
+
+### Read-after-write: the index doesn't have it yet
+A user creates an issue, searches for it four seconds later, gets nothing, and concludes search is
+broken. Any index that isn't synchronous with the write path owns this. Two cheap fixes: merge
+recently created objects from the local store into the result set client-side before render, and
+when a zero-result query is younger than your known index lag, say `Indexed up to ~15 seconds ago —
+items created just now may be missing` instead of `No results`. Never tell a user "no results" about
+an object the same session just created.
+
+### Session expiry mid-composition
+Four chips set, forty seconds of work, token expires. Ranked by how often it actually ships: bounce
+to login and lose the filters; render zero results because the 401 body parsed as an empty list;
+render the previous results forever because the error was swallowed. Correct behaviour is a
+re-auth-in-place that keeps the query and chips visible behind it and re-runs the same query on
+success. Rule 4 is what makes this survivable — if the filters are in the URL, the login round-trip
+returns to them for free, and the recovery is one redirect rather than a state-restoration feature.
+
+### Rate limiting is a mode change, not an error
+Type-ahead is a rate-limiter magnet: one fast typist on a slow debounce can trip a per-user quota in
+seconds. On 429, stop retrying per keystroke, switch the field to submit-on-Enter for the rest of
+the session, and say so — `Searching as you type is paused. Press Enter to search.` Silently
+dropping requests produces a field that looks like it works and shows the wrong results, which
+costs more trust than a visible degradation. The same applies to a streaming/AI answer row: a
+rate-limited stream that stops mid-sentence must say it stopped, not sit there looking thoughtful.
+
+### A filter value that stopped existing
+Saved views and shared URLs outlive their referents: the label is deleted, the assignee is
+deactivated, the project is archived, the custom field is removed. Three failures to avoid — 404 the
+whole view; silently drop the clause, so the view now returns a different set than its author saw
+with nothing on screen saying why; or throw on the null lookup. Correct: keep the clause, render it
+struck-through as `Assignee: (deleted user)`, put one line above the results — `1 filter no longer
+exists` — and keep it removable.
+
+### A shared filter URL the recipient can't fully run
+`assignee:matthijs team:security`, pasted into a channel, opened by someone with no access to
+`security`. Do not silently narrow to what they can see: their count then disagrees with the
+sender's and neither party can work out why. Say `Showing 12 of 47 — 35 are in teams you don't have
+access to.` Whether that 35 is safe to disclose is a threat-model decision; make it deliberately and
+per facet, because "how many results exist that I can't see" is itself an information leak in some
+products and table stakes in others.
+
+### Partial failure in a federated search
+One of five sources times out. Rendering the four that returned and dropping the fifth silently is a
+correctness bug dressed as a layout: absence reads as "there are none." Keep the group header,
+render `Couldn't reach Documents — Retry` inside it, and exclude that source from every total you
+print. A count that silently excludes a failed shard is worse than no count.
+
+### The palette action that fails after the palette closed
+A palette is optimistic by construction — it closes on Enter, so every error lands somewhere the
+user is no longer looking. Errors from palette actions need a toast naming the command and the
+object count (`Couldn't archive 3 issues — no permission in ENG`), undo where the action is
+reversible, and — for anything destructive or multi-object — a confirm step *inside* the palette
+before it closes, never a toast afterwards. If the action is long-running, the palette is the wrong
+place to report it: give it a real progress surface.
+
+### Offline and flaky
+Offline: keep the last result set, badge it `Offline — showing results from 2 minutes ago`, queue
+nothing. Flaky: one failed request inside a type-ahead stream must never clear the list — only a
+failure of the *current* query is allowed to change what's on screen, which is the same
+request-tagging discipline that prevents stale-result flicker (§2).
+
+### Failure copy rules
+- Name what failed and what survived: `Search is down. Your filters are saved.`
+- Never blank the field. Baymard: 37% of sites drop the query on error.
+- Retry is a button. "Please try again later" without one is a shrug.
+- Give the error an identity when someone will report it — `Search failed (ref 8f2a)`. A ticket that
+  says "search didn't work" costs an hour that a ref number costs a minute.
 
 ---
 
@@ -759,6 +947,40 @@ it, you're not ready to choose; ship submit-on-Enter, which fails gracefully at 
 context be checked? Would a user plausibly know its name before knowing its location? Three yeses →
 palette. Otherwise it's a button somewhere.
 
+### Where each of these forks is wrong
+
+Every branch above has a product it gives bad advice to. Check yours against these before following
+one.
+
+- **"Under ~50 items → inline filter-as-you-type."** Wrong when the 50 rows are wide and expensive
+  to render (a table with sparklines, a board with covers) or when the list is virtualised over a
+  server-paged source that only *looks* short. It is also wrong when the 50 items are not all
+  loaded — filtering the page you have while telling the user you filtered the set is the worst
+  version of this control. Scope: fewer than ~50 items **that are all in memory**.
+- **"Multiple types + go-to-a-thing → dropdown/palette."** Wrong when the types have wildly
+  different result densities. A workspace with 40,000 messages and 40 projects will show ten
+  messages and no projects on every query unless you reserve slots per group. Cap per group before
+  you cap the list.
+- **"Measure p95, then read the table."** Wrong whenever a query is not free — metered, audited, or
+  side-effecting (see §2). Latency chooses the interaction only when cost per query is ~0.
+- **"≤4 facets adjusted often → chips inline."** Wrong when the four facets are dependent — pick a
+  country and the state list changes. Dependent facets need an ordered form or a sheet, because
+  inline chips imply the options are stable and independent.
+- **"Users know the schema and save queries → filter bar."** Wrong on a phone, and wrong when the
+  saved query is the deliverable rather than the workspace (a report builder, a segment definition):
+  those want a named, versioned, validated object with a preview count, not a bar you can nudge by
+  accident.
+- **"Add a query language only on top of a GUI."** The exception is a product whose users arrive
+  already fluent in a syntax you'd be foolish to replace — log search, SQL-adjacent tools, anything
+  where the query is pasted from a runbook. There the text field is primary and the GUI is the
+  scaffold for newcomers, which inverts the build order but not the rule that both must exist.
+- **"Recents beat suggestions."** Wrong on shared and supervised devices (§5), and wrong at cold
+  start, which is most of your evaluation traffic.
+- **"Hide inapplicable commands (VS Code)."** Wrong when the command's precondition is *the thing
+  the user is trying to fix*. Hiding `Connect to database` because there's no connection teaches
+  nothing; showing it with `— no database configured` is the discoverable version. Hide when the
+  precondition is ambient and obvious, name the reason when the precondition is the user's problem.
+
 ---
 
 ## The generic version
@@ -767,9 +989,8 @@ You can diagnose thoughtless work from these traits alone:
 
 - One `<input placeholder="Search...">`, no scope named, no shortcut hint, no `/` or `⌘K` binding.
 - A request per keystroke, no debounce, no cancellation, results that flicker between two queries.
-- Results are titles in a `<ul>`. No icons, no type labels, no breadcrumbs, no snippets, so a
-  20-result list has no way to tell rows apart except by reading.
-- Highlighting is a naive `replace()` on the raw query, or absent.
+- Results are titles in a `<ul>`: no icons, no type labels, no breadcrumbs, no snippets, and
+  highlighting that is a naive `replace()` on the raw query, or absent.
 - Filters are `<select>` dropdowns in a row. Nothing shows what's currently applied except the
   dropdowns themselves, which are off-screen once you scroll. No `Clear all`.
 - Facets have no counts, so users click into zero results repeatedly and conclude the catalogue is
@@ -777,6 +998,8 @@ You can diagnose thoughtless work from these traits alone:
 - Filter state is component state. Refresh, back and share all lose it. The URL is `/search`.
 - Zero results is a centred illustration and `No results found. Try a different search term.` The
   filter that caused the zero is not mentioned or removable.
+- `if (!results.length) return <NoResults/>` — so an outage, a permission wall and an honestly empty
+  result set all render the same screen, and the zero-result metric doubles as an uptime blind spot.
 - Arrow keys do nothing; `Enter` submits a form and reloads the page; `Esc` does nothing; focus is
   never returned after the modal closes.
 - The mobile version is the desktop version at 390px: filter chips overflow and clip, the modal
@@ -799,6 +1022,13 @@ Run these against your own build.
    matching promote a long title that happens to contain the letters? (The Stripe `refund` test.)
 5. Does any result row explain why it matched — snippet, breadcrumb, or highlighted field?
 6. Turn off the network mid-query. Is there an error state with the query preserved and a retry?
+6a. Force a 403 and a 500 on the search endpoint. Do you get three distinguishable screens for
+    empty / forbidden / broken, or one `No results found`?
+6b. Create an object, then search for it immediately. How many seconds until it's findable, and
+    what does the UI say during that window?
+6c. Expire the session with filters applied. Are the filters still there after re-auth?
+6d. Trip the rate limiter with fast typing. Does the field tell you it switched modes, or just go
+    quiet?
 
 **Filters**
 7. Apply three filters, copy the URL, open it in a private window. Same result set?
@@ -809,6 +1039,11 @@ Run these against your own build.
 11. Is any facet with zero results clickable?
 12. Is any count rendered as `0` that is actually unknown (unauthenticated, uncomputed, errored)?
 13. Set filters that yield zero. Does the empty state name the filters and offer to remove them?
+13a. Delete a label used by a saved/shared view, then open that view. Does it 404, silently drop the
+     clause, or keep it visible and removable with a notice?
+13b. Open a shared filter URL as a user who lacks access to one filter value. Is the shortfall
+     stated, or does the count just disagree with the sender's?
+13c. Kill one source in a federated search. Does its group render an error, or vanish?
 
 **Command palette**
 14. `Esc` from a nested/argument step: does it go back one level, or close the whole thing?
@@ -823,6 +1058,12 @@ Run these against your own build.
 21. Is the filter CTA (`Show N results`) pinned above the keyboard, not below it?
 22. Do filter chips scroll horizontally without clipping the last one?
 23. Are all row targets ≥44pt?
+23a. Are keyboard-only affordances (`↵` glyphs, shortcut chips, `esc to close` legends) actually
+     removed at 390, or just inherited? (react.dev drops the footer legend and keeps the `↵`.)
+23b. Does the collapsed filter entry point carry the applied count (`Filters · 3`)? Airbnb's
+     icon-only mobile control does not.
+23c. Does your chip rail drop options at narrow widths, or scroll them? Airbnb's desktop rail cuts
+     `Dryer` and `Heating` off the end at 1440 with no overflow control.
 
 **Accessibility**
 24. With VoiceOver/NVDA: on typing, is the result count announced? On arrowing, is the row announced
@@ -835,43 +1076,62 @@ Run these against your own build.
 
 ## Sources
 
-Walked with a headless browser, Sept 2026; screenshots in
-`~/Ayush/UI_Library/.cache/shots/sfc-*.png`.
+Walked with a headless browser, Sept 2026; re-walked 2026-09-09 with screenshots in
+`~/Ayush/UI_Library/.cache/shots/search-filter-and-command-v-*.png`. Every measurement below marked
+"re-verified" or "re-measured" was taken from those PNGs, at 1440×900 and 390×844, DPR 2, logged
+out.
 
-- **Airbnb** `airbnb.com/s/San-Francisco--CA/homes` (1440×900 and 390×844) — chip rail at 34px,
-  `Filters` button 84×34, filter modal measured 568×820 at top 40; `Search all filters` field;
+- **Airbnb** `airbnb.com/s/San-Francisco--CA/homes` (1440×900 and 390×844) — re-measured
+  2026-09-09. Chip rail at 34px showing 8 of 10 chips at 1440 with the rest clipped, `Filters`
+  button 83.6×34, filter modal 568×820 at top 40 over a scrim; `Search all filters` field;
   price-distribution histogram behind the dual slider; footer `Clear all` / `Show 1,000+ places`;
   mobile sheet 832px tall at top 12, `Filters` collapses to an icon-only control
   (`aria-label="Show filters"`), map-over-sheet results layout.
 - **Linear** `linear.app/docs/filters`, `/docs/search` + in-product captures from those pages — chips
   reading `Assignee is any of 3 assignees ×`; `Match all filters` toggle; `@ma` inline token with an
   `Assignee`-headed typeahead; Display panel `Most relevant / Last updated / Last created` +
-  `Include archived`; "applied filters are also reflected in the browser URL"; `⌘F` "acts more like a
-  temporary filter"; command-menu prefixes `i p u t l f d`.
-- **GitHub** `github.com/search?q=repo:facebook/react+useEffect&type=issues|code`,
-  `github.com/search/advanced` — `0 results (21 ms) in [facebook/react ×]`; three collapsed
-  zero-result accordions; every left-rail facet rendered as `0` while logged out; advanced-search
-  placeholders as syntax examples (`0..100, 200, >1000`) and `Return repositories [not ▾] including
-  forks.`
-- **react.dev / Algolia DocSearch** `react.dev/reference/react/useEffect` — 768px desktop modal;
-  section groups; parent+anchor tree rows; inline blue match highlighting; selected row as a solid
-  band with `↵` on it; footer legend `↵ to select / ↓↑ to navigate / esc to close`; mobile 390×844
-  full-bleed, 52px rows, `Cancel` button, legend removed, leading-ellipsis truncation
-  (`… Might Not Need an Effect`).
-- **Vercel docs** `vercel.com/docs` ⌘K — placeholder `What are you searching for?`; `Esc` pill inside
-  the input; logged-out empty state = 8 curated `Suggestions`; amber match highlighting; snippet
-  leaking frontmatter (`title: domain-management product: vercel url: …`); near-duplicate rows.
-- **Stripe docs** `docs.stripe.com/payments` `/` — `refund` returns five irrelevant fuzzy hits;
-  `refunds` returns `Refund and cancel payments` first; per-result breadcrumb with highlighting;
-  groups `Results` / `Ask AI Assistant` / `Code example`; `View more results`.
+  `Include archived`; "The applied filters are also reflected in the browser URL… Only the main
+  filters are included in the URL. View options, quick filters, and Insights filters aren't
+  included" (quotes re-fetched 2026-09-09); `⌘F` "acts more like a temporary filter… Press Esc to
+  clear the search and show all of your issues"; search menu shows "recent searches as well as a
+  list of recent issues"; command-menu prefixes `i p u t l f d`.
+- **GitHub** `github.com/search?q=repo:facebook/react+useEffect&type=issues`,
+  `github.com/search/advanced` — re-verified 2026-09-09 at 1440 and 390. `0 results (6 ms) in
+  [facebook/react ×]` (elapsed time varies per query); three collapsed zero-result accordions plus
+  `Your search did not match any issues. You could try one of the tips below.`; left rail logged-out
+  shows `Issues/Pull requests/Discussions/Commits/Packages/Wikis` all `0` while `Code` shows `…`; at
+  390 the rail collapses to `Filter: [Issues 0 ▾] in [facebook/react ×]`. Advanced search:
+  placeholders as syntax examples (`github, atom, electron, octokit`; `>YYYY-MM-DD, YYYY-MM-DD`;
+  `0..100, 200, >1000`; `50..100, 200, <5`) and `Return repositories [not ▾] including forks.`
+- **react.dev / Algolia DocSearch** `react.dev/reference/react/useEffect` — re-measured 2026-09-09.
+  Desktop modal 768×868 at top 16, rows 52px; groups by docs section (`REACT APIS`, `LEARN`,
+  `REACT DOM APIS`, `REACT SERVER COMPONENTS`); parent+anchor tree rows; inline blue match
+  highlighting; selected row a solid teal band with `↵` at its right edge; footer legend `↵ to
+  select / ↓↑ to navigate / esc to close` plus Algolia attribution. Mobile: modal 390×844 at 0,0,
+  rows 52px, `Cancel` 69×40 at x=301 y=12, legend removed (attribution kept), `↵` glyph retained on
+  the selected row, per-row ellipsis placement (`Comparing useState and use …` / `… in memory with
+  useState`).
+- **Vercel docs** `vercel.com/docs` ⌘K — re-verified 2026-09-09. Placeholder `What are you searching
+  for?`; `Esc` pill inside the input; logged-out empty state = the same 8 curated `Suggestions`;
+  amber match highlighting; `domain` returns 7 rows with two leaking frontmatter (`title:
+  domain-management product: vercel url: …`) and a byte-identical near-duplicate pair at rows 5 and
+  7; no results-page escape row; sidebar affordance `Search Docs ⌘K`.
+- **Stripe docs** `docs.stripe.com/payments` `/` — re-verified 2026-09-09. `refund` and `refunds`
+  now return the identical five rows led by `Refund and cancel payments`; stemmed highlighting
+  across title, snippet and breadcrumb; per-result breadcrumb path with `›` and tail elision; groups
+  `Results` / `Ask AI Assistant` (5 generated questions) / `Code example`; `View more results`. The
+  earlier singular/plural relevance failure recorded in this file did not reproduce — see the review
+  pass.
 - **Raycast** `manual.raycast.com` (+ `/search-bar`, `/action-panel`) — documented ranking order
   (exact alias → alias prefix → title fuzzy → subtitle/keyword → frecency, "for a given query");
   fuzzy sensitivity setting; Action Panel `⌘K` with its own search field and section grouping;
   "The first action in the Action Panel is the primary action"; root-search screenshot showing
   `Suggestions`/`Commands` groups and the `Open Command ↵` / `Actions ⌘K` footer.
-- **VS Code** `vscode.dev` live (F1) — widget measured 602px wide at top 6; `>` prefill; commands
-  gated by context (`>format` = 2 results with no folder open); substring highlight false positive
-  `Export Debug In**format**ion`; per-row keybinding caps; `N Results` announced but not rendered;
+- **VS Code** `vscode.dev` live (F1) — re-measured 2026-09-09: widget 602×407 empty, 602×93 on a
+  two-result query, both at top 6; `>` prefill; commands gated by context (`format` with no folder
+  open returns exactly `File: Save without Formatting` ⌘K S and `Remote Repositories: Export Debug
+  Information` — one true hit, one substring false positive); per-row keybinding caps; `N Results`
+  announced but not rendered;
   `code.visualstudio.com/docs/getstarted/userinterface` for `⇧⌘P` / `⌘P` / `?` / `⇧⌘O` / `⌃G`.
 - **Newegg** `newegg.com/p/pl?d=gaming+laptop` — ON/OFF toggle pills with no counts anywhere;
   `Department` duplicated as rail *and* chip row; `Search Within:` second input; `SAVE THIS SEARCH`;
@@ -904,3 +1164,59 @@ Research cited:
 - **W3C ARIA APG**, *Combobox with listbox popup* — required roles/states, and "DOM Focus is
   maintained on the combobox and the assistive technology focus is moved within the listbox using
   aria-activedescendant." `w3.org/WAI/ARIA/apg/patterns/combobox/`
+
+---
+
+## Review pass (2026-09)
+
+Adversarial re-read on 2026-09-09. Seven products re-walked live at 1440×900 and 390×844 (DPR 2,
+logged out); screenshots at `.cache/shots/search-filter-and-command-v-*.png`.
+
+**One claim was false and is now removed.** The original rule 2 hung on Stripe docs search returning
+five unrelated documents for `refund` and the correct one for `refunds`. It does not reproduce.
+`refund` and `refunds` now return the identical five rows, `Refund and cancel payments` first, with
+stemmed highlighting across title, snippet and breadcrumb (v-3). Rule 2 now rests on VS Code's
+substring matching, which is live and measurable: `format` with no folder open returns two commands
+and one is `Export Debug In**format**ion` (v-11). Lesson for this corpus: a relevance failure is the
+most perishable kind of claim, because it is the kind a docs team fixes. Prefer defects that are
+structural (Vercel indexing frontmatter, GitHub rendering unknowns as `0`) over defects that are one
+index rebuild away from being wrong.
+
+**Verified and unchanged.** Airbnb `Filters` 83.6×34 and modal 568×820 at top 40, `Search all
+filters`, the price histogram behind the dual slider, `Clear all` / `Show 1,000+ places` (v-9);
+mobile sheet 390×832 at top 12 (v-10). react.dev DocSearch 768×868 at top 16, 52px rows, footer
+legend, and at 390 a full-bleed 390×844 modal with a 69×40 `Cancel` and no legend (v-6, v-7). GitHub
+`0 results (N ms) in [facebook/react ×]`, the three collapsed accordions, the logged-out rail of
+zeros, and the advanced-search placeholders-as-syntax (v-1, v-2). Vercel's frontmatter-leaking
+snippets and duplicate rows (v-4). VS Code 602px at top 6 (v-11). Linear's doc quotes re-fetched.
+
+**Numbers that were too precise.** `0 results (21 ms)` is a per-query value — measured 6 ms today.
+Now stated as a pattern with the number as an example. "react.dev renders 10 rows on mobile" was
+wrong: it renders an uncapped scrolling list. `84×34` is 83.6×34.
+
+**What was added.** A new §10 on failure states — the gap. The file's per-section state notes
+covered slow, partial and empty, but nothing covered the states that actually decide trust: 401/403/
+429/5xx collapsing into `No results found` because the client branches on array length; read-after-
+write against a lagging index; session expiry mid-composition; rate limiting as a mode change;
+filter clauses whose referent was deleted; shared filter URLs the recipient can only partly run;
+silent shard failure in federated search; palette actions that fail after the palette closed.
+
+**Mobile, re-shot.** Real findings rather than "the desktop version is smaller": react.dev keeps the
+`↵` glyph on the selected row on a device with no Enter key; Airbnb's icon-only mobile `Filters`
+control carries no applied count; Airbnb's desktop chip rail silently clips `Dryer` and `Heating`
+at 1440; GitHub's mobile zero-results collapses the facet rail into an `Issues 0 ▾` dropdown while
+keeping the scope chip — the good half — then spends the viewport on the illustration.
+
+**Decision procedures, scoped.** Every fork in the file now names a product it is wrong for. The
+sharpest: the "under ~50 items → inline filter" branch is wrong unless all 50 are in memory; the
+p95 latency table is wrong whenever a query is metered, audited or side-effecting; "filters live in
+the URL" is wrong when filter values are identifiers you don't want in a support ticket — and Linear
+itself only serialises the main filters, so its own shared links don't reproduce the sender's view;
+"hide inapplicable commands" is wrong when the missing precondition is the thing the user is trying
+to fix.
+
+**Still unverified, flagged rather than fixed.** Linear and Slack are documented from their help
+pages plus earlier in-product captures, not from a logged-in session this pass — the operator lists,
+sigil behaviour and `Match all filters` toggle are quoted from docs. Raycast likewise, from the
+manual. Newegg was not re-walked; its facet-count and duplicate-control claims are from the earlier
+pass. Baymard percentages are cited, not re-checked.
