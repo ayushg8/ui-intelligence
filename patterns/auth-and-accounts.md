@@ -126,9 +126,10 @@ flow; do not copy it.
   the Google button is stacked above the fields. If you must have four fields, pin the primary
   button to the bottom of the viewport above the keyboard.
 - Do not autofocus the first field on mobile. Autofocus opens the keyboard before the user has
-  read the heading, which hides the heading. Stripe and Notion both autofocus at 1440 and not at
-  390; GitHub autofocuses at both, which is why its `Sign in with a passkey` link — already last on
-  the page — is off-screen for a mobile user before they have touched anything.
+  read the heading, which hides the heading. Stripe autofocuses Email at 1440 and not at 390; Notion
+  autofocuses at 1440 and ships no email field at all at 390; GitHub autofocuses at both, which is
+  why its `Sign in with a passkey` link — already last on the page — is off-screen for a mobile user
+  before they have touched anything.
 
 ### Accessibility
 - Every input needs a real `<label>`, not a placeholder. Placeholders vanish on focus and are
@@ -357,12 +358,13 @@ user's Instagram.
 ## 4. Passkeys in 2026 — the actual UX, including the fallback
 
 ### Where adoption really is
-The FIDO Alliance's World Passkey Day 2026 figures: ~**5 billion** passkeys in use; **90%** consumer
-awareness; **75%** have enabled a passkey on at least one account; **49%** use them regularly when
-offered; **68%** of organisations have deployed or are deploying them for employee sign-in.
-Industry split: fintech ~60%, ecommerce ~35%, B2B SaaS ~28%, media ~18%. Reported sign-in success
-rate is ~**93% for passkeys vs ~63% for passwords** — that gap, not the security story, is what
-gets passkeys funded. And still: **57%** of organisations use a phishable factor as primary.
+Two numbers from the FIDO Alliance's World Passkey Day 2026 report carry decisions; the rest are
+fundraising slides. Reported sign-in success is ~**93% for passkeys vs ~63% for passwords** — that
+gap, not the security story, is what gets the work funded, and it is the number to put in your own
+proposal. And **49%** use passkeys regularly *when offered*, against **75%** who have enabled one
+somewhere — so roughly a third of the people who own a passkey will still pick another method on
+your screen. Both figures are self-reported by a trade body promoting the technology; treat them as
+directionally right and instrument your own funnel before quoting either internally.
 
 Translation for a builder: passkeys are now table stakes as an *option*, and a mistake as the
 *only* option.
@@ -500,9 +502,9 @@ and:
 
 > "my password manager doesn't auto fill them"
 
-That is the real cost and it is not aesthetic: **magic-link-only flows are invisible to password
-managers, so the manager stops being the user's index of which account exists**, and the same
-person creates a new account every time they forget. Nine accounts is not a hypothetical.
+That is the real cost: **magic-link-only flows are invisible to password managers, so the manager
+stops being the user's index of which account exists**, and the same person creates a new account
+every time they forget.
 
 ### The decisions
 | Fork | Choose |
@@ -587,9 +589,9 @@ business must not confirm to an attacker that `ceo@target.com` has an account �
 input to a credential-stuffing or phishing campaign.
 
 ### The real resolution
-Not "show a generic error." That is the answer that makes the flow unusable and it is why so many
-teams quietly leak instead. The resolution used by Google Identity Platform (enumeration protection
-on by default for projects created after 15 Sep 2023), by Vercel, and recommended by OWASP:
+Not "show a generic error" — that is what makes the flow unusable and it is why so many teams
+quietly leak instead. The resolution used by Google Identity Platform (enumeration protection on by
+default for projects created after 15 Sep 2023), by Vercel, and recommended by OWASP:
 
 **Make the response identical and move the disambiguation into the email itself.**
 
@@ -1196,7 +1198,7 @@ actively misleading. And the customer never learns it happened.
 | Method | UX cost to user | Security property | Support cost | Use it when |
 |---|---|---|---|---|
 | **Password** | High: must create, store, recall; typos; resets | Phishable, replayable, stuffable. Only as good as the blocklist | Highest — reset queue dominates auth support | You need offline-capable, universally understood auth, or your users demand a password-manager-fillable field |
-| **Magic link** | Medium: leaves the app, may land on the wrong device, invisible to password managers | Bearer token in email; email account becomes the security boundary; link prefetch consumes it | Medium — "didn't arrive" and spam-folder tickets | The second device is intentional (Monzo), or the audience is non-technical and email-native |
+| **Magic link** | Medium: leaves the app, may land on the wrong device, invisible to password managers | Bearer token in email; email account becomes the security boundary; link prefetch consumes it | Medium — "didn't arrive" and spam-folder tickets | The strong factor is gone by design (Monzo's emergency channel, paired with a cut-down capability set), or the destination genuinely is the mail client's device |
 | **6-digit email code** | Low-medium: one context switch, but stays on the same device | Same boundary as magic link, but no prefetch problem and rate-limitable | Low-medium | Default passwordless choice. Vercel's pick |
 | **OAuth / social** | Lowest: one tap, no new credential | Inherits the IdP's security (usually strong); creates IdP dependency and duplicate-account risk | Low, except account-linking confusion | You have 2–4 providers your users demonstrably already use |
 | **Passkey** | Lowest after enrollment; enrollment itself needs explaining; device-bound mental model is weak | Phishing-resistant, non-replayable. ~93% sign-in success vs ~63% for passwords | Low in steady state; **recovery is the whole cost** | Always offer. Never as the sole method |
@@ -1272,6 +1274,11 @@ You have built the thoughtless version if:
   marker.
 - Account deletion is a support email address.
 - Support impersonation is a small header badge with full write access and no audit trail.
+- The mobile layout is the desktop layout with `flex-wrap`, so the method you made primary on
+  desktop is sixth on a phone and nobody has looked.
+- A failed payment renders as a login wall, so the one person who could fix the card cannot reach
+  the billing page.
+- A revoked or expired invite renders as "Invalid token".
 
 The tell that ties these together: **each screen was designed in isolation and no failure state was
 walked.** Every item above is fine on the happy path.
@@ -1285,49 +1292,65 @@ Runnable against your own implementation.
 **Signup / login**
 1. Load `/login`, tab from the top: does focus reach the identifier, the primary button, then the
    providers, in that visual order? No focus traps, no invisible skipped controls?
-2. Submit an email that exists and one that does not. Diff the HTTP status, the body, and the
-   **response time**. Any of the three differing is an enumeration leak.
-3. Turn off JavaScript. Does the login form still submit, or at least fail with a message rather
+2. Submit an email that exists and one that does not. Diff the HTTP status, the body, the
+   `Set-Cookie`, and the **response time**. Any difference is an enumeration leak.
+3. Now submit each one twenty times fast. Does the existing address start returning 429 while the
+   unknown one does not? Your rate limiter is the oracle you thought you closed.
+4. Turn off JavaScript. Does the login form still submit, or at least fail with a message rather
    than a blank page?
-4. On a 390×844 viewport with the keyboard open, is the primary button visible without scrolling?
-5. Paste a 64-character password into the signup field. Is it accepted whole, or silently truncated?
-6. Paste a 6-digit code into box 1 of your OTP input. Do all six fill?
+5. On a 390×844 viewport with the keyboard open, is the primary button visible without scrolling?
+6. Paste a 64-character password into the signup field. Is it accepted whole, or silently truncated?
+7. Paste a 6-digit code into box 1 of your OTP input. Do all six fill?
 
 **Passkeys**
-7. Is `mediation: 'conditional'` called on page load, and does the identifier field carry
+8. Is `mediation: 'conditional'` called on page load, and does the identifier field carry
    `autocomplete="username webauthn"`?
-8. Press Escape at the platform prompt. Does the UI say "cancelled", or does it say "failed"?
-9. In Settings, try to delete the only passkey on an account with no password. Are you blocked?
+9. Press Escape at the platform prompt. Does the UI say "cancelled", or does it say "failed"?
+10. In Settings, try to delete the only passkey on an account with no password. Are you blocked?
 
 **Sessions — the important ones**
-10. Type 500 words into your longest form. Invalidate the session server-side. Hit Save. **Is the
+11. Type 500 words into your longest form. Invalidate the session server-side. Hit Save. **Is the
     text still on screen 10 seconds later?** If not, this is your highest-priority bug.
-11. Set the session to expire in 3 minutes. Do you get a warning with a countdown and a "Stay
+12. Set the session to expire in 3 minutes. Do you get a warning with a countdown and a "Stay
     signed in" button at least 20 seconds before? (WCAG 2.2.1)
-12. Go offline mid-session and trigger a request. Are you logged out? You should not be.
-13. Open four tabs, let the session expire, re-authenticate in one. Do the other three recover
+13. Go offline mid-session and trigger a request. Are you logged out? You should not be. Repeat with
+    a 429 from your own API instead of a network failure — same answer.
+14. Open four tabs, let the session expire, re-authenticate in one. Do the other three recover
     without their own login prompts?
-14. After sign-out-everywhere, is a previously-issued access token rejected immediately, or does it
+15. After sign-out-everywhere, is a previously-issued access token rejected immediately, or does it
     work for another 15 minutes?
 
 **SSO**
-15. Enter an email whose domain has an SSO connection. Does the password field disappear on submit
+16. Enter an email whose domain has an SSO connection. Does the password field disappear on submit
     (or on keypress), or does the user have to know a slug?
-16. Post an unsolicited SAML response to your ACS endpoint. Is it rejected?
-17. Enable SSO enforcement on a test org. Does an existing password still work? It should not.
+17. Post an unsolicited SAML response to your ACS endpoint. Is it rejected?
+18. Enable SSO enforcement on a test org. Does an existing password still work? It should not.
 
 **Recovery and lifecycle**
-18. Enroll in 2FA and close the recovery-codes screen without acknowledging. Are you 2FA-enabled
+19. Enroll in 2FA and close the recovery-codes screen without acknowledging. Are you 2FA-enabled
     with zero saved codes? (You should not be.)
-19. On the 2FA challenge screen, count the clicks to "use a recovery code". More than one is too
+20. On the 2FA challenge screen, count the clicks to "use a recovery code". More than one is too
     many.
-20. Request a data export. Does it complete async with an email, and does the UI say how long?
-21. Delete a test account that is the sole owner of an org. Is the error actionable?
+21. Request a data export. Does it complete async with an email, and does the UI say how long?
+22. Delete a test account that is the sole owner of an org. Is the error actionable?
 
 **Impersonation**
-22. Start an impersonation session and scroll. Is the banner still visible?
-23. Check the audit log entry for an action taken during impersonation. Does it name the agent, or
+23. Start an impersonation session and scroll. Is the banner still visible?
+24. Check the audit log entry for an action taken during impersonation. Does it name the agent, or
     does it name the customer?
+25. During an impersonation session, expire the *agent's* session. Which identity gets challenged?
+26. During an impersonation session, have the customer change their password. Does the agent's
+    session die within seconds?
+
+**Lifecycle and money**
+27. Put a test account into dunning. Log in. Can a non-billing teammate still read? Can the billing
+    owner reach the card form in one click, without a paywall in the way?
+28. Revoke an invite, then click its link. Do you get a named reason, or "Invalid token"?
+29. Point a signup at a mailbox that hard-bounces. Does the pending screen ever change?
+30. Run "sign out everywhere", then use a personal access token issued before it. Still works? Then
+    say so in the dialog.
+31. Compare your login page at 1440 and 390 side by side. Is the method order the same, and if it
+    changed, did someone decide that?
 
 ---
 
@@ -1347,21 +1370,33 @@ Walked in a browser, September 2026 (screenshots in `.cache/shots/`):
   expanded an inline **"Team Slug"** field (placeholder `my-team`) — the weakest of the four SSO
   patterns.
 - `https://www.notion.com/signup` and `https://www.notion.so/login` — signup: "Work email" label,
-  `name@company.com` placeholder, persistent work-email tip callout, three social tiles. Login after
-  entering an email: 3×2 tile grid (Google, ChatGPT, Apple / Microsoft, Passkey, SSO); Continue
-  button dims and shows an inline spinner while keeping its label and width.
-- `https://dashboard.stripe.com/register` — Email, Full name, Password, Country (US default, ⓘ
-  tooltip), `Create account`, then a single Google button below "Or sign up with".
+  `name@company.com` placeholder, persistent work-email tip callout, three social tiles. Login at
+  1440: autofocused Email + "Use an organization email…" helper + blue Continue, "or continue with",
+  3×2 grid of icon+label tiles (Google, ChatGPT, Apple / Microsoft, Passkey, SSO); Continue dims and
+  shows an inline spinner while keeping its label and width. **Login at 390: no email field at all —
+  seven stacked full-width buttons, Google / ChatGPT / Apple / Microsoft / Passkey / SSO / Email,
+  with email last.**
+- `https://dashboard.stripe.com/register` — a card over the blurred dashboard. At 1440: Email
+  (autofocused), Full name, Password, Country (US default, ⓘ tooltip), `Create account`, then
+  "Or sign up with" and a single Google button *below* it. **At 390 the order inverts: "Sign up with
+  Google" first, then "Or sign up with", then the four fields, then `Create account` at ~553pt — no
+  autofocus.**
 - `https://github.com/login` (390px) — both fields on one screen, green Sign in, "Forgot password?"
   inline beside the Password label, Google + Apple below, `Sign in with a passkey` as the last link
   on the page.
-- `https://auth0.com/signup` — an auth vendor choosing email-first: one field, Continue, then three
-  icon-only tiles (GitHub, Google, Microsoft).
+- `https://auth0.com/signup` — an auth vendor choosing email-first: one Email field, the legal line
+  *above* the primary, indigo `Continue`, "OR", then three full-width icon+label buttons (Continue
+  with GitHub / Google / Microsoft). **Changed since the previous pass, which recorded icon-only
+  tiles here.**
 - Clerk's default `<SignIn/>` (`clerk-nextjs-app-router.vercel.app/sign-in`) — two social buttons in
   a row, "or", "Email address" with an inline "Use phone" toggle, `Continue ▸`, "Don't have an
   account? Sign up", "Secured by Clerk".
 - `https://web.monzo.com` — a bank, magic-link-only on web: "Enter your email to get access" /
-  "We'll send you a secure magic link to get access." / `Get magic link`.
+  "We'll send you a secure magic link to get access." / `Get magic link`. The panel beside it scopes
+  the whole thing: "Securely log in to Monzo for Emergencies… log in here to see a stripped-back
+  version of your account", an explicit five-item capability list (remote log-out, balance, account
+  list, transactions, freeze/unfreeze card), and "You'll only be able to see recent transactions if
+  you've used your app in the last 90 days." No money movement.
 - `https://app.revolut.com/start` — phone-number-first with a country selector, "Lost access to my
   phone number" placed directly under the field *above* Continue, then Email/Google/Apple icon
   circles, then `Create account` as a full-size secondary button.
@@ -1418,3 +1453,102 @@ Documentation and research:
   Re-authenticating (Level AAA: warn about data loss and preserve data across re-authentication).
 - GDPR Art. 17 (erasure) and Art. 20 (portability, "structured, commonly used and machine-readable
   format").
+
+---
+
+## Review pass (2026-09)
+
+Adversarial re-walk. Twelve screenshots at 1440 and 390, `.cache/shots/auth-and-accounts-v-1`
+through `-v-9`. Seven products re-verified against what this file claimed.
+
+**Confirmed, unchanged**
+
+- **Vercel `/login`** — Email field → black `Continue with Email` → hairline → Google, GitHub,
+  ChatGPT, SAML SSO, Passkey as five equal bordered buttons → "Show other options" → "Don't have an
+  account? Sign Up". Exactly as described. (`v-1`)
+- **Vercel `/signup`** — "Your first deploy is just a sign-up away." → four equal bordered buttons
+  Google / GitHub / ChatGPT / **Apple**, no filled primary → "Show other options" → blue
+  `Continue with Email →` → "By joining, you agree to our Terms of Service and Privacy Policy".
+  The inverted-stack claim holds, and note the fourth provider differs between the two pages:
+  Apple on signup, SAML SSO + Passkey on login. (`v-2`)
+- **Vercel SAML** — clicking `Continue with SAML SSO` still expands a **Team Slug** field with a `?`
+  tooltip and placeholder `my-team`, inline above the button. Pattern 4, still. (`v-9`)
+- **Linear `/signup`** — zero fields, three pills, `Continue with Google` filled indigo. One copy
+  correction: the legal line is "Terms of Service and **Data Processing Agreement**", not Privacy
+  Policy. (`v-3`)
+- **GitHub `/login` at 390** — both fields on one screen, autofocused username, "Forgot password?"
+  inline beside the Password label, green Sign in, Google + Apple, then "New to GitHub? Create an
+  account", then `Sign in with a passkey` dead last. (`v-6`)
+- **Monzo `web.monzo.com`** — magic-link-only, verbatim copy intact. (`v-7`)
+- **Notion `/login` at 1440** — email-first, 3×2 tile grid, org-email helper. (`v-5`)
+
+**Wrong, now fixed**
+
+1. **Auth0 `/signup` no longer uses icon-only tiles.** It ships three full-width icon+label buttons
+   (Continue with GitHub / Google / Microsoft), and puts the legal line above the primary button.
+   The old claim was the basis for a decision bullet ("icon tiles once you have four or more,
+   Auth0"), which has been rewritten around Notion's labelled tiles instead. (`v-8`)
+2. **Monzo's rationale was wrong.** This file said the magic link works "because the real credential
+   lives in the phone app and the web session must be approved there anyway". The opposite is true:
+   the page is explicitly scoped to *"Securely log in to Monzo for Emergencies… if you've lost your
+   phone"*, with a five-item capability list and no money movement. The link is proportionate
+   because the capabilities were cut, not because a second factor backs it. §5 and the tradeoff
+   table rewritten. (`v-7`)
+3. **Stripe's Sources entry described only the desktop order.** At 390 the card inverts — Google
+   first, fields second. Added, along with the measured 553pt fold position for `Create account`.
+   (`v-4`)
+
+**The gap this pass was looking for: mobile**
+
+**Notion's 390px login is a different information architecture, not a reflow.** No email field;
+seven stacked buttons with Email seventh. The product that models email-first best on desktop models
+NASCAR worst on a phone. This is now the file's canonical counterexample and drove three edits: the
+provider-count rule (cap what one user *sees*, not what you support), a new §2 mobile rule
+(re-decide order at 390, do not unwrap), and self-check #31. Stripe's deliberate inversion is the
+contrast case — same problem, decided rather than inherited.
+
+**Failure states added**
+
+The file was strong on §10 (session expiry) and thin everywhere the task's four canonical failures
+land. New states: rate-limited-vs-expired and streamed responses cut off mid-token (§10); failed
+payment as an authorization state that must not render as a login wall (§10); revoked, expired and
+seat-exhausted invites, plus hard-bounced verification mail (§7); the rate limiter as a rebuilt
+enumeration oracle (§6) — the sharpest single finding of this pass, since the standard fix for
+enumeration creates it; six device-list states including wrong IP geolocation and "sign out
+everywhere" missing PATs and OAuth grants (§11, which had none); seven impersonation states
+including agent-session expiry and customer-initiated password change (§13, which had none);
+export/delete races, outstanding balances, and re-auth before erasure (§12).
+
+**Decision procedures scoped**
+
+Every fork was given a product where its recommended branch is wrong:
+
+| Fork | Where it breaks | Now scoped in |
+|---|---|---|
+| Identifier-first, never two tabs | Admin-provisioned tools with no self-serve signup — nothing to route between | Top-of-file rule 1 |
+| Three or four providers | Regional fragmentation (LINE / Kakao / WeChat); the cap is on choices *shown*, not supported | §2 |
+| Code beats link | Constrained devices need a device-authorization flow; mail-native destinations; recovery channels where the strong factor is gone | §5 |
+| Domain detection on keypress is best | It is an unauthenticated customer-list enumeration API, and a phishing target list that names the IdP | §9 |
+| Verify after first value | Anything that emits to third parties, or costs per request, gates the first emission | §7 |
+| Passkey + fallback always | "Fallback" must mean comparable strength; a custody console shipping hardware-key-only is stronger, not broken | §4 |
+| Re-auth in an overlay | Shared terminals and PCI/clinical contexts need the content obscured — keep the DOM, hide the pixels | §10 |
+| Recovery codes at enrollment | Mass-consumer users will not file 16 strings; a second synced passkey is the real route | §8 |
+| Two typed confirmations to delete | Disproportionate on a low-value account, and in the EU cuts against "as easy to withdraw as to give" | §12 |
+| Impersonation read-only by default | Done-for-you products where acting in the account *is* the service | §13 |
+| SMS ranked last but offered | Never on an account that moves money, or in SIM-swap-endemic markets | §8 |
+
+**Marked unverified**
+
+FIDO Alliance 2026 adoption figures are self-reported by a trade body promoting passkeys; the
+paragraph now says so and keeps only the two numbers that drive a decision. The Vercel enumeration
+string, Clerk session defaults, GitHub 2FA recovery-code behaviour, Mercury's enrollment placement
+and the HN practitioner quotes are documentation- and transcript-sourced, not re-walked this pass —
+the sign-in screens above are the only browser-verified claims.
+
+**Cut**
+
+Rhetorical restatements that survived the last pass: "Nobody is inconvenienced except the attacker"
+(false — the real user pays a round trip through their inbox, and the honest version of that
+sentence is now in §6), "Design the flow assuming it is a right, not a favour, and it gets simpler",
+"Most support tasks are diagnosis", "it is the clearest available win", the passkey industry-split
+statistics, and "A warning is worth more than any amount of polish on the expiry screen".

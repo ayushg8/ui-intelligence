@@ -12,7 +12,9 @@ The single most useful fact in this file, and the one that should reframe everyt
 > *color documentation page* — a page whose entire content is color swatches — is 6.45%.
 
 Product interfaces made by good designers are 99% neutral. Not "mostly neutral." Ninety-nine
-percent. If you take one thing from this file, take the number.
+percent. And note what the 6.45% figure means: a documentation page consisting of nine ten-step
+color ramps, rendered as ~90 filled swatches, is still 93.5% grayscale. If you take one thing from
+this file, take the number.
 
 ---
 
@@ -666,21 +668,52 @@ unbounded and gamut-limited, so `oklch(0.55 0.30 148)` simply doesn't exist and 
 Tailwind v4, which ships its entire palette as `oklch()`.
 
 ```css
+/* A complete warm neutral ramp. Every hex below is the browser's own conversion of the
+   oklch() to its left, and every contrast number was computed from that hex. Note three
+   things: the steps get FURTHER apart as they get darker, chroma arcs up and back down,
+   and hue drifts 90° → 64°. */
 :root {
-  /* Neutral: fix hue and chroma, walk L. Chroma ≤ 0.02 for a neutral. */
-  --n-50:  oklch(0.985 0.003 264);
-  --n-100: oklch(0.968 0.004 264);
-  --n-200: oklch(0.929 0.006 264);
-  --n-300: oklch(0.880 0.008 264);   /* the step Tailwind doesn't have */
-  --n-400: oklch(0.820 0.010 264);
-  --n-500: oklch(0.700 0.014 264);
-  --n-600: oklch(0.550 0.016 264);
-  --n-700: oklch(0.450 0.016 264);
-  --n-800: oklch(0.370 0.014 264);
-  --n-900: oklch(0.280 0.011 264);
-  --n-950: oklch(0.180 0.008 264);
+  --n-50:  oklch(0.990 0.002 90);  /* #fcfcfa   page ground              */
+  --n-100: oklch(0.975 0.004 88);  /* #f8f7f4   subtle surface      Δ1.5 */
+  --n-150: oklch(0.955 0.006 85);  /* #f2f0ec   component bg        Δ2.0 */
+  --n-200: oklch(0.930 0.008 82);  /* #eae7e2   component hover     Δ2.5 */
+  --n-250: oklch(0.900 0.011 80);  /* #e2ddd6   component active    Δ3.0 */
+  --n-300: oklch(0.860 0.014 78);  /* #d6d0c7   border subtle       Δ4.0 */
+  --n-400: oklch(0.800 0.016 76);  /* #c4bdb3   border default      Δ6.0 */
+  --n-500: oklch(0.700 0.017 74);  /* #a59d93   border strong       Δ10  */
+  --n-600: oklch(0.600 0.016 72);  /* #867f76   3.95:1  APCA 67     Δ10  */
+  --n-700: oklch(0.480 0.014 70);  /* #635c55   6.58:1  APCA 83     Δ12  */
+  --n-800: oklch(0.380 0.011 68);  /* #46413c  10.09:1  APCA 93     Δ10  */
+  --n-900: oklch(0.270 0.008 66);  /* #292622  15.06:1  APCA 102    Δ11  */
+  --n-950: oklch(0.175 0.005 64);  /* #12100e  18.98:1  APCA 105    Δ9.5 */
 }
 ```
+
+The dark counterpart is not the same numbers reversed. Steps near the ground are *wider*
+(+3 to +4.5 instead of +1.5 to +2.5) and steps near the text end are much wider still:
+
+```css
+:root[data-theme="dark"] {
+  --bg-sunken:      oklch(0.115 0.004 64);  /* #060504                            */
+  --bg:             oklch(0.155 0.005 66);  /* #0e0c0a  page               Δ+4.0  */
+  --surface:        oklch(0.200 0.007 68);  /* #181513  card               Δ+4.5  */
+  --surface-2:      oklch(0.245 0.009 70);  /* #23201c  raised             Δ+4.5  */
+  --hover:          oklch(0.275 0.010 72);  /* #2b2722                     Δ+3.0  */
+  --active:         oklch(0.305 0.011 74);  /* #322e29                     Δ+3.0  */
+  --border-subtle:  oklch(0.320 0.011 74);  /* #36322d                            */
+  --border:         oklch(0.375 0.012 74);  /* #45403a  1.90:1 on page            */
+  --border-strong:  oklch(0.450 0.013 74);  /* #5a544d  2.61:1                    */
+  --text-disabled:  oklch(0.545 0.014 72);  /* #756f67  3.93:1  APCA −27          */
+  --text-tertiary:  oklch(0.660 0.014 70);  /* #989189  6.27:1  APCA −43          */
+  --text-secondary: oklch(0.790 0.012 68);  /* #c0b9b3 10.07:1  APCA −65          */
+  --text-primary:   oklch(0.960 0.004 66);  /* #f4f1ef 17.36:1  APCA −99          */
+}
+```
+
+Read the APCA column on that dark ramp: `--text-tertiary` is 6.27:1 by WCAG 2 — comfortably AA —
+but Lc −43, which is *below* the Lc 60 prose floor. That is correct and intentional: tertiary is
+for metadata and column labels, never for a paragraph. Linear's own dark tertiary sits at Lc −42.
+If you need dark-mode body text at Lc 60+, you need `--text-secondary` at 10:1.
 
 **Two things that are not obvious:**
 
@@ -829,13 +862,17 @@ matches the data order. Do not walk chroma without walking L — a chroma-only r
 grayscale and to CVD viewers.
 
 ```css
---seq-1: oklch(0.96 0.03 258);
---seq-2: oklch(0.88 0.07 258);
---seq-3: oklch(0.78 0.11 258);
---seq-4: oklch(0.66 0.15 258);
---seq-5: oklch(0.54 0.19 258);
---seq-6: oklch(0.42 0.17 258);
+--seq-1: oklch(0.96 0.03 258);  /* #e6f3ff   1.13:1 on white */
+--seq-2: oklch(0.88 0.07 258);  /* #bbdaff   1.44:1 */
+--seq-3: oklch(0.78 0.11 258);  /* #8bb9fd   2.01:1 */
+--seq-4: oklch(0.66 0.15 258);  /* #5492ec   3.13:1 */
+--seq-5: oklch(0.54 0.19 258);  /* #1069da   5.18:1 */
+--seq-6: oklch(0.42 0.17 258);  /* #0046a7   8.63:1 */
 ```
+
+Chroma rises to step 5 and then falls — not a mistake. At L 0.42 the sRGB gamut simply does not
+contain chroma 0.19 at this hue, and asking for it silently clips to something you did not choose.
+Walk L; let C follow the gamut.
 
 ### Diverging
 
@@ -914,16 +951,18 @@ they tell you what you're accidentally saying.
 | Signal | How it's built | Measured example |
 |---|---|---|
 | **Institutional / serious money** | warm low-chroma neutral, near-black text, one blue-violet accent used ~twice per screen | Mercury: beige ramp (hue 88–106), `text-default #272735`, accent `#5266eb` |
-| **Technical / dense / for engineers** | cool blue-tinted neutral, high information density, semantic color per domain state | Primer: neutrals hue 247–258, eight semantic families |
+| **Technical / dense / for engineers** | cool blue-tinted neutral, high information density, semantic color per domain state | Primer: neutrals hue 244–255, eleven semantic families |
 | **Brand-free / engineered** | chroma exactly 0, pure grayscale + one focus blue | Geist: `hsla(0, 0%, X%)` throughout |
 | **Calm / document / long-session** | warm neutral, alpha-based tokens, almost no saturated color anywhere | Notion: `tatami` hue 61–106, text as black-at-alpha |
 | **Premium / editorial** | high-contrast near-black on off-white, one restrained accent, generous neutral range | Radix `sand`, Aesop-style |
-| **Consumer-friendly** | brighter accent (L 0.62+), higher chroma, more of it | Linear's marketing `#7070ff` at L 0.622 vs its app fill at L 0.567 |
+| **Consumer-friendly** | brighter accent (L 0.62+), higher chroma, more of it | Linear light-theme brand `#7070ff` L 0.622 C 0.207 vs dark-theme `#5e6ad2` L 0.567 C 0.159 |
 | **AI slop** | violet→blue gradient, `#8b5cf6`, glow, oversaturated dark | see below |
 
-Note the Linear split: L 0.622 accent on the marketing site, L 0.567 in the product. The same
-brand goes brighter where it's selling and quieter where you work. That's the general pattern —
-**marketing can afford 2–3% chromatic pixels; the product cannot.**
+Note that these are gradients, not categories. Linear's light theme brand is L 0.622 C 0.207 and
+its dark theme brand is L 0.567 C 0.159 — the same brand, dimmed by a fifth of its chroma, because
+in dark mode it is a fill carrying white text rather than a link on paper. **The role you put a
+color in changes the color.** And the general budget still holds: a marketing page can afford 2–3%
+chromatic pixels; the product behind the login cannot.
 
 ---
 
@@ -993,10 +1032,10 @@ Both companies decided the AI feature should look like the rest of the product.
 over-represented hue in generated UI, and at chroma 0.219 it's louder than every accent measured
 here except Stripe's (Linear 0.159–0.207, Mercury 0.200, Primer 0.191).
 
-**What to do instead:** if you want violet, take it to L 0.54 where white passes:
-`oklch(0.54 0.20 293)`; the nearest shipped value is Tailwind `violet-600` `#7c3aed` (L 0.541), white-on = **5.70:1**. Better: move the hue. 25°, 75°, 148°
-and 200° are all under-used and instantly less generic. Best: pick the hue from something in the
-product's actual domain.
+**What to do instead:** if you want violet, take it to L 0.54 where white passes —
+`oklch(0.54 0.20 293)`, whose nearest shipped value is Tailwind `violet-600` `#7c3aed` (L 0.541),
+white-on = **5.70:1**. Better: move the hue. 25°, 75°, 148° and 200° are all under-used and
+instantly less generic. Best: pick the hue from something in the product's actual domain.
 
 ### 3. Glow
 
@@ -1020,8 +1059,11 @@ chroma, `text-secondary` at `#a78bfa`, borders at 5% white.
 
 **Why it's wrong:** the tinted ground makes every hue on top of it read as a variant of that tint;
 full-chroma accents on near-black are where blue and violet genuinely halate; and 5% borders are
-invisible so everything runs together. Measured dark grounds: Linear `#08090a` chroma 0.003,
-Primer `#0d1117` chroma 0.014, Radix `#111113` chroma 0.004. All essentially neutral.
+too weak to separate anything. Computed over an L 0.156 ground: 5% white gives L 0.211
+(**Δ +5.5**), which is the same size as one elevation step, so the edge reads as another surface
+rather than a boundary. 15% gives L 0.311 (**Δ +15.5**), which reads as an edge. Measured dark
+grounds for comparison: Linear `#08090a` chroma 0.003, Primer `#0d1117` chroma 0.014, Radix
+`#111113` chroma 0.004 — all essentially neutral.
 
 **What to do instead:** neutral or near-neutral ground at L 0.14–0.18 with chroma ≤ 0.015, borders
 at 15% white, text-role accents raised to L 0.66–0.72 with chroma roughly unchanged. See the
@@ -1101,7 +1143,7 @@ Run this against your own output before calling it done.
 
 - [ ] Page ground L 0.14–0.18, and a sunken step exists below it.
 - [ ] Elevation is lightness, not shadow.
-- [ ] Border alpha ~1.5–2× the light value; every panel has a visible edge.
+- [ ] Every panel has a visible edge: an opaque border L +12 to +20 above the surface, or alpha at 1.5–2× the light-mode value.
 - [ ] Accent text/icon lightness raised by +0.11 to +0.17; fill lightness unchanged.
 - [ ] Status washes are alpha over hue, not opaque tints.
 
@@ -1158,6 +1200,13 @@ python3 cvd.py
 #    then read computed styles for background/border/outline/box-shadow.
 node fc.mjs
 ```
+
+**Related files in this library:** [`system/3-tokens.md`](../system/3-tokens.md) for where the
+color tokens sit in the wider token system; [`references/fintech-and-trust.md`](../references/fintech-and-trust.md)
+for Wise's, Mercury's and Column's full measured palettes;
+[`craft/tables-dashboards-data.md`](tables-dashboards-data.md) for chart layout once the palette is
+settled; [`anti-patterns/vibecode-rubric.md`](../anti-patterns/vibecode-rubric.md) for scoring the
+result.
 
 Where a value came from a stylesheet rather than a computed style I said so. Where I did not
 measure something, it isn't in this file.

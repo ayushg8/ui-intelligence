@@ -10,7 +10,7 @@ Walked: Linear (Inbox, Notifications, Members & roles, Invite members, Private t
 
 1. **Split "who can reach this" from "what they can do."** Figma's share settings has two separate controls stacked — a `Who has access` dropdown (Anyone / Anyone at [Organization] / Anyone in [Workspace] / Only invited people) and a `What they can do` radio pair (View / Edit), each with a plain-language sentence under it. Google splits it the same way: a `General access` dropdown for audience, a second dropdown beside it for role. The single fused dropdown ("Anyone with the link can edit") is where every clone goes wrong: it multiplies audience × role into 8–12 menu items, and the destructive option sits one row away from the safe one.
 
-2. **Ship three roles, and put the fourth axis somewhere else.** Admin / Member / Guest covers ~95% of real teams. GitHub, by contrast, ships 6 organization roles (owner, member, moderator, billing manager, security manager, App manager) plus 5 repository roles (Read, Triage, Write, Maintain, Admin) plus team maintainer plus outside collaborator plus custom org roles — roughly 13 concepts a new admin must hold. Linear resolves the same needs with 3 workspace roles plus a *scoped* role (Team owner) and four per-team toggles. Scope beats role count.
+2. **Ship three roles, and put the fourth axis somewhere else.** Admin / Member / Guest covers most collaboration tools. It does not cover products where the permission model *is* the surface people came for — see *Where each default breaks* under Decision procedures before you take this one. GitHub, by contrast, ships 6 organization roles (owner, member, moderator, billing manager, security manager, App manager) plus 5 repository roles (Read, Triage, Write, Maintain, Admin) plus team maintainer plus outside collaborator plus custom org roles — roughly 13 concepts a new admin must hold. Linear resolves the same needs with 3 workspace roles plus a *scoped* role (Team owner) and four per-team toggles. Scope beats role count.
 
 3. **Never let a user find a wall by walking into it.** The permission-denied state is a design failure that already happened upstream. Prevent it: disable-with-reason instead of erroring, show the escalation path (Linear ships `View workspace admins` in ⌘K and at `/settings/view-admins` precisely so a blocked user knows *whom* to ask), and where you can't prevent it, make the request first-class — Notion routes page access requests into the owner's Inbox with approve/reject inline; a member without invite rights sees "request to add a member" instead of a dead Invite button.
 
@@ -186,7 +186,8 @@ Seven roles named Owner, Admin, Manager, Editor, Contributor, Viewer, Guest, wit
 Four moves, from four products:
 
 1. **Linear — publish the escalation path.** `View workspace admins` is in the ⌘K command menu and at `linear.app/settings/view-admins`, available to any member. The blocked user does not have to guess who to DM. This costs one page and removes an entire class of ticket.
-2. **Notion — swap the blocked action for a request.** A member without invite rights doesn't see a dead Invite button; they see "request to add a member". Guest access requests land in the workspace owner's **Inbox** carrying requester, requested role, target page and guest email — approvable in place. Page permission-change requests do the same: "If someone has requested a change in their permissions on a page you own, you'll be able to see, approve, and reject those requests from your Inbox."
+2. **Notion — swap the blocked action for a request.** A member without invite rights doesn't see a dead Invite button; they see "request to add a member", and a guest-invite request reaches a workspace owner carrying requester, requested role, target page and guest email — enough to decide without leaving the notification. Two *different* request affordances ship on the page itself, and the split is deliberate: open a page you can't see and you get a **No access** control that sends a request to that page's creators or editors; open a page you can only view and the **Share** tab shows your current level with a dropdown containing **Request edit access**, which goes to the page creator. Asking for the door and asking for a better key are different asks with different approvers.
+   Notion is also honest about the state that follows, which is the part worth stealing: "You'll be notified once your request has been accepted — try refreshing the page if you're not able to edit it." A granted permission does not invalidate the client the requester is sitting in. Either push the grant down the socket, or ship that sentence.
 3. **Notion — disclose the consequence pre-flight.** Hover an invitee's email in the share field *before* pressing Invite to see how they'll be added. The decision is reversible only in theory; the disclosure is free.
 4. **Figma — annotate every scope with a sentence.** Under the `Who has access` dropdown: "Org members can access this file via link or through the file browser." Under `Advanced`: "This setting applies to anyone in the file with **can view** access." The sentence changes when the dropdown changes. This is the single highest-value 40 characters in the whole dialog.
 
@@ -300,7 +301,7 @@ Tabs at the top — **Share** | **Publish** — separating "let people in" from 
 
 This is the control that gets built wrong most often. Rules:
 
-1. **Two controls, never one.** Audience and capability are independent; fusing them makes an N×M menu.
+1. **Two controls, never one** — *when the two axes are actually independent.* Audience × capability usually is, and fusing them makes an N×M menu. If your public audience can only ever be read-only, one control is the honest design; splitting it invents a combination the user will hunt for and never find.
 2. **The current state is always visible without opening the menu.** "Anyone with the link · Editor" as the closed label — not "Change".
 3. **Escalating the audience is visually distinct.** Google and Figma both change the *icon* (person → globe) when you go public. Change icon and helper text; don't rely on the text alone.
 4. **Never make "Anyone with the link" the default,** and never place it adjacent to the safe option in a way that a fat-thumbed tap lands on it. Put a divider between internal scopes and public.
@@ -384,7 +385,7 @@ Three properties separate a good guest model from a bad one:
 
 - **Orphaned object** (last member of a private team leaves): admins must be able to see and recover it. Linear lets admins/owners find private teams in Settings → Administration → Teams and join with a confirmation warning.
 - **Moving an object between containers** changes who can see it. Confirm with the delta: "Moving this project to Security will remove access for 12 people."
-- **Mobile:** hierarchy navigation is a sidebar problem. The one thing that must survive to mobile is the *badge on the object* saying "Private" or "Shared with 3 guests" — the reassurance, not the management.
+- **Mobile:** hierarchy navigation is a sidebar problem, and the sidebar is the first thing that dies at 390px. Two things must survive: the *badge on the object* ("Private" · "Shared with 3 guests") so the user can see scope without opening anything, and the breadcrumb of containers above the title, so "why can't she see this?" is answerable on a phone. Everything else — moving objects between containers, changing visibility — belongs on desktop and should say so rather than shipping a 24px dropdown.
 - **A11y:** private/guest state must be text in the accessible name of the tree item, not a lock glyph alone.
 - **Copy:** "Private to 6 members" beats "Private". "Shared with 2 people outside Acme" beats "External".
 
@@ -438,6 +439,14 @@ Linear's SCIM page is the honest version:
 
 **UI requirements:** show sync status and last sync time; show per-user provenance ("Managed by Okta") on every externally-managed row; disable with reason rather than hide; and surface sync *failures* as a banner on the Members page, not only in a log.
 
+## Mobile for this whole section
+
+Ownership transfer, audit and SCIM are desktop work and should say so. What must not be desktop-only is the small set of actions performed under time pressure from a phone: **suspend a member** (the laptop is gone), **revoke a session or token**, **resend an invite**, and **read the audit log filtered to one actor** (the "what did they touch?" question, asked in a group chat, at 11pm). Those four get real mobile screens with 44pt targets. The member table, the role matrix and the SCIM mapping form get a read-only view and an honest "Manage on desktop" link.
+
+Two mobile-specific rules:
+- **Re-auth on a phone is a different flow.** Slack's ownership transfer asks for a password; on mobile that means a password manager round-trip out of the app and back, which drops the transfer if you unmount the page. Use a biometric/passkey prompt where you can, and preserve the form state where you can't.
+- **A confirm that requires typing the object name is hostile on a touch keyboard** and gets defeated by autocorrect capitalising the first letter. Keep type-the-name for desktop; on mobile use hold-to-confirm or a second explicit screen, and set `autocapitalize="none"` `autocorrect="off"` if you keep the field.
+
 ---
 
 # 7. The notification inbox
@@ -446,7 +455,7 @@ Linear's SCIM page is the honest version:
 
 **User:** find out what needs them, act on it, and get the list to zero — repeatedly, several times a day, in under a minute.
 
-**Business:** notifications are the primary re-engagement surface, and also the primary reason people uninstall. Notifications are one of the **top three drivers of customer-experience tickets** at Slack.
+**Business:** Slack's own number — notifications are one of the **top three drivers of customer-experience tickets**. The inbox is simultaneously the re-engagement surface and the support-cost surface.
 
 **Resolution:** treat it as an inbox with real triage verbs and a defensible definition of "done," not as a list of everything that happened.
 
@@ -459,13 +468,15 @@ Anatomy, from the product screenshot:
 - **The reason line is the load-bearing element.** It's what makes a notification triageable without opening it.
 - Read items are rendered at reduced contrast in the same list — read/unread is a visual weight, not a separate view.
 
-Verbs and keys: `g i` to inbox from anywhere; `j/k` or arrows through the list; `u` toggle read/unread; `⌥U` mark all read; `h` snooze; `Backspace` delete; `⇧Backspace` delete all read; `⇧S` unsubscribe (only from inside the item); `⌘F` quick search over title, ID, notification type, assignee, team, project, priority.
+Verbs and keys: `g i` to inbox from anywhere; `j/k` or arrows through the list; `u` toggle read/unread; `⌥U` mark all read; `h` snooze; `Backspace` delete; `⇧Backspace` delete all read; `⌘F` quick search over title, ID, notification type, assignee, team, project, priority, `Esc` to clear it. Subscription is a verb on the *object*, not on the row: `⇧S` subscribes, `⌘⇧S` unsubscribes, and from the Inbox you must open the item first — which is the correct friction, because unsubscribing is not a triage action, it is a standing decision.
 
 Two decisions worth copying:
-- **Snooze is a first-class verb**, and it reappears in the inbox at the chosen time. Custom dates are typed, not picked ("Jan 3 10am", "next quarter", "for 3 weeks") — and the docs warn you must type the option in full.
+- **Snooze is a first-class verb**, and it reappears in the inbox at the chosen time. The menu is four presets with their resolved dates spelled out beside them — *An hour from now · Tue, 11 Feb, 21:47*, Tomorrow, Next week, A month from now — then **Custom…**, whose field is a parser with the grammar in the placeholder ("Try: 4 pm, 2 days, Feb 9") and the accepted forms documented: Month Date Time, next quarter, til/until a date, for X weeks. **Showing the resolved date next to each preset is the whole trick** — "Next week" alone is a guess about Monday. The documented sharp edge: you must type the option in full (`next quarter`, not `next quar`) or it won't appear, which is the cost of a parser with no visible grammar.
 - **Reminders are separate from snooze** and attach to the *object*, not the notification: set a reminder on an issue/document/project/initiative, and it shows **at the top of the issue** where it can be rescheduled or cancelled.
 
-Limits, stated: **2,000 open notifications max**, older ones aren't retained. **No archive** ("we don't support archiving notifications at this time"). You cannot choose what enters the Inbox — every notification goes there, and channel prefs only control the *copies* elsewhere. That's a deliberate simplification: one canonical list, many delivery mirrors.
+Limits, stated: **2,000 open notifications max**. You cannot choose what enters the Inbox — verbatim, "You cannot choose which notifications go to your Inbox. All notifications will arrive there, and any additional notification subscriptions you enable under Account > Notifications will link back to the Inbox notification." That's a deliberate simplification: one canonical list, many delivery mirrors, and the settings page says so at the top of the card ("Notifications will always go to your Linear inbox").
+
+**What happens past 2,000 is now documented two different ways, and it is instructive that even Linear can't keep this straight.** The Inbox page says older notifications "will not be retained" and the FAQ still reads "We don't support archiving notifications at this time"; the Notifications page says "When this limit is exceeded, notifications are automatically archived." Both were live on 2026-09-09. Whatever your cap does — drop, archive, or archive-and-hide — it is a *data-loss rule*, it will be described in at least two places, and those two places will drift. Write it once, render it from one string, and show it in the UI at the boundary ("Showing your 2,000 most recent notifications") rather than only in a help centre.
 
 ## Reference implementation B: GitHub Notifications
 
@@ -483,14 +494,15 @@ Note the sharp edge GitHub documents: a saved notification older than 5 months t
 - **Query language as the filter model.** `is:unread`, `reason:mention`, `repo:octo-corp/octo-project reason:participating`. Default saved filters ship with emoji names: 🎯 Assigned (`reason:assign`), 💬 Participating, ✋ Mentioned, 🙌 Team mentioned, 👀 Review requested. Up to **15 custom filters**. You build one by typing a query in the inbox and clicking **Save**, which opens the filter dialog pre-filled — filter creation is a *promotion of an existing view*, never a blank form.
 - **Grouping** by repository or by date, chosen by the user, "to get a quick overview with less context switching."
 - **Bulk triage bar**: "2 selected | ✓ Done | 🔕 Unsubscribe | ⋯".
-- **Reason labels on each row** ("See one of the latest reasons you're receiving a notification… with a reasons label") — same insight as Linear's reason line.
+- **Reason labels on each row** ("See one of the latest reasons you're receiving a notification… with a `reasons` label") — same insight as Linear's reason line.
+- **The prerequisite GitHub states and nobody copies:** "To use the notifications inbox on GitHub and GitHub Mobile, you must enable notifications for both **Email** and **On GitHub**." The in-product inbox is coupled to the email channel, which is a strange dependency — but it is *disclosed*, so a user who turned email off knows why their inbox emptied. Any coupling like this in your own system needs the same sentence, or the empty inbox reads as data loss.
 
 ## The decisions
 
 | Fork | Answer | Reasoning |
 |---|---|---|
 | Read/unread, or done/not-done? | **Both, and they're different.** Read = "my eyes passed over it". Done = "I've dealt with it, remove it." | GitHub ships both and they don't collapse. Products with only read/unread produce inboxes that never empty. |
-| Archive or delete? | Archive (recoverable) if you can afford storage; Linear deliberately ships delete + a 2,000 cap and no archive. Either is defensible; **silently truncating is not**. | Say the limit in the FAQ and in the UI. |
+| Archive or delete? | Either is defensible; **silently truncating is not**, and **describing it twice is how you end up truncating silently** — Linear's two docs currently disagree about whether past-2,000 notifications are dropped or auto-archived. | Render the limit from one string, in the UI, at the boundary. |
 | Auto-mark-read on open? | Mark read on *opening the item*, never on scroll-past. Provide `u` to undo. | Scroll-based read-marking is the single most hated notification behaviour. |
 | Group by thread or list flat? | **Thread by object** (issue, PR, page). 6 comments on one issue = 1 row with "6 new comments", not 6 rows. | Both references thread by object. Flat lists make counts meaningless. |
 | Tabs or filters? | 2 tabs max (Linear: Priority/Other), plus a query/filter layer for power users. | 5 tabs = 5 inboxes to clear. |
@@ -510,12 +522,13 @@ Note the sharp edge GitHub documents: a saved notification older than 5 months t
 
 ## Mobile
 
-- The inbox is the *most* mobile-used surface in this whole family, and the one most often built desktop-first.
+- **State sync is the requirement; everything else is polish.** GitHub documents its mobile inbox as syncing with the web inbox, and its email channel as syncing read state into both. If yours doesn't, users triage twice, notice, and stop triaging on the phone — which turns the phone into a pure interruption device with no way to clear anything.
 - **Swipe verbs map to the two most common triage actions** — swipe-right = Done/Archive, swipe-left = Snooze (or Unsubscribe). Full-swipe commits; partial reveals. Both must be undoable via a snackbar.
 - Row height ≥ 64pt with a two-line title clamp and the reason line always visible — the reason line is what makes swiping safe.
 - Keyboard shortcuts don't exist; a persistent "Mark all read" in the header replaces `⌥U`.
 - Pull-to-refresh, and reconcile — don't prepend duplicates.
-- GitHub's mobile inbox **syncs read/done state with web**. If yours doesn't, users triage twice and stop.
+- Snooze on mobile cannot be a parser. Linear's typed "next quarter" grammar is a desktop affordance; the phone gets the four presets with their resolved dates and a date picker behind Custom. A free-text field that silently rejects `next quar` is worse on a touch keyboard than on a physical one.
+- The mobile inbox is where a notification most often points at something the user can't open — they were @mentioned from a laptop into a space they aren't in. Render the reason line and the object title from the notification payload, so the row is still readable and still dismissible when the fetch 403s.
 
 ## Accessibility
 
@@ -574,6 +587,11 @@ The shipped hierarchy, in order down the page:
 3. **Also notify you about** — a short list of *named exceptions*: replies to a thread you're following; a message from a **VIP** while notifications are paused or you're in focus mode; a huddle starting in your channels or DMs.
 4. **Mobile overrides** — one dropdown that says how mobile differs from the above.
 
+Two more named blocks ship alongside those four, and both are doing work the file previously credited to nothing:
+
+- **What to show in Activity** — the badge/feed contents, separated from delivery. "You'll always see DMs, mentions, reactions, and thread replies, but you can choose whether to see other types": channels set to All new posts, and Later item due dates. This is the badge-scope control, given a name a user can reason about.
+- **Channel keywords** — a subscription primitive rather than a preference. Type a word, get notified when it appears in a channel you've joined, and see it highlighted in yellow. The documented edges are the interesting part: not case-sensitive, **exact matches only**, and **keywords in threaded messages don't trigger**. That last one is a real gap disclosed rather than hidden.
+
 Per-conversation, three options only: **All new posts** | **Mentions** | **Mute**.
 
 Migration was done at read time — old "Off" became "Mentions" + push disabled — so nobody's settings silently changed meaning.
@@ -582,9 +600,9 @@ Migration was done at read time — old "Off" became "Mentions" + push disabled 
 
 ## Reference implementation: Linear's deliberate coarseness
 
-Linear's Settings → Account → Notifications is organised **by channel** — Desktop, Mobile, Email, Slack — with a **green dot for enabled, grey for disabled** next to each channel name, so the state of the whole system is legible from one screen without expanding anything.
+Linear's Settings → Account → Notifications is organised **by channel** — Desktop, Mobile, Email, Slack, four rows in one card — and each row carries a green/grey dot *plus a summary sentence of its own state*: "Enabled for assignments, status changes, 9 others" / "Enabled for all notifications" / "Disabled". **That sentence is the design.** A dot tells you a channel is on; the sentence tells you what it will do to you tonight, and it collapses an entire expanded sub-tree into one line you can scan in half a second. Four rows, four sentences, whole system legible without opening anything.
 
-And then the decision most products cave on: **notification types are grouped and you cannot decompose them.** The docs say it plainly — the `status-changes` category covers issue completions and cancellations, urgent-priority changes, and changes to blocking relationships, and *"You cannot select only status changes."* If you need finer control, the answer isn't a checkbox; it's a **view subscription** (subscribe to a saved filter). Granularity is pushed into a different, more expressive primitive rather than into 40 checkboxes.
+And then the decision most products cave on: **notification types are grouped, and the group is the smallest unit you can turn off.** Select "Status changes" and you get issue completions and cancellations. Want notifications when issues enter one *specific* status? The docs send you somewhere else entirely — "consider setting up a view subscription", i.e. subscribe to a saved filter. Granularity is pushed into a different, more expressive primitive rather than into 40 checkboxes, and the settings page never grows a row for it.
 
 ## The decisions
 
@@ -594,7 +612,7 @@ And then the decision most products cave on: **notification types are grouped an
 2. **Group event types into 4–8 named categories** and let people opt out of *categories*. Name them by what they mean to the user ("Assignments", "Mentions & replies", "Status changes", "Project updates"), not by your event enum.
 3. **Object-level overrides beat global granularity.** The bell on a Linear project, Slack's per-channel three-way, GitHub's per-repo custom watch (issues / PRs / releases / security alerts / discussions). Fine control belongs where the object is, in context — not in a settings page.
 4. **Auto-save.** Slack explicitly replaced a click-to-save modal because people forgot to save. There is no confirmation step for a preference.
-5. **A mute/pause with a duration** ("Pause notifications for 2 hours / until tomorrow") absorbs most of the demand for granularity, because most of it is temporal, not categorical.
+5. **A mute/pause with a duration,** plus a recurring version. Slack ships both: pause-now, and a **notification schedule** where "outside of the schedule you set, your notifications will be paused." Much of the demand that arrives as "I want per-event checkboxes" is actually temporal, and a schedule answers it with two controls instead of forty. Pair it with a named exception class (Slack's VIP, paid plans only) so the schedule doesn't have to be conservative.
 6. **Show the escape hatch inside the notification itself.** Every email and every in-app item carries "Unsubscribe from this issue" / "Turn off these notifications" — the point of intent is where the annoyance is felt.
 
 **A workable default matrix to ship:**
@@ -611,7 +629,8 @@ And then the decision most products cave on: **notification types are grouped an
 ## The states
 
 - **Preference saved** — inline, per-row, immediate ("Saved" microcopy or a settling toggle). No global Save button.
-- **Blocked at the OS layer** — the highest-value state and almost universally missed. If browser/OS permission is denied, the in-app toggle is a lie. Detect it and show: "Your browser is blocking notifications from Linear. Enable them in Chrome settings." Linear's FAQ carries exactly this, plus the macOS dock-badge variant.
+- **Blocked at the OS layer** — the highest-value state and almost universally missed. If browser/OS permission is denied, the in-app toggle is a lie. Detect it and show: "Your browser is blocking notifications from Acme. Enable them in Chrome settings." Linear's FAQ carries exactly this, plus a separate macOS entry for the dock badge, which is a *different* OS permission that fails independently of banners.
+- **Enabled, permitted, and still not arriving.** Ship the diagnostic, not just the toggle: Linear's desktop settings card has a **Send test notification** action, and its FAQ names the real cause — "Notification delivery may be routed to an active desktop app or browser session", i.e. you are getting them, on a machine you are not looking at. Presence-based routing is invisible and generates the bug report "notifications are broken". One test button and one sentence about routing removes most of that traffic.
 - **Overridden elsewhere** — "Muted for #general" must be visible from the global page, or people will toggle globals forever trying to fix one channel.
 - **Quiet hours active** — a persistent indicator, plus the VIP-style exception so urgent things still land (Slack's "a message from a VIP when your notifications are paused").
 - **Admin-enforced** — greyed with the reason and the enforcer named.
@@ -620,7 +639,8 @@ And then the decision most products cave on: **notification types are grouped an
 
 - Preferences are a *list* on mobile, not a grid. A 4-channel × 6-category matrix is unusable at 390px; collapse to one screen per channel.
 - The **most important mobile preference control is not in your app** — it's the OS permission prompt. Ask for push permission at a moment of demonstrated value (right after they get their first @mention), never on first launch. Once denied, iOS won't ask again, and your only remaining move is a deep link to Settings.
-- Slack's mobile timing controls are the good version of "don't double-notify": `Immediately, even if I'm active` / `As soon as they're sent` / `As soon as you're inactive` / `After an additional delay`, with the default described concretely — **one minute after locking your desktop screen, or 10 minutes after Slack stops detecting cursor activity.**
+- **The mobile settings tree should be shorter than desktop, not the same tree in a narrower column.** Slack's is, and the omission is the lesson: the phone screen has *Mobile notifications* (toggle), *What to notify you about*, and *Also notify you about* — but no "How to notify you" checkbox pair, because on the device you are holding, the channel is not a question. Every preference whose answer is implied by the device should be absent from that device's screen.
+- Slack's per-device split runs all the way down: notification sound is set under `Sound` on iOS but under `System settings → Sound` on Android, because Android routes it through OS channels. If your preference is really an OS preference, deep-link to the OS rather than mirroring a control you don't own.
 
 ## Accessibility
 
@@ -674,7 +694,7 @@ So: a badge is a reliable attention weapon with unproven user benefit. Rules tha
 | **Dot** (no number) | "Something new here", low stakes — feeds, activity, changelogs | When the user needs to triage volume |
 | **Nothing** | Read-only surfaces, feeds, anything the user didn't subscribe to | — |
 
-Give users the control. Linear puts badge configuration in Inbox → Display options, and lets the **Pulse** sidebar item be set to *always show / only show when badged / never show*. Slack ships "Show a badge on Slack's icon to indicate new activity" as a plain checkbox. If your badge counts unread *feed* items, you have built an anxiety generator; count only inbox items with an action attached.
+Give users the control, and make the control name the *scope* rather than on/off. Linear's Inbox → Display options is a five-row panel: Enable priority inbox, **Include in priority inbox** (All / …), **Badge count** (Priority & Other / …), **Group unreads by**, Ordering — so the badge's meaning is a setting, not a constant, and the Pulse sidebar item is separately set to *always show / only show when badged / never show*. Slack ships the same idea as a named block called **What to show in Activity**: "You'll always see DMs, mentions, reactions, and thread replies, but you can choose whether to see other types" — channels set to All new posts, and Later item due dates. Both products let the user answer "what is this number counting?" instead of only "do I want a number?". Slack ships "Show a badge on Slack's icon to indicate new activity" as a plain checkbox. If your badge counts unread *feed* items, you have built an anxiety generator; count only inbox items with an action attached.
 
 ## Real-time arrival without disrupting the user
 
@@ -732,6 +752,63 @@ Linear runs both, as separate sidebar items, with a defined bridge between them.
 
 ---
 
+# 11. The failure states that cut across all of these
+
+Every section above has its own states list. These five don't belong to a section — they hit permissions, sharing and notifications at once, they are the states these flows are actually judged by, and they are the ones almost nobody builds.
+
+## Session expiry mid-action
+
+The user has the share dialog open, sets the audience to `Anyone at Acme`, clicks Save, and their session died four minutes ago.
+
+- **The write must fail closed and say so.** A permission write that appears to succeed and didn't is a security bug, not a UX bug — the user walks away believing the file is shared. This is the one place in the whole family where optimistic UI is wrong.
+- **Re-auth without unmounting.** Authenticate in an overlay or a popup that leaves the dialog mounted, then replay the buffered request and show the result. Bouncing to `/login` and returning to a fresh dialog loses the change *and* leaves the user unsure which state won.
+- **The permission you re-authenticate into may differ from the one you left.** Someone demoted you while the tab sat open. On replay, re-read the effective permission before applying, and if it changed, say which: "Your role changed to Member while you were away. Members can't change link scope."
+- Long-lived tabs are the norm for this family — a share dialog and an inbox both sit open for days. Assume every action is fired from a tab whose session, permissions and data are all stale.
+
+## Access revoked while the user is holding unsaved work
+
+Covered in §3 as a state; here is the whole shape, because it is where products lose data.
+
+1. **Fail the save, keep the bytes.** Preserve the unsaved delta client-side before showing anything.
+2. **Name the change and the actor if you can** — "Priya removed your edit access 2 minutes ago" beats "You no longer have access."
+3. **Offer the copy-out**: download, copy-to-clipboard, or fork-into-my-space. One button.
+4. **Do not close the editor.** Read-only it in place with the banner. Closing it looks identical to a crash.
+5. **Request access from inside the wall**, pre-filled with what they were doing: "Ask Priya for edit access" → the request carries the object and, optionally, the message.
+
+The revocation case where products fail hardest is a *group* revocation — someone was removed from a teamspace, not from the doc, so no per-object event fires. If your permission model is inherited, your revocation events have to be computed on the inherited edge too, or the user keeps a live session against a doc they lost an hour ago.
+
+## Failed payment, expired trial, downgraded plan
+
+Billing is a permission system with worse error messages.
+
+- **Never revoke access to the *data* on a payment failure.** Degrade to read-only with the amount, the reason and the deadline stated: "Payment failed 3 Sep. Editing is paused for 14 members. Retry payment · $128 due." Deleting or hiding content on a declined card is how you turn a churn risk into a public incident.
+- **The person who sees the error must be able to act on it or hand it off.** A Member hitting a billing wall needs the billing contact's name, not "contact your administrator" — the same escalation-path move as §3, applied to money.
+- **Downgrading a plan silently deletes capabilities.** Enumerate before, not after: "Downgrading to Pro removes SAML, the audit log, and 4 private teams (which become visible to all 38 members)." Linear's SAML/SCIM downgrade rule is the honest version — new provisioning stops, existing provisioned users can still sign in — because it separates "the feature stops" from "people get locked out."
+- **Seats reclaimed on downgrade need a chooser, not an algorithm.** If the plan drops from 25 seats to 10, do not pick the 15 to suspend by last-active. Show the list, sort it by last-active, and make the admin click.
+
+## Rate limits, streams and reconnection
+
+The inbox is a real-time surface, so it inherits every real-time failure.
+
+- **Rate-limited by the server:** the fix is to coalesce the *alert*, never the record. Everything is written to the canonical inbox; the desktop banner and the push are what get one-per-burst-per-thread. A user who was rate-limited must not discover it as missing history.
+- **Websocket drops:** show it. "Updated 4 minutes ago · Reconnecting" is a two-word status line and it is the difference between a stale inbox and an inbox the user believes.
+- **On resume, fetch a delta and merge by ID.** A naive replay double-posts; a naive refetch discards local read state set while offline. Reconcile both directions: local triage actions taken offline must be queued and replayed too, or the user marks 12 things done on a plane and finds them all back.
+- **The badge must not lie during a disconnect.** Freeze it at the last known value rather than zeroing it; a badge that drops to 0 because the socket died trains people to ignore the badge permanently.
+- **Push delivery is not your channel.** APNs/FCM drop, delay and coalesce silently. Anything that must be seen has to also exist in the inbox and, past a delay, in email. Push is a hint, never a delivery guarantee — design the flow so a dropped push costs nothing.
+
+## Partial success
+
+Every bulk action in this family can half-work, and almost every product renders it as either a green toast or a red one.
+
+- Invite 12 people, 2 bounce: "10 invitations sent. 2 addresses bounced — copy their invite links" with the two rows still present and actionable.
+- Mark 20 done, 2 fail: "18 of 20 marked done. 2 failed — retry."
+- Change 30 roles via bulk edit, 1 is the last owner: the whole batch should not fail; the 29 apply, the 1 is returned with its reason.
+- SCIM sync half-fails: a banner on the Members page, not a line in a log nobody opens, naming the count and the IdP — "Okta sync failed for 3 users at 14:20."
+
+The rule: **a bulk action reports a count, a failure list, and a retry that applies only to the failures.**
+
+---
+
 # Decision procedures
 
 ## Which invite mechanism?
@@ -780,6 +857,25 @@ Is it about one object (a channel, project, repo, page)?
 | Informational, they didn't subscribe | feed only | ✗ | ✗ |
 | User is actively viewing the object | ✓ (silent) | ✗ suppress | ✗ suppress |
 | Already read in-app | — | — | **✗ drop the email** |
+
+## Where each default breaks
+
+Every fork above is a default, and a default with no stated scope is advice you can't argue with — which makes it useless. Each row names a real product where the recommended branch is the wrong one.
+
+| Default | Wrong when | What to ship instead |
+|---|---|---|
+| **Three roles (Admin / Member / Guest)** | The permission model *is* the product surface. A community platform where the whole point is that moderators, VIPs and boosters have visibly different powers per room; a clinical system where prescriber / nurse / front-desk are legally distinct and an audit says so; a payments back-office with maker-checker separation, where "can initiate" and "can approve" must never be the same role. | Discord's 53-flag model exists for the first case and Discord is right. When roles are the product, ship a role *builder* with a live "what can this role do here" preview, and accept the support cost. |
+| **One invite dialog, not a wizard** | The invite triggers an irreversible legal or compliance step: an external auditor entering a workspace under a BAA, a contractor whose access requires a signed NDA, an EU-resident guest in a data-residency-scoped tenant. | Keep the one dialog for internal invites; branch to a second step *only* on the external/regulated path, and say why: "priya@vendor.com is outside Acme. External guests need an NDA on file." |
+| **Reusable, rotatable invite links** | The invitee list is the security boundary: a private beta with a hard cap, a financial product where an invite is worth money, anything where a forwarded link is the attack. | Single-use tokens bound to the invited address, plus a resend. The support ticket per person is cheaper than one leaked link. |
+| **Two controls: audience × capability** | Audience and capability are genuinely coupled and always will be — a publishing product where "on the web" can only ever mean read-only, or a form product where the public audience gets submit-only. | One control, because the second one has one legal value. Fusing what is actually independent is the sin; splitting what is actually fused invents an unreachable combination the user will hunt for. |
+| **Never default to "Anyone with the link"** | Public sharing *is* the job — a screenshot/recording tool, a paste tool, a status page. Defaulting to private there means every user's first action is to fix your default, and the second is to look for a competitor. | Default public, but make the scope legible on the object itself (a persistent "Public" badge on the item, not only in a dialog) and offer a workspace-level admin default that flips it for orgs that need it. |
+| **Thread by object (6 comments = 1 row)** | Each event is independently actionable. An approval queue where six line items on one purchase order are six decisions; an on-call system where three alerts on one service are three acknowledgements. | One row per *decision*, not per object. The test: if two events on the same object can be resolved by different people, they are different rows. |
+| **Mark read on opening the item** | The "item" is the reading surface. A full-page inbox with a persistent preview pane marks things read by cursoring past them, which is the scroll-marking failure wearing a different hat. | Mark read on dwell (a real threshold, ~2s) or on an explicit action, and keep `u` as the undo. If your layout has a preview pane, opening is not evidence of reading. |
+| **Two tabs max** | The inbox is shared. A support or sales team inbox needs Unassigned / Mine / Everyone as tabs, because they are assignment queues with different owners, not filters over one person's attention. | Tabs = queues when the inbox is shared; tabs = 2 when the inbox is personal. Never mix the two models in one list. |
+| **Drop the email if it was read in-app** | Email is the system of record. Security alerts, legal notices, billing failures, anything a compliance team will later ask you to produce. | Send regardless, and mark it: "Sent because this is a security notification. These can't be turned off." The dedup rule protects attention; it must not protect you from a subpoena. |
+| **Auto-save preferences, no confirm** | The preference has a cost the user can't see. Turning off security-alert email, or muting an on-call channel, or disabling the only channel that reaches you. | Auto-save the ordinary ones. For the load-bearing ones, auto-save *and* state the consequence inline — "You will no longer be paged for production incidents" — with an undo that lives longer than a toast. |
+| **Domain auto-join on a verified domain** | The domain is shared with people who aren't staff: an agency where contractors get `@agency.com` addresses, a university, a company that acquired another and inherited its mail domain. | Domain-*request*, with an approval queue, until an admin explicitly promotes the domain to auto-join. Notion's guest-limit behaviour is the cautionary version — over the limit, same-domain guests get silently upgraded to billed members. |
+| **Suspend, never delete a member** | A legal deletion request (GDPR erasure) or a jurisdiction that requires it. | Separate the two operations in the UI and name them differently: **Suspend** (reversible, keeps attribution) and **Erase** (irreversible, replaces attribution with a tombstone, type-the-name to confirm, logged). Never let one button mean both. |
 
 ---
 
@@ -848,7 +944,9 @@ Run these against your own build.
 - [ ] Do arriving notifications reflow the list under the cursor? (They shouldn't — sticky pill.)
 - [ ] Mobile: swipe verbs on the two most common actions, undoable, read state synced with web?
 - [ ] Screen reader: does a row announce "Unread" before the content?
-- [ ] Is the retention/cap stated somewhere the user can find it?
+- [ ] Is the retention/cap stated somewhere the user can find it — and rendered from *one* string, so the FAQ and the UI can't drift apart?
+- [ ] Does each channel row show a sentence describing its current behaviour, not just an on/off dot?
+- [ ] Is there a "send test notification" and a sentence about presence-based routing, for the user whose notifications are on and not arriving?
 
 **Preferences & routing**
 - [ ] Is the settings page organised channel × volume, not channel × raw event type?
@@ -859,6 +957,13 @@ Run these against your own build.
 - [ ] Does every notification email carry an unsubscribe scoped to *that thread*?
 - [ ] Does the badge count only actionable inbox items?
 - [ ] Is there a pause-with-duration, with a VIP-style exception?
+
+**Failure states (§11)**
+- [ ] Let a session expire with the share dialog open, then save. Does the write fail closed, and does the dialog survive re-auth with the change intact?
+- [ ] Revoke someone's edit access while they have unsaved text. Do they keep the bytes and get a copy-out?
+- [ ] Fail a payment on a paid workspace. Does it degrade to read-only with the amount and deadline named, or does content disappear?
+- [ ] Kill the websocket for 60 seconds. Does the inbox say it's stale, does the badge freeze rather than zero, and does triage done offline replay on reconnect?
+- [ ] Bulk-invite 12 addresses with 2 bad ones. Do you get a count, a failure list, and a retry scoped to the failures?
 
 **Ownership, deactivation, audit**
 - [ ] Does ownership transfer require re-auth and name what the outgoing owner becomes?
