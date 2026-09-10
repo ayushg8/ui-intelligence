@@ -81,16 +81,19 @@ of them are inside another one? Every one should be justified. Most generated pa
 one semantic color that happens to be present. More than that and color has stopped meaning
 anything.
 
-**8. The comparison test — the single highest-signal technique.** Screenshot an excellent product
-in the same archetype (from [`../references/`](../references/)) and put it next to yours. Name three
-specific differences. They will almost always be:
+**8. The comparison test — calibration, not discovery.** Screenshot an excellent product in the same
+archetype (from [`../references/`](../references/)) and put it next to yours. Name three specific
+differences. They will almost always be:
    - theirs is denser
    - theirs has fewer boxes
    - theirs has stronger size contrast between levels
-   
-   Do this every time. It is worth more than the other seven tests combined, because it replaces
-   "does this look good" (unanswerable in isolation) with "how does this differ from something
-   known-good" (answerable).
+
+   Run it **after** tests 1–7, not instead of them. Measured across two full runs in
+   [`../anti-patterns/visual-critique-method.md`](../anti-patterns/visual-critique-method.md) §5.0,
+   the comparison produced no finding the squint, grayscale and count tests had not already produced.
+   What it does produce is permission: it is the only test that tells you where your page is
+   *correctly* different from the reference, and the only one that stops you shipping something that
+   got better five times and is still bad.
 
 **9. What would a designer's first comment be?** Ask it honestly. You usually already know.
 

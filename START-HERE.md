@@ -180,6 +180,10 @@ split cleanly by kind, and this determines how you should use them:
 
 - **Values read from shipped CSS — type scales, weights, letter-spacing, neutral ramps, radii, row
   heights, transition durations — reproduced byte-for-byte.** These are durable. Quote them.
+  *Counts* of those declarations are a different animal: because CSS is code-split, how many
+  `@media` or `aspect-ratio` rules a page pulls moves ±20% between loads. Read counts as ratios
+  between products, never as specs. (Measured in
+  [`craft/responsive-and-mobile-web.md`](craft/responsive-and-mobile-web.md).)
 - **Values derived from network timing — LCP, CLS, load and skeleton durations — drifted, and one
   product moved by 4x.** Re-probe these before relying on them; a CLS figure without its
   observation window is not even comparable to another CLS figure.

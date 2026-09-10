@@ -22,6 +22,11 @@ for (const [w,h] of [[1440,900],[390,844],[320,844]]) {
       clipped: [...document.querySelectorAll('*')]
         .filter(e => { const s = getComputedStyle(e);
           return /auto|scroll|hidden/.test(s.overflowX) && e.scrollWidth - e.clientWidth > 24; })
+        // drop visually-hidden text (.vh/.sr-only): a 1px box with overflow:hidden looks
+        // identical to a silently clipped column and is 100% of the noise in this check
+        .filter(e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e);
+          return r.width > 24 && r.height > 8 && s.visibility !== 'hidden'
+              && s.clip === 'auto' && !/inset\(50%\)/.test(s.clipPath); })
         .slice(0,4).map(e => `${e.tagName.toLowerCase()}.${(e.className||'').toString().split(' ')[0]} +${e.scrollWidth-e.clientWidth}px`),
     };
   }, [h, rowSel]);

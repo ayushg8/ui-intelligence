@@ -8,6 +8,22 @@ Measured September 2026 against live production UI. Breakpoints were extracted b
 bounding boxes at real device viewports (`iPhone 14 Pro` = 393x660, `320x568` iPhone SE, `744`,
 `1440`). Where a value is inferred rather than read, it says "approx."
 
+**Which numbers here you can quote.** A re-probe on 2026-09-10 (see the adversarial pass at the end)
+found they split three ways, not two:
+
+- **Geometry and computed style — heights, paddings, sticky offsets, scroll widths, document
+  `scrollWidth` at 320 — reproduced exactly.** Vercel's 78 overflowing elements / 77 `hidden` /
+  1 `clip` / 0 leaks came back identical. Quote these.
+- **Declaration counts in shipped CSS drift ±20% per load,** because the CSS is code-split and which
+  chunks a page pulls depends on route, experiment bucket and what lazy-loads before your snapshot.
+  Stripe's `min-640` was 190, then 194; Linear's `max-1024` 66, then 48. Read them as **ratios
+  between products**, never as a spec.
+- **Timing-derived numbers (LCP, CLS, long tasks) drift badly and one moved 3x.** Re-probe or ignore.
+
+And one whole class of claim that is neither: **which bundle a site serves you.** Spotify at a phone
+UA ships a different application than Spotify at 1440 — 0 container queries versus 123. Any count
+taken at one viewport describes that build only.
+
 The reason this file exists: responsive is the single most reliable place to detect generated UI.
 Not because the mobile view is ugly — because it is *the desktop view with smaller padding*. Real
 products do not shrink at a breakpoint. They **change shape**: a three-field search bar becomes one
@@ -25,13 +41,17 @@ sheet. The generated version keeps every element in place and reduces `padding: 
    **734 / 833 / 1068 / 1440**. Airbnb ships **744 / 1128**. Vercel ships **400 / 600 / 960 / 1200**.
    Not one of these products uses 768/1024 as its primary breakpoint. Those two numbers are Tailwind
    defaults inherited from a 2010 iPad, and reaching for them is the tell.
-2. **Reach for `@container`, not `@media`, for anything inside a shell.** Spotify's web player ships
-   **120 `@container` rules** against named containers (`main-view-grid-area`,
-   `search-item-container`, `below-fold-cards`) because its sidebar is user-resizable and viewport
-   width does not predict card width. Vercel ships 105. Set `container-type: inline-size` on the
-   wrapper and query the wrapper.
+2. **Reach for `@container`, not `@media`, for anything inside a shell.** Spotify's **desktop** web
+   player ships **123 `@container` rules** (re-probed 2026-09-10) against named containers
+   (`main-view-grid-area`, `search-item-container`, `below-fold-cards`) because its sidebar is
+   user-resizable and viewport width does not predict card width. Vercel ships 105. Set
+   `container-type: inline-size` on the wrapper and query the wrapper. (Load `open.spotify.com` with a
+   phone UA and you get a different application entirely — **0 container rules**, plain 768/992
+   breakpoints, half the CSS. See "when responsive is the wrong answer.")
 3. **Never let a mobile input's `font-size` drop below 16px.** Safari zooms the whole viewport when
-   you focus a sub-16px field, and it does not zoom back out. Measured on real login forms at 393px:
+   you focus a sub-16px field, and it does not zoom back out. Still true in 2026 — it is an
+   intentional Apple accessibility behaviour, not a bug awaiting a fix, and it keys off the
+   *computed* font-size of the focused control only, so labels and helper text may stay small. Measured on real login forms at 393px:
    Stripe 16px, GitHub 16px, Google 16px, X 17px, Shortcut 16px, Vercel 16px. The one product in the
    sample that ships **15px** — the Supabase dashboard sign-in — zooms on every focus.
 4. **`100vh` is a bug on mobile. Use `100svh` for anything that must never be clipped, `100dvh` only
@@ -39,15 +59,22 @@ sheet. The generated version keeps every element in place and reduces `padding: 
    `height: 100vh` is taller than the visible area whenever the toolbars are showing and your
    bottom-anchored button sits under them. Vercel uses `svh` 23 times to `dvh`'s 8. Airbnb ships the
    safe pair everywhere: `min-height:100vh; min-height:100dvh`.
-5. **Test at 320px with `documentElement.scrollWidth`, and clip decorative overflow at the
-   component, never on `body`.** Thirteen of the fourteen top products measured have **zero**
-   horizontal document overflow at 320x568. The exception — supabase.com, at 339px of scroll width in
-   a 320px viewport — is the kind of 19px leak that ships when nobody looks. `320` is the iPhone SE
-   and the Galaxy S9+; it is a live device, not a museum piece. Note what "zero overflow" does *not*
-   mean: at 320px Stripe has **728 elements whose right edge is past the viewport** and still
-   `scrollWidth === 320`, because every one of them sits inside an explicit clip (473 `overflow:hidden`
-   ancestors, 62 `overflow:clip`, 193 `overflow:auto`). Overflow is normal; *unclipped* overflow is
-   the bug.
+5. **Test at 320px with `documentElement.scrollWidth` — twice, at load and after the page settles —
+   and clip decorative overflow at the component, never on `body`.** Twelve of the fourteen top
+   products measured have **zero** horizontal document overflow at 320x568. The two that leak, both
+   re-confirmed 2026-09-10, are the whole lesson:
+   - **supabase.com: 339px** in a 320px viewport. The culprit, identified by element: the hero's
+     second CTA, `<a>Request a demo</a>`, inside a `div.flex.items-center.gap-2` with
+     `flex-wrap: nowrap`. Two buttons that will not wrap. 19px, visible as a clipped button label.
+   - **airbnb.com: 482px for the first ~3 seconds, then 320.** A `position: fixed` header laid out at
+     482px before hydration corrects it. Reproduced on 3 of 3 cold loads; invisible to any check that
+     waits 5s first, and it is the state the user actually lands in.
+
+   `320` is the iPhone SE and the Galaxy S9+; it is a live device, not a museum piece. Note what
+   "zero overflow" does *not* mean: at 320px Stripe has **772 elements whose right edge is past the
+   viewport** and still `scrollWidth === 320`, because every one of them sits inside an explicit clip
+   (467 `overflow:hidden` ancestors, 67 `overflow:clip`, 238 `overflow:auto`). Overflow is normal;
+   *unclipped* overflow is the bug.
 
 ---
 
@@ -70,8 +97,17 @@ sheet. The generated version keeps every element in place and reduces `padding: 
 | **Square** | mobile-first | `min-1024` (115), `min-1280` (62), `min-740` (23), `min-1680` (20), `min-320` (11), `min-374` (9) | 374 targets iPhone SE-class |
 | **Mercury** | mobile-first | `min-1024` (101), `min-768` (43), `min-1536` (36), `min-1952` (21) | Tailwind + a custom 1952 ultrawide tier |
 | **Robinhood** | both | `768/767` (93), `1024/1023` (123), `426/425` (72), `1280/1279` (48) | Tailwind, plus a hand-added 425/426 |
-| **Klarna / Supabase / Tailwind site** | mobile-first | 640 / 768 / 1024 / 1280 / 1536 | Unmodified Tailwind defaults |
+| **Klarna / Supabase / Tailwind site** | mobile-first | 640 / 768 / 1024 / 1280 / 1536 — now shipped as **40 / 48 / 64 / 80 / 96rem** | Unmodified Tailwind defaults |
 | **Hacker News** | n/a | `min-796` (1) | One breakpoint. The entire site. 7.4KB of CSS |
+
+**Tailwind v4 breakpoints are in `rem`, and that changes behaviour.** Verified in the shipped bytes of
+both tailwindcss.com and supabase.com on 2026-09-10: every default media query is now
+`(min-width: 40rem)`, not `(min-width: 640px)`. `rem` in a media query resolves against the
+**browser's** root font size, not yours — so a reader who has set their default text to 20px gets
+your `md` layout at 960 CSS px, not 768. That is deliberate (layout tiers scale with text) and it is
+also a behaviour nobody on your team has seen, because nobody on your team changed their default
+font size. If you author breakpoints in `px` and use a Tailwind v4 component, you now have two
+systems that disagree for those users. Pick one unit for breakpoints and stay in it.
 
 **The signal:** breakpoint counts are low and the numbers are odd. Stripe runs a global commerce
 brand on two. Apple runs the world's most-visited product marketing on four. If your file has six
@@ -82,7 +118,7 @@ from your content.
 
 | Product | `@container` rules | `container-type` decls | Named containers | Thresholds observed |
 |---|---|---|---|---|
-| **Spotify** | 120 | 15 | `main-view-grid-area`, `search-item-container`, `below-fold-cards` | `width>=600`, `>=778`, `>=1102`, `>952`, `<1200`, `<2304` |
+| **Spotify** (desktop build only) | 123 | 15 | `main-view-grid-area`, `search-item-container`, `below-fold-cards` | `width>=600`, `>=778`, `>=1102`, `>952`, `<1200`, `<2304` |
 | **Vercel** | 105 | 13 | (unnamed) | 401, 418, 454, 480, 560, 600, 601, 768, 960, 961, 1200 |
 | **Notion** | 47 | 19 | style queries: `style(--hero-layout-row:1) and (min-width:800px)` | 600, 800, 840, 900, 1024, 1252, 1392 |
 | **Airbnb** | 44 | 1 | `cohost-pdp`, `facepile-overflow`, `banner-grid` | **32, 40, 48, 64**, 256, 270, 300, 325, 357, 366, 370, 535, 620, 744, 950, 1128 |
@@ -116,7 +152,7 @@ breakpoint could ever express that.
 |---|---|---|---|
 | Google | 48px | — | — |
 | Notion | 48px | — | — |
-| Apple | median 48px (range 33-53) | 48px fixed globalnav + 60px localnav | 44px |
+| Apple | median 48px (range 33-53) | 48px globalnav + **48px** sticky localnav (re-measured at 320, 2026-09-10) | 34px |
 | Stripe | 44px | — | — |
 | Linear | 44px | 65px fixed header | 44px |
 | Supabase | 42px | — | — |
@@ -191,15 +227,16 @@ contain-intrinsic-size: calc(var(--vw) - 48px) 100px;   /* Airbnb — skip offsc
 `6x` approximates a mid-range Android against this Mac. `longTaskMs` is total time the main thread
 was blocked for >50ms — the thing that makes a tap feel dead.
 
+Captured 2026-09-09, one cold sample each. **These are the volatile kind of number** — quote the
+shape, re-probe the digits, and use
+[`performance-and-perceived-speed.md`](performance-and-perceived-speed.md) for anything current. Five
+rows, chosen because each carries one of the three lessons below:
+
 | Site | LCP 1x → 6x | Long tasks 1x → 6x | Total blocked (6x) | Longest single task (6x) | CLS (6x) | JS heap |
 |---|---|---|---|---|---|---|
 | **Hacker News** | 192 → **280 ms** | 0 → 1 | **91 ms** | 91 ms | 0 | 9.5 MB |
 | **Apple** | 292 → **700 ms** | 0 → 5 | **391 ms** | 108 ms | 0 | 9.5 MB |
-| **Vercel** | 504 → 712 ms | 1 → 11 | 1,477 ms | 580 ms | 0 | 22 MB |
-| **Notion** | 440 → 1,020 ms | 2 → 11 | 2,304 ms | 508 ms | 0 | 26 MB |
-| **Linear** ‡ | 3,556 → 4,248 ms | 1 → 17 | 2,455 ms | 532 ms | 0 | 32 MB |
 | **Airbnb** | 1,020 → **3,344 ms** | 0 → 22 | 3,388 ms | 359 ms | 0.019 | 16 MB |
-| **Figma** | 1,060 → 3,420 ms | 4 → 20 | 3,660 ms | 840 ms | 0 | 82 MB |
 | **Stripe** | 544 → 740 ms | 3 → 18 | **4,625 ms** | **1,073 ms** | 0 | 40 MB |
 | **NYT** | 2,800 → **15,676 ms** | 4 → 43 | **11,374 ms** | **2,220 ms** | **0.474** | 125 MB |
 
@@ -207,16 +244,16 @@ Three things fall out of this and they are the whole mobile performance story:
 
 - **The gap between the best and worst is 56x on LCP** (280ms vs 15.7s) and both are shipped by
   companies with money. It is a choice, made in the bundle.
-- **Fast paint does not mean responsive.** Stripe's LCP at 6x is 740ms — fourth best in the table —
+- **Fast paint does not mean responsive.** Stripe's LCP at 6x is 740ms — third best in the table —
   and it still blocks the main thread for 4.6 seconds afterward, including one unbroken 1,073ms task.
   Every tap in that window does nothing. Measure `longtask`, not just LCP.
 - **CLS only appears under throttle.** NYT is 0.437 at 1x and 0.474 at 6x; Airbnb is 0.000 at 1x and
   0.019 at 6x. If you test layout stability on a fast machine you will measure zero and ship shift.
 
-‡ `linear.app`'s 1× LCP was re-probed on 2026-09-10 and came back at **1,344ms**, not 3,556ms — the
-page changed between passes. Treat the Linear row's 6× figures as stale until re-run;
-[`performance-and-perceived-speed.md`](performance-and-perceived-speed.md) §Table A carries the
-current desktop numbers.
+How volatile: `linear.app`'s 1× LCP was 3,556ms in the first pass and **1,344ms** a day later. The
+four rows cut from this table in the 2026-09 adversarial pass (Vercel, Notion, Linear, Figma) were
+cut for that reason — they carried no lesson the remaining five do not, and their digits were already
+moving. Nothing in this file's advice depended on them.
 
 Note also that the CLS figures in this table and the ones in
 [`performance-and-perceived-speed.md`](performance-and-perceived-speed.md) §Table A are of the same
@@ -386,11 +423,26 @@ your framework.
 
 ## Decision: what do I do with this table?
 
-A dense table cannot shrink. 8 columns at 320px is 40px per column. Pick one of four, by the reader's
-task:
+A dense table cannot shrink. 8 columns at 320px is 40px per column. Pick one of six, by the reader's
+task. Every one below was verified against a live product at 320 or 390 on 2026-09-10; where a
+pattern is in this list because it is *right* rather than because it is *common*, it says so.
 
 **A. Horizontal scroll inside a bounded container, first column sticky.** Correct when the reader is
-comparing rows and every column matters (financial statements, spec sheets, log tables).
+comparing rows and every column matters (financial statements, spec sheets, log tables). **This is by
+far the most-shipped answer** — of the production tables probed for this pass, A and B accounted for
+all of them.
+
+Verified in the wild:
+
+| Product @390 | Shipped mechanics |
+|---|---|
+| **CoinMarketCap** | `<table>` in an `overflow-x: scroll` wrapper (client 358 → scroll 371); first cell `position: sticky; left: 0; background: #fff`; **and `thead th` `position: sticky; top: 0`** — pinned on *both* axes; 12px cells |
+| **GitHub → branches** | `role="table"` with flex cells in an `overflow-x: auto` wrapper, 358 → **806** at 390. Same product, different table, different answer than its file list (B, below) |
+| **Tailwind docs** | `display: grid` table in a 358px `overflow-x: auto` parent, scrolling to 738 |
+
+Two-axis pinning is the part most implementations miss and CoinMarketCap gets right: on a phone you
+lose the header row after two scrolls of a 40-row table, and a pinned first column without a pinned
+header just tells you *which* row you are lost in.
 
 ```css
 .table-wrap { overflow-x: auto; overscroll-behavior-x: contain; }
@@ -402,29 +454,75 @@ th:first-child, td:first-child {
 }
 ```
 
-Measured: Tailwind's docs `font-size` table at 393px is a `display: grid` table in a 361px
-`overflow-x: auto` parent, scrolling to 738px — **and the cell padding stays 8px and the cell font
-stays 12px at 393, 744 and 1440.** They did not make it denser for mobile or looser for desktop. The
+Measured: Tailwind's docs `font-size` table is a `display: grid` table in a 358px `overflow-x: auto`
+parent, scrolling to 738px — **and the cell padding (`10px 8px`) and cell font (14px) are identical at
+390, 744 and 1440** (re-measured 2026-09-10; the values were 8px/12px in the first pass, the
+*invariance* is the durable part). They did not make it denser for mobile or looser for desktop. The
 container scrolls; the table is the table. That is the whole trick and it costs four lines of CSS.
+
+**A-variant: two tables, one frozen.** Instead of `position: sticky` cells, split the table in half in
+the DOM: a narrow label table that does not scroll, beside a wide data table that does. ESPN's NBA
+standings at **320** ships exactly this — a **136px** single-column team table next to a **543px**
+13-column stats table inside a **254px** `overflow-x: auto` scroller, with the next column deliberately
+clipped at the right edge as the peek. It also does the content half of the transform: team names
+become three-letter codes so the frozen column can be 136px at all.
+
+Why anyone still does this in 2026: sticky cells inside a horizontal scroller are the buggiest thing
+in mobile CSS — borders drop, shadows tear, and iOS repaints them late. Two tables cannot desync.
+**The cost is real and you must decide it is acceptable:** a screen reader now reads two unrelated
+tables, and the association between "DET" and "60-22" exists only visually. If the data matters to
+non-visual users, pay the sticky-cell tax instead, or provide the same data as a definition list
+(pattern D).
 
 Two things that break this and are easy to miss: `overscroll-behavior-x: contain` prevents the swipe
 from triggering browser back-navigation once the rail hits its end (Airbnb ships
 `overscroll-behavior-inline: contain` for exactly this), and the container needs a visible edge
 treatment or nobody knows to scroll — a right-edge mask-image gradient or a partially clipped column.
 
-**B. Priority columns.** Keep 2-3 columns, hide the rest behind a per-row expander. Correct when one
-column is the answer and the others are supporting detail. This is a *product* decision, not a CSS
-one: someone has to rank the columns.
+**B. Priority columns.** Keep 2-3 columns, drop the rest (optionally behind a per-row expander).
+Correct when one column is the answer and the others are supporting detail. This is a *product*
+decision, not a CSS one: someone has to rank the columns.
+
+Verified: GitHub's repository file list. At 1440 the row is name / commit message / date, 904px wide.
+At 390 the commit-message cell is `display: none` and a **different, narrower name cell** takes over
+(GitHub ships both and toggles them), leaving name + date in 358px with no scroll at all. Four cells
+in the DOM, two rendered. Column-level `display: none` is fine — it is *component*-level duplication
+the file warns about, not cell-level.
 
 **C. Card transform.** Each row becomes a stacked block: primary value large, label/value pairs
 beneath. Correct when rows are read one at a time, not compared. **The mistake here is repeating the
 column header on every card** — 40 rows × 8 labels is 320 redundant strings. Show labels only for
 the values that are ambiguous without them.
 
-**D. Not a table at all.** Stripe's API reference has no `<table>` element on the Charge object page.
-The parameter list is a definition-style stack: name (mono, 15px), type (gray), description below.
-It reads identically at 320 and at 1440 because it was never a grid. If your "table" is really
-key/value documentation, this is the answer and it is free.
+*Honesty about this one:* it is the pattern most written about and the one this pass could not find
+shipping on any public table it probed (CoinMarketCap, ESPN, GitHub ×2, Tailwind docs, Wikipedia,
+AWS pricing). Real products either scroll (A) or drop columns (B). Card transform is still right when
+rows are genuinely read one at a time — an order history, a transaction list — but if you are
+reaching for it on a table people *compare*, you are choosing the pattern with the best blog posts
+rather than the one the task needs.
+
+**D. Not a table at all.** Stripe's API reference has **zero `<table>` elements** on the Charge object
+page — verified again 2026-09-10. The parameter list is a definition-style stack: name (mono), type
+(gray), description below. It reads identically at 320 and at 1440 because it was never a grid. If
+your "table" is really key/value documentation, this is the answer and it is free.
+
+**E. Switch the column, don't scroll it.** Keep 2-3 columns and put the rest behind a chip row that
+swaps which one is shown. Correct when the reader wants **one variable across many rows** — the
+opposite of A's "every column matters."
+
+Verified: weather.com's hourly forecast at 390. The table is Time / Sky / [metric], and a horizontal
+chip row — `Temperature · Feels Like · Precipitation · Wind …` — selects the third column. Twelve
+columns of data, three columns of layout, no horizontal scroll, and the reader never loses the row
+labels. A 12-column table where each column is the same *kind* of thing is nearly always this pattern
+rather than A.
+
+**F. Show two, let them choose which two.** For comparison tables — where the *columns* are the
+records — cut to the number that fits and put a picker in each column header.
+
+Verified: apple.com/iphone/compare at 390 renders exactly **two** product columns, each headed by a
+dropdown that swaps which product occupies that slot. Desktop shows four. Nobody scrolls, nobody
+drops information, and the comparison stays a comparison — which A would destroy, because comparing
+two things you cannot see at once is not comparing.
 
 **Never** use `display: block` on `<tr>`/`<td>` with `::before { content: attr(data-label) }`. It
 destroys the accessibility tree — screen readers lose the table semantics entirely — and it produces
@@ -437,10 +535,17 @@ the label-repetition problem in its worst form.
 Apple's HIG says 44x44pt. Material says 48x48dp. Both are correct and both are widely ignored, on
 purpose. Measured mobile primary buttons cluster at **40-48px**, median 44 — but 41% of Apple's
 homepage targets and 52% of Airbnb's are *under* 44px, and neither product is hard to use. Measured
-again at **320px** on Airbnb's homepage — 65 links and buttons, **median height 18px, p90 40px, and
-61 of 65 (94%) under 44px.** A product with a bottom tab bar and a 125px nav is shipping a median
-18px target. It works because the 18px items are chip labels and text links inside larger padded
-rows; the *hit area*, not the painted box, is what clears 44.
+at **320px** across five homepages on 2026-09-10: Stripe median 21px (135 of 181 under 44), Vercel
+24px (119/132), GitHub 26px (130/176), Apple 28px (107/123), Airbnb 40px (24/47). Every one of them
+ships a median target under 44px. It works because those items are chip labels, nav links and text
+links inside larger padded rows; the *hit area*, not the painted box, is what clears 44. (The
+per-page counts move with what is in the DOM — a cookie modal alone changes them — so read the
+pattern, not the digits.)
+
+The sharpest instance is Apple's own: on `apple.com/macbook-pro` at 320 the persistent blue **Buy**
+pill in the sticky localnav paints at **24 x 45px with 12px type**. Apple, whose HIG says 44x44,
+ships a 24px-tall primary CTA — and it is still the easiest thing on the page to hit, because the
+44px belongs to the padded link box around it.
 
 The resolution is that **44px is a hit-area minimum, not a paint minimum.** Linear's shipped pattern,
 found on their interactive controls:
@@ -466,7 +571,8 @@ Rules that follow:
   are more reliably tappable than two 44px buttons that touch. Give adjacent targets at least 8px of
   gap, and never let two hit expanders overlap (the one later in the DOM wins, silently).
 - **Targets in the bottom 20% of the screen need to be bigger,** because that is thumb-reach territory
-  and the aim error is larger. Apple's mobile localnav "Buy" button is 44px in a 60px bar.
+  and the aim error is larger. Airbnb's bottom tab bar is the shipped example: 125px of nav for three
+  destinations.
 - **Exceptions where under-44 is right:** inline text links inside prose (making these 44px would
   double-space your paragraphs — Linear's marketing page median target height is 14px because it is
   mostly prose links); dense data grids where the row itself is the target and the row is 44px+;
@@ -523,6 +629,10 @@ There are four viewport-height units and they mean different things when the iOS
 | `svh` | **small** viewport (toolbars visible) | no | anything that must always be fully visible |
 | `dvh` | current viewport | **yes, constantly** | a scroll container that should fill remaining space |
 
+All four have been Baseline Widely Available since June 2025, so the `min-height:100vh; min-height:100dvh`
+paired fallback Airbnb still ships is now legacy support, not a correctness requirement. Write the
+unit you mean.
+
 **`height: 100vh` is the single most common mobile bug in generated UI**, and it is subtle: it does
 not look broken on desktop, and it does not look broken in a Chrome device-emulator either, because
 neither has a collapsing toolbar. On a real iPhone it produces a hero whose CTA sits under the
@@ -558,6 +668,17 @@ it too.
 Apple's trick for measuring the toolbar height in pure CSS is worth stealing:
 `transform: translateY(calc(100dvh - 100vh))` yields exactly the current chrome offset, negative,
 with no JS.
+
+**iOS 26 changed the ground under this and Apple documented none of it for the web.** Since the
+Liquid Glass redesign, Safari's controls float *over* the page rather than sitting above it, and the
+consistent developer reports through 2026 are: `viewport-fit=cover` is now what buys you a
+transparent bottom bar (without it you get an opaque fallback strip); a fixed or sticky element that
+carries its own `background-color` or `backdrop-filter` interacts badly with the floating tab bar and
+should put those on an absolutely-positioned child instead; and a full-screen overlay's dimming no
+longer necessarily covers the browser chrome. **None of this is reproducible in Chromium device
+emulation — including everything in this file that depends on a collapsing toolbar — so treat it as a
+"test on a real iOS 26 device" flag rather than a rule.** The durable advice is unchanged: `svh` for
+what must always be visible, `dvh` only for scroll containers, and never `vh`.
 
 ---
 
@@ -638,6 +759,9 @@ desktop.
   /* .action-bar { bottom: calc(var(--kb, 0px) + env(safe-area-inset-bottom)); } */
   ```
   On Chrome/Android, `interactive-widget=resizes-content` in the viewport meta does this for you.
+  **WebKit has still not implemented it** (bugs.webkit.org 259770, open as of 2026-09), so on iOS the
+  `visualViewport` listener above is not a polyfill you can delete later this year — it is the
+  implementation.
 - **Set `inputmode` and `autocomplete` on every field.** `inputmode="numeric"` for a PIN,
   `inputmode="decimal"` for money, `type="email"` for email. It costs nothing and changes which
   keyboard appears. Measured: real login forms ship `autocomplete="current-password"`,
@@ -654,10 +778,15 @@ desktop.
 
 The hamburger is not automatically wrong. It is wrong when it is the *only* thing left.
 
-**What Apple actually ships at 320px:** a 48px fixed global bar with logo, search, bag and a
-hamburger — *plus* a second 60px "localnav" bar underneath carrying the product name as a dropdown
-and a persistent blue **Buy** button. The hamburger hides site-wide navigation. The one action that
-matters stays on screen, always. That is the pattern: **hide the map, keep the destination.**
+**What Apple actually ships at 320px** (re-measured on `apple.com/macbook-pro`, 2026-09-10): a 48px
+global bar with logo, search, bag and a hamburger — *plus* a second **48px sticky "localnav"** bar
+underneath carrying the product name as a dropdown and a persistent blue **Buy** pill (24 x 45px,
+12px type). The hamburger hides site-wide navigation. The one action that matters stays on screen,
+always. That is the pattern: **hide the map, keep the destination.**
+
+Note the scope: this is a *product page* pattern. `apple.com` itself at 320 ships the 48px global bar
+and nothing else, because the homepage has no single destination to keep. Do not copy the localnav
+onto a page that has no one action.
 
 **What Airbnb ships at 320px:** a fixed bottom tab bar (Explore / Wishlists / Log in) and a collapsed
 search pill. No hamburger at all. At **744** the tab bar disappears and the desktop nav returns.
@@ -742,20 +871,30 @@ appears) and the jump reads as a bug.
 
 ## Decision: where does the overflow go?
 
-At 320px, **Stripe has 728 elements whose right edge is past the viewport and a document
-`scrollWidth` of exactly 320.** So does Linear (375), GitHub (170), Vercel (78), Apple (9). Overflow
+At 320px, **Stripe has 772 elements whose right edge is past the viewport and a document
+`scrollWidth` of exactly 320.** So does Linear (371), GitHub (177), Vercel (78), Apple (11). Overflow
 is not the bug. Overflow that reaches `<html>` is the bug.
 
 Measured — for every one of those elements, on all five sites, the nearest ancestor with a
 horizontal-overflow rule was an explicit clip or scroller. **Zero true leaks, across all five sites.**
+(Re-probed 2026-09-10; the element counts moved by up to 6% and every structural conclusion held.)
 
 | Site | Overflowing elements @320 | nearest ancestor `hidden` | `clip` | `auto`/`scroll` | true leaks | `body { overflow-x }` | doc scrollWidth |
 |---|---|---|---|---|---|---|---|
-| Stripe | 728 | 473 | 62 | 193 | **0** | `visible` | 320 |
-| Linear | 375 | 291 | 0 | 84 | **0** | **`hidden`** | 320 |
-| GitHub | 170 | 159 | 11 | 0 | **0** | `visible` | 320 |
+| Stripe | 772 | 467 | 67 | 238 | **0** | `visible` | 320 |
+| Linear | 371 | 287 | 0 | 84 | **0** | **`hidden`** | 320 |
+| GitHub | 177 | 160 | 17 | 0 | **0** | `visible` | 320 |
 | Vercel | 78 | 77 | 1 | 0 | **0** | `visible` | 320 |
-| Apple | 9 | 0 | 9 | 0 | **0** | `visible` | 320 |
+| Apple | 11 | 0 | 11 | 0 | **0** | `visible` | 320 |
+| **Supabase** | 10 | 0 | 0 | 10 | **0** ← wrong | **`auto`** | **339** |
+
+**Read that last row: the scan says zero leaks and the document is 19px too wide.** It is the scan
+that is broken, not the page. Supabase sets `body { overflow-x: auto }`, so `<body>` counts as a
+"clipping ancestor" and every genuinely leaking element is filtered out as intentional. The fix is one
+line in the walk — **stop at `<body>`; a scroller on `body` or `html` is the leak, not the containment**
+— and it is applied in the self-check at the end of this file. With that fix the culprit resolves in
+one step: `a.relative.inline-flex` reading "Request a demo", inside `div.flex.items-center.gap-2` with
+`flex-wrap: nowrap`.
 
 Apple is the outlier worth noticing: nine overflowing elements on the whole page, all nine inside
 `overflow: clip`. The other four sites are running marquees and bleeding hero art, which is a
@@ -785,14 +924,20 @@ you can clip one axis while leaving the other visible, which `hidden` cannot do:
 document.documentElement.scrollWidth <= window.innerWidth   // must be true at 320
 ```
 
-When it fails, *then* run the element scan — and filter out anything with a clipping ancestor, or you
-will get 728 results and give up.
+Run it **twice** — once as soon as the page is interactive, once after it settles and after a full
+scroll. Airbnb's homepage reports **482** for the first ~3 seconds at 320 and **320** after; a check
+that sleeps 5s passes a page that is visibly broken when it loads. When it fails, *then* run the
+element scan — filtering out anything with a clipping ancestor **below `<body>`**, or you will get 772
+results and give up.
 
-**The three causes, in order of how often they are it:** (1) a fixed `width`/`min-width` on a card or
+**The five causes, in order of how often they are it:** (1) a fixed `width`/`min-width` on a card or
 media element larger than 320 minus the gutters; (2) an unbreakable string — a URL, an API key, a
 German compound, a file path — in a container with no `overflow-wrap`; (3) a grid whose
-`minmax(320px, 1fr)` floor exceeds the viewport once you subtract padding. Fix (2) globally and be
-done with it:
+`minmax(320px, 1fr)` floor exceeds the viewport once you subtract padding; (4) **a flex row that will
+not wrap** — two CTAs, a label and a badge, a button pair — which is Supabase's live 19px leak and is
+invisible at 375 because at 375 they fit; (5) **a `position: fixed` element sized from a stale
+measurement**, which is Airbnb's, leaks only before hydration settles, and is the one your CI will
+never catch. Fix (2) globally and be done with it:
 
 ```css
 /* Airbnb ships `overflow-wrap: anywhere`; `break-word` alone will not break a long unbroken token */
@@ -957,6 +1102,37 @@ of the time. It is the wrong answer when:
 **How to tell you are in this case:** if your mobile CSS is mostly `display: none`, you are not
 building a responsive layout, you are building a second product with extra steps. Do it properly.
 
+### Three cases, verified, where the advice in this file is the wrong advice
+
+**1. A desktop tool that should not be made responsive at all: Figma Design.** Figma's own help
+documentation states that on a mobile device "you can only access a **View Only** version of Figma
+files," and that "the file browser is no longer supported on mobile phone web browsers." They did not
+build a touch canvas editor and they did not build a responsive file browser — they *removed* the
+file browser from phone web. If your product's core interaction is precision pointer work on an
+unbounded canvas, the responsible mobile build is view + comment + a clear route to the desktop, and
+every hour spent making the editor reflow at 390 is an hour spent making something nobody will use.
+The failure mode this prevents is worse than a missing feature: a canvas editor that *technically*
+works on a phone invites people to start work they cannot finish.
+
+**2. Horizontal scroll is not a bug, it is the answer — for comparison data.** Every production data
+table probed for this pass scrolls horizontally on purpose: ESPN's standings (254px viewport onto a
+543px stats table), CoinMarketCap (358 → 371 with both axes pinned), GitHub's branch list (358 →
+806). Nobody stacks them, because the reader's task is *comparison across rows*, and a card stack
+destroys exactly the alignment that makes comparison possible. The rule "no horizontal scrolling on
+mobile" applies to the **page**; inside a bounded, obviously-scrollable container with a peeking next
+column, horizontal scroll is the correct and the shipped answer. What makes it a bug is when it is
+the *document* that scrolls.
+
+**3. A distinct mobile product beats adaptation — and you can see it in the bytes: Spotify.** Load
+`open.spotify.com` at 1440 and you get 1.02MB of CSS, 123 container queries, `pointer: coarse` blocks,
+45 `clamp()`s. Load the same URL with a phone user-agent and you get a different application: 483KB,
+**zero** container queries, plain `min-768` / `min-992` breakpoints, and a different viewport meta.
+Spotify did not make the desktop player responsive; they built a second front end for the mobile job
+(browse, resume, one-hand reach) and route to it. Google does the same with Sheets, where mobile web
+is a gate to the app and "request desktop site" is the only way to reach the real editor. Both are
+choices you can only make when the mobile *job* is a different job — but when it is, adaptation costs
+more and delivers less than two focused products.
+
 ---
 
 ## When this advice is wrong
@@ -1118,18 +1294,22 @@ from one `min-width: 340px` card or one long unbroken token.
 
 Run against your own output. Any "no" is a bug.
 
-1. At a **320x568** viewport, is `document.documentElement.scrollWidth <= window.innerWidth`? That
-   is the test. Only if it fails, scan for the culprit — **and filter out anything with a clipping
-   ancestor**, or you will get hundreds of false positives (Stripe: 728, all of them intentional):
+1. At a **320x568** viewport, is `document.documentElement.scrollWidth <= window.innerWidth`? Check it
+   **at first paint and again after the page settles** — Airbnb's homepage fails this for three
+   seconds and then passes. Only if it fails, scan for the culprit — filtering out anything with a
+   clipping ancestor **below `<body>`**, or you will get hundreds of false positives (Stripe: 772, all
+   intentional):
    ```js
    [...document.querySelectorAll('body *')].filter(e => {
      if (e.getBoundingClientRect().right <= innerWidth + 2) return false;
-     for (let a = e.parentElement; a; a = a.parentElement)
+     for (let a = e.parentElement; a && a !== document.body; a = a.parentElement)   // stop at body
        if (/(hidden|clip|auto|scroll)/.test(getComputedStyle(a).overflowX)) return false;
      return true;   // this one actually leaks
    });
    ```
-   And confirm the fix is not `body { overflow-x: hidden }`.
+   The `a !== document.body` guard is load-bearing: without it, a page that sets
+   `body { overflow-x: auto }` reports zero leaks while scrolling sideways (supabase.com does exactly
+   this at 339px). And confirm the fix is not `body { overflow-x: hidden }`.
 2. Count the distinct breakpoints in the file. More than four for a page, or more than two for a
    component, means you picked them from a list. Are any of them a number you found by dragging?
 3. Does at least one component on the page **change shape** (absorb into a trigger, drill down, swap)
@@ -1195,3 +1375,86 @@ shared connection — treat LCP as order of magnitude and the long-task and CLS 
 Device viewport table from the Playwright device registry. Payload figures are decompressed response
 bytes on a cold load at the `iPhone 14 Pro` profile, one sample per site — treat them as order of
 magnitude, not as benchmarks.
+
+The 2026-09-10 adversarial re-probe added: coinmarketcap.com, espn.com/nba/standings,
+weather.com's hourly forecast, apple.com/iphone/compare, apple.com/macbook-pro at 320,
+github.com/vercel/next.js (file list and branch list at 1440 and 390), aws.amazon.com/ec2/pricing,
+en.wikipedia.org, and open.spotify.com loaded at both a phone and a desktop user-agent.
+
+---
+
+## Adversarial pass (2026-09)
+
+First hostile review of this file. Everything below was re-probed live on **2026-09-10** with
+Playwright against a shared Chromium, at 320x568 (DPR 2, iOS UA), 390/393x660 (DPR 3, touch) and
+1440x900, plus screenshots read at 320 and 390. Sixteen products, ~40 page loads.
+
+**Held, could not shake.** Geometry and computed style reproduced essentially exactly a day and a
+route later: Vercel's 320px overflow profile (78 elements / 77 `hidden` / 1 `clip` / 0 leaks / doc
+320) came back identical; Apple's `env(safe-area-inset-*)` count is still exactly 31 and its
+`aspect-ratio` count still exactly 0; Airbnb's `scroll-snap-type` still 14 and `env()` still 79;
+Vercel's `svh`:`dvh` ratio still 23:8 and its `aspect-ratio` still 108; Spotify's desktop player
+still 15 `container-type` and ~123 `@container`; Supabase's dashboard-sign-in 15px input and the
+19px document leak both still there. The viewport-meta findings all held, including the three good
+products shipping `maximum-scale=1` (Vercel, Airbnb, Spotify-desktop). The 16px iOS input-zoom rule
+is current and is an intentional platform behaviour, not a bug queued for a fix. `dvh`/`svh`/`lvh`
+have been Baseline Widely Available since June 2025.
+
+**Corrected.**
+1. *Airbnb leaks at 320.* Document `scrollWidth` is **482** for the first ~3 seconds of every cold
+   load (3/3 runs) — a `position: fixed` header laid out before hydration corrects it — then 320. The
+   old "thirteen of fourteen products have zero overflow" was a post-settle snapshot. The overflow
+   test now says: run it twice.
+2. *The self-check's leak scan had a false negative that hid a live bug.* It treated any ancestor
+   with `overflow-x: auto` as intentional containment, including `<body>` — which is why Supabase
+   scored "0 true leaks" while scrolling sideways at 339px. Walk now stops at `<body>`. With the fix,
+   the culprit resolves in one step: a `flex-wrap: nowrap` CTA pair, `Request a demo`. Added as
+   overflow cause (4); the fixed-element-sized-from-stale-JS case added as (5).
+3. *Apple's localnav is 48px, not 60px, and its Buy pill is 24 x 45px at 12px type, not 44px.* Also
+   scoped: the localnav pattern is on product pages; `apple.com` itself ships only the 48px global bar.
+4. *Spotify's 120 container queries are the desktop build.* At a phone UA the same URL serves a
+   different application with **zero** container rules and half the CSS. Every count in this file is
+   now labelled with the build it came from.
+5. *Tailwind v4 ships `rem` breakpoints* (40/48/64/80/96rem), verified in tailwindcss.com's and
+   supabase.com's shipped bytes. Media-query `rem` resolves against the browser's root font size, so
+   these tiers move for users who change their default text size. New paragraph in the breakpoint
+   section.
+6. *Tailwind docs table cells are 14px / `10px 8px` now, not 12px / 8px.* The invariance across
+   390/744/1440 — the actual lesson — holds.
+7. *Declaration counts drift ±20% per load* because CSS is code-split (Stripe `min-640` 190→194,
+   Linear `max-1024` 66→48, Airbnb `aspect-ratio` 80→60). Framing added at the top: read them as
+   ratios between products, never as specs.
+8. *Cut:* four rows from the main-thread table (Vercel, Notion, Linear, Figma) and the Linear
+   staleness footnote. Timing numbers, duplicated in
+   [`performance-and-perceived-speed.md`](performance-and-perceived-speed.md), carrying no lesson the
+   remaining five rows do not.
+
+**Added, from looking rather than recalling.** Each pattern in the table section is now tied to a
+named product verified at 320 or 390, and two patterns the file was missing were found in the wild:
+**E. Switch the column, don't scroll it** (weather.com's hourly forecast: a chip row selects which
+single metric column sits beside Time and Sky — twelve columns of data, three of layout) and
+**F. Show two, let them choose which two** (apple.com/iphone/compare: two product columns at 390,
+each headed by a picker, where desktop shows four). Also added the **split-table frozen column**
+variant of A, measured on ESPN's standings at 320 (136px static team table beside a 543px stats table
+in a 254px scroller, team names abbreviated to fit), with its screen-reader cost named. Pattern **C,
+the card transform, was not found shipping on any public table probed** — that is now stated in the
+file rather than implied away. And the three scoping cases: Figma (view-only on phone web, by their
+own docs), horizontal scroll as the correct answer for comparison data, and Spotify's separate
+mobile front end.
+
+**Could not verify.** Anything that requires a real iOS toolbar: Chromium emulation has no
+collapsing chrome, no software keyboard, and no safe areas, so this file's `svh`/`dvh`/`env()`
+behaviour claims are argued from shipped CSS and from spec, not observed. The iOS 26 "Liquid Glass"
+viewport changes are reported consistently by developers through 2026 and documented by Apple for the
+web nowhere; they are flagged in-place as a device-test item rather than stated as rules.
+`-webkit-tap-highlight-color`'s default value and the ~300ms tap delay were not re-measured.
+The Robinhood, Klarna, Arc, Raycast, Shopify, Square and Mercury rows were not re-probed this pass.
+
+**Reproduce it:**
+
+```bash
+node tools/browserd.mjs start
+node tools/shot.mjs https://www.espn.com/nba/standings --out .cache/shots --name t --widths 320
+# then, at 320x568 in the page context:
+#   document.documentElement.scrollWidth              // twice: at load, and after settle
+```

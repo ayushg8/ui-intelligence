@@ -6,25 +6,30 @@
 it, why a designer clocks it in half a second, when it is actually correct, the specific move that
 replaces it, and how to detect it in code and in a screenshot.**
 
-**Measured 2026-09-10.** Every number, hex value, class name, string and count below was read out of
-a live interface with Playwright — computed styles, `:root` custom property dumps, stylesheet rule
-inspection — or off a 1440×900 render that I opened and looked at. Nothing here is recalled from
-training data. The corpus:
+**Measured 2026-09-10, in two passes.** Every number, hex value, class name, string and count below
+was read out of a live interface with Playwright — computed styles, `:root` custom property dumps,
+stylesheet rule inspection — or off a 1440×900 render that I opened and looked at. Nothing here is
+recalled from training data. The corpus:
 
 | Set | n | What |
 |---|---|---|
-| **Generated** | 15 | v0.app community templates, opened at their live preview URLs (Optimus, COMPUTE, AGENTIC, Tasko, UXBooster, Financial Dashboard, HR Pulse, DRIPNEX, Hoodie Store, Modern SaaS Landing, and 5 more) |
-| **Generated** | 10 | Published `*.lovable.app` apps built by real users, found via search, not curated by Lovable |
+| **Generated** · pass 1 | 15 | v0.app community templates at their live preview URLs (Optimus, COMPUTE, AGENTIC, Tasko, UXBooster, Financial Dashboard, HR Pulse, DRIPNEX, Hoodie Store, Modern SaaS Landing, and 5 more) |
+| **Generated** · pass 1 | 10 | Published `*.lovable.app` apps built by real users, found via search, not curated by Lovable |
+| **Generated** · pass 2 | 8 | An adversarial re-probe of *different*, publicly deployed output: `v0-design-brutalist-ai-saa-s` (SYS.INT), `v0-pixel-perfect-seven` (PIXELCRAFT), `v0-sales-operations-dashboard` (SalesOps), `v0-ai-mockup-generator-five` (product.mockup), `wwwe.lovable.app` (LearnHub), `mode9.lovable.app` (Email Extractor), `mastering-lovable.lovable.app`, `v0-premium-templates` |
 | **Reference** | 2 | `ui.shadcn.com/blocks` and `/examples/dashboard` — the source of the defaults |
-| **Control** | 14 | linear.app, stripe.com, mercury.com, ramp.com, raycast.com, railway.com, vercel.com, notion.com, figma.com, sentry.io, posthog.com, basecamp.com, arc.net, gov.uk |
+| **Control** | 14 | linear.app, stripe.com, mercury.com, ramp.com, raycast.com, railway.com, vercel.com, notion.com, figma.com, sentry.io, posthog.com, basecamp.com, arc.net, gov.uk — five of them re-probed in pass 2 |
 
 Two hard results frame everything below:
 
-- **Gradient text appeared on 0 of 14 control products.** Not "rarely." Zero. It appeared on
-  Lovable and v0 output.
-- **`:focus-visible` rule counts:** Railway 97, Notion 84, Mercury 56, GOV.UK 53, Ramp 36 · versus
-  **exactly 24 on seven different v0 templates by seven different authors** (the Tailwind/shadcn
-  base, with nothing added) and **0** on a financial dashboard.
+- **Gradient text appeared on 0 of 14 control products.** Not "rarely." Zero. Pass 2 found it on
+  **1 of 8** generated pages, so it is now rare in both populations. It stays in the file because it
+  is *one-directional*: finding it tells you something, not finding it tells you nothing.
+- **Zero focus *coverage* is the signal. No rule count is.** Pass 2 CSSOM rule counts: v0 output
+  **0 · 0 · 0 · 7**; Lovable output **13 · 13 · 13 · 2**; `ui.shadcn.com/blocks` itself **3**;
+  controls GOV.UK **28**, Vercel **22**, Linear **7**, Stripe **0 — a false zero, all six of its
+  stylesheets are cross-origin and throw**. The "exactly 24" fingerprint carried by the previous
+  revision of this file did not reproduce on a single page, and rule counting turned out not to be
+  reproducible at all. Measure how many interactive elements actually get a ring. See E6.
 
 ---
 
@@ -36,13 +41,17 @@ Scan this. Jump to the section for the six fields.
 | # | Tell | Detect in 5 seconds |
 |---|---|---|
 | [A1](#a1--one-radius-scaled-seven-ways) | One radius value, scaled | All radii are multiples of one number: 6/8/10/14/18/22/26 |
-| [A2](#a2--rounded-full-on-everything-that-isnt-round) | `rounded-full` on non-circular things | computed `border-radius: 3.35544e+07px` on 20–105 elements |
+| [A2](#a2--rounded-full-on-everything-that-isnt-round) | `rounded-full` on non-circular things | A rectangle wider than 200px with semicircular ends. Volume no longer separates |
 | [A3](#a3--the-single-flat-shadow) | `0 1px 2px rgba(0,0,0,.05)` and nothing else | One shadow value, no ring, no second layer |
 | [A4](#a4--the-alpha-ramp-instead-of-an-elevation-model) | `bg-black/5 /10 /20` as the surface system | `oklab(0 0 0 / 0.04 … 0.25)` backgrounds |
 | [A5](#a5--glass-applied-to-content-not-to-chrome) | `backdrop-filter: blur()` on cards | blur count > 8 with cards behind it |
 | [A6](#a6--the-blurred-blob-and-the-radial-glow) | 400–800px radial gradients behind the hero | `radial-gradient(… , rgba(x,y,z,.15), transparent 60%)` |
 | [A7](#a7--the-animated-gradient-border) | conic-gradient rotating on a pseudo-element | `@keyframes` named `border-beam`, `shine`, `rotate` |
 | [A8](#a8--the-detached-floating-pill-navbar) | Nav inset 16–24px from the top, pill-shaped | `position: fixed; top: 16px` + `rounded-full` |
+| [A9](#a9--the-borrowed-aesthetic-the-costume) | A whole named style worn as a substitute for a decision | Every surface trait belongs to one -ism; the copy is still generic |
+
+*Historical, kept for provenance, near-extinct in 2026 output: A5, A6, A7, B1, F3, F4. Do not open an
+audit on these.*
 
 ### B · Color
 | # | Tell | Detect in 5 seconds |
@@ -55,7 +64,8 @@ Scan this. Jump to the section for the six fields.
 | [B6](#b6--generic-dark-mode-2-a-ramp-with-no-perceptible-steps) | Four near-blacks within ΔL 15 | Surfaces at #05070b / #0c1014 / #171b1f |
 | [B7](#b7--generic-dark-mode-3-inverted-or-absent-elevation) | Cards darker than the page they sit on | Compare card bg L\* to body bg L\* |
 | [B8](#b8--color-used-decoratively-rather-than-semantically) | Icon chips in 4 unrelated hues | Category colors with no legend |
-| [B9](#b9--the-accent-everywhere) | Primary color on > 3% of surface area | Squint: more than 2 accent-colored regions |
+| [B9](#b9--the-accent-everywhere) | Primary color on > 5% of surface area | Squint: more than 2 accent-colored regions |
+| [B10](#b10--an-accent-that-is-a-stock-ramp-step) | `--primary` resolves to `indigo-500` / `blue-500` | Compare every semantic token to the framework's ramp |
 
 ### C · Typography
 | # | Tell | Detect in 5 seconds |
@@ -69,6 +79,7 @@ Scan this. Jump to the section for the six fields.
 | [C7](#c7--tracking-widest-uppercase-labels-everywhere) | `+1.98px` / `+2.2px` / `+2.64px` on 10px caps | positive letter-spacing on > 30 elements |
 | [C8](#c8--inter-geist-and-the-four-substitutes) | Inter / Geist / Instrument Sans / Plus Jakarta | `font-family` first token |
 | [C9](#c9--the-announcement-pill-above-the-headline) | `🎉 Introducing … →` pill, 28px, centered | A `rounded-full` sibling immediately before `h1` |
+| [C10](#c10--the-accent-coloured-phrase-in-the-headline) | One word or clause of the h1 in the accent | Count distinct computed `color` values inside `h1` |
 
 ### D · Layout & composition
 | # | Tell | Detect in 5 seconds |
@@ -77,7 +88,7 @@ Scan this. Jump to the section for the six fields.
 | [D2](#d2--nested-cards-a-dashboard-tell-not-a-landing-page-tell) | Card in card in card, same treatment | Surface-depth histogram with equal styling |
 | [D3](#d3--one-content-width-on-every-section) | `max-width: 1400px` × 11 | One inner max-width dominates |
 | [D4](#d4--one-vertical-padding-on-every-section) | `padding-top: 128px` × 8 of 13 | Section padding histogram is a spike |
-| [D5](#d5--centered-everything) | 35% of elements `text-align: center` | Count centered elements ÷ total |
+| [D5](#d5--centered-everything) | Sustained centering through structured content | Centered ÷ text-bearing leaves; >40% is a finding, 5–9% is designed |
 | [D6](#d6--three-identical-feature-cards) | 3-col grid, 3 items, icon + h3 + 2 lines | `grid-template-columns` 3 × equal, 3 children |
 | [D7](#d7--the-bento-grid-as-a-substitute-for-hierarchy) | 2×3 of unequal boxes, equal importance | `grid-auto-flow: dense` or `col-span-2` mosaics |
 | [D8](#d8--the-landing-page-shape-applied-to-application-pages) | Settings page with a hero and a CTA | An `<h1>` over 40px inside an authed route |
@@ -85,16 +96,18 @@ Scan this. Jump to the section for the six fields.
 | [D10](#d10--the-testimonial-trio) | 3 quotes, 3 avatars, 3 equal cards | Three `<blockquote>` in a 3-col grid |
 | [D11](#d11--the-generic-pricing-table) | 3 tiers, middle one "Most popular", ring | `ring-2` / `scale-105` on the middle column |
 | [D12](#d12--faq-accordion-as-page-filler) | 6 questions nobody asked, at the bottom | `[data-state]` accordion under the last CTA |
+| [D13](#d13--the-primary--ghost-cta-pair-arrow-on-the-primary) | Filled CTA with `→`, outline CTA beside it | Two sibling buttons under the subhead, one filled one not |
+| [D14](#d14--the-kpi-tile-row) | 4 tiles: label, icon chip, big number, green delta | A 4-col grid whose children each hold one `svg` and one number |
 
 ### E · Library fingerprints
 | # | Tell | Detect in 5 seconds |
 |---|---|---|
 | [E1](#e1--dead-tokens-for-components-the-page-does-not-contain) | `--sidebar-ring` on a marketing page | Count `:root` props with no matching element |
-| [E2](#e2--the-tailwind-transition-signature) | `.15s cubic-bezier(.4,0,.2,1)` with `all` | `transition-property: all` on > 20 elements |
+| [E2](#e2--the-tailwind-transition-signature) | `.15s cubic-bezier(.4,0,.2,1)` with `all` | Marks a Tailwind stack, not a defect — shadcn.com measures 1532. Compare to Linear's **zero** |
 | [E3](#e3--the-shadcn-keyframe-residue) | `accordion-down`, `caret-blink` with no accordion | `@keyframes` names vs. actual components |
 | [E4](#e4--the-lucide-eight) | `check`, `arrow-right`, `arrow-up-right`, `menu`, `shield`, `lock`, `eye`, `file-check` | `svg.lucide-*` class names |
 | [E5](#e5--the-lovable-badge-and-other-host-watermarks) | 17 elements in `CameraPlainVariable` | `font-family` outlier with n ≈ 17 |
-| [E6](#e6--the-focus-visible-count-of-exactly-24) | Nobody wrote a focus style | Count `:focus-visible` rules |
+| [E6](#e6--zero-focus-coverage) | Nobody wrote a focus style | Focus every control and count the rings |
 
 ### F · Motion
 | # | Tell | Detect in 5 seconds |
@@ -140,6 +153,7 @@ Scan this. Jump to the section for the six fields.
 | [I6](#i6--the-theme-swap-that-changes-nothing) | New palette, identical geometry |
 | [I7](#i7--scale-degeneracy) | Four border alphas, one gap value |
 | [I8](#i8--no-real-content) | Every string is a category, not an instance |
+| [I9](#i9--one-width-for-every-kind-of-content) | Prose, grid and quote all at the same measure |
 
 ---
 
@@ -161,9 +175,19 @@ for novelty — is worse, because a straining interface reads as amateur where a
 neutral. A well-executed conventional interface is not a defect. The target is *intentional*, not
 *unusual*.
 
-**Ranking.** If you can only fix five things, fix G (content), then D3/D4 (rhythm), then E1 (dead
-tokens), then H (states), then A (surface). Surface is the most visible and the least diagnostic.
-An agent that perfects the radius scale and ships `Acme Inc.` has done nothing.
+**Ranking.** If you can only fix five things, fix G (content), then D3/D4/I9 (rhythm and measure),
+then E1 + B10 (dead tokens and the renamed palette), then H (states), then A (surface). Surface is
+the most visible and the least diagnostic. An agent that perfects the radius scale and ships
+`Acme Inc.` has done nothing.
+
+**The ranking has a second half, added in the 2026-09 adversarial pass.** The failure this file must
+not cause is *fixing upward into a costume* — reaching for a louder aesthetic because the plain one
+scored badly on surface. Two of four v0 landing pages re-probed in that pass had already done exactly
+that (A9): a complete brutalist or industrial style over `99.9% uptime` and `NO CREDIT CARD`. Every
+entry here has a **when it is actually fine** field, and on the entries where convention is usually
+right — D11 pricing tables, D13 CTA pairs, D14 KPI rows, D5 centered heroes, C10 two-colour
+headlines, A2 pills, I3 symmetry — that field is the operative instruction, not a caveat attached to
+one. Read it before you change anything.
 
 ---
 
@@ -174,11 +198,11 @@ Print this. It is the diff.
 | Property | Generated (measured) | Excellent (measured) |
 |---|---|---|
 | Distinct `border-radius` values | 3–5, all multiples of one number | Linear **8** (9999, 12, 9, 8, 6, 4, 2, 50%); Raycast **8** (11, 8, 6, 12, 20, 16, 100%, 99999) |
-| Dominant radius | `3.35544e+07px` (`rounded-full`) on 20–105 els | Mercury **4px** ×196; Railway **4px** ×437; Figma **2px**; GOV.UK **0px everywhere** |
+| Dominant radius | `3.35544e+07px` (`rounded-full`) on 20–105 els in pass 1; **0–20 els in pass 2** — the pill flood has receded, see A2 | Mercury **4px** ×196; Railway **4px** ×437; Linear **9999px ×76** and it is *correct*; Stripe **4px ×73**; GOV.UK **0px everywhere** |
 | Box-shadow vocabulary | one value: `rgba(0,0,0,.05) 0 1px 2px` | Linear: `rgba(0,0,0,.2) 0 0 0 1px` (a ring) + `0 0 12px inset` + `0 2px 32px`; Ramp: `0 232px 65px rgba(0,0,0,.008), 0 35px 59px rgba(0,0,0,.03), 0 … rgba(0,0,0,.09)`; Raycast: a 4-layer keycap shadow on 159 elements |
 | Gradient elements | 0–26 | Raycast **235**, Linear **62**, Stripe **26** — gradients are *not* the tell |
 | **Gradient text elements** | 1–6 | **0 on all 14 controls** |
-| `:focus-visible` rules | **exactly 24** (Tailwind base) on 7 v0 templates; **0** on a finance dashboard | Railway 97, Notion 84, Mercury 56, GOV.UK 53, Ramp 36, Raycast 25 |
+| Focus **coverage** (rings ÷ interactive elements — E6; the rule counts below are a screening proxy only, and are not reproducible) | All four v0 apps and Cruip ring **nothing**. Rule counts, for screening: **0** on 3 of 4 v0 pages, 7 on the fourth, 13 on each of three Lovable pages, **3 on `ui.shadcn.com/blocks` itself** | GOV.UK **56 of 56**; Halden **53 of 53** from three rules. Rule counts: GOV.UK 28 (plus 135 bare `:focus`), Vercel 22, Linear 7, Stripe **0 — false, six cross-origin sheets**. Railway 97 / Notion 84 / Mercury 56 / Ramp 36 / Raycast 25 are pass-1 figures whose method was not recorded — unverified |
 | `letter-spacing ÷ font-size` | one constant: −0.025em at 48px, 60px, 86.4px, 96px, 160px | Linear −0.13/−0.165/−0.15/−0.039/−0.182px (5 non-proportional values); Mercury **+**0.07/+0.24/+0.42/+0.48 |
 | Font weights | 300/400/500/600/700 only, no exceptions in 15 templates | Linear **510**, **590**; Mercury **420**, **480**, **360**, **530**; Figma **330**, **320**, **540**; Vercel **450** |
 | Font families | Inter · Geist · Instrument Sans · `ui-sans-serif` (no choice made) | Stripe `sohne-var` (one family, 2705 elements); Mercury `arcadia`; Ramp `TWK Lausanne`; Linear `Inter Variable` + `Berkeley Mono` |
@@ -187,8 +211,11 @@ Print this. It is the diff.
 | Contrast failures (light pages) | UXBooster 5/51 (10%), MSP 45/317 (14%), IWD 20/72 (**28%**) | Railway **0/879**, GOV.UK **0/79**, Mercury 1/207, Stripe 17/420 (4%) |
 | `:root` custom properties | 95–155, of which ~40 are unused | Ramp 271, Vercel 567, Notion 657 — all used; Stripe **0** |
 
-Three of those are near-decisive on their own: **gradient text > 0**, **`:focus-visible` == 24**,
+Three of those are near-decisive on their own: **gradient text > 0**, **zero focus coverage**, and
 **a single `letter-spacing ÷ font-size` ratio**.
+All three are one-directional. Each convicts when it fires and clears nothing when it does not —
+a healthy focus count proves a component library authored the focus states, not that anyone
+designed them (`vibecode-rubric.md` §6.4).
 
 ---
 
@@ -217,13 +244,20 @@ want proportionally *smaller* radius, not larger. A derived scale gets this back
 surface — an internal tool, an admin console, a docs site. A derived scale is a real system and
 consistency beats fiddling. It is also fine as a *starting point* you then break in two places.
 
-**Instead.** Author the radii independently and let the vocabulary be wider than the scale. Linear
-ships **eight** distinct radii on one page — 9999px (pills, ×76), 12px, 9px, 8px (×33), 6px, 4px
-(×18), 2px, 50% (avatars, ×28). **9px** and **2px** are not in any generated scale; they exist
-because something needed them. Raycast's dominant radius is **11px** (×159) — an odd number that
-survives no derivation. Mercury runs almost everything at **4px** (×196) and reserves 12/32/40 for
-three specific surfaces. GOV.UK ships **zero** radius on the entire page and looks like the
-institution it is.
+**Instead.** Pick the radii yourself, from the objects, and stop. Re-probed 2026-09-10, Linear ships
+eight distinct radii on one page — 9999px (pills, ×76), 8px (×33), 50% (avatars, ×28), 12px (×26),
+4px (×21), 9px (×18), 6px (×15), 2px (×13). **9px** and **2px** are not on any generated scale; they
+exist because something needed them. Raycast's dominant radius is **11px** (×159) — an odd number
+that survives no derivation. Stripe runs **4px ×73 / 6px ×50** and almost nothing else. Mercury runs
+almost everything at **4px** (×196). GOV.UK ships **zero** radius and looks like the institution it
+is.
+
+**Do not read this as "ship eight radii."** Eight is what Linear's history produced, not a target,
+and an agent that manufactures a wide radius vocabulary to look authored has swapped a boring system
+for an incoherent one — which is worse and harder to undo. Two of the three products above ship
+*two* dominant values. The fix is three or four radii you can each justify by naming the object, all
+of them still tokens (`system/3-tokens.md` rule: no arbitrary values). If your derived scale already
+does that, keep it and change nothing.
 
 **Detect.** *Code:* if the set of computed radii is `{r×0.6, r×0.8, r, r×1.4, r×1.8, r×2.2, r×2.6}`
 for a single r, it is untouched. Look for any radius that is not on the scale. *Screenshot:* squint
@@ -235,11 +269,14 @@ that is the derivation showing.
 ### A2 · `rounded-full` on everything that isn't round
 
 **The tell.** In Tailwind v4, `rounded-full` is `border-radius: calc(infinity * 1px)`, which
-Chromium clamps to **33 554 400px** — it shows up in computed styles as `3.35544e+07px`. It is the
-single most-used radius in generated output: AGENTIC **105 elements**, a Lovable community page
-**353 elements**, COMPUTE 34, Tasko 26, UXBooster 25, Optimus 24. Buttons, nav items, badges,
-avatars, icon chips, tags, progress bars, section eyebrows and — regularly — a 320px-wide card all
-get it.
+Chromium clamps to **33 554 400px** — it shows up in computed styles as `3.35544e+07px`. In pass 1 it was the single most-used radius in generated output: AGENTIC **105 elements**, a
+Lovable community page **353 elements**, COMPUTE 34, Tasko 26, UXBooster 25, Optimus 24.
+
+**Frequency, pass 2 (2026-09-10): the flood has receded.** Across eight freshly deployed pages the
+`rounded-full` counts were **0, 0, 1, 3, 6, 7, 8, 11, 19, 20** — and Vercel, a control, measures
+**26**. The pill is no longer a volume tell; a page with twenty of them is now inside the normal
+range. What survives is the *placement* tell: the pill on something that is not pill-shaped —
+a 320px card, a section eyebrow, a progress track.
 
 **Why AI generates it.** `rounded-full` is one word, always safe, never produces a visibly wrong
 corner, and reads as "modern" in every tutorial in the training set. It is the token-cheapest way
@@ -342,6 +379,11 @@ depths that are almost, but not quite, the same gray.
 navigation or overlays. Measured: IWD portfolio **11** blurred elements, AGENTIC 10, HR Pulse
 inherits it from its top bar. Usually paired with `bg-white/10` and a `border-white/20`.
 
+**Frequency, 2026-09-10 re-probe: near-extinct.** `backdrop-filter` element counts across eight
+freshly deployed generated pages were **3, 1, 1, 1, 1, 0, 0, 0**. If you are auditing 2026 output for
+glass you are auditing the wrong decade. Kept for provenance and because the *correct* uses below
+still matter.
+
 **Why AI generates it.** "Glassmorphism" is a named, well-documented aesthetic with thousands of
 copy-paste examples. It is a two-class change that visibly transforms a page, which is exactly the
 kind of edit a model optimizing for demo-legibility will make.
@@ -374,6 +416,14 @@ element has anything scrolling behind it. *Screenshot:* scroll the page 200px an
 `radial-gradient(400px, rgba(…, .03), rgba(0,0,0,0) 60%)` (AGENTIC ×12) or as a `filter: blur(64px)`
 on an oversized circle. Frequently two of them in complementary hues at opposite corners.
 
+**Frequency, 2026-09-10 re-probe: gone, and replaced.** Zero blurred blobs across eight pages. Its
+successor is the **grainy gradient panel** — a full-width rounded rectangle filled with a soft,
+noisy two-or-three-hue gradient, standing in for a screenshot. Measured on
+`mastering-lovable.lovable.app`: an 896px-wide, 16px-radius panel of blue-to-red grain sitting where
+a product image belongs. The mechanism is identical to the blob's — it occupies the space an image
+should occupy, and it is not about anything — so the entry below applies unchanged; only the shape
+of the filler has moved on.
+
 **Why AI generates it.** It is the cheapest possible "the page has depth" move: no assets, no
 imagery, no art direction, four utility classes. It also reliably fills the empty right half of a
 left-aligned hero, which is otherwise the model's biggest layout problem.
@@ -405,6 +455,10 @@ the layout.
 travels around the border. Keyframe names to look for: `border-beam`, `shine`, `rotate`,
 `gradient-shift` (measured in COMPUTE), `background-position` animations on
 `linear-gradient(90deg, …)`.
+
+**Frequency, 2026-09-10 re-probe: not found.** Zero `border-beam`-family keyframes across eight
+pages. Effect-library residue has moved on to page-specific names (`hero-scan`, `glow-pulse`,
+`waveform-travel`, `orbit`) — see A9. Grep the *shape* of the name, not the library's word.
 
 **Why AI generates it.** It is a flagship Magic UI / Aceternity component. Those two libraries exist
 to be pasted, they rank highly in search and training data, and the component is self-contained —
@@ -452,6 +506,61 @@ their headers to `top: 0`. Zero of the 14 controls float a pill nav.
 
 **Detect.** *Code:* `position: fixed` + `top` > 0 + `border-radius` ≥ 16px on the `<header>`.
 *Screenshot:* is there page background visible above the nav? That's the tell.
+
+---
+
+### A9 · The borrowed aesthetic (the costume)
+
+**The tell — the most important new entry in this revision.** The page wears one complete named
+style, head to toe, and the style is doing the work a design decision would have done. Measured in
+pass 2, two of four v0 landing pages:
+
+- `v0-design-brutalist-ai-saa-s` — "SYS.INT". `JetBrains Mono` on **439 of 441 elements**, a
+  dot-matrix display face (`GeistPixelGrid`) for the h1, a dotted-graph-paper background, hard black
+  boxes, one orange. Keyframes `glitch`, `blink`, `marquee`. Zero `border-radius` on the entire page.
+- `v0-pixel-perfect-seven` — "PIXELCRAFT". Industrial yellow-on-near-black, `IBM Plex Mono` ×285 +
+  `Space Grotesk` ×126, `[NEW] // VERSION 2.0 NOW LIVE` in a hard-cornered badge, and four fake
+  multiplayer presence cursors labelled `JIN_L`, `MILA_V`, `SARA_M`, `ALEX_K` floating over the
+  headline — implemented as keyframes literally named `cursor-alex`, `cursor-sara`, `cursor-jin`,
+  `cursor-mila`.
+
+Both would pass every surface check in sections A–C. Neither has a product. SYS.INT's headline is
+`DEPLOY. SCALE. ROUTE.` — the tricolon of one-word sentences the rubric scores 8 on COPY
+(`vibecode-rubric.md` §6.2) — over "Sub-5ms inference. Global edge routing. Full operational
+control." PIXELCRAFT's proof line is `NO CREDIT CARD // FREE FOREVER PLAN // 10,000+ BUILDERS`:
+two canned phrases (G6) and one invented metric (G1), set in a costume.
+
+**Why AI generates it.** Asked to avoid looking generic, the cheapest available move is to apply a
+style with a name — brutalist, swiss, terminal, editorial, Y2K — because a named style comes with a
+complete, well-documented set of values the model can emit wholesale. It is the same mechanism as
+reaching for shadcn's defaults, one abstraction level up: a borrowed *system* instead of a borrowed
+*component*. The generator has also learned that "make it less generic" is a frequent instruction,
+so this is increasingly what it produces on the second turn.
+
+**Why it reads as generated.** The style is total and uniform, which no authored design is: a real
+brutalist site has a reason for its brutality and breaks its own rules where the content needs it.
+More diagnostically, the costume never reaches the content — the same page carries a dot-matrix
+wordmark and `99.9% uptime`. A designer reads the gap between how hard the surface is trying and how
+little the words say, and that gap is a stronger signal than any single value.
+
+**When it is actually fine.** When the aesthetic is a genuine position about the audience and the
+product earns it — a developer tool whose users read terminal type as respect, a print-adjacent
+publication, a game. `mastering-lovable.lovable.app`, measured in the same pass, is Lovable output
+with a plain sidebar, a single 896px measure, two weights and no costume, and it reads as designed
+because its content is real. The test is not whether the style is loud. It is whether removing the
+style would leave anything behind.
+
+**Instead.** Decide the archetype first and let density, type and colour follow from it
+(`system/2-direction.md`), then spend the effort you would have spent on the costume on one signature
+move drawn from the domain — Raycast's keycap shadow, Linear's status arc, GOV.UK's `0 2px 0` hard
+button edge. One owned detail beats a whole borrowed wardrobe, and it is the only kind of
+distinctiveness that survives someone else adopting the same aesthetic next month.
+
+**Detect.** *Code:* one family on > 90% of elements combined with a keyframe set named after
+effects (`glitch`, `scan`, `blink`, `cursor-*`) rather than after states. Then run the copy checks in
+G — a costume with generic copy underneath is the diagnosis. *Screenshot:* strip the page to
+greyscale and read only the words. If they would fit any product in the category, the aesthetic is
+the only thing on the page.
 
 ---
 
@@ -605,8 +714,14 @@ generated dashboards, and it is invisible to the generator because the chart "re
 a bucketed histogram, revenue by quintile. Then a single-hue ramp is *correct* and multi-hue is wrong.
 
 **Instead.** For categories, use hues separated in perceptual space and held at similar lightness, so
-no series looks more important than another. Check every pair for deuteranopia. Then order the legend
-by the data, not by the token number.
+no series looks more important than another, and hold two floors: **≥3:1 against the plot
+background**, and — only if you ship a legend — **≥1.3:1 between adjacent entries**, because a legend
+forces the reader to match colours from memory. `craft/tables-dashboards-data.md` §"default
+categorical palettes" scores the stock palettes against both, and finds shadcn's `--chart-1..5`
+failing both: adjacent series sit **1.30–1.37:1** apart and `--chart-1` is a 1.84:1 tint.
+**Plausible** shows the cheaper route: one series, direct-labelled, 2px, `oklch(.585 .233 277)` at
+6.29:1 — no legend, so no matching, so no palette problem. If you can direct-label, do that instead
+of building a palette. Then order the legend by the data, not by the token number.
 
 **Detect.** *Code:* if `--chart-1..5` resolve to one hue, and the chart is a bar/line/pie with named
 categories, it's a hit. *Screenshot:* convert the chart to grayscale — if two series become the same
@@ -664,7 +779,9 @@ is a wireframe with a dark fill.
 one surface, with generous separation — is completely fine and often better than four muddy levels.
 
 **Instead.** Use lightness steps of 3–5 L\* at the dark end, and stop at three levels. Concretely:
-page `#0e0e10`, raised `#161618`, overlay `#1e1e21`, border `#2a2a2e`. Verify by screenshotting in
+page `#0e0e10`, raised `#161618`, overlay `#1e1e21`, border `#2a2a2e`. Every dark-by-default control
+in this corpus — **Linear, Vercel, Raycast, Railway** — starts its ramp above `#000` for exactly this
+reason (B5), which is what leaves room for perceptible steps above it. Verify by screenshotting in
 grayscale at 100% and checking you can see each boundary without the border.
 
 **Detect.** *Code:* convert every surface background to L\* and check the minimum gap between
@@ -736,8 +853,9 @@ nothing.
 ### B9 · The accent everywhere
 
 **The tell.** The primary color appears on the CTA, the icon chips, the active nav item, the section
-eyebrow, the link underlines, the chart, the badge, and the progress bar. It occupies well over 5%
-of the visible surface.
+eyebrow, the link underlines, the chart, the badge, and the progress bar. It occupies well over
+**5%** of the visible surface. (An earlier revision of the index said 3%; 5% is the number, and it is
+a squint test, not a pixel count.)
 
 **Why AI generates it.** Applying `text-primary` is how a model expresses "this is important," and
 many things are important.
@@ -755,6 +873,53 @@ one family across 2705 elements; the emphasis is entirely structural.
 
 **Detect.** *Screenshot:* desaturate everything except the accent hue. If more than two regions
 survive, cut. *Code:* count elements whose `color` or `background-color` resolves to `--primary`.
+
+---
+
+### B10 · An accent that is a stock ramp step
+
+**The tell.** The page has a semantic colour layer — `--primary`, `--success`, `--warning`,
+`--error` — and every one of its values is a framework ramp step, unchanged. The canonical set,
+measured on Bolt's hackathon winner `weight.coach` and reproduced in `vibecode-rubric.md` §6.3:
+
+```
+--primary    #6366F1  ==  indigo-500      --error      #EF4444  ==  red-500
+--success    #10B981  ==  emerald-500     --background #F8FAFC  ==  slate-50
+--warning    #F59E0B  ==  amber-500
+```
+
+Six for six. The neighbouring values are `#4F46E5` (indigo-600, the most-shipped "primary" on the
+2026 web) and `#3B82F6` (blue-500) — measured live as the accent of the Lovable "LearnHub" page in
+pass 2. shadcn's own `--destructive` is the same story in the other direction: across three
+generators and two shadcn generations, **every single one kept the stock red** —
+`oklch(0.577 0.245 27.325)` on all four v0 apps, the same value reformatted on Lovable, `#ef4444` on
+the older HSL generation. One Lovable page in the whole calibration set rethemed it.
+
+**Why AI generates it.** Naming a token is free; choosing its value is not. The model has learned the
+*vocabulary* of a design system — semantic aliases, a warning/success/error triad — without the part
+a design system consists of, which is somebody deciding what those colours are for this product on
+this background.
+
+**Why it reads as generated.** Indigo-500 is the accent of every admin template on earth, so it
+carries no information about you. And because the values were never chosen against your surfaces,
+they are usually wrong in a way nobody checked: `emerald-500` and `amber-500` sit at different
+lightnesses, so "success" reads louder than "warning" on a status list. An error colour nobody chose
+is an error state nobody designed.
+
+**When it is actually fine.** When the ramp step genuinely is the right value — Tailwind's palette is
+well built and `red-500` is a good red. It is fine in an internal tool, and it is fine as a starting
+point. The tell is the *set*: six semantic tokens, six stock steps, zero deviations, which is a
+rename rather than a decision. Fix `--destructive` and the accent first; the rest can wait.
+
+**Instead.** Pick the accent against your own neutral ramp and check it at the two sizes it actually
+appears at: a 40px filled button and a 13px link. Then move at least the error colour off the stock
+value — GOV.UK ships one blue (`#1D70B8`), one green (`#0F7A52`) and nothing else, and both are
+namespaced (`--govuk-*`) so you can see at a glance that somebody owns them.
+
+**Detect.** *Code:* resolve every semantic token and compare it to the framework's ramp —
+`grep -E '#6366F1|#4F46E5|#3B82F6|#10B981|#F59E0B|#EF4444|oklch\(0\.577 0\.245 27\.325\)'`. Any
+semantic name whose value is a ramp step is a hit; six of six is the diagnosis. *Screenshot:* not
+visible, which is why it survives every cleanup pass.
 
 ---
 
@@ -804,10 +969,24 @@ The tell is that it is the *only* value.
 +0.06em. Or use a variable font with an `opsz` axis and let it do this for you — that is what
 Mercury's `arcadia` and Linear's `Inter Variable` are doing.
 
+**Reproduced 2026-09-10.** Four of the eight pages in the pass-2 sample returned a distinct-ratio set
+of size **one**: `['-0.0250']` on the SalesOps dashboard, the Email Extractor and the v0 templates
+gallery, and `['-0.0500']` on `ui.shadcn.com/blocks`. This is the most durable measurement in the
+file.
+
+**The evasion.** The two costume pages (A9) returned ten-plus distinct ratios and would clear this
+check — because `tracking-widest` on a page full of uppercase labels manufactures ratio variety
+without anyone having made a per-size optical decision. So: **run this check on the body and heading
+sizes only, and ignore uppercase elements**, or a page that is worse will score better than a page
+that is plain.
+
 **Detect.** *Code:*
 `[...document.querySelectorAll('*')].map(e=>{const s=getComputedStyle(e);return (parseFloat(s.letterSpacing)/parseFloat(s.fontSize)).toFixed(4)})`
-— then count distinct values. Fewer than four non-zero ratios, all in
-{−0.05, −0.025, 0.025, 0.05, 0.1}, means untouched utilities. *Screenshot:* compare the hero and a
+— excluding elements whose `text-transform` is `uppercase` — then count distinct values. Fewer than
+four non-zero ratios, all in {−0.05, −0.025, 0.025, 0.05, 0.1}, means untouched utilities. A
+companion check from `vibecode-rubric.md` §6.7 that costs nothing: **negative tracking below ~20px**
+is a tell on its own, because it means `tracking-tight` was applied to a wrapper rather than to
+display type. *Screenshot:* compare the hero and a
 12px label; if the small caps look cramped while the hero looks fine, one value is being reused.
 
 ---
@@ -835,9 +1014,18 @@ where every weight lands on a round hundred was set by someone choosing from a d
 weights are the only weights and the observation is meaningless. This tell only applies when the page
 loads a variable font — which most 2026 pages do.
 
-**Instead.** If you have a variable font, use the axis. Set body at 400, UI labels at 450–520, and
-display at whatever actually looks right against your background — often 480–560 rather than 600.
-Define them as tokens so they are still a system.
+**Instead.** If — and only if — the font you actually loaded exposes a continuous `wght` axis, use
+it. Set body at 400, UI labels at 450–520, and display at whatever looks right against your
+background, often 480–560 rather than 600. **Define them as named tokens**, so this stays a system
+and does not become the arbitrary-value habit `system/3-tokens.md` exists to prevent.
+
+**Two guards, because this tell is the easiest one to over-apply.** First, verify the axis: if you
+loaded static instances via `next/font` with `weight: ['400','700']`, writing `font-[510]` gets you a
+synthesised or snapped weight that looks *worse* than 500, and you have made the page worse to move a
+number nobody can see. Second, keep it in proportion — this is a code-only signal worth about a point
+on the rubric's 8-weight TYPE dimension. Reproduced 2026-09-10: all eight pass-2 pages used only
+round hundreds, and so did four of five re-probed controls at the family level. It is a real tell and
+it is a small one. Do not spend an hour here while `Acme Corp` is still in the table.
 
 **Detect.** *Code:* `[...new Set([...document.querySelectorAll('*')].map(e=>getComputedStyle(e).fontWeight))]`
 — all multiples of 100 on a page loading a `-Variable` or `var` font file is a hit. *Screenshot:*
@@ -1090,6 +1278,55 @@ click it.
 
 ---
 
+### C10 · The accent-coloured phrase in the headline
+
+**The tell — one of the two or three most reliable live signals in 2026.** The `<h1>` contains more
+than one computed `color`: a word or a clause is painted in the accent while the rest is the
+foreground. Measured verbatim in pass 2:
+
+| Page | Headline | Coloured |
+|---|---|---|
+| Lovable "LearnHub" | `Learn. Grow. Succeed.` | **`Succeed.`** in blue |
+| v0 "PIXELCRAFT" | `BUILD WITHOUT LIMITS. PIXEL-PERFECT.` | **`PIXEL-PERFECT.`** in yellow |
+| v0 "product.mockup" | `Generate Product Mockups with SeedDream AI` | **`with SeedDream AI`** in muted grey |
+| Bolt `weight.coach` | `Your Personal Chef. Your Smart Kitchen. Your Better Life.` | **`Chef.` `Kitchen.`** in violet |
+| Lovable `blueprintbuddy` | — | **`in under a minute`** |
+
+Controls measured for the same thing: Linear, Mercury, Vercel, Basecamp, GOV.UK, Resend and
+shadcn.com all return **one** colour in the h1.
+
+**Why AI generates it.** It is the safest possible way to make a headline look art-directed: one
+`<span>`, one class, no layout risk, and it reads in a thumbnail. It is also what the model reaches
+for when told to "add some colour" — the headline is the only element large enough for the change to
+register.
+
+**Why it reads as generated.** In every generated instance above, the coloured words are **not the
+words that carry the sentence.** `Succeed.` is the least informative word in "Learn. Grow.
+Succeed."; `Chef.` and `Kitchen.` are coloured because they end their lines, not because they are
+the claim. The reader's eye is pulled to a spot the sentence does not want emphasised, and that
+mismatch is what a designer clocks — not the colour itself.
+
+**When it is actually fine.** Often, and this is the field that matters. **Stripe measures two
+colours in its h1 too** (`rgb(129,184,26)` on part of it) and scores 1.7 on the rubric. The
+difference is *which* words: Stripe colours the noun the sentence is about. So the rule is not "one
+colour in the headline" — it is **be able to say, in one sentence, why those words are the coloured
+ones.** If the honest answer is "because they were on the last line," recolour or remove. A
+two-colour headline is also correct when the coloured span is a proper noun, a product name, or a
+number the page is actually about.
+
+**Instead.** Read the headline aloud and note which word you stressed. Colour that one, or — better —
+give it weight instead, which does the same job without spending the accent (B9). Linear's hero is a
+single `Inter Variable` weight 510 at 64px in one colour and it is the most confident headline in the
+control set.
+
+**Detect.** *Code:* `new Set([...document.querySelector('h1').querySelectorAll('*')].map(e =>
+getComputedStyle(e).color)).size > 1`. *Screenshot:* read the headline out loud, then look at which
+words are coloured. If they are not the same words, that is the finding. Note this is the same check
+as `vibecode-rubric.md` §6.2 item 4 — the two files must stay in step; the rubric's rule is *do not
+deduct for a two-colour headline, deduct when you cannot explain the choice.*
+
+---
+
 ## D · Layout & composition
 
 ### D1 · Everything in cards
@@ -1202,9 +1439,11 @@ one rhythm because it has one width.
 **When it is actually fine.** Documentation, where a single measure is a feature and the sidebar
 provides the variation. Also fine in an app shell where the content area is fixed by the chrome.
 
-**Instead.** Three widths minimum, chosen by content: a prose measure (~640–680px), a grid measure
-(~1120–1200px), and full-bleed for at least one moment. GOV.UK's 640/960/720 is the whole system and
-it is enough. Then let at least one section break the pattern entirely.
+**Instead.** Three widths, chosen by content: a prose measure (~640–680px), a grid measure
+(~1120–1200px), and one full-bleed moment if you have something worth bleeding. GOV.UK's 640/960/720
+is the whole system and it is enough. Three is a floor derived from content shapes, **not a quota** —
+if the page is one kind of content, one width is the honest answer, and a section that breaks the
+pattern for no reason is worse than a page that never breaks it.
 
 **Detect.** *Code:* histogram of computed `max-width` in px. One value with a count over ~8, and
 every value round, is a hit. *Screenshot:* draw two vertical lines down the page at the content
@@ -1234,9 +1473,11 @@ and the one that survives every surface cleanup.
 sections genuinely are peers and the reader is scanning for one of them.
 
 **Instead.** Decide which two sections matter, give them 1.5–2× the space, and compress the rest.
-Then break the rhythm once: put two sections flush against each other with no gap at all, so the pair
-reads as one argument. Vary top and bottom padding independently — a section that ends a thought
-wants more space below than above.
+Vary top and bottom padding independently — a section that ends a thought wants more space below than
+above. If two sections are one argument, set them flush with no gap; that is the rhythm break, and
+the reason for it is the argument, not the break. **Do not insert a disruption to prove you made a
+decision.** A page with one honest emphasis and eight even sections beats a page with a random
+collision in the middle of it.
 
 **Detect.** *Code:* histogram of section `padding-top`. A single value on more than half the sections
 is a hit. *Screenshot:* take a full-page capture, scale it to 200px wide, and look at the bands. Even
@@ -1269,9 +1510,15 @@ does not, Linear does not, Mercury does not — but the moment there is a second
 paragraph, go left. And use the asymmetry: a left-aligned hero with content in the right half is the
 single strongest fix for the empty-fold problem (A6).
 
-**Detect.** *Code:* `document.querySelectorAll('*')` filtered on `textAlign === 'center'`, divided by
-total. Over ~20% is a hit. *Screenshot:* fold the page down the middle. If both halves are the same,
-that's the tell.
+**Detect.** *Code:* **count text-bearing leaf elements only, not all elements** — the two
+denominators give wildly different numbers and this file and `vibecode-rubric.md` §6.5 must use the
+same one. On text-bearing leaves: designed products cluster at **5–9%** (GOV.UK 9.1%, Linear 9.0%,
+Mercury 5.5%), Lovable output around 22%, Bolt's `weight.coach` **66.2%**, and **above ~40% is a
+finding on its own**. On the all-elements denominator the pass-2 sample ran 2%–45%, which is why the
+old "over 20% of all elements" threshold in this file fired on pages that were fine and has been
+dropped. *Screenshot:* fold the page down the middle. If both halves are the same, that's the tell —
+and remember a centered hero, auth screen, empty state or 404 is correct and should not be counted
+against the page.
 
 ---
 
@@ -1478,6 +1725,93 @@ last CTA in DOM order. *Screenshot:* read the questions. Would a real user type 
 
 ---
 
+### D13 · The primary + ghost CTA pair, arrow on the primary
+
+**The tell.** Directly under the subhead: two sibling buttons, the first filled in the accent with a
+trailing `→`, the second an outline or ghost with no fill. Measured in pass 2, on four unrelated
+pages by four authors:
+
+| Page | Primary | Secondary |
+|---|---|---|
+| Lovable "LearnHub" | `Start Learning Free →` (blue fill, 10px radius) | `Browse Courses` (white, hairline border) |
+| v0 "PIXELCRAFT" | `START BUILDING FREE` (yellow fill, 0 radius) | `VIEW DOCS >` (outline) |
+| `mastering-lovable` | `Try Lovable for free` (black fill) | `Follow for more` (white, hairline) |
+| v0 "SYS.INT" | `→ REQUEST A DEMO` (black fill, orange arrow block) | — |
+
+**Why AI generates it.** "Hero with two CTAs" is the single most-represented composition in the
+training corpus, the arrow is one character, and the pair is risk-free: it satisfies both "primary
+action" and "secondary action" without anyone deciding what the second action is.
+
+**Why it reads as generated.** The second button is almost never a real alternative path. `Browse
+Courses` and `Start Learning Free` go to the same place; `Follow for more` is not a step in any
+journey. A designer reads a decision that was not made — the page could not commit to one action, so
+it offered two and ranked them by fill weight rather than by what the visitor is likely to want. The
+arrow compounds it: an arrow promises a destination, and on generated pages it frequently has none.
+
+**When it is actually fine — and it very often is.** Two genuinely different intents deserve two
+buttons: *buy* versus *see it work*, *sign up* versus *read the docs*, *start* versus *talk to
+sales*. That is a real, useful, conventional pattern, and Stripe, Vercel and Linear all ship a
+version of it. **This entry is not permission to delete the second button.** A page whose audience
+splits — evaluators and buyers — and offers one path has made things worse, not better. The tell is
+the pair whose two halves lead to the same outcome.
+
+**Instead.** Name the second action after the thing it does and check it goes somewhere different:
+"See a live workspace", "Read the API reference", "Book 20 minutes". Drop the arrow unless it is
+leaving the page. If you cannot name a genuinely different second intent, ship one button and use
+the recovered space.
+
+**Detect.** *Code:* two sibling `<a>`/`<button>` elements immediately after the hero paragraph whose
+`background-color` differs but whose `href` targets are the same page, or where the second `href` is
+`#`. *Screenshot:* read both labels and ask where each one goes. If the answer is the same place, one
+of them is decoration.
+
+---
+
+### D14 · The KPI tile row
+
+**The tell.** Four (occasionally three or six) equal cards across the top of a dashboard, each
+containing exactly: a muted label, an icon in a tinted rounded square at the top-right, a large
+number, and a coloured delta with a triangle. Measured on `v0-sales-operations-dashboard`, pass 2:
+
+```
+Total Revenue  [$]   $2.4M   ↗ +12.5%
+Conversion Rate [↗]  24.8%   ↗ +3.2%
+Active Deals   [◎]   147     ↘ −5
+New Leads      [👥]  892     ↗ +18.3%
+```
+
+`+12.5%` is a shadcn `dashboard-01` fixture string, still present. The tiles sit in a 4-column grid
+with `gap: 12px` — the page's dominant gap, used on 28 elements.
+
+**Why AI generates it.** "Dashboard" in the training corpus means "KPI row, then chart, then table,"
+in that order, and the tile is a `<Card>` with four children. It also solves the model's hardest
+dashboard problem — what to put at the top — without needing to know what the user came to find out.
+
+**Why it reads as generated.** Four numbers of four different kinds, given four identical containers,
+tells the reader they are peers when they are not: revenue is the outcome, conversion rate is a
+driver of it, and active deals is a workload measure. The card borders also force the eye across four
+boundaries to compare four figures that would compare better on one baseline (D1). And the deltas are
+the giveaway — three green up-arrows and one red one, all against an unnamed comparison period.
+
+**When it is actually fine.** When the numbers genuinely are the four things this user opens the page
+to check, when each delta names its comparison window, and when the row is the *answer* rather than
+the *preamble*. Mercury opens on your balance; Stripe's dashboard opens on today's volume against the
+same day last week. A KPI row is a legitimate, expected, well-understood pattern — do not remove it
+from a product whose users want it. Deviating from a convention users arrived with is a cost.
+
+**Instead.** Keep the row; drop the four boxes. Put the numbers on one baseline with hairline
+dividers between and the labels beneath — a stat strip, not a card set. Give the one number that
+matters more size than the other three, since it does matter more. Put the comparison window in the
+delta (`+12.5% vs. last 30d`) rather than in a heading three elements away. And if a tile's number is
+never the reason anyone opens the page, cut the tile rather than filling it.
+
+**Detect.** *Code:* a grid with 3–6 equal columns whose children each contain exactly one `svg` and
+one element whose text matches `/^[$€£]?[\d,.]+[KMB%]?$/`. Cross-check every delta for a stated
+comparison period. *Screenshot:* cover the labels. Can you say what the four numbers have in common?
+If the only answer is "they are numbers," it is a filled slot, not a summary.
+
+---
+
 ## E · Library fingerprints
 
 ### E1 · Dead tokens for components the page does not contain
@@ -1523,8 +1857,15 @@ Anything printed is dead. *Screenshot:* not visible — which is why this surviv
 **The tell.** `transition-duration: 0.15s`, `transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1)`
 and — the real tell — `transition-property: all`. Tailwind v4 ships
 `--default-transition-duration: 150ms` and `--default-transition-timing-function:
-cubic-bezier(.4, 0, .2, 1)`. Measured on generated pages: `0.15s cubic-bezier(0.4,0,0.2,1) all` on 5,
+cubic-bezier(.4, 0, .2, 1)`. Measured on generated pages in pass 1: `0.15s cubic-bezier(0.4,0,0.2,1) all` on 5,
 7, 27, 47 and 60 elements; `0.3s cubic-bezier(0.4,0,0.2,1) all` on 47, 65 and 90 elements.
+
+**Recalibrated 2026-09-10 — the old threshold is useless.** `transition-property: all` element counts
+across the pass-2 sample: **50, 67, 140, 390, 430, 431, 494, 919, 1290** — and **1532 on
+`ui.shadcn.com/blocks` itself**. The index's old "> 20 elements" trigger now fires on every page
+built on the stack, including the reference implementation. Treat a high count as *"this is a
+Tailwind page"*, which is not a defect, and score the thing that still separates: Linear ships
+**zero** `transition: all` and names its properties per element.
 
 **Why AI generates it.** `transition-all` is one class and covers every property, so nothing is ever
 missing an animation. `duration-300` is the modal duration in the corpus.
@@ -1612,13 +1953,19 @@ concepts that are *your* product's nouns, draw them. Linear draws its own status
 backlog/todo/in-progress/done arcs are a signature no library provides. If you cannot draw, drop the
 icon and use a label; a security section with no shield reads more confident, not less.
 
-**Contrarian note on the sparkle.** Conventional wisdom says AI-generated UI is full of sparkle/star
-icons. **Across 20 v0 templates I found zero `lucide-sparkles`.** It survives in two places: the
-✨ *emoji* in consumer-facing Lovable output (3 `lucide-sparkles` on the IWD portfolio, plus ✨ in
-running text), and in the marketing of the effect libraries themselves — `magicui.design`'s
-announcement bar opens with `✨ Introducing Magic UI Pro` and its hero badge is `🎉 Introducing
-Floating 3D Particles`. If you are auditing 2026 developer-facing output, the sparkle is not where
-the tells are.
+**⚠ The sparkle note in the previous revision is retracted.** It said "across 20 v0 templates I found
+zero `lucide-sparkles`" and concluded the sparkle had left developer-facing output. The pass-2
+re-probe on 2026-09-10 **falsifies that**: `lucide-sparkles` appears on `v0-ai-mockup-generator-five`
+(on the primary "Generate Mockup" button), on the `v0-premium-templates` gallery (the "Featured"
+badge on every card), and on Lovable's "LearnHub" (the "AI Tutor" feature icon). Three of eight
+pages. The sparkle is back, and it has a specific 2026 job: **it marks the AI-powered control.**
+
+That job is legitimate — a sparkle on the button that calls a model is now a convention users read
+correctly, and inventing your own glyph for it costs comprehension. The tell is the sparkle used as
+decoration: on a badge, a testimonial, a pricing tier, or a feature that involves no model. Check
+what it is attached to, not whether it is present. Its sibling ✨ *emoji* remains a straight hit
+(G8), and effect-library marketing still leads with it — `magicui.design`'s announcement bar opens
+`✨ Introducing Magic UI Pro`, its hero badge `🎉 Introducing Floating 3D Particles`.
 
 **Detect.** *Code:* `document.querySelectorAll('svg[class*=lucide]')` and tally the class suffixes.
 Cross-check stroke-width consistency. *Screenshot:* look for a shield, a lock and an eye in one row.
@@ -1653,32 +2000,70 @@ bottom-right corner.
 
 ---
 
-### E6 · The `:focus-visible` count of exactly 24
+### E6 · Zero focus coverage
 
-**The tell.** Count `:focus-visible` rules in the page's stylesheets. Seven different v0 templates by
-seven different authors returned **exactly 24** — the Tailwind/shadcn base, plus nothing. The v0
-Financial Dashboard returned **0**. Controls: Railway 97, Notion 84, Mercury 56, GOV.UK 53, Ramp 36,
-Raycast 25, Figma 11, Linear 7.
+**⚠ This entry replaces "the `:focus-visible` count of exactly 24", which was a measurement
+artifact.** The previous revision reported "exactly 24 on seven v0 templates" and control counts of
+GOV.UK 53, Railway 97, Notion 84. Re-probed on 2026-09-10, **not one page in a ten-page sample
+returned 24**, and the exercise exposed something worse: *rule counts are not a reproducible
+measurement at all.* Three separate ways of counting the same thing disagree:
+
+| Method | GOV.UK | Linear | Vercel | Stripe |
+|---|---|---|---|---|
+| **CSSOM rules** whose `selectorText` contains `:focus-visible` | 28 | 7 | 22 | **0** |
+| Occurrences of the literal token in the raw CSS text | 54 | 34 | 168 | **58** |
+| Stylesheets that threw on `cssRules` (cross-origin) | 0 | **54 of 84** | 0 | **6 of 6** |
+
+The old "GOV.UK 53" is the raw-token count sitting in a list of rule counts. Stripe's 0 is a false
+zero produced entirely by cross-origin sheets. And `vibecode-rubric.md` §6.4 adds the decisive
+version: on `demo.tailadmin.com` the same page in the same minute returned `:focus-visible` = **0**
+via CSSOM and **3** via raw stylesheet text. **A rule count is a screening proxy. It is not
+quotable.**
+
+**The tell, restated as coverage.** Focus every interactive element and count how many actually get a
+ring. Zero coverage is the tell. Measured: all four v0 apps and Cruip ring **nothing**; Bolt's
+`weight.coach` ships 0 `:focus-visible` and 1 bare `:focus` in 48KB of CSS. Against that, GOV.UK
+rings **56 of 56** and Halden rings **53 of 53** from *three* rules — which is why the count was
+always the wrong number to chase: one correct universal rule,
+`:focus-visible{outline:2px solid var(--accent);outline-offset:2px}`, is a complete keyboard system
+and scores 1 on the metric this file used to print.
 
 **Why AI generates it.** Focus styling is invisible in a screenshot, so nothing in the generation
 loop — or in the human's review of the generation — ever surfaces its absence.
 
-**Why it reads as generated.** It is the cleanest available proxy for "was this ever used by a
-human?" Anyone who has actually operated the interface has hit Tab and noticed.
+**Why it reads as generated.** It is the cleanest available proxy for "was this ever operated by a
+human?" Anyone who has actually used the interface has hit Tab and noticed.
+
+**⚠ The check is one-directional, and this is the part that matters.** Healthy coverage proves
+nothing. Lovable output measures **13, 13, 13** rules in the pass-2 sample and 9–15 in the rubric's
+calibration set — more than Linear's 7 — and every one of those rules was authored by the component
+library, not by a person. `ui.shadcn.com/blocks` itself measures 3. So: **zero coverage is strong
+evidence of generation; full coverage is no evidence of design.** When coverage is healthy, stop
+measuring and go look: does any list render with zero rows, any number render while loading, any
+destructive action render its confirmation, any control render disabled?
 
 **When it is fine.** Never for shipped software. Fine for a throwaway visual mock.
 
 **Instead.** Write focus styles per interactive component type — one for buttons, one for inputs, one
-for rows, one for cards — using your accent as the ring color and a 2px offset so the ring reads on
-both light and dark surfaces. GOV.UK's 53 rules and its yellow focus block are the reference
-implementation.
+for rows, one for cards — using your accent as the ring colour and a 2px offset so the ring reads on
+both light and dark surfaces. GOV.UK's **28** `:focus-visible` rules plus **135** bare `:focus`
+rules, and its black-on-yellow focus block, are the reference implementation.
 
-**Detect.** *Code:*
+**Detect.** *Code:* measure coverage, not rules. This is the same snippet as
+`vibecode-rubric.md` §6.4 and the two files must stay identical:
 ```js
-let n=0; for (const s of document.styleSheets) { try { for (const r of s.cssRules)
-  if (r.selectorText?.includes(':focus-visible')) n++ } catch {} } ; n
+const sel = 'a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"]),[role=button]';
+let ringed = 0; const bare = [];
+for (const e of document.querySelectorAll(sel)) {
+  const b = getComputedStyle(e).cssText; e.focus({ preventScroll: true }); const a = getComputedStyle(e);
+  if (a.cssText !== b && a.outlineStyle !== 'none' && parseFloat(a.outlineWidth) > 0) ringed++;
+  else bare.push(e.tagName + ' ' + e.textContent.trim().slice(0, 24));
+}
+({ coverage: ringed + '/' + document.querySelectorAll(sel).length, bare });
 ```
-*Screenshot:* press Tab five times and screenshot each stop.
+If you must fall back to a rule count, report how many stylesheets threw alongside it, and treat the
+number as a floor rather than a measurement. *Screenshot:* press Tab five times and screenshot each
+stop — this is the check that actually settles it.
 
 ---
 
@@ -1752,6 +2137,10 @@ The failure is visible in a single frame. Optimus's stat marquee reads, within o
 
 The same item appears **twice in one viewport**, because the loop is shorter than the screen.
 
+**Frequency, 2026-09-10 re-probe: one of eight**, and that one is a costume page (A9) where the
+marquee is part of the terminal bit. Down sharply from pass 1. The duplication-in-viewport failure
+below is still the fastest way to catch it when it appears.
+
 **Why AI generates it.** It fills horizontal space with a small amount of content and it is a
 self-contained, well-documented component.
 
@@ -1776,6 +2165,12 @@ string twice in one frame.
 **The tell.** Named effects from the effect libraries: `meteors`, `spotlight`, `border-beam`,
 `shine-border`, `aurora`, `background-beams`, `grid-and-dot-backgrounds`, `retro-grid`,
 `animated-grid-pattern`, plus `radial-gradient` overlays that follow the cursor.
+
+**Frequency, 2026-09-10 re-probe: zero.** No `meteor`, `spotlight`, `border-beam`, `aurora`,
+`retro-grid` or `background-beams` keyframes on any of eight pages. The named effect libraries have
+largely dropped out of generated output; what replaced them is the whole-page costume (A9) and
+page-specific keyframes (`hero-scan`, `glow-pulse`, `orbit`, `waveform-travel`, `glitch`). The
+principle below is unchanged and now applies to those names instead.
 
 **Why AI generates it.** Aceternity UI and Magic UI are explicitly built to be pasted into
 AI-generated pages — Magic UI's own homepage describes it as the "Perfect companion for shadcn/ui" —
@@ -1916,6 +2311,11 @@ should be rendered honestly.
 organic, and include at least one row that is *awkward* — a refund, a failed charge, a name that
 overflows. If the header says 23, either show 23 or say "6 of 23."
 
+**Stripe's API reference** is the standard here: its example objects carry real-shaped identifiers
+(`ch_3MmlLrLkdIwHu7ix0snN0B15`) and real constraints ("The minimum amount is $0.50 US or equivalent
+in charge currency"), so no two rows are interchangeable and the fixtures teach the object model
+while they fill the page."
+
 **Detect.** *Code:* hash each row's text content; any collision is a hit. Also flag more than two
 identical amounts in one list. *Screenshot:* read every row. Every one.
 
@@ -1943,6 +2343,9 @@ label states the value. That is a legitimate, information-dense form.
 **Instead.** Label the axis with a unit. Put the category name at the end of the line or on the
 spoke, not in a numbered key. Make the summary statistic derivable from the visible data. And if you
 have no data, show the empty state — an honest empty chart is better than a dishonest full one.
+**Plausible** is the reference for the minimum viable honest chart: one 2px series, direct-labelled,
+horizontal gridlines only, 12px axis labels, no legend, and every number on screen recomputable from
+the line (`craft/tables-dashboards-data.md`).
 
 **Detect.** *Code:* a chart with numeric-only axis tick labels and a separate legend. *Screenshot:*
 name the unit on the Y axis. If you can't, neither can the user.
@@ -2241,6 +2644,12 @@ it), **loading** (skeleton at the real content's dimensions, not a spinner), **e
 and what to do), **partial** (some data, some failed), and **too-much** (2,000 rows, a 90-character
 name, a $1,204,516.22 figure). Design the empty and too-much states *first* — they set the bounds.
 
+The bar is lower than it looks, and two *generated* pages in this corpus clear it: `mode9.lovable.app`
+renders `0 URLs` and a disabled `Start Extraction` before you type anything, and Lovable's
+`liquid-log-glow` renders its genuine empty state on load (`0 ml`, `0%`, `2000 ml left`, an unfilled
+bar). One real second state puts an artifact ahead of most of the designed set on this dimension —
+`vibecode-rubric.md` §6.4 says to credit it rather than claw it back.
+
 **Detect.** *Code:* grep components for `isLoading`, `error`, `.length === 0`. A data component with
 none of them has one state. *Screenshot:* set the fixture array to `[]` and re-render. Then set it to
 2,000 items with one 200-character string.
@@ -2251,7 +2660,8 @@ none of them has one state. *Screenshot:* set the fixture array to `[]` and re-r
 
 **The tell.** `outline: none` with nothing replacing it, or the browser default left in place, or a
 `--ring` that is `neutral-400` and therefore invisible against a `neutral-200` border. See E6 for the
-counts.
+coverage measurement — and note that the useful number is *rings ÷ interactive elements*, not a count
+of rules.
 
 **Why AI generates it.** `focus:outline-none` is in every reset the model has seen, and the
 replacement ring is easy to forget because it is invisible in the artifact.
@@ -2301,7 +2711,16 @@ a repeated label already announced by a heading. Rare.
 
 **Instead.** Pick a muted foreground that clears 4.5:1 against your *lightest* surface, then use it
 everywhere. On white, that's about #6b6b6b, not #737373. Never combine `text-muted-foreground` with
-`opacity-*`. And set a floor: no text below 12px, ever.
+`opacity-*`.
+
+**On the size floor.** The previous revision ended "no text below 12px, ever." That is right for
+marketing and general product UI and wrong for the archetypes that legitimately go smaller — a
+trading terminal, a log viewer, a dense table, a code gutter, a chart axis — where 11px at full
+contrast is correct and 13px would cost the user rows they need. Linear treats **13px** as a real
+tier across 227 elements; GOV.UK's body is **19px**. The size is a decision the archetype makes
+(`craft/density-and-hierarchy.md`), so the enforceable rule is the contrast one: **whatever the size,
+it clears 4.5:1, and the small sizes are used for data rather than for de-emphasis.** 11px grey
+captions on a landing page remain a defect; 11px black tick labels on an axis are not.
 
 **Detect.** *Code:* the contrast pass in §J below, or `node tools/audit.mjs <url>`. *Screenshot:*
 turn the display brightness to 40% and try to read the captions.
@@ -2334,7 +2753,9 @@ the name, and an inline SVG wordmark. Both work offline and neither can 404.
 
 These are what remain after someone changes the radius, kills the gradient and swaps the font. They
 are the difference between an interface that stops looking AI-generated and one that starts looking
-designed.
+designed. **They are also where this file is most dangerous**, because each of them has a
+conventional, correct form that an over-eager reading would destroy — so every entry below carries
+its own *Fine when*, and those lines are not softeners, they are the scope.
 
 ### I1 · Uniform vertical rhythm with no emphasis
 
@@ -2343,6 +2764,10 @@ on inner elements). Stated as a principle: **a page's vertical rhythm is its arg
 spacing means every section is equally important, which means the page has no thesis. Fix by
 choosing the two sections that matter and giving them 1.5–2× the room, then compressing everything
 else — and by breaking the rhythm exactly once, hard.
+
+**Fine when:** the sections genuinely are peers and the reader is scanning for one of them — a
+changelog, a docs index, a legal page, a settings list, a pricing comparison. Even rhythm is correct
+there and irregular rhythm would read as noise.
 
 **Detect:** full-page screenshot scaled to 200px wide. Even stripes = no argument.
 
@@ -2354,6 +2779,9 @@ Generated pages establish importance by making things bigger — 160px headline,
 full foreground against muted, with 128px of air above it. Remove size from Linear and the hierarchy
 survives; remove size from a generated page and it goes flat.
 
+**Fine when:** the page has exactly two levels — a title and its body. Two sizes and nothing else is
+a system, not a failure. The defect is four size steps standing in for four *kinds* of importance.
+
 **Detect:** screenshot, then set every `font-size` to 16px in devtools. Can you still tell what
 matters?
 
@@ -2363,12 +2791,24 @@ Everything is centered or evenly split (D5: 35–55% of elements `text-align: ce
 section is 50/50. Every grid is 3 or 4 equal columns. Nothing hangs into a margin, nothing bleeds off
 an edge, nothing is deliberately off-balance.
 
-Asymmetry is what makes a composition look authored, because symmetry is the state a layout falls
-into when nobody decides anything. Fix: one 60/40 split, one element hanging into the left margin,
-one full-bleed moment per page. Stripe's inner widths — 400px ×26, 1266px ×13, **817.778px** ×8 —
-describe a page that is doing three different things at three different widths.
+Symmetry is the state a layout falls into when nobody decides anything, so its *ubiquity* is the
+signal. Stripe's inner widths — 400px ×26, 1266px ×13, **817.778px** ×8 — describe a page doing three
+different things at three widths, and the asymmetry falls out of that rather than being applied to
+it.
 
-**Detect:** fold the screenshot down the vertical centerline.
+**⚠ Do not manufacture asymmetry.** "One element hanging into the left margin, one full-bleed moment
+per page" appeared here in the previous revision as a prescription, and read literally it produces
+exactly the *trying too hard* failure this file says is worse than blandness — a page with a
+gratuitously offset element is amateur where an evenly centred one is merely neutral. Asymmetry is a
+*consequence* of two pieces of content having different natural widths. If your content does not have
+that property, a symmetric page is the correct page.
+
+**Fine when:** the composition has one focal object and no reading sequence — an auth screen, a
+confirmation, a modal, a 404, an empty state, a pricing table's tier headers, a single search
+affordance. Also fine on any page whose content genuinely is a set of peers.
+
+**Detect:** fold the screenshot down the vertical centerline. If it matches, ask whether the content
+had a reason to be uneven. If it did not, this is not a finding.
 
 ### I4 · Components that don't compose
 
@@ -2380,14 +2820,20 @@ a shadow and no border. Each was generated in its own pass, against its own loca
 This is the deepest structural tell, because fixing it requires holding the whole page in mind at
 once — the thing a component-at-a-time generator cannot do.
 
+**Fine when:** the variations are *roles*. A primary, a secondary and a tertiary button should look
+different; a filter chip is not a submit button. Three deliberate button treatments is a system;
+three accidental ones is drift, and the difference is whether you can name what each one is for.
+Stripe ships 4px and 6px buttons and every instance is predictable from its role.
+
 **Detect:** extract every button on the page into one image and put them side by side. Then every
-card. Then every input. Any variation you cannot justify is drift. (Measured version: histogram
-`border-radius` × `padding` for all `<button>`s. More than three combinations is drift.)
+card. Then every input. Any variation you cannot name a role for is drift. (Measured version:
+histogram `border-radius` × `padding` for all `<button>`s. More than three combinations you cannot
+label is drift.)
 
 ### I5 · Correct in a screenshot, empty in the hand
 
-The page is right until you touch it. Hover does nothing or everything. Tab goes nowhere (E6: 24 or
-0 focus-visible rules). The search box does not search. The filter chips do not filter. The tabs do
+The page is right until you touch it. Hover does nothing or everything. Tab goes nowhere (E6: zero focus coverage on
+every v0 app measured). The search box does not search. The filter chips do not filter. The tabs do
 not switch. The sort arrows do not sort. The "View All Transactions" button has no destination. The
 theme toggle is present on every generated dashboard I measured, sitting next to controls that do
 nothing.
@@ -2396,7 +2842,15 @@ nothing.
 passes visual review and fails on contact. It is also the reason this library's procedure insists on
 rendering and *operating* the artifact rather than reading its JSX.
 
-**Detect:** click every interactive element once. Count how many do nothing.
+**Fine when:** the artifact is explicitly a comp — a visual mock, a Figma-to-code specimen, a design
+review target — and is labelled as one. It is never fine in something a user will touch. Note the
+inverse credit, from `vibecode-rubric.md` §6.4: two generated pages in that calibration set render a
+real second state — `mode9.lovable.app` shows `0 URLs` and a disabled action before you paste
+anything, `liquid-log-glow` renders its genuine empty state on load — and that is worth crediting
+even though everything else about them was generated.
+
+**Detect:** click every interactive element once. Count how many do nothing. Then set the fixture
+array to `[]` and reload; then to 2,000 rows with one 200-character string in it.
 
 ### I6 · The theme swap that changes nothing
 
@@ -2409,6 +2863,11 @@ the page has a new complexion and the same skeleton.
 
 The corollary matters for anyone remediating: **changing the palette is the least effective fix
 available.** It is also the most commonly attempted one.
+
+**Fine when:** the palette swap *was* the job — a white-label deployment, a tenant theme, a dark mode.
+Re-theming an inherited system is legitimate work; the error is believing it addressed anything
+structural. Note also B10: a re-theme that only moves semantic tokens onto different stock ramp steps
+has not even changed the complexion.
 
 **Detect:** screenshot the page, desaturate it completely, and compare to a desaturated shadcn block.
 If they are indistinguishable, the palette was the only change.
@@ -2426,8 +2885,16 @@ The measurable core of "spacing was never decided." Two shapes:
 Compare Linear's gap distribution: `8px` ×95, `4px` ×63, `6px` ×60, `12px` ×18, `2px` ×11 — five
 values with a clear ranking, including a 2px used deliberately eleven times. That is a scale in use.
 
-**Detect:** histogram of `gap`, `padding`, `border-color` alpha and `max-width`. A spike with a count
-over ~40 is collapse; two adjacent values within 15% of each other is drift.
+**Fine when:** one value dominating is *correct* for a uniform surface — a list of identical rows, a
+grid of identical cards, a table. Linear's own top gap value appears 95 times. The collapse diagnosis
+needs the second half: one value dominating **and no other values in use at other scales**. A single
+gap across component-scale and section-scale spacing is the defect; a single gap inside one repeated
+component is a system working.
+
+**Detect:** histogram of `gap`, `padding`, `border-color` alpha and `max-width`, **bucketed by
+scale** — inside-component (≤ 16px), between-components (16–48px), between-sections (> 48px). A
+bucket with only one value is collapse; two adjacent values within 15% of each other in the same
+bucket is drift.
 
 ### I8 · No real content
 
@@ -2441,8 +2908,30 @@ decision drawn from the domain. An interface built from real content does not re
 when every component in it is conventional — which is exactly why Linear scores a 2 on this library's
 rubric while shipping pill nav, dark mode, Inter and a card grid.
 
+**Fine when:** the artifact is a component library's own documentation, an API reference's example
+payloads, or a template being sold as a template — places where a category label is the honest
+content and a specific instance would be a lie. `ui.shadcn.com` shipping `Acme Inc.` is correct;
+the same markup one commit later is not.
+
 **Detect:** for every visible string, ask "is this a class or an instance?" Count the instances. If
 the answer is zero, nothing else you fix will matter.
+
+### I9 · One width for every kind of content
+
+The second-order form of D3, and it belongs here because it survives every surface cleanup. Prose,
+a card grid, a stat strip and a pull quote have four different natural measures — roughly 640px,
+1120–1200px, full bleed and ~450px — and a generated page gives all four the same container, because
+each section was written independently and `max-w-7xl mx-auto` is the safe wrapper. The result is
+prose at 140 characters and a quote floating in a lake. Measured: Optimus `1400px ×11`, COMPUTE
+`1400px ×14`, MSP Summit `1360px ×10`, LearnHub `1400px ×4` — against Stripe's 400 / 817.778 /
+1266 and GOV.UK's 640 / 960 / 720.
+
+**Fine when:** the page is one kind of content. Documentation with a sidebar, an app shell whose
+content area is fixed by the chrome, a changelog — one measure is right and varying it is fidgeting.
+
+**Detect:** histogram of computed `max-width`. One value with a count over ~8, and every value a
+round number, is a hit — fractional widths (`817.778px`) mean a grid computed them; round ones mean
+somebody typed them.
 
 ---
 
@@ -2480,6 +2969,12 @@ grep -rn 'outline-none\|outline: none' .
 
 # emoji in UI source
 grep -rP '[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]' --include=*.tsx --include=*.jsx .
+
+# a semantic token layer that is only a rename of the framework ramp  (B10)
+grep -rE '#6366F1|#4F46E5|#3B82F6|#10B981|#F59E0B|#EF4444|oklch\(0\.577 0\.245 27\.325\)' .
+
+# the costume: one family everywhere plus effect-named keyframes  (A9)
+grep -roE '@keyframes +[a-z-]+' . | grep -iE 'glitch|scan|blink|cursor-|orbit|waveform|glow'
 ```
 
 ### J2 · Computed-style probe
@@ -2519,16 +3014,24 @@ Run this in the console, or via Playwright. It returns the eight numbers that ma
   const weights = [...new Set(els.map(e => getComputedStyle(e).fontWeight))];
 
   return {
-    focusVisibleRules: fv,                       // 24 or 0 → generated. >30 → operated by a human.
-    gradientTextElements: gradText,              // >0 → generated. Controls: 0/14.
+    focusVisibleRules: fv,                       // SCREENING ONLY — not reproducible, see E6.
+                                                 // A low number means nothing on its own; run the
+                                                 // coverage snippet in E6 before concluding.
+    gradientTextElements: gradText,              // >0 → generated. Controls: 0/14. One-directional.
     trackingRatios: ratios,                      // ≤3 values, all round → untouched utilities.
-    weightsAllRound: weights.every(w => +w % 100 === 0),  // true + variable font → generated.
+                                                 // Exclude uppercase elements first (C1).
+    weightsAllRound: weights.every(w => +w % 100 === 0),  // true + a real variable wght axis →
+                                                 // generated. Worth ~1 point. Check the axis (C2).
     roundedFull: els.filter(e => parseFloat(getComputedStyle(e).borderRadius) > 1000).length,
+                                                 // 2026 range is 0–26 on good and bad alike.
+                                                 // Placement, not volume, is the tell (A2).
     radii: top(tally(s => s.borderRadius)),      // one derived scale → shadcn untouched.
     gaps: top(tally(s => s.gap)),                // one spike >40 → scale collapse.
     maxWidths: top(tally(s => s.maxWidth === 'none' ? null : s.maxWidth)),
     sectionPadTop: top(tally((s, e) => e.tagName === 'SECTION' ? s.paddingTop : null)),
     transitionAll: els.filter(e => getComputedStyle(e).transitionProperty === 'all').length,
+                                                 // "this is a Tailwind page", not a defect.
+                                                 // ui.shadcn.com/blocks measures 1532 (E2).
     backdropFilter: els.filter(e => getComputedStyle(e).backdropFilter !== 'none').length,
     centeredRatio: (els.filter(e => getComputedStyle(e).textAlign === 'center').length / els.length).toFixed(2),
     keyframes: [...new Set(kf)],                 // accordion-down with no accordion → residue.
@@ -2545,7 +3048,10 @@ Run this in the console, or via Playwright. It returns the eight numbers that ma
 2. **Fold down the centerline.** Symmetric → D5/I3.
 3. **Desaturate completely.** Hierarchy gone → I2. Chart series merge → B4. Headline mushy → B2.
 4. **Count the rounded rectangles.** More rectangles than ideas → D1.
-5. **Read every string out loud.** → all of G.
+5. **Read every string out loud.** → all of G, and A9 — a loud aesthetic with generic copy under it
+   is the diagnosis, not two separate findings.
+5b. **Read the headline, note which word you stressed, look at which word is coloured.** → C10.
+5c. **Read both hero CTA labels and ask where each goes.** → D13.
 6. **Read every date.** → G4.
 7. **Read every row of every list.** → G2.
 8. **Tab five times, screenshot each stop.** → H2/E6.
@@ -2577,6 +3083,14 @@ here, wrong or badly scoped.
 | "Nested cards are an AI tell" | Linear nests 3 deep; Raycast nests 3 deep. The tell is nesting *without changing the material* (D2). |
 | "Too much whitespace" | GOV.UK is extremely airy and scores 0. The tell is airiness plus zero information (C3). |
 | "It uses shadcn" | shadcn is a good library. The tell is shipping its defaults as a brand (B3, E1). |
+| "`transition: all` means generated" | `ui.shadcn.com/blocks` measures **1532**; four generated pages measure 50–1290. It marks a Tailwind stack, not a defect. Linear's **zero** is the thing to compare against (E2). |
+| "A `:focus-visible` count of 24 is the shadcn fingerprint" | **Retired.** Not one page in a ten-page 2026 re-probe returned 24, and rule counting is not reproducible — the same page can read 0 or 3 depending on method. Measure coverage: rings ÷ interactive elements (E6). |
+| "Lots of `rounded-full` means generated" | 2026 counts run 0–20 on generated pages and **26** on Vercel. Volume no longer separates; the pill on a *card* still does (A2). |
+| "Two colours in the headline is a tell" | Stripe has two and scores 1.7. The tell is being unable to say why *those* words are coloured (C10). |
+| "A sparkle icon means AI" | It now marks the AI-powered control, which is a real convention. Three of eight 2026 pages use it correctly. The tell is a sparkle on something with no model behind it (E4). |
+| "Two hero CTAs is a tell" | Two genuinely different intents deserve two buttons. The tell is a pair that leads to the same place (D13). |
+| "A KPI tile row is a tell" | Users of a dashboard expect one. The tell is four unrelated numbers given four identical containers and no comparison window (D14). |
+| "A distinctive aesthetic means somebody designed it" | The inverse of every row above, and the 2026 failure mode. Two of four v0 landing pages re-probed wear a complete named style over generic copy (A9). |
 
 **And the meta-point:** three of the four strongest signals in this document — `:focus-visible` count,
 weight granularity, tracking-ratio degeneracy — are **invisible in a screenshot**. Any review process
@@ -2613,7 +3127,96 @@ viewport and opened and looked at, not inferred from markup.
 weighted dimensions. [`remedies.md`](remedies.md) has before/after code for the highest-frequency
 fixes. [`visual-critique-method.md`](visual-critique-method.md) is the looking procedure.
 
-**Re-measure this file.** The tells move. The violet gradient was decisive in 2023 and is nearly
-extinct in 2026; the italic serif accent word (C4) did not exist in 2024 and is now on three of the
-shadcn ecosystem's flagship sites; the generator's caveats rendered as UI (G10) is brand new. Run
-§J's probe against a fresh sample every six months and delete what has stopped being true.
+**Re-measure this file.** The tells move, and this file has now been re-probed twice in one day by
+two different people with two different intents, which is roughly the interval at which the surface
+entries start to rot. The violet gradient was decisive in 2023 and is extinct in 2026; glass, blobs
+and border-beams went with it; the italic serif accent word (C4) did not exist in 2024 and is now on
+three flagship shadcn-ecosystem sites *and* on a furniture template; the generator's caveats rendered
+as UI (G10) is a year old; the whole-page costume (A9) is the newest thing here. Run §J's probe
+against a fresh sample every six months, **delete what has stopped being true**, and record the
+method next to every count — the `:focus-visible` correction in E6 exists only because two files in
+this corpus were counting two different things under one name.
+
+## Adversarial pass (2026-09)
+
+An adversarial reviewer re-probed this file on 2026-09-10 against ten live pages — eight freshly
+deployed v0 and Lovable artifacts not in the original corpus, plus `ui.shadcn.com/blocks` and the v0
+templates gallery — and re-measured five controls (GOV.UK, Linear, Stripe, Vercel, shadcn). Every
+number below was read in that pass.
+
+**Corrected, because the previous revision was wrong.**
+
+1. **E6 was rewritten and retitled, from "the `:focus-visible` count of exactly 24" to "zero focus
+   coverage."** The 24 did not reproduce on a single page. Worse, three ways of counting the same
+   thing disagree: GOV.UK measures **28** CSSOM rules against **54** raw-text occurrences (the old
+   "GOV.UK 53" was the second number sitting in a list of the first), Linear's CSSOM count is a floor
+   because **54 of its 84 stylesheets throw**, and Stripe reads **0** because all six of its
+   stylesheets are cross-origin. `vibecode-rubric.md` §6.4 supplies the decisive case —
+   `demo.tailadmin.com` returning 0 via CSSOM and 3 via raw text on the same page in the same minute.
+   E6 now measures **coverage** (rings ÷ interactive elements) with the same snippet the rubric uses,
+   and treats rule counts as a screening proxy that is not quotable. The §2 baseline table, the
+   header banner, the J2 probe comment, the index row, H2 and I5 were all updated to match.
+2. **The J2 probe's inline comment said `>30 → operated by a human`.** Linear (7) and Figma (11) are
+   controls *in this file*. Fixed.
+3. **E4's sparkle note is retracted.** `lucide-sparkles` appears on three of eight 2026 pages, in a
+   specific and legitimate role: marking the control that calls a model.
+4. **E2's `transition: all` threshold ("> 20 elements") fires on `ui.shadcn.com/blocks`, which
+   measures 1532.** Recalibrated to a stack marker rather than a defect.
+5. **A2's `rounded-full` magnitudes were 2025 numbers.** 2026 range is 0–20 on generated pages and 26
+   on Vercel. Volume no longer separates; placement does.
+6. **D5's centering threshold used a different denominator from `vibecode-rubric.md` §6.5.** Both
+   files now count text-bearing leaves, with the rubric's calibrated bands (5–9% designed, >40% a
+   finding).
+7. **B9 said `>3%` in the index and `well over 5%` in the body.** Now 5% in both.
+
+**Added, because they are what is actually shipping.** A9 (the borrowed aesthetic — the highest-value
+new entry, and the one that names the failure mode this corpus is most at risk of causing), B10 (a
+semantic token layer that is only a rename of the framework ramp), C10 (the accent-coloured phrase in
+the headline), D13 (the primary + ghost CTA pair), D14 (the KPI tile row), I9 (one width for every
+kind of content). Each was measured on at least two unrelated pages in the pass-2 sample.
+
+**Scoped, because following the previous text literally made interfaces worse.** A1 no longer reads
+as "ship eight radii" (Linear's eight are a history, not a target, and manufacturing radius variety
+breaks `system/3-tokens.md`). I3 no longer prescribes "one element hanging into the left margin" —
+that instruction produces the *trying too hard* failure the file's own preamble calls worse than
+blandness. C2 now requires verifying the font actually exposes a `wght` axis before writing 510, and
+says what the tell is worth. H3's "no text below 12px, ever" is now scoped to archetype, because it
+punished dense data UI where 11px at full contrast is correct. D3 and D4 no longer ask for a pattern
+break as a quota. I1–I9 each gained a *Fine when* line, which is the field that keeps a second-order
+tell from becoming a demand for novelty.
+
+**Verified and could not shake.** A1's shadcn radius scale reproduced byte-for-byte (`8px ×37, 6px
+×35, 14px ×20, 10px ×10, 26px ×3`). C1's single-tracking-ratio degeneracy reproduced on four of eight
+pages (`['-0.0250']`, and `['-0.0500']` on shadcn.com). C2's round-hundred weights held on 8 of 8.
+D4's section-padding spike held (`100px ×9` on one page). E3's keyframe residue held —
+`accordion-down`, `accordion-up`, `caret-blink` on four pages with no accordion and no caret. E5's
+Lovable watermark held: `CameraPlainVariable` on exactly **17** elements, three for three. G1, G6,
+G11 and C9 all reproduced verbatim. Linear's gap distribution reproduced exactly as I7 states it
+(`8px ×95, 4px ×63, 6px ×60, 12px ×18, 2px ×11`).
+
+**Could not verify, flagged rather than deleted.** The pass-1 control focus counts (Railway 97,
+Notion 84, Mercury 56, Ramp 36, Raycast 25) were recorded without their method and are now labelled
+unverified in §2 — re-probe them before quoting them. The AGENTIC, Optimus and COMPUTE preview URLs
+now resolve to v0's sign-in wall, so their pass-1 measurements could not be re-read; two of them
+disagree slightly with `vibecode-rubric.md` (Optimus `rounded-full` 24 vs 22; AGENTIC section padding
+"9 of 12" vs "all nine"), and the disagreement is left standing with this note rather than resolved
+by picking a favourite. Contrast figures were not re-run in this pass.
+
+**Three numbers in `vibecode-rubric.md` that this pass re-measured and found stale, left for that
+file's owner** — it was being edited concurrently and writing to it would have clobbered work in
+flight. Re-read from linear.app on 2026-09-10 at 1440×900:
+
+| Rubric says | Re-measured | Where |
+|---|---|---|
+| Linear gaps `8px×94, 4px×62, 6px×51, 12px×14, 2px×11` | `8px×95, 4px×63, 6px×60, 12px×18, 2px×11, 16px×5` — as I7 of this file already states | rubric §2 row 5, §6.5 |
+| Linear radii `9999px×72, 8px×30, 12px×19, 4px×18, 9px×18` | `9999px×76, 8px×33, 50%×28, 12px×26, 4px×21, 9px×18, 6px×15, 2px×13` | rubric §6.8 |
+| "Stripe: 4 `:focus-visible`" | CSSOM reads **0** because all six of Stripe's stylesheets are cross-origin; raw CSS contains 58 occurrences. Quote coverage, not this | rubric §6.4 |
+
+Gap counts drift a few percent between page loads; the *ranking* does not. Where the two files
+disagree on a Linear number, this file's is the one re-read today.
+
+**One thing the pass did not change, deliberately.** This file is long. Cutting it to look sharper
+would mean deleting the *when it is actually fine* fields and the measured values, and those are the
+two things that stop an agent from turning a bland interface into a costume. The historical entries
+(A5, A6, A7, B1, F3, F4) are now labelled with their 2026 frequency at the top of each, so a reader
+can skip them in a second — that is the right form of the cut here.

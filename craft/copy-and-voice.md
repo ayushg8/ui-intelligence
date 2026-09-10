@@ -2,6 +2,8 @@
 
 **Measured:** 2026-09, in two passes. The second pass added a corpus no marketing scrape can give: **24,899 English UI strings (140,068 words) taken from the shipped translation files of four real products** — Excalidraw, Grafana, Bitwarden and Mattermost — plus 33,145 English→German/French/Japanese string pairs from the same files, and harvested accessible names from GitHub, Grafana and Excalidraw. Those are in-product strings, not homepage strings, and they behave differently. Every string quoted as "real" below was captured from a live page or from a shipped locale file — a form I submitted, a search that returned nothing, a dialog I opened — not recalled. Typographic values are computed styles at 1440×900. Where I could not measure something I say so.
 
+**Re-verified 2026-09-10 under adversarial review.** The `Intl` tables in §5 reproduce byte-for-byte. Product strings split: most held, four were stale or wrong and are corrected in place, and three could not be re-reached from this network and are named as such at the end of the file. §7b and drill three are new and were captured on that date. Read the `Adversarial pass (2026-09)` section at the end before trusting any single quoted string.
+
 Copy is where AI-generated products announce themselves fastest: a competent agent produces a plausible layout, then labels the primary button `Submit`, headlines the page `Revolutionize Your Workflow`, and writes an empty state reading `No items found. Get started by creating your first item!` — three tells in one screen.
 
 Organised by decision. Each section ends with the generic default you are trying not to write.
@@ -14,7 +16,7 @@ Organised by decision. Each section ends with the generic default you are trying
 2. **Write errors as three facts in one or two sentences: what happened, why, what to do next.** Reuse the field's own words. GOV.UK's error-message guidance — the most user-tested error copy in existence — bans `please` (implies a choice), `sorry` (does not help), `valid`/`invalid` (adds nothing), and `oops`, and bans generic strings like `An error occurred`, `This field is required`, and `Fill in the field`. If your label is "How many hours do you work a week?", the error is "Enter how many hours you work a week."
 3. **Delete the success message.** If the UI already shows the new state — the row appeared, the toggle moved, the badge changed — a toast saying "Success! Your changes have been saved." adds a dismissal task and nothing else. Keep confirmation only where the result is invisible (an email sent, a background job queued, an irreversible action taken) or where the user needs an undo handle.
 4. **Never let a number, date or currency reach the screen as a raw string.** Use `Intl`. `Intl.NumberFormat('en-US',{notation:'compact'}).format(12500)` returns `13K` — it rounds by default and silently lies about your metric unless you set `maximumFractionDigits: 1` (`12.5K`). `de-DE` renders that same value as `12.500`, not `12,5 Tsd.` And `03/09/2026` means 3 September in London and 9 March in New York; one shipped fintech page I measured renders `09/03/26` with no month name anywhere on the page.
-5. **Run the tell list before you ship a single string.** Across **20,282 words** of live homepage copy from 19 top products, the phrases `powerful yet simple`, `take it to the next level` and `delve` appear **zero times**, the sparkle and rocket emoji appear **zero times**, `revolutionize`, `elevate`, `harness`, `robust` and `cutting-edge` appear **once each in 20,000 words**, and em dashes run at **2.4 per 1,000 words** with five of the nineteen sites using none at all. Those frequencies are the empirical bar. A draft that uses `unlock` twice on one page is already an outlier against every product in the sample. **In-product strings are stricter still:** across 140,068 words of shipped UI copy, em dashes run at **0.0–0.5 per 1,000 words** (five times below the marketing rate) and emoji appear **twice in 24,899 strings**. **Re-measure the tell list; do not memorise it.** On a 2026-09 re-scrape, `delve` and ✨ are still zero — which makes them dead detectors that give false confidence — while `agentic` appears on **4 of 8** re-measured homepages and `AI-powered` on 3, above every classic tell in the table. See §7a.
+5. **Run the tell list before you ship a single string.** Across **20,282 words** of live homepage copy from 19 top products, the phrases `powerful yet simple`, `take it to the next level` and `delve` appear **zero times**, the sparkle and rocket emoji appear **zero times**, `revolutionize`, `elevate`, `harness`, `robust` and `cutting-edge` appear **once each in 20,000 words**, and em dashes run at **2.4 per 1,000 words** with five of the nineteen sites using none at all. Those frequencies are the empirical bar. A draft that uses `unlock` twice on one page is already an outlier against every product in the sample. **In-product strings are stricter still:** across 140,068 words of shipped UI copy, em dashes run at **0.0–0.5 per 1,000 words** (five times below the marketing rate) and emoji appear **twice in 24,899 strings**. **Re-measure the tell list; do not memorise it.** On a 2026-09 re-scrape, `delve` and ✨ are still zero — which makes them dead detectors that give false confidence — while `agentic` appears on **4 of 8** re-measured homepages and `AI-powered` on 3, above every classic tell in the table. **And the detector set is now anti-correlated with the thing it detects:** v0.app and bolt.new, the two products most responsible for generated UI copy, score a perfect zero on every punctuation and emoji check in this file while shipping `Everything you need to scale Built in.` and `Agentic by default`. See §7a, §7b and drill three. The only check that cannot be gamed is the structural one: swap a competitor's name into the sentence and see if it still reads.
 
 ---
 
@@ -130,7 +132,7 @@ Plurals are not an English problem: `Intl.PluralRules` classifies **2** as `othe
 | Railway | `Nov 12, 2024`, `2 days ago`, and — on the same page — **`10 Days ago`** | Capital D. A real drift bug in a real product, visible at 1440px |
 | Brex | `March 2025` and **`09/03/26`** | Ambiguous numeric date with no month name anywhere near it |
 | Wise | **`17/12/2025`** | DD/MM, correct for their audience, wrong if you copy it into a US product |
-| GitHub pricing | `$ 0 USD per user/month`, `$ 4 USD per user/month` | Currency code spelled out because the page serves every country |
+| GitHub pricing | `$ 0 USD per month`, `$ 4 USD per user/month`, `$ 21 USD per user/month` | Currency code spelled out because the page serves every country. Re-verified 2026-09-10 — and note the Free row is *per month* while the paid rows are *per user/month*. The unit changes between adjacent cells of one table, which is why it is printed on every cell instead of once in a header |
 | Stripe pricing | `2.9% + 30¢` | Cents glyph, not `$0.30` — the smaller unit reads smaller |
 | Mercury | `Earn 1.5% cashback`, `Earn up to 3.89% yield` | Two decimal places on the rate that matters, one on the one that doesn't |
 
@@ -203,6 +205,8 @@ Eight of the nineteen homepages above, re-scraped at 1440px on the same day this
 | Slack | 1,306 | 0 | 0.0 | 0 | 0.0 |
 | Vercel | 132 | 0 | 0.0 | 0 | 0.0 |
 
+**Re-measured again 2026-09-10, and the instrument's precision is the finding.** Stripe 1,751 words / 11 em dashes = **6.3**/1k (was 6.7). Linear 1,383 / **0** with 2 `!` (unchanged). Vercel 134 / 0 (unchanged). Mercury 924 / 7 = **7.6**/1k — the same seven em dashes, but the page shed 600 words, so the rate rose 69% with no copy change. **Read per-site rates as shape, not as figures:** zero versus non-zero is stable across scrapes; anything below about 2 per 1,000 is inside the noise of what your scraper counts as body text. The aggregate is what holds.
+
 **The classic tells are now dead detectors.** Across those 8,460 words: `revolutionize` 0, `supercharge` 0, `empower` 0, `elevate` 0, `robust` 0, `powerful yet simple` 0, `delve` 0, ✨ 0, 🚀 0. A draft that passes the 2023 checklist tells you nothing.
 
 **What replaced them, measured on the same pass:**
@@ -221,6 +225,36 @@ Eight of the nineteen homepages above, re-scraped at 1440px on the same day this
 `agentic` and `AI-powered` are doing in 2026 exactly what `powerful` did in 2019: standing in for a capability the writer has not named. The difference is that they are currently *true* of the products using them, which is why they pass review. **The test is unchanged — can the reader tell what the software does from the sentence?** `Agentic commerce` cannot be distinguished from any other product in its category; Stripe's own nav entry is the counter-example that proves it, because the page underneath has to explain what it means.
 
 **Rebuild your own tell list from your own corpus once a year.** The mechanism, not the word list, is what generalises: a tell is any term that (a) appears in your draft, (b) appears at near-zero rate in shipped product copy, and (c) would still be true if you swapped in a competitor's product name.
+
+### 7b. What the generators themselves ship — measured 2026-09-10
+
+The strongest available evidence about the model's copy prior is the marketing copy the AI builders write **for themselves**, because nobody edited it toward a house voice. Scraped at 1440px on 2026-09-10.
+
+| Site | Words | Em dashes | `!` | ✨/🚀 | `delve` |
+|---|---|---|---|---|---|
+| **v0.app** | 332 | **0** | **0** | 0 | 0 |
+| **bolt.new** | 419 | **0** | **0** | 0 | 0 |
+
+**Both score a perfect zero on every punctuation and emoji detector in this file, and both are saturated.** What they actually ship, verbatim:
+
+- bolt.new h2: `Everything you need to scale Built in.` — the canned phrase, live, on the homepage of a product that generates canned phrases.
+- bolt.new h2: `Empowering product builders with the most powerful coding agents` — `empower` and `powerful` in one twelve-word sentence, both measured at ~1 per 20,000 words on shipped product homepages.
+- bolt.new h2s: `Bolt gives you superpowers` · `Ready to build something amazing?` · h3 `Enterprise-grade` (a feature heading that is one adjective).
+- bolt.new body: `98% less errors` (a stat with no baseline, and `less` for `fewer`), `Bolt handles projects 1,000 times larger than before` (a multiplier with no unit), `Stop building from scratch. Start building on-brand.`, `Launch a full business in days, not months.`
+- v0.app h3: **`Agentic by default`** — the same `<abstract noun> by default` frame that two unrelated v0 *templates* independently shipped as `Global by default.` ([`../anti-patterns/vibecode-rubric.md`](../anti-patterns/vibecode-rubric.md) §6.2). The generator and its output converge on one sentence shape.
+- v0.app h3 `Prompt. Build. Publish.` (tricolon, §taxonomy 10) and CTA section `Go from idea to production in seconds with smart, secure infrastructure`.
+- v0.app nav, at 1440px: `New Chat` · `Log In` · `Sign Up` · `View Details` · `Get Started` in Title Case beside `Browse all` in sentence case. bolt.new: `Sign in` beside `Get Started` in the same nav bar. **Case drift on the generators' own surfaces, re-verified.**
+
+**The conclusion this forces:** the 2023 detector set is not merely stale, it is *anti-correlated*. The two products most responsible for generated UI copy in 2026 pass every punctuation and emoji check in this file. Only the structural tests — canned phrase, unbaselined multiplier, adjective-as-heading, tricolon, case drift, and "could a competitor swap their name in" — fired on either page.
+
+### 7c. The outside literature, checked 2026-09
+
+The corpus this file measures is product copy; the detection literature measures prose, and it moved in the last six months.
+
+- **The Economist, 2026-08** — compared its own articles against ChatGPT, Claude, Gemini and Grok across **55,940 sentences / 1.2 million words**. The tells it names: **monotonous sentence length** ("cadence uniformity"), **under-punctuation** — models skimp on commas, semicolons and parentheses and lean on `and` as their single most overused word — **`it's not X, it's Y`**, and **the rule of three**. It also explicitly demotes the lexical tells: claiming a text is machine-written because it contains `delve`, it argues, is like claiming one is Jane Austen's because it contains `imprudence`.
+- **Em-dash suppression** shipped as a user-level control with GPT-5.1 (2025-11) and the rate has trended down across frontier models since, which is why §9's detector is now unstable in both directions.
+
+Two of those four — **cadence uniformity** and **under-punctuation** — were absent from this file before this pass and are now §taxonomy 26 and 27. The other two were already here (§taxonomy 11 and 18), and the independent confirmation at that corpus size is the strongest evidence either has.
 
 ### 8. The in-product corpus — 24,899 shipped strings
 
@@ -312,7 +346,7 @@ The strings nobody reviews. Every one of these was read off a live page at 1440p
 | Product | What is on screen | The accessible name / `title` |
 |---|---|---|
 | **GitHub** issue row | Issue title, an `Open` chip, `#98493`, avatar, relative time | `Stale "use cache" segment after a client-side navigation that changes a root param: Status: Open. #98493 In vercel/next.js;· amannn opened on Sep 10, 2026. More information available below.` |
-| **GitHub** star button | `142k` | `142215 users starred this repository` — **the visible number is compacted and the accessible name is a raw integer**, so the two disagree about both grouping and magnitude. Re-measured 2026-09; it has been wrong long enough to survive a redesign of the visible side |
+| **GitHub** star button | `142k` in the header, `142.2k` in the sidebar | `142221 users starred this repository` — **the visible number is compacted and the accessible name is a raw integer**, so the two disagree about grouping, magnitude and each other. Re-measured 2026-09-10 on `vercel/next.js`; the count drifts by the hour, so quote the *pattern*, never the integer. One value, three renderings on one page, is the finding |
 | **GitHub** filter menus | Chevron dropdowns labelled `Author`, `Labels`, `Projects` | `Filter by author`, `Filter by labels`, `Filter by projects` |
 | **GitHub** timestamps | `Sep 10, 2026` | `title="Sep 9, 2026, 11:42 PM PDT"` — absolute, with the timezone abbreviation, and note it disagrees with the visible date because the visible one is rendered in UTC |
 | **Grafana** sidebar chevrons | icon only | `Expand section: Starred`, `Collapse section: Synthetics` |
@@ -327,7 +361,7 @@ The conventions that fall out, and they are worth copying verbatim:
 2. **Icon-only controls get `verb + object + the object's name`.** `Actions for folder meta-monitoring` beats `More`, `Options` and `Actions` — because a page has 20 of those and the accessible names must be unique.
 3. **State goes in the name.** `Expand section: Starred` vs `Collapse section: Synthetics` — the label says what will happen, and it changes when the state changes.
 4. **Tooltips carry the shortcut after an em dash** (`Rectangle — R or 2`). This is the one place in product UI where an em dash is conventional, and it is a separator, not prose.
-5. **Format numbers in accessible names too, and format them the same way.** GitHub ships `142k` visibly and `142215` in the label. Beyond the grouping problem, the two strings now make different claims, and a voice-control user reading the screen cannot say the label. Run one formatter over both, or set the label from the same value the visible text was formatted from.
+5. **Format numbers in accessible names too, and format them the same way.** GitHub ships `142k` in the header, `142.2k` in the sidebar and a raw `142221` in the label — one number, three renderings, on one page. Beyond the grouping problem, the two strings now make different claims, and a voice-control user reading the screen cannot say the label. Run one formatter over both, or set the label from the same value the visible text was formatted from.
 
 ### 12. The template corpus — where the slop is not
 
@@ -346,7 +380,7 @@ The conventions that fall out, and they are worth copying verbatim:
 
 **The templates are not the problem.** Their prose rates sit at or below shipped marketing pages, their headlines are concrete (`Accounting made simple for small businesses.`, `Open-source Git client for macOS minimalists`, `Invest at the perfect time.`), and they contain zero emoji. One template habit is worth un-learning — **CTA monotony**: Salient ships `Get started` five times on one page, and every clone inherits it.
 
-Generated slop is therefore not inherited from Tailwind templates; it is the model's own prior. The fix is a checklist, not a better reference site.
+Generated slop is therefore not inherited from Tailwind templates; it is the model's own prior — which §7b confirms from the other direction, on the generators' own homepages.
 
 ---
 
@@ -414,7 +448,7 @@ A heading earns its line by carrying information the body would otherwise have t
 | Ramp | `Join 70,000 of the world's most ambitious companies growing 3.2x faster than the average American business.` | Two verifiable numbers |
 | Supabase | `Build in a weekend. Scale to millions.` | Two ends of a range, no adjectives |
 | Railway | `Ship software peacefully` | One unexpected adverb doing all the work |
-| Raycast | `It's not about saving time.` | Contradicts its own category's cliché |
+| Raycast | `It's not about saving time.` / `It's about feeling like you're never wasting it.` | Contradicts its own category's cliche — **and is a live instance of the negative parallelism this file calls the #1 2026 tell (§taxonomy 11).** Verified verbatim on raycast.com, 2026-09-10. It survives because the second clause carries a claim a competitor could not make; the *construction* is not what makes it work. Copy the construction without that second clause and you get `It's not a CRM — it's a revenue platform.` The exception has to earn itself |
 | Fly.io | `Computers for agents` | Three words, a category claim, no adjective |
 | Attio | `Picks up leads at 2am. Catches renewals before they slip.` | Two scenarios, not two benefits |
 
@@ -514,7 +548,7 @@ GOV.UK's guidance, which has been tested with live users on tax services, is the
 | Banned | Reason (theirs) |
 |---|---|
 | `please` | implies the user has a choice about fixing it |
-| `sorry` | does not help fix the problem |
+| `sorry` | does not help fix the problem — **scoped:** the ban holds where the user is blocked mid-task and has an action to take. Where your product failed and there is nothing for the user to do, an apology is the correct register: the Guardian's live 404 reads `Sorry — we haven't been able to serve the page you asked for. You may have followed an outdated link, or have mistyped a URL.` and [`../archetypes/editorial.md`](../archetypes/editorial.md) ships it as a *good* example. Apologise for outages, 404s and data loss you caused; never for a field the user left empty |
 | `valid` / `invalid` | adds nothing the user can act on |
 | `oops`, humour | wrong register when someone is stuck |
 | `forbidden`, `illegal`, `prohibited`, `you forgot` | blames the user |
@@ -681,7 +715,8 @@ Rules ordered by how often they are broken:
 4. **Never fabricate a percentage.** A progress bar that sits at 92% for forty seconds destroys more trust than an indeterminate spinner ever did.
 5. **Never use jokes on a timer.** "Reticulating splines" is funny the first time and infuriating the ninth, and it is unlocalisable.
 6. **Change the button, not the page.** A submit button going `Save changes` → `Saving…` (disabled) keeps the user's eyes where they already are. Do not also show a full-screen overlay.
-7. **Ellipsis convention:** one character `…` or three periods, chosen once. Trailing ellipsis means "in progress"; on a *menu item* it means "this opens a dialog that asks for more input" (`Export…`). Do not mix the two meanings on one surface. **Measured:** shipped products overwhelmingly use three periods, not the single glyph — Grafana 210 `...` vs 21 `…`, Excalidraw 18 vs 2, Mattermost 107 vs 19. And they mix them *on one screen*: Excalidraw's welcome screen shows the annotation `Export, preferences, languages, …` (glyph) directly above the menu item `Live collaboration...` (three periods). Pick the three-period form because it is what everything else does, then lint for the glyph.
+7. **Ellipsis convention — the meaning is what you standardise, not the glyph.** There are two ellipses and they say different things. **In-progress** (`Saving...`) means the system is still working. **Second-step** on a menu item or command (`Export…`, `Assign to…`) means "this opens something that will ask you for more input" — a keyboard user reading a palette is deciding whether to keep typing, so it is load-bearing, not decoration. **Measured:** shipped products overwhelmingly type three periods — Grafana 210 `...` vs 21 `…`, Excalidraw 18 vs 2, Mattermost 107 vs 19 — and they mix them *on one screen*: Excalidraw's welcome screen (re-verified live, 2026-09-10) shows the annotation `Export, preferences, languages, …` directly above the menu item `Live collaboration...`.
+   **Corpus reconciliation:** [`../archetypes/technical-productivity.md`](../archetypes/technical-productivity.md) prescribes the glyph for the second-step form (`Assign to…` · `Change status…` · `Snooze until…`) and it is right for a command palette in the macOS lineage, where that glyph is the platform convention. So: **one glyph per meaning, both linted.** Whichever pair you pick, the rule that actually catches bugs is that the *in-progress* form must never appear on a finished state — an empty state, a completed toast, a settled value.
 
 **The generic default you are avoiding:** a full-screen spinner over `Loading your data, please wait...` for a 200ms fetch.
 
@@ -734,7 +769,7 @@ An accessible name is the string a screen reader announces. It is also the strin
 - **A row or card:** one linearised sentence, in reading order, with the status included. GitHub's issue rows are the model: `«title»: Status: Open. #98493 In vercel/next.js;· amannn opened on Sep 10, 2026.`
 - **A toggle or disclosure:** name the action *and* the target, and swap it with state: `Expand section: Starred` / `Collapse section: Synthetics`.
 - **Never duplicate the visible text into `aria-label` with different words.** A voice-control user says what they see. If the button says `Save changes` and the label says `Submit form`, saying "Save changes" does nothing.
-- **Run your number, date and currency formatters over accessible names.** GitHub's star button is the counter-example, shipping `142216 users starred this repository` beside a visible `142,216`.
+- **Run your number, date and currency formatters over accessible names.** GitHub's star button is the counter-example, shipping a raw `142221 users starred this repository` beside a visible `142k` (re-verified 2026-09-10).
 - **`aria-live` for anything you decided not to toast.** If you deleted the success message because the state change is visible, the change is still invisible to a screen reader. A polite live region carrying `Invoice sent` costs nothing and is the actual reason "delete the success toast" is safe advice.
 
 ### Tooltip copy
@@ -749,7 +784,7 @@ Grafana's Checks page shows both halves of this on one screen at 1440px: the glo
 
 **Rule:** a scoped search names its scope and its searchable fields; only a true omnisearch may be generic, and even then `Search or jump to…` (GitHub) beats `Search...`. If a user cannot tell which of two search boxes on the screen will find their thing, the placeholder is the only thing that can tell them, and `Search...` refuses to.
 
-**The same rule already governs the AI input box, and the shipped products mostly get it right.** Measured 2026-09: ChatGPT `Ask ChatGPT`, Gemini `Ask Gemini`, v0 `Ask v0 to build…`, Perplexity `Ask anything…`. Three of four name the thing being asked; naming it is what tells the user which of the boxes on screen reaches the model and what it can do. `Ask anything…` is the `Search...` of AI surfaces — it is defensible on a product that is only that box, and wrong the moment the box sits inside a larger app. Scope it the same way: `Ask about this invoice`, `Ask about your 2026 spend`.
+**The same rule already governs the AI input box.** Measured 2026-09: ChatGPT `Ask ChatGPT`, Gemini `Ask Gemini`, Perplexity `Ask anything…`. **Correction, re-measured 2026-09-10: v0 no longer ships `Ask v0 to build…`** — its composer sits under the heading `What do you want to create?` with no placeholder at all, and bolt.new ships an *animating* placeholder that types `Let's build a prototype...` one character at a time. An animated placeholder is worse than a generic one: a user arriving mid-cycle reads a fragment (screenshotted at 1440px, it read `Let's build a c`), it is meaningless under reduced motion, and it is not a format example. Naming the thing being asked; naming it is what tells the user which of the boxes on screen reaches the model and what it can do. `Ask anything…` is the `Search...` of AI surfaces — it is defensible on a product that is only that box, and wrong the moment the box sits inside a larger app. Scope it the same way: `Ask about this invoice`, `Ask about your 2026 spend`.
 
 ### Marketing voice inside the product
 
@@ -789,7 +824,7 @@ They are both right inside their own domain. Apple writes for an OS where the so
 
 - **Group with `Intl.NumberFormat`, never a regex.** German uses `.` where English uses `,`; Hindi groups in lakhs.
 - **Round to the precision the decision needs, not to the precision you have.** `$1,234.56` in a ledger; `$1.2K` in a summary tile; never `$1234.5600000001`.
-- **Compact notation rounds by default.** `12,500` renders `13K` unless you pass `maximumFractionDigits: 1`. Decide whether your dashboard is allowed to be 4% wrong.
+- **Compact notation rounds by default** (§5). Decide whether your dashboard is allowed to be 4% wrong.
 - **Tabular figures on every column of numbers that aligns or updates.** Inter's `1` is ~41% narrower than its `0`; a right-aligned money column jitters without `font-variant-numeric: tabular-nums`. Measured: marketing pages apply it to ~2–12% of digit-bearing nodes, but a real data surface is the opposite — on Grafana's Checks page, **72 of 133 digit-bearing leaf nodes (54%)** carry `tabular-nums`. The rule is not "use it sparingly", it is "use it wherever numbers stack", and a dashboard is nearly all stacked numbers.
 - **The grouping bug is real and it ships.** On that same Grafana page, at 1440px, the check cards read `8928 executions / month`, `133920 executions / month` and `5963ms` — six-digit counts with no thousands separator, in a monitoring product whose entire job is numbers. This is what `${n} executions / month` produces. Every number that reaches a user goes through a formatter, including the ones in chips, badges, tooltips and `aria-label`s.
 - **Zero is a value, not an empty state.** `0 open issues` is information; a blank cell is ambiguous between zero and unknown. Use `—` for unknown and `0` for zero, and never the same glyph for both.
@@ -798,6 +833,7 @@ They are both right inside their own domain. Apple writes for an OS where the so
 ### Dates
 
 - **Absolute for records, relative for recency, and give the other on hover.** Attio's live pattern: `6 hours ago`, `2 days ago`, `yesterday` for anything under about a week, then `Sep 30, 2026`. Linear's changelog uses `Today` for the newest entry and `September 3, 2026` for everything else.
+  **Scope — this inverts entirely on an operational surface.** On a monitoring console, an incident timeline or a log view, relative time is wrong at every horizon: two events 300ms apart are both "just now", and a screenshot pasted into an incident channel has to be datable a year later. There it is absolute to the resolution the domain warrants, with the zone always printed — `2026-09-10 09:48:55.947 UTC`. Stated with its reasoning in [`../archetypes/data-terminal.md`](../archetypes/data-terminal.md), which is the authority for that archetype.
 - **Never render a bare numeric date to a global audience.** `09/03/26` is 9 March in most of the world and 3 September in the US. If you must be compact, use `3 Sep 2026` or ISO `2026-09-03`.
 - **`Intl.RelativeTimeFormat` with `numeric: 'auto'`** gives you `yesterday` and `last week` free; without it you get `1 day ago` and `1 week ago`.
 - **Match the capitalisation of relative strings across the app.** Railway's own site shows `2 days ago` and `10 Days ago` on one page. This is what happens when relative time is formatted in two places.
@@ -819,7 +855,7 @@ Even if you never localise, these rules make copy better in English. If you do l
 
 1. **Never concatenate a sentence from fragments.** `"You have " + n + " new " + (n === 1 ? "message" : "messages")` is unlocalisable: `Intl.PluralRules` classifies 2 as `few` in Polish and Russian, and word order differs. Use full templated strings per plural category (ICU MessageFormat), one message per category.
 2. **Never build a sentence around an injected UI element.** `Click [Save] to continue` puts a button in the middle of a sentence and forces a word order English has and Japanese does not. Write `Select Save to continue.`
-3. **Budget the measured expansion, not the folklore number.** Across 21,534 shipped English→German string pairs, German runs **1.20–1.27× at the median and 1.59–1.73× at p90**; French runs slightly longer than German (1.32 median, 1.86 p90); Japanese *contracts* to **0.56×** and essentially never exceeds 1.3×. Size controls against p90 (≈1.7×) and write against the median. This is why fixed-width buttons and single-line nav items are localisation traps — and why a global "+35% padding" rule silently ruins your Japanese UI, which needs a larger font in less width, not more room.
+3. **Budget the measured expansion, not the folklore number** (§10 has the table). Size controls against German p90 (≈1.7×) and write against the median (≈1.25×). Fixed-width buttons and single-line nav items are the localisation traps, and a global "+35% padding" rule silently ruins your Japanese UI, which contracts to 0.56× and needs a larger font in less width, not more room.
 4. **Do not encode grammar in code.** Gendered adjectives, articles that depend on the following noun (`a`/`an`), and possessives (`Priya's project`) all break outside English. Prefer `Project owner: Priya`.
 5. **Avoid idiom, sport metaphor and alliteration.** `Knock it out of the park` is untranslatable. `Set and forget` requires an explanation. Product copy that leans on wordplay ships as literal nonsense in twelve languages.
 6. **Avoid text in images and icon-only labels for text-heavy actions.** Both are invisible to translation pipelines.
@@ -832,13 +868,18 @@ Even if you never localise, these rules make copy better in English. If you do l
 
 Tone is not decoration; it is a claim about what kind of consequence the user is facing. The measured signals below come from the homepages and product surfaces I scraped.
 
+**Precedence, because this table is not the only one in the corpus.** All 20 files in [`../archetypes/`](../archetypes/) carry a `## Copy register` section with worked right/wrong string pairs. **Where an archetype file and this table disagree, the archetype file wins for its own archetype** — it was written against that archetype's reference products and it knows things this table generalises away. This table is the *cross-archetype instrument*: it tells you which dimensions move between archetypes and by how much. Read your archetype's register first, then use this to see what your neighbours do differently.
+
+The five rows below are grouped by consequence class, and each names the archetype files it summarises. **They were checked against all 20 registers on this pass; the four places where the corpus genuinely contradicted itself are resolved in-place** — the ellipsis glyph (§Loading 7), `sorry` (§Error messages), relative time (§Dates) and the separator em dash (§taxonomy 9).
+
 | Archetype | Measured signals | Sentence shape | Never |
 |---|---|---|---|
-| **Fintech / money** (Mercury, Ramp, Brex, Stripe) | **0 exclamation marks** on mercury.com (1,575 words) and ramp.com (1,473 words). Exact figures everywhere: `1.5% cashback`, `3.89% yield`, `3.72%`, `2.9% + 30¢` | Declarative, short, numeric. `Radically different banking`. `Time is money. Save both.` | Jokes near a balance. Emoji. Vague ranges. Anything that reads as a promotion where a fact belongs |
-| **Developer tools** (Vercel, Railway, Supabase, Fly.io) | Vercel and Retool: **0 em dashes, 0 exclamation marks**. Changelog entries state the delta: `Deployment step now 10% faster`, `Vercel Sandbox routing is now 18x faster globally` | Imperative and mechanical. `Build in a weekend. Scale to millions.` `Computers for agents.` | Explaining what an API is. Marketing adjectives in error messages. Hiding the real error behind a friendly one |
-| **Consumer / habit** (Duolingo, Headspace) | Duolingo: uppercase CTAs (`TRY 1 WEEK FREE`), lowercase section heads (`free. fun. effective.`), 3 exclamation marks in 357 words | Warm, second person, short. `The most fun way to learn languages, chess, and more!` | Formality. Jargon. Long sentences. Making the user feel behind |
-| **Healthcare** (One Medical) | Concrete promises, no exclamation marks: `Same/next-day appointments, in person or over video, that start on time`; `Longer appointments so you don't feel rushed` | Plain, calm, specific about time and cost. Reading level deliberately low | Cheerfulness about outcomes. Hedged language where a fact is known. Euphemism (`unexpected result`) |
-| **Enterprise / admin** (Atlassian, Retool, Grafana) | Category-labelled navigation, no personality in settings | Neutral noun phrases. Consequences stated for every toggle | Delight. Personality in destructive flows. Any string an auditor would have to interpret |
+| **Money** → [`fintech-consumer`](../archetypes/fintech-consumer.md), [`fintech-institutional`](../archetypes/fintech-institutional.md), [`ecommerce`](../archetypes/ecommerce.md) | **0 exclamation marks** on mercury.com (1,575 words) and ramp.com (1,473 words). Exact figures everywhere: `1.5% cashback`, `3.89% yield`, `3.72%`, `2.9% + 30¢` | Declarative, short, numeric. `Radically different banking`. `Time is money. Save both.` | Jokes near a balance. Emoji. Vague ranges. Anything that reads as a promotion where a fact belongs |
+| **Technical** → [`developer-platform`](../archetypes/developer-platform.md), [`technical-productivity`](../archetypes/technical-productivity.md), [`data-terminal`](../archetypes/data-terminal.md), [`ai-product`](../archetypes/ai-product.md) | Vercel and Retool: **0 em dashes, 0 exclamation marks**. Changelog entries state the delta: `Deployment step now 10% faster`, `Vercel Sandbox routing is now 18x faster globally` | Imperative and mechanical. `Build in a weekend. Scale to millions.` `Computers for agents.` | Explaining what an API is. Marketing adjectives in error messages. Hiding the real error behind a friendly one |
+| **Consumer** → [`expressive-consumer`](../archetypes/expressive-consumer.md), [`consumer-marketplace`](../archetypes/consumer-marketplace.md), [`social-community`](../archetypes/social-community.md) | Duolingo: uppercase CTAs (`TRY 1 WEEK FREE`), lowercase section heads (`free. fun. effective.`), 3 exclamation marks in 357 words | Warm, second person, short. `The most fun way to learn languages, chess, and more!` | Formality. Jargon. Long sentences. Making the user feel behind |
+| **High-consequence civic** → [`healthcare-clinical`](../archetypes/healthcare-clinical.md), [`institutional-civic`](../archetypes/institutional-civic.md) | Concrete promises, no exclamation marks: `Same/next-day appointments, in person or over video, that start on time`; `Longer appointments so you don't feel rushed` | Plain, calm, specific about time and cost. Reading level deliberately low | Cheerfulness about outcomes. Hedged language where a fact is known. Euphemism (`unexpected result`) |
+| **Operational** → [`enterprise-dense`](../archetypes/enterprise-dense.md), [`internal-utility`](../archetypes/internal-utility.md), [`analytics-bi`](../archetypes/analytics-bi.md) | Category-labelled navigation, no personality in settings | Neutral noun phrases. Consequences stated for every toggle | Delight. Personality in destructive flows. Any string an auditor would have to interpret |
+| **Composed voice** → [`luxury`](../archetypes/luxury.md), [`editorial`](../archetypes/editorial.md), [`premium-marketing`](../archetypes/premium-marketing.md), [`premium-minimal`](../archetypes/premium-minimal.md), [`creative-tool`](../archetypes/creative-tool.md) | The one group where a written voice is the product. `Est. 1925`, `Buy &#124; Read` (Kinfolk), `Restored support for ⌘⌫ in Quick Entry's checklists.` (Things) | Full sentences with subordinate clauses are *allowed here and nowhere else in this file*; the product named plainly and completely; the photograph or the text carries the argument | Explaining why the thing is good. Adoption metrics used as prestige. `Shop Now` where the object has a name. Also: two of these five (`luxury`, `editorial`) legitimately break this file's sentence-case and `sorry` rules — see their registers |
 
 ### The same message in five voices
 
@@ -916,7 +957,11 @@ Each entry: the pattern, why it is empty, and the rewrite move. The moves are al
 ### 9. Em-dash-heavy rhythm
 
 **Why it's a tell:** The em dash is the model's favourite connector because it can join two clauses without committing to a logical relationship. Real product copy uses it at **2.4 per 1,000 words**, and five of nineteen top products use **none**. AI drafts routinely run 15–30 per 1,000 — one in most paragraphs, often two in a sentence.
-**Move:** convert each em dash to the relationship it was hiding. A period if the clauses are independent. A colon if the second explains the first. A comma if it is an aside. Then re-read; usually one of the two clauses was filler and can go.
+**Two em dashes, and only one of them is the tell.** The **connector** — joining two clauses in prose without committing to a logical relationship — is the tell. The **separator** — `label — detail`, `fact — consequence` — is a conventional typographic device in status lines, tooltips and error strings, and it is what six archetype files in this corpus prescribe: `Rectangle — R or 2` (Excalidraw), `Card declined — insufficient funds.`, `Couldn't export — the file is still saved.`, `Documented allergy: penicillin — anaphylaxis.` Those are not prose and they are not the tell. **Count connectors, not glyphs**, and read grep check #10 as a smell test on prose rather than a hard gate on a locale file.
+
+**And the detector is now unstable in the other direction.** OpenAI shipped user-level em-dash suppression with GPT-5.1 (2025-11), and the trend across frontier models since has been downward. So a zero em-dash count no longer proves a human wrote it, and a high count may only mean a different model or a different setting. The em-dash rate remains a good *house-style* rule — it is a bad *detector* in 2026, and this file's own §7a is the reason: the classic lexical tells and the punctuation tells are decaying together.
+
+**Move:** convert each connector em dash to the relationship it was hiding. A period if the clauses are independent. A colon if the second explains the first. A comma if it is an aside. Then re-read; usually one of the two clauses was filler and can go.
 → `We rebuilt sync — it's faster now — and added conflict resolution.` becomes `Sync is 4x faster and now resolves conflicts automatically.`
 
 ### 10. Tricolon headlines (`Fast. Simple. Secure.`)
@@ -987,7 +1032,7 @@ Each entry: the pattern, why it is empty, and the rewrite move. The moves are al
 
 ### 21. `Agentic`, `AI-powered`, `AI-native`, `intelligent`
 
-**Why it's empty:** This is the 2026 replacement for `powerful`, and it is harder to catch because it is usually *true*. Measured on the 2026-09 re-scrape: `agentic` on **4 of 8** homepages (7 hits), `AI-powered` on 3 — both more frequent than any phrase in the §7 tell table. The word names your implementation, not the user's outcome, and it is true of every competitor in the category simultaneously, which is the definition of a non-differentiating claim.
+**Why it's empty:** This is the 2026 replacement for `powerful`, and it is harder to catch because it is usually *true* (rates in §7a). The word names your implementation, not the user's outcome, and it is true of every competitor in the category simultaneously, which is the definition of a non-differentiating claim.
 **Move — describe what it does without the word.** If the sentence collapses, the sentence was the word.
 → `AI-powered expense categorisation` becomes `Categorises each expense from your last 90 days of coding decisions; you correct it once and it stops asking.`
 **In-product corollary:** never prefix a feature name with `AI`. `AI Insights` tells a user nothing about what is in the panel. `Spend anomalies` does.
@@ -1012,6 +1057,26 @@ Each entry: the pattern, why it is empty, and the rewrite move. The moves are al
 
 **Why it's a tell:** The tools generating most AI UI drift on their own surfaces. Measured 2026-09: v0.app ships `New Chat`, `Log In`, `Sign Up`, `View Details` in Title Case beside `Browse all` in sentence case; bolt.new ships `Get Started` beside `Sign in` on one page. An agent that pattern-matches its own tooling inherits both conventions and therefore neither.
 **Move — pick one convention and lint it**, which is the §8 argument in one line: Excalidraw enforces one and has zero case-duplicate label pairs; Mattermost enforces none and has 101.
+
+### 26. Cadence uniformity — the tell that replaced the em dash
+
+**Why it's a tell:** The Economist's 2026-08 study across 55,940 sentences names this as the strongest surviving signal: model output runs sentence after sentence at near-identical length, because nothing in the generation process has a reason to vary. Human product copy is lumpy — a four-word headline beside a twenty-word subhead, a one-word answer after a paragraph. Uniform cadence reads as competent and anonymous, which is exactly what generated UI copy reads as.
+
+**It is the one tell in this file you can measure without a word list.** For any block of prose — a landing page, a docs page, a settings description set — compute the sentence-length standard deviation. Human editorial and shipped marketing prose runs wide; generated prose clusters.
+
+```bash
+python3 -c "import re,sys,statistics as st;s=[len(x.split()) for x in re.split(r'(?<=[.!?]) +',sys.stdin.read()) if x.strip()];print(len(s),'sentences, mean',round(st.mean(s),1),'sd',round(st.pstdev(s),1))"
+```
+
+**Move — break the rhythm on purpose.** After a three-sentence paragraph, write a two-word one. Let one feature description be a fragment and the next be two clauses. The point is not variety for its own sake: uniform length means every sentence was given the same weight, and in real copy some facts matter more than others.
+
+### 27. Under-punctuation and `and`-chaining
+
+**Why it's a tell:** the same study's second finding. Models under-use commas, semicolons and parentheses, and instead chain clauses with `and`, producing long flat sentences with no internal hierarchy. In product copy this shows up as help text and feature descriptions that read as one breath: `Connect your account and we'll sync your transactions and categorise them automatically and you can review them later.`
+
+**Move — punctuate the hierarchy you already have.** The parenthetical goes in parentheses, the consequence goes after a colon, the aside goes between commas. Then delete whichever clause survives being cut. `Connect your account. Transactions sync and categorise themselves; you review the ones we weren't sure about.`
+
+**The interaction with §9 that matters:** you cannot fix under-punctuation by adding em dashes, which is the move a model reaches for first. Colons and periods carry the same load and are not a signature.
 
 ---
 
@@ -1066,6 +1131,30 @@ Read down the "what's wrong" column and notice how few of these are *tone* probl
 
 ---
 
+### Drill three: eleven strings generated by the tools, verbatim
+
+Drill one is invented generics; drill two is shipped human copy. This one is the actual output distribution — strings written by or for the AI builders themselves, and by the templates they emit. Nine were captured live on 2026-09-10 (marked *live*); two come from this corpus's template sampling ([`../anti-patterns/vibecode-rubric.md`](../anti-patterns/vibecode-rubric.md), [`../anti-patterns/vibecode-taxonomy.md`](../anti-patterns/vibecode-taxonomy.md) §G5–G6). **None of them is invented, and none of them trips a single punctuation or emoji check in this file.**
+
+| # | Generated string (source) | What's actually wrong | Sharpened | Move |
+|---|---|---|---|---|
+| 1 | `Everything you need to scale Built in.` — bolt.new h2, *live* | The canned phrase, plus a missing conjunction between two sentence fragments. "Everything" is unfalsifiable and it commits you to completeness a reviewer will test | `Postgres, auth, file storage and a custom domain. No second account, no second bill.` | name the thing |
+| 2 | `Empowering product builders with the most powerful coding agents` — bolt.new h2, *live* | `empower` + `powerful` in twelve words; both measured ~1 per 20,000 words on shipped homepages. Neither word names a capability | `Routes each task to the model that handles it best, and tells you which one it picked.` | mechanism |
+| 3 | `Bolt gives you superpowers` — bolt.new h2, *live* | A multiplier with the number removed. The reader cannot check it, and cannot even tell which axis improved | `Ships a working prototype in the time a spec review takes.` | mechanism |
+| 4 | `Enterprise-grade` — bolt.new h3, *live* | A feature heading that is one adjective meaning "good". §taxonomy 16: the word survives only if a specific artefact follows it | `SOC 2 Type II · SAML SSO · audit log export` | name the thing |
+| 5 | `98% less errors` — bolt.new, *live* | A statistic with no baseline, no window and no definition of "error" — and `less` where the count noun needs `fewer`. §anti-pattern 13: the model knows the shape of proof | `Builds that failed on first run dropped from 34% to under 1% after the September agent change.` | real number |
+| 6 | `Agentic by default` — v0.app h3, *live* | The exact `<abstract noun> by default` frame that two *unrelated* v0 templates shipped as `Global by default.` The generator and its output converge on one sentence | `Plans the work, opens the tasks, and connects the database before you ask.` | mechanism |
+| 7 | `Prompt. Build. Publish.` — v0.app h3, *live* | Tricolon of three verbs that are true of every tool in the category (§taxonomy 10). It is a rhythm, not an argument | `Type a sentence. Get a URL. About ninety seconds.` | real number |
+| 8 | `Go from idea to production in seconds with smart, secure infrastructure` — v0.app CTA, *live* | On this corpus's own 2026 canned-phrase list, plus two adjectives ("smart, secure") that carry no artefact | `Deploys to Vercel on the same account you already have. Preview URL first, production on approval.` | mechanism |
+| 9 | `Uh oh! There was an error while loading. Please reload this page .` — github.com/pricing, *live* | Shipped by a company with a style guide. An interjection, an exclamation, `Please`, no object, no cause, no automatic retry — and a stray space before the period, which is the tell that nobody read the rendered string | `Couldn't load the plan comparison. Reload the page, or see pricing at github.com/pricing.` | name the thing |
+| 10 | `Build & orchestrate AI agents while you sleep.` — v0 template *AGENTIC*, h1 | Capability nouns, an unfalsifiable promise, a period on a fragment, and `while you sleep` — an idiom that will not localise and a claim nobody would put in a contract | `Runs your nightly reconciliation and files the exceptions before you're up.` | name the thing |
+| 11 | `You earn $3287 today, it's higher than last month. Keep up your good work!` — TailAdmin dashboard template | Four failures in one string: an ungrouped integer (`$3287`), a comma splice, a tense error, and a dashboard congratulating an operator on a number they are paid to watch | `$3,287 today · up 12% on the same day last month` | real number |
+
+**What to take from this drill and not from the other two.** Every one of these eleven scores **zero** on the em-dash, exclamation-in-prose, emoji, `delve` and `powerful yet simple` checks — the whole 2023 detector set — except #9 and #11, and those two were written by humans. The tells that actually fired: canned phrase (1, 8), adjective standing in for an artefact (2, 4, 8), unbaselined multiplier (3, 5), the generator's own sentence frame (6), tricolon (7), and an unformatted number (11).
+
+**And the shape of the sharpened column is the finding.** Nine of the eleven rewrites are longer than the original and every one of them contains a noun, a number or a limit that the writer had to go and find out. That is the whole discipline: generated copy is short because it is empty, and the fix costs you words because it costs you facts.
+
+---
+
 ## When this advice is wrong
 
 Every rule above has a domain. These are the boundaries.
@@ -1098,6 +1187,8 @@ Every rule above has a domain. These are the boundaries.
 
 **"Sentence case, always" has one platform-shaped exception worth knowing:** Apple's HIG explicitly declines to mandate either — *"Title case is generally considered formal, while sentence case is more casual. Choose a style for each UI element type and use it consistently"* — and native Apple platforms conventionally use Title Case for alert buttons and many controls (`Get Started`, `Done`, `Allow Once`). If you are building a SwiftUI or Catalyst app, sentence-case buttons will read as foreign in a way they never do on the web. The web default and the Apple-platform default genuinely differ; consistency inside the platform beats consistency with this file.
 
+**Two archetypes make the `please` / `sorry` gradient a hard ban, and they are right to.** [`healthcare-clinical`](../archetypes/healthcare-clinical.md) and [`institutional-civic`](../archetypes/institutional-civic.md) ban `please`, `sorry`, `valid`/`invalid` and `oops` outright, because in those domains a softened error produces a wrong record and a wrong record is a denied claim or a missed diagnosis. Everywhere else:
+
 **"Never say `please`, `sorry`, or `Are you sure`" is stated more absolutely than the evidence supports.** GOV.UK bans them, Atlassian bans `please` and `sorry` explicitly (*"saying 'please' can undermine the authority and credibility of your message and lead people to think a required step is optional"*), and I agree with both. But measured: 399 uses of `please` and 209 of `Are you sure` across four shipped products. Use this as a quality gradient, not a law — and never argue the point with an engineer by claiming real products don't do it. They do. The argument is that the ones with the best copy don't.
 
 **"Errors should be short" is wrong for:** anything the user must act on outside your product. A string like `Reconnect Google Drive` is short and useless if the person does not know that reconnecting happens in Settings → Integrations and requires admin rights. Atlassian's own rule allows for this: keep the message to 1–2 sentences, then link — but the link must be the *action*, not "learn more".
@@ -1112,11 +1203,24 @@ Every rule above has a domain. These are the boundaries.
 - Multi-user consequences: deleting something other people depend on.
 - Regulated flows where an explicit acknowledgement is the audit artefact.
 
-**Five rules in this file invert under load, and the scope is stated where the rule is** — read them there before applying the rule to anything at scale: naming the object in a **confirm-dialog title** (breaks on long names, bulk selections, and screens that get recorded); **echoing the query** into a filtered empty state (an XSS sink, a layout bomb, and a disclosure on shared screens); **`verb + object + name` on every icon-only control** (inverts above ~20 repeated table rows, where it slows the screen-reader user it was written to help); **reusing the label's words** in an error (generates sixteen-word errors from question-style labels — reuse the distinguishing noun instead); and **front-loading the actor** in a notification (wastes the whole visible budget when the actor is a bot that sends every notification).
+### Three ways this file makes copy worse, and the correction for each
+
+The scopes above are about *rules that invert*. These three are different: they are cases where an agent applies this file correctly, in good faith, and produces a worse string than the generic one it replaced. Each has fired in real review.
+
+**1. Terse where the reader needed the reassuring fact.** This file's centre of gravity — delete the success message, no exclamation marks, `Changes saved` beats `Your changes have been saved` — is calibrated for a competent user doing routine work. Apply it to someone frightened and it strips the only sentence they were reading for. `Payment declined.` is correct, three words, and cruel: the user's actual question is *have I been charged twice.* Same for a medical result, a rejected benefits claim, a failed transfer on the day rent is due, a bereavement flow.
+**The correction is not adjectives, and this is the part agents get backwards.** Warmth in this register is a *fact*, not a tone: name the thing the reader is afraid of and say what is true about it. `Your payment didn't go through — your bank declined it, and you haven't been charged.` is fourteen words longer than the terse version, contains no adjective and no exclamation mark, and the whole value is the last clause. Compare [`../archetypes/fintech-consumer.md`](../archetypes/fintech-consumer.md)'s `Your money's on the way. It'll land by Friday.` and [`../archetypes/creative-tool.md`](../archetypes/creative-tool.md)'s `Couldn't export — the file is still saved.` Both are warmer than anything this file's rules would generate and neither adds a single adjective. **Test: if the reader is anxious, one clause must answer "what is the damage".**
+
+**2. Domain jargon where the reader needed plain language.** "Reuse the field's own words" and "use the user's words" are the same rule pointed at two different people, and [`../archetypes/internal-utility.md`](../archetypes/internal-utility.md) makes the sharper version explicit — use the real vocabulary the team says in Slack (`chargeback`, `hard bounce`, `dunning`), because inventing friendlier synonyms for words your users already own makes the tool harder. **That is right for an operator and catastrophic one surface over.** The failure is an agent reading both files and carrying the operator's vocabulary onto a customer screen: a patient portal writing `Your specimen was hemolyzed`, a consumer bank writing `Returned — R01`, a shipping app writing `Exception scan at origin facility`. Each is the correct term, sourced from the domain, and unreadable by the person it is shown to.
+**The correction: "the user's words" means the words of the person reading *this* string, and the operator's vocabulary and the customer's vocabulary are two different string files.** Where one string serves both, lead with plain and carry the code in parentheses so the support call still works: `Your transfer was returned — there wasn't enough money in the account (code R01).` [`../archetypes/fintech-institutional.md`](../archetypes/fintech-institutional.md)'s `Returned — R01 Insufficient funds.` is correct *because its reader is an operations analyst*, not because the code belongs everywhere.
+
+**3. Specific where the honest answer is that you do not know.** This file pushes hard for numbers — "if you cannot find a number to put in it, you usually do not know enough about the situation" — and for a named cause in every error. Aimed at a genuinely unknown state, that instruction manufactures precision: `Deploy queued — this usually takes about 2 minutes` written by an agent with no such measurement is an invented statistic, which is this file's own §anti-pattern 13. The same failure produces an ETA on a queue with no depth signal, a percentage the code cannot compute, and a cause on a 500 the server never classified.
+**The correction: the ban on fabricated numbers outranks the demand for numbers, and "unknown" is a state you write, not a gap you fill.** Say what is known, name what is not, and say what you are doing: `Still importing — 1,240 of 3,500 done. We don't have an estimate for the rest yet.` `Couldn't save. The server didn't say why; your draft is still here. Reference 8FQ2-40B1.` This is the copy half of a rule this file already states numerically: `—` for unknown, `0` for zero, never one glyph for both. Extend it to prose — **an honest "we don't know yet" is a specific string; a plausible number is not.**
+
+**Eight rules in this file invert under load, and the scope is stated where the rule is** — read them there before applying the rule to anything at scale: naming the object in a **confirm-dialog title** (breaks on long names, bulk selections, and screens that get recorded); **echoing the query** into a filtered empty state (an XSS sink, a layout bomb, and a disclosure on shared screens); **`verb + object + name` on every icon-only control** (inverts above ~20 repeated table rows, where it slows the screen-reader user it was written to help); **reusing the label's words** in an error (generates sixteen-word errors from question-style labels — reuse the distinguishing noun instead); **front-loading the actor** in a notification (wastes the whole visible budget when the actor is a bot that sends every notification); **terseness** (strips the reassuring fact from a frightened reader); **the user's words** (carries operator jargon onto a customer screen); and **demanding a number** (manufactures a fabricated one where the honest answer is unknown).
 
 **"Personality is bad in tools" is wrong for:**
 - The one or two places a product can afford to be human: the 404 page, the first-run empty state, the changelog. Linear's changelog heading is literally `Now`.
-- Teams whose users chose them partly for the voice. Raycast's `It's not about saving time.` is doing brand work that a neutral string could not.
+- Teams whose users chose them partly for the voice. Raycast's `It's not about saving time. It's about feeling like you're never wasting it.` (verified live, 2026-09-10) is doing brand work a neutral string could not — while being the exact construction §taxonomy 11 tells you to delete. **The reconciliation: the ban is on negation used as a substitute for evidence.** Raycast's second clause *is* the evidence, and it names a feeling no other launcher is claiming. One instance, load-bearing, is voice. Four is a signature.
 
 ---
 
@@ -1130,7 +1234,7 @@ Every rule above has a domain. These are the boundaries.
 | 4 | Empty state with an illustration, a paragraph, and a `Create New Item` button — shown on a filtered list | The model writes one empty state and reuses it | Branch on cause: first-run vs. filtered vs. successfully-empty vs. blocked. Only the first gets teaching copy |
 | 5 | `Success!` toast after every action | Symmetry instinct: every action gets feedback | Delete it when the state change is visible. Keep it for invisible, delayed, or irreversible results |
 | 6 | `Are you sure?` / `Cancel` / `Confirm` | Dialog template with no knowledge of the object | Title = the question with the object named; body = the quantified consequence; button = the verb |
-| 7 | Em dash in every second sentence | The model's default connector | 2.4 per 1,000 words marketing, 0.0–0.5 in-product, re-confirmed at 2.5 in 2026-09. Convert each to a period, colon or comma and delete the filler clause |
+| 7 | Em dash in every second sentence | The model's default connector | 2.4 per 1,000 words marketing, 0.0–0.5 in-product, re-confirmed at 2.5 in 2026-09. Convert each *connector* to a period, colon or comma and delete the filler clause. **Count connectors, not glyphs** — the `label — detail` separator is conventional. And treat this as house style, not detection: em-dash suppression shipped in GPT-5.1, and both AI builders measured in §7b score zero |
 | 8 | ✨ 🚀 🎉 in headings and buttons | Emoji read as "friendly" in training data | Zero across 20,282 words of real product copy — and now a **stale detector**; the live problem is the sparkle *icon* on AI entry points. Delete the emoji; name the AI action instead of badging it |
 | 9 | Tricolon adjective headlines (`Fast. Simple. Secure.`) | Rhythm mistaken for argument | Each member must be concrete and different in kind, or collapse to one claim with evidence |
 | 10 | Placeholder used as label | Shorter markup, looks tidy in a mock | Real `<label>`; placeholder carries format only (`you@example.com`) |
@@ -1147,7 +1251,7 @@ Every rule above has a domain. These are the boundaries.
 | 21 | Notification copy: `You have a new notification` | No access to the event's content | Actor + verb + object, front-loaded for truncation |
 | 22 | Every heading a category label (`Overview`, `Features`, `Benefits`) | Structure without content | A heading either names a place (nav, docs) or states something true. Never a claim-shaped nothing |
 | 23 | `aria-label="button"`, `aria-label="More"` ×6, or no accessible name at all on icon buttons | The invisible string is not in the mock, so it is never reviewed | `verb + object + name`: `Actions for folder meta-monitoring`. Every accessible name on a page must be unique |
-| 24 | Numbers formatted in the visible text but raw in `aria-label`, tooltips, badges and page titles | The formatter is applied at one call site | One formatting layer; every surface reads through it. Shipped counter-example: GitHub's `142216 users starred this repository` |
+| 24 | Numbers formatted in the visible text but raw in `aria-label`, tooltips, badges and page titles | The formatter is applied at one call site | One formatting layer; every surface reads through it. Shipped counter-example: GitHub's raw `142221 users starred this repository` beside a visible `142k` |
 | 25 | `…` and `...` mixed on one screen; empty states punctuated with a trailing ellipsis | Two authors, or one model with no convention | Three periods everywhere, and never on an empty state — an empty state is a finished state |
 | 26 | Marketing voice in an in-product banner: Title Case aphorism, `Effortlessly`, benefit stack | The upsell copy is written by a different pipeline than the product copy | In-product promo takes the product's voice: sentence case, one specific capability, the constraint stated |
 | 27 | A generic `Search...` placeholder on a scoped search box | The placeholder ships as the component default | Name the scope and the fields: `Search by job name, endpoint, or label` |
@@ -1164,6 +1268,8 @@ Every rule above has a domain. These are the boundaries.
 | 33 | Five feature headings in one grammatical frame (`Hosting, handled` · `Payments, processed`) | Generated as a set in one call, so the set is uniform | Break at least one member of every set of three or more in shape and in length. Live example: lovable.dev's own homepage ships five |
 | 34 | Case drift inherited from the generator (`New Chat` beside `Browse all`) | v0.app and bolt.new drift on their own surfaces; the agent pattern-matches its tooling | One convention, linted. Excalidraw enforces one and has 0 case-duplicate pairs; Mattermost enforces none and has 101 |
 | 35 | Passing the 2023 checklist and shipping anyway | `delve`, ✨, `powerful yet simple` now measure zero on real *and* generated copy, so a clean sweep proves nothing | Re-derive the word list from a fresh corpus annually (§7a). The durable test is structural: could a competitor's name be swapped into this sentence unchanged? |
+| 36 | Cadence uniformity — every sentence 15–25 words, paragraph after paragraph | Nothing in generation has a reason to vary sentence length | The Economist, 2026-08, 55,940 sentences: the strongest surviving signal. Measure sentence-length standard deviation (§taxonomy 26); break the rhythm on purpose |
+| 37 | `and`-chaining, with commas, semicolons and parentheses missing | Models under-punctuate and lean on `and` as the only connector | Punctuate the hierarchy already in the sentence: parentheses for the aside, colon for the consequence, period for the independent clause. Do **not** fix it with em dashes |
 
 ---
 
@@ -1195,7 +1301,7 @@ S=locales/en.json      # or: S=src/
 | 12 | 2026 vocabulary | `grep -rniE 'agentic\|ai-powered\|ai-native\|intelligent\|"AI [A-Z]' $S` | each hit survives "could a competitor swap their name in?" |
 | 13 | Blanket AI disclaimer | `grep -rniE 'can make mistakes\|check important info\|may be inaccurate\|double-check' $S` | ≤1 occurrence, at the feature boundary |
 | 14 | Chat loading copy | `grep -rniE 'loading\.\.\.\|please wait\|thinking[.…]' $S` | 0 |
-| 15 | Ellipsis form mixed | `grep -rc '…' $S; grep -rc '\.\.\.' $S` | one of the two totals is 0 |
+| 15 | Ellipsis **meaning** mixed | `grep -rniE '"[^"]*(ing\|s)(\.\.\.\|…)"' $S` (in-progress form) vs `grep -rniE '"[^"]*(to\|until\|as\|from)(\.\.\.\|…)"' $S` (second-step form) | each meaning uses one glyph consistently, and the in-progress form never appears on a finished state |
 | 16 | Ellipsis on an empty state | `grep -rniE '"No [^"]*(\.\.\.\|…)"' $S` | 0 |
 | 17 | Hand-rolled plurals | `grep -rniE "\?[[:space:]]*'' *: *'s'\|\? *\"\" *: *\"s\"\|\+ *'s'" $S` | 0 |
 | 18 | Unformatted interpolated numbers | `grep -rniE '\{[a-z_.]*(count\|total\|amount\|price\|qty\|num\|size)[a-z_.]*\}' $S \| grep -viE 'format\|intl'` | 0 |
@@ -1209,13 +1315,15 @@ S=locales/en.json      # or: S=src/
 | 26 | First person outside filters | `grep -rnE '\bMy [A-Z]' $S` | 0 except `Assigned to me` / `Created by me` |
 | 27 | **Label length budget** | `python3 -c "import re,json,statistics as st;d=json.load(open('$S'));v=[x for x in d.values() if isinstance(x,str) and len(x.split())<=4 and '{' not in x and x[-1:] not in '.?!'];print(len(v),'labels, median',st.median(map(len,v)),'chars, mean',round(st.mean([len(x.split()) for x in v]),2),'words')"` | median **11–15 chars**, mean **≤2.4 words** |
 | 28 | CTA monotony | `grep -rhoiE '"get started"' $S \| wc -l` | ≤1 per page |
-| 29 | **Tell sweep** | see the single command below | each survivor justified out loud |
+| 29 | **Cadence uniformity** (§taxonomy 26) | `python3 -c "import re,statistics as st;s=[len(x.split()) for x in re.split(r'(?<=[.!?]) +',open('$S').read()) if x.strip()];print(len(s),'sentences, mean',round(st.mean(s),1),'sd',round(st.pstdev(s),1))"` | sd is a meaningful fraction of the mean, not a fifth of it |
+| 30 | **Structural swap test** | none — read it | swap your product name for a competitor's. If the page still reads correctly, the copy says nothing |
+| 31 | **Tell sweep** | see the single command below | each survivor justified out loud |
 
 ```bash
 grep -rniE 'seamless|effortless|unlock|supercharg|revolution|empower|elevate|leverag|streamlin|robust|cutting.edge|game.chang|next level|powerful yet simple|simple yet powerful|everything you need|built for modern|all.in.one|in today.s|we.re excited to announce|delve|agentic|ai.powered|ai.native|world.class|best.in.class|state.of.the.art|next.generation' $S
 ```
 
-The 2023 half of that list (`delve`, `powerful yet simple`, ✨) now measures zero on real *and* generated copy, so a clean sweep proves nothing on its own. Checks 3, 10, 11, 12 and 27 are the ones that actually fire in 2026.
+The 2023 half of that list (`delve`, `powerful yet simple`, ✨) now measures zero on real *and* generated copy, so a clean sweep proves nothing on its own. **Proof, measured 2026-09-10: v0.app and bolt.new score a perfect zero on checks 8, 9, 10 and 31 while shipping the copy quoted in §7b and drill three.** Checks 3, 11, 12, 27, 29 and 30 are the ones that fire in 2026, and 30 is the only one that cannot be gamed.
 
 ### B. Screenshot checks — answerable from a PNG
 
@@ -1245,3 +1353,97 @@ Render at 1440 and 390 (`node $UI_LIBRARY/tools/shot.mjs <url> --widths 1440,390
 | 20 | The whole shot | Count em dashes | more than one per screen of body copy |
 
 If a string survives all of that and still reads like nobody in particular wrote it, the problem is one level up: you do not yet know what the product does that its competitor does not, and no amount of rewriting will produce that sentence.
+
+---
+
+## Adversarial pass (2026-09)
+
+First adversarial review of this file. Method: re-fetch every quoted product string, re-run every
+computable value, read all 20 `## Copy register` sections in [`../archetypes/`](../archetypes/), and
+search the AI-copy detection literature published since 2026-03. Date of record: **2026-09-10**.
+
+### What changed
+
+**Corrected — four stale or wrong quotes.**
+
+1. **GitHub's star-button accessible name appeared with two different integers in this file** (`142215` in §11, `142216` two sections later). One fact, two numbers, which is exactly the defect this corpus exists to prevent. Re-measured live on `vercel/next.js`: `aria-label="142221 users starred this repository"` beside a visible `142k` in the header **and** `142.2k` in the sidebar. The count drifts hourly, so the file now quotes the *pattern* and the three-renderings finding, never the integer.
+2. **GitHub pricing.** §6 read `$ 0 USD per user/month` for the Free plan. Live it is `$ 0 USD per month` — the unit changes between adjacent cells, which turns out to be the more useful observation.
+3. **v0's AI-input placeholder.** The file claimed `Ask v0 to build…`. Not present 2026-09-10; v0's composer has no placeholder and sits under the heading `What do you want to create?`. bolt.new ships an *animating* placeholder instead, which is worse than a generic one.
+4. **Raycast's `It's not about saving time.`** was quoted in two places as a model heading — while §taxonomy 11 calls that construction the single most persistent 2026 tell. The file was praising and banning the same sentence. Verified live: the full string is `It's not about saving time. It's about feeling like you're never wasting it.` Both places now carry the reconciliation — the ban is on negation substituting for evidence, and Raycast's second clause *is* the evidence.
+
+**Added — evidence that did not exist in the file.**
+
+- **§7b, the generators' own homepages, measured.** v0.app (332 words) and bolt.new (419 words) both score **zero** em dashes, zero exclamation marks, zero emoji, zero `delve` — a perfect pass on every punctuation and lexical detector in this file — while shipping `Everything you need to scale Built in.`, `Empowering product builders with the most powerful coding agents`, `Enterprise-grade` as a feature heading, `98% less errors`, and `Agentic by default`. That last one is the same `<abstract noun> by default` frame two unrelated v0 *templates* independently shipped as `Global by default.` The detector set is not merely stale; on these two pages it is anti-correlated with the thing it detects.
+- **§7c, the outside literature.** The Economist (2026-08) compared its own articles to ChatGPT, Claude, Gemini and Grok across **55,940 sentences / 1.2M words** and named four tells: cadence uniformity, under-punctuation with `and`-chaining, `it's not X, it's Y`, and the rule of three. Two were already here; the other two are now §taxonomy 26 and 27 and self-check 29. Separately, em-dash suppression shipped as a user control in GPT-5.1 (2025-11), so §taxonomy 9 is now stated as house style rather than as detection.
+- **Drill three: eleven verbatim generated strings, sharpened.** Nine captured live on 2026-09-10, two from this corpus's template sampling. Nine of the eleven rewrites are longer than the original, and every one contains a fact the writer had to go and find.
+- **Three ways this file makes copy worse**, in `When this advice is wrong`: terseness stripping the reassuring fact from a frightened reader; "the user's words" carrying operator jargon onto a customer screen; and the demand for a number manufacturing a fabricated one where the honest answer is unknown. The "rules that invert under load" list goes from five to eight.
+
+**Reconciled — four places the corpus contradicted itself.** In every case the fix is here, not in the archetype file, because the archetype file was right about its own domain and this file had over-generalised.
+
+| Conflict | Other file | Resolution |
+|---|---|---|
+| Ellipsis: "pick three periods, lint the glyph" | [`technical-productivity`](../archetypes/technical-productivity.md) prescribes `Assign to…` | **Standardise the meaning, not the glyph.** Two ellipses exist — in-progress and second-step. One glyph per meaning; the lint that matters is that the in-progress form never lands on a finished state |
+| `sorry` banned outright | [`editorial`](../archetypes/editorial.md) ships the Guardian's `Sorry — we haven't been able to serve the page…` as a *good* example | The ban holds where the user is blocked mid-task with an action to take. Apologise for outages, 404s and data loss you caused; never for an empty field |
+| "Relative for recency" | [`data-terminal`](../archetypes/data-terminal.md) explicitly inverts it | Scoped: on monitoring, incident and log surfaces, absolute to the domain's resolution with the zone printed. `data-terminal.md` is the authority there |
+| Em-dash rate | Six archetype registers prescribe `fact — detail` strings | **Count connectors, not glyphs.** The separator is conventional; the clause-joining connector is the tell |
+
+The tone-by-archetype table now names the archetype files it summarises, states precedence
+(the archetype file wins for its own archetype), and gains a sixth row — **composed voice**
+(`luxury`, `editorial`, `premium-marketing`, `premium-minimal`, `creative-tool`) — which the
+five-row version had no home for, and which is the one group where full sentences with subordinate
+clauses are correct.
+
+**Cut.** Four measurements that were stated a third time in a section that already pointed at the
+table holding them (`agentic` rates, German expansion, compact rounding, and §12's closing claim,
+now better made by §7b). **The file should stay long.** It is dense with values that are load-bearing
+individually, and the length audit found restatement rather than filler; cutting to a target would
+have removed specifics an agent needs at the point of decision. The right compression already exists
+in the file's shape — the five-item summary at the top and the self-check at the bottom.
+
+### What I tried to shake and could not
+
+- **The `Intl` tables in §5 reproduce byte-for-byte** on Node 24, all eight locales, both the format
+  table and the compact table, plus `Intl.PluralRules` classifying 2 as `other`/`few`/`few`. This is
+  the durable half of START-HERE's split, confirmed.
+- **§7a's per-site em-dash shape held on a fresh scrape.** Stripe 6.3/1k (was 6.7), Linear **0.0**
+  with 2 `!`, Vercel 0.0, Mercury 7.6 (was 4.5 — same seven em dashes, 600 fewer words on the page).
+  Zero-versus-non-zero is stable; the decimal is not, and the file now says so. Below about 2 per
+  1,000 words, per-site rates are inside the noise of what a scraper counts as body text.
+- **Excalidraw's first-run screen is verbatim unchanged**, all three risk-disclosure sentences, the
+  four menu items and both hand-drawn annotations. Still the best shipped counter-example to
+  benefit-carousel onboarding in this corpus.
+- **Case drift on the generators' own surfaces, re-verified at 1440px.** v0.app: `New Chat` · `Log In`
+  · `Sign Up` · `View Details` · `Get Started` beside `Browse all`. bolt.new: `Sign in` beside
+  `Get Started` in one nav bar, confirmed in the screenshot.
+- Live and unchanged: Supabase `Build in a weekend. Scale to millions.`, Railway
+  `Ship software peacefully`, Fly.io `Computers for agents`, Attio
+  `Picks up leads at 2am. Catches renewals before they slip.`, Stripe `2.9% + 30¢`, GitHub's
+  `Start free for 30 days` / `Join for free` / `Continue with Team` / `Contact Sales`, Mercury's
+  ambitious-entrepreneurs line, Linear's `product development system` headline.
+
+### What I could not verify, and you should not trust until someone does
+
+- **Lovable's five parallel headings** (`Hosting, handled` · `Payments, processed` · …), the measured
+  example under §taxonomy 24 and anti-pattern 33. lovable.dev now sits behind a Cloudflare bot
+  challenge that blocks both fetch and headless browser. The *pattern* is independently confirmed on
+  v0.app and bolt.new, so the row stands on other evidence; the specific five strings are as of the
+  original pass and unre-checked.
+- **One Medical's headings** (§Headings table, tone table healthcare row). onemedical.com returned a
+  CloudFront `403 ERROR — The request could not be satisfied.` from this network. Unverified.
+- **ChatGPT, Gemini and Perplexity input placeholders.** All three bot-blocked. Only the v0 claim was
+  re-measurable, and it was the one that had gone stale — treat the other three as of the original
+  pass.
+- **Figma's login error, Supabase's signup errors, Grafana's in-product banner and the GitHub empty
+  states.** These require submitting a form or holding a session, which this pass did not do. They
+  were captured live in an earlier pass and are unre-checked here.
+- **The Economist's per-model figures.** The study's headline findings and corpus size are reported
+  consistently across secondary coverage, but the article itself is paywalled, so the four named
+  tells are cited without their underlying per-model numbers. Treat the direction as sound and the
+  magnitudes as unverified.
+
+### The one thing that would change this file most
+
+Every check in the self-check that a 2023 tell list would have run now passes on the copy this file
+exists to prevent. The next pass should stop adding words to the sweep and instead build the
+structural checks — cadence variance, the competitor-name swap, the canned-phrase collision across
+two independently generated pages — into something an agent runs rather than reads.

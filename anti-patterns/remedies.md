@@ -28,30 +28,44 @@ Default idiom is **Tailwind v4 + React**. Framework-agnostic equivalents are giv
 summarized at the end. Tailwind v4 has no `tailwind.config.js` — tokens are CSS custom properties
 inside `@theme`, so every remedy here is portable to plain CSS by deleting the `@theme` wrapper.
 
+**Variable syntax, and it is not cosmetic.** Every class here that reads a custom property is
+written `text-(--color-fg-muted)`, not `text-[--color-fg-muted]`. The bracket form is v3. Compiled
+against `tailwindcss@4.3.3`, `text-[--color-fg-muted]` emits `color: --color-fg-muted` — an invalid
+declaration the browser drops, so the element silently falls back to `currentColor` and inherits
+near-black. See [§15.5](#155-three-tailwind-v4-gotchas-that-produce-visible-defects).
+
 ---
 
 ## The 10-minute polish pass
 
-Run this in order on anything you just built. It is sorted by **perceived quality gained per
-minute spent**, which is not the same as sorted by importance. Steps 1–4 are mechanical and take
-seconds; they are first because they are cheap, not because they matter most. Step 11 matters
-most.
+Run this in order on anything you just built, skipping any step whose tell is not present. It is
+sorted by **perceived quality gained per minute spent**, which is not the same as sorted by
+importance — step 11 matters most and is last.
+
+**The ordering is tested, and it changed.** A generic dashboard (purple-blue gradient hero,
+`shadow-md` KPI cards, `rounded-xl`, three neutral families, two gradient buttons) was rendered,
+then two 2½-minute edits were applied to separate copies and screenshotted at 1200px: one applying
+*shadows → neutrals → radius*, the other applying *gradients → shadows → button hierarchy*. The
+first is nearly indistinguishable from the baseline — the gradient hero dominates the read and the
+radius change is invisible at page scale. The second is a different-looking product. Surface
+grammar (radius, neutral family) is real but it is **low-amplitude**; it cannot be seen until the
+high-amplitude tells are gone. So the high-amplitude, one-line deletions go first.
 
 | # | Change | Time | Why it is this high |
 |---|---|---|---|
-| 1 | Delete every `shadow-*` that is not on a floating layer (dropdown, popover, dialog, toast, drag ghost). Replace with `border`. | 30s | The resting-card drop shadow is the single most reliable AI tell. |
-| 2 | Replace every `gray-*` / `slate-*` with **one** neutral family, chosen once. Delete the other two families you accidentally used. | 60s | Mixed neutral families produce a faint colour disagreement a designer sees instantly. |
-| 3 | Set exactly one `--radius` and derive the rest from it. Delete every `rounded-*` that is not derived. | 60s | Four unrelated radii in one screen reads as assembled, not designed. |
-| 4 | Kill every gradient that is not a scrim, a chart fill, or a deliberate hero. `bg-gradient-to-r from-blue-500 to-purple-600` → a flat brand colour. | 30s | Purple-blue gradient is the highest-recognition tell in existence. |
-| 5 | Icons: add `.lucide, [class*="tabler-icon"] { stroke-width: 1.5 }` to your CSS, and drop every `size-5`/`size-6` icon sitting next to 13–14px text to `size-4`. | 30s | lucide's default is a 2-unit stroke on a 24 grid rendered at 16px = a **1.33px** line. Nothing else on the screen is 1.33px. §13. |
-| 6 | Body copy 16px → 14px on any surface that is a control panel, and drop every vertical padding one step (`py-4` → `py-2.5`). | 90s | Default output runs 30–40% too airy. See §7 for per-archetype multipliers. |
-| 7 | Replace all placeholder content with real, *varied*, domain-specific content: real names, real amounts with different digit counts, real timestamps at irregular intervals, one item with an ugly long name. | 3 min | Highest ratio in the list after §11. Uniform fake data is visible from across the room. |
-| 8 | One filled button per view. Demote the rest to ghost/text at the **same height**. | 60s | Two primaries means no primary. |
-| 9 | Add `:focus-visible` rings if you removed them, and a `disabled` + `:active` state to the primary action. | 60s | Missing states is what makes a build feel like a mockup. |
-| 10 | Rewrite the three most-visible strings using §9's moves. Headline, primary button, empty state. | 2 min | Copy is 30% of perceived design quality and 0% of most build effort. |
-| 11 | Give the app's **primary object** more visual weight than its chrome, and add one signature decision drawn from the domain. | rest of the budget | §11. Everything above is subtraction; this is the only addition. |
+| 1 | Kill every gradient that is not a scrim, a chart fill, or a deliberate one-per-page hero. `bg-gradient-to-r from-blue-500 to-purple-600` → a flat brand colour. | 30s | Highest-amplitude tell that exists, and one of the cheapest to delete. In the render test it accounted for most of the visible difference on its own. |
+| 2 | Delete every `shadow-*` that is not on a floating layer (dropdown, popover, dialog, toast, drag ghost). Replace with `border`. | 30s | The resting-card drop shadow is the single most reliable AI tell. |
+| 3 | One filled button per view. Demote the rest to ghost/text at the **same height**. | 60s | Two primaries means no primary — and a second filled button is as loud on the page as the gradient was. |
+| 4 | Replace every `gray-*` / `slate-*` with **one** neutral family, chosen once. Delete the other two families you accidentally used. | 60s | Mixed neutral families produce a faint colour disagreement a designer sees instantly. |
+| 5 | Add `:focus-visible` rings if you removed them, and a `disabled` + `:active` state to the primary action. | 60s | Missing states is what makes a build feel like a mockup. Invisible in a screenshot, unmissable in the hand — this is why it is not lower. |
+| 6 | Icons: add `.lucide, [class*="tabler-icon"] { stroke-width: 1.5 }` to your CSS, and drop every `size-5`/`size-6` icon sitting next to 13–14px text to `size-4`. | 30s | lucide's default is a 2-unit stroke on a 24 grid rendered at 16px = a **1.33px** line. Nothing else on the screen is 1.33px. §13. |
+| 7 | Body copy 16px → 14px on any surface that is a control panel, and drop every vertical padding one step (`py-4` → `py-2.5`). | 90s | Default output runs 30–40% too airy. See §7 for per-archetype multipliers — and §7.4 for where this is wrong. |
+| 8 | Replace all placeholder content with real, *varied*, domain-specific content: real names, real amounts with different digit counts, real timestamps at irregular intervals, one item with an ugly long name. | 3 min | Highest ratio in the list after §11. Uniform fake data is visible from across the room. Do not invent numbers you cannot source — see §11.1a. |
+| 9 | Rewrite the three most-visible strings using §9's moves. Headline, primary button, empty state. | 2 min | Copy is 18% of the rubric and 0% of most build effort. |
+| 10 | Set exactly one `--radius` and derive the rest from it. Delete every `rounded-*` that is not derived. | 60s | Four unrelated radii reads as assembled, not designed — but only once the loud tells are gone. |
+| 11 | Give the app's **primary object** more visual weight than its chrome, and add one signature decision drawn from the domain. | rest of the budget | §11. Everything above is subtraction; this is the only addition, and it is the one the rubric weights at 20. |
 
-If you have 60 seconds and not 10 minutes, do 1, 2, 4, 5.
+If you have 60 seconds and not 10 minutes, do 1, 2, 3.
 
 If what you just built is a **form**, do [§14.2](#142-correction-1--four-roles-need-four-treatments)
 and [§14.3](#143-correction-2--the-ring-not-the-border) before anything in that table — they beat
@@ -60,6 +74,44 @@ every general fix on that one surface. If it is a **phone layout**, do
 
 **Verify by rendering.** `node $UI_LIBRARY/tools/shot.mjs <url> --widths 1440,390` and open the
 PNGs. You cannot see any of this in JSX.
+
+---
+
+## Where these remedies stop
+
+Every remedy in this file is a correction to an *over*-application. Applied as a rule rather than a
+correction, each one produces a worse interface than the default it replaced. These three do the
+most damage, because each is stated as a memorable absolute somewhere in the corpus:
+
+**1. "Don't use cards" (§1) stops at the object grid.** The rule is *a card is a claim that
+something is an independently actionable object* — it is not "no cards". A marketplace listing
+grid, a file browser, a kanban board, a photo library, a template gallery and a product catalogue
+all fail de-carding badly: each tile is separately clickable, separately selectable, holds mixed
+content types, and is the thing the page is *about*. De-carding those produces a divided list of
+text where the user came to compare things by looking at them. The correct move on an object grid
+is a **borderless** card (image is the boundary, no shadow, no `p-6`) — §11.2 C is the worked
+example. Run §1.2's three tests; if the thing passes, keep the card and cut the decoration instead.
+
+**2. The density multipliers (§7.1) stop at N < 10 rows, at touch, and at anything done once.**
+They are calibrated on Work- and Scan-archetype surfaces with hundreds of rows. A 28px row list of
+five items looks cheap, not dense. A checkout, an onboarding step, an error-recovery screen and a
+confirmation dialog should all be roomier than the generated default, not tighter. And the
+multipliers cost something even where they are right: mis-click rate and reading time both rise as
+rows tighten, which is a trade a six-hours-a-day operator will take and a once-a-quarter user will
+not. §7.4 is not optional reading.
+
+**3. "Nothing moves on hover" (§12.1) is a rule about *lists and chrome*, not about the page.**
+It exists because a `hover:-translate-y-1` on a row makes a list unstable under a moving cursor.
+It does not mean a marketing card cannot lift, that a drag handle cannot follow the pointer, that a
+carousel cannot slide, or that a disclosure chevron cannot rotate. Direct manipulation is motion's
+actual job (§12.4). The failure the rule targets is *decorative* transform on *repeated, scannable*
+elements — apply it there and stop.
+
+And the cost that applies to all three: **every deletion in this file removes a signal as well as
+noise.** A shadow was doing some grouping work; a card border was an affordance that said "click
+me"; hover motion was feedback. If you delete one, the job it was doing has to move somewhere —
+usually to spacing, a background shift, or a colour change. Deleting without relocating the job is
+how a de-vibecoded interface ends up merely flat.
 
 ---
 
@@ -107,7 +159,7 @@ and something feels off, find the row, apply the fix, move on.
 | 34 | `<Label>` 14px, input 14px, help 14px, error 14px, all `gap-2` | Four roles need four treatments; ring not border; recessed not raised | [14](#14-form-correction) |
 
 Three more that are structural rather than greppable, and matter more than most of the list:
-**no primary object** ([11.3](#113-the-test)), **one density for every surface**
+**no primary object** ([11.3](#113-the-three-tests)), **one density for every surface**
 ([14.5](#145-correction-4--control-size-is-a-property-of-the-surface-not-of-the-app)), and
 **a mobile layout that is the desktop layout with smaller text** ([16](#16-mobile-correction)).
 
@@ -192,15 +244,15 @@ Four numbers that are read together belong in one object, separated by rules, no
 separated by gutters. Vertical dividers, one border, no shadow.
 
 ```tsx
-<div className="grid grid-cols-4 divide-x divide-[--border] rounded-lg border border-[--border]">
+<div className="grid grid-cols-4 divide-x divide-(--border) rounded-lg border border-(--border)">
   {stats.map(s => (
     <div key={s.label} className="px-5 py-4">
-      <div className="text-[13px] leading-5 text-[--fg-muted]">{s.label}</div>
+      <div className="text-[13px] leading-5 text-(--fg-muted)">{s.label}</div>
       <div className="mt-1 flex items-baseline gap-2">
         <span className="text-[22px] leading-7 font-medium tabular-nums tracking-[-0.01em]">
           {s.value}
         </span>
-        <span className={s.delta > 0 ? "text-[13px] text-[--pos]" : "text-[13px] text-[--neg]"}>
+        <span className={s.delta > 0 ? "text-[13px] text-(--pos)" : "text-[13px] text-(--neg)"}>
           {s.delta > 0 ? "+" : ""}{s.delta}%
         </span>
       </div>
@@ -215,15 +267,15 @@ separated by gutters. Vertical dividers, one border, no shadow.
 
 ```tsx
 {/* before: {items.map(i => <Card>…</Card>)} in a grid */}
-<ul className="divide-y divide-[--border-subtle]">
+<ul className="divide-y divide-(--border-subtle)">
   {items.map(i => (
     <li key={i.id}>
       <a href={i.href}
          className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-3 py-2
-                    hover:bg-[--overlay-hover] focus-visible:outline-2
-                    focus-visible:outline-offset-[-2px] focus-visible:outline-[--ring]">
+                    hover:bg-(--overlay-hover) focus-visible:outline-2
+                    focus-visible:outline-offset-[-2px] focus-visible:outline-(--ring)">
         <span className="truncate text-[13px] leading-5">{i.title}</span>
-        <span className="text-[13px] leading-5 text-[--fg-muted] tabular-nums">{i.amount}</span>
+        <span className="text-[13px] leading-5 text-(--fg-muted) tabular-nums">{i.amount}</span>
         <StatusDot status={i.status} />
       </a>
     </li>
@@ -247,21 +299,21 @@ Right when the groups are *different kinds of thing* and comparison is not the p
 ```tsx
 <section className="space-y-10">
   <div>
-    <h2 className="text-[13px] font-medium uppercase tracking-[0.06em] text-[--fg-muted]">
+    <h2 className="text-[13px] font-medium uppercase tracking-[0.06em] text-(--fg-muted)">
       Awaiting review
     </h2>
-    <ul className="mt-3 divide-y divide-[--border-subtle]">{/* rows */}</ul>
+    <ul className="mt-3 divide-y divide-(--border-subtle)">{/* rows */}</ul>
   </div>
 
   {/* the ONE background shift in the view: a full-bleed band, not a card */}
-  <div className="-mx-6 bg-[--surface-sunken] px-6 py-8">
+  <div className="-mx-6 bg-(--surface-sunken) px-6 py-8">
     <h2 className="…">Blocked</h2>
-    <ul className="mt-3 divide-y divide-[--border-subtle]">{/* rows */}</ul>
+    <ul className="mt-3 divide-y divide-(--border-subtle)">{/* rows */}</ul>
   </div>
 
   <div>
     <h2 className="…">Shipped this week</h2>
-    <ul className="mt-3 divide-y divide-[--border-subtle]">{/* rows */}</ul>
+    <ul className="mt-3 divide-y divide-(--border-subtle)">{/* rows */}</ul>
   </div>
 </section>
 ```
@@ -281,7 +333,7 @@ Sometimes the fix is deleting the wrapper.
 {/* after */}
 <section>
   <h2 className="text-[15px] font-medium">Account</h2>
-  <p className="mt-0.5 text-[13px] text-[--fg-muted]">Visible to everyone in the workspace.</p>
+  <p className="mt-0.5 text-[13px] text-(--fg-muted)">Visible to everyone in the workspace.</p>
   <div className="mt-4 max-w-[440px]"><SettingsForm /></div>
 </section>
 ```
@@ -299,6 +351,35 @@ which the `<h2>` already said.
 - **A notification/inbox item that can be dismissed individually.** Actionable and removable.
 - **A dashboard tile the user can reorder or drill into.** If your dashboard genuinely supports
   drag-to-rearrange, the tiles are cards. If it does not, they are numbers.
+
+**And the whole object grid.** A marketplace listing, a file browser, a template gallery, a photo
+library, a product catalogue: every tile is separately clickable and selectable, holds mixed
+content, and is the subject of the page. Applying After B to one of these produces a text list
+where the user came to compare things by looking at them — a strictly worse interface. The move
+there is a **borderless** card: the image is the boundary, and you delete the border, the shadow,
+the radius and the `p-6` rather than the card ([§11.2 C](#c--a-vinyl-record-marketplace-listing-glance-density-consumer)).
+
+## 1.4a What de-carding costs
+
+It is not free, and pretending it is produces the second failure mode.
+
+- **Hit-target legibility.** A card border says "this whole rectangle is one click." A divided row
+  says it less loudly, and on touch it says it barely at all. If you convert a card grid to rows,
+  the row needs a hover fill *and* a press state (`active:`) to replace what the border was doing —
+  on mobile the press state is the only feedback that exists (§16.5).
+- **Squint-distance grouping.** Four bordered boxes are four groups at 20 feet; four divided rows
+  are one. That is the goal when the numbers are a set (After A) and a loss when they are not. If
+  the groups are genuinely unrelated, After C's single background shift is the replacement, not
+  nothing.
+- **Scan cost in a mixed-content list.** Cards tolerate ragged content; rows do not. A de-carded
+  list where one item has a two-line title and the rest have one will look broken in a way the card
+  grid hid. Truncate, or keep the card.
+- **Reorder affordance.** If the thing is draggable, the card *is* the grab surface. Deleting it
+  deletes the affordance.
+
+The rule stands — most generated cards fail all three tests in §1.2 — but each deletion has to
+hand its job to something. Deleting without relocating is how a de-carded page reads as flat rather
+than as edited.
 
 ## 1.5 What the generic version was optimizing for
 
@@ -370,14 +451,14 @@ inner = outer − padding  (only when padding ≥ 12px, i.e. a genuinely inset c
 
 ```tsx
 {/* outer 10, padding 4 → inner 6 */}
-<div className="rounded-[10px] border border-[--border] p-1">
+<div className="rounded-[10px] border border-(--border) p-1">
   <img className="rounded-[6px]" src={cover} alt="" />
 </div>
 
 {/* outer 16, padding 16 → inner 8 (not 0) — the formula overshoots at large padding too;
     stop at the next value down your scale */}
-<div className="rounded-[16px] bg-[--surface-sunken] p-4">
-  <div className="rounded-[8px] border border-[--border] bg-[--surface] p-3">…</div>
+<div className="rounded-[16px] bg-(--surface-sunken) p-4">
+  <div className="rounded-[8px] border border-(--border) bg-(--surface) p-3">…</div>
 </div>
 ```
 
@@ -422,9 +503,9 @@ Sharp corners are not brutalism, they are a density and precision signal.
 
 ```tsx
 {/* right: radius on the frame, none on the tiled children */}
-<div className="overflow-hidden rounded-[10px] border border-[--border]">
+<div className="overflow-hidden rounded-[10px] border border-(--border)">
   <table className="w-full">
-    <tbody className="divide-y divide-[--border-subtle]">{/* no radius anywhere inside */}</tbody>
+    <tbody className="divide-y divide-(--border-subtle)">{/* no radius anywhere inside */}</tbody>
   </table>
 </div>
 ```
@@ -521,7 +602,7 @@ everything else already is.
 ```
 ```tsx
 // after
-"outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--color-ring]"
+"outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-ring)"
 ```
 `outline` over `ring` because `outline` follows `border-radius` in every current browser, does not
 participate in layout, and cannot be clipped by an ancestor's `overflow-hidden` — which is exactly
@@ -546,7 +627,7 @@ hydration. See §12.
 //   content "... data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 duration-200"
 // after:
 // overlay
-"bg-[--overlay-scrim]"                 // e.g. rgba(9,9,11,0.45) — tinted to your neutral, not pure black
+"bg-(--overlay-scrim)"                 // e.g. rgba(9,9,11,0.45) — tinted to your neutral, not pure black
 // content
 "data-[state=open]:animate-in data-[state=open]:fade-in-0
  data-[state=open]:slide-in-from-bottom-1 duration-150 ease-out"
@@ -802,7 +883,20 @@ both at 10%, blur only 1.5× the offset. It reads as a sticker peeled off the pa
 
 Usage:
 ```tsx
-<div className="shadow-[--shadow-e2] rounded-[10px] bg-[--surface] p-1">{/* popover */}</div>
+<div className="shadow-(--shadow-e2) rounded-[10px] bg-(--surface) p-1">{/* popover */}</div>
+```
+
+**What a ring-first elevation system costs.** The whole shadow — ring included — is forced to
+`none` in forced-colors mode and dropped by most print stylesheets, so a floating layer whose only
+boundary is `--shadow-e2` loses its edge and merges into whatever is behind it. Same fix as the
+field primitive ([§14.3](#143-correction-2--the-ring-not-the-border)): one guarded border on the
+floating surfaces.
+
+```css
+@media (forced-colors: active), print {
+  [data-slot="popover-content"], [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"], [role="menu"], [role="listbox"] { border: 1px solid; }
+}
 ```
 
 ## 4.3 When a border beats a shadow — the decision rule
@@ -821,7 +915,7 @@ float, so it gets a border. The `<Select>` *menu* floats, so it gets `--shadow-e
 table header is attached, so `--shadow-e1` — and only once it has actually stuck:
 
 ```tsx
-<thead className="sticky top-0 z-10 bg-[--surface] shadow-[--shadow-e1]">
+<thead className="sticky top-0 z-10 bg-(--surface) shadow-(--shadow-e1)">
 ```
 
 ## 4.4 Dark-mode elevation: lightness, not shadow
@@ -902,7 +996,7 @@ it is doing the whole job, which is why the text on it is never quite legible.
 ```tsx
 // after — the shape apple.com's nav actually has
 <header
-  className="sticky top-0 z-30 border-b border-[--color-border-subtle]
+  className="sticky top-0 z-30 border-b border-(--color-border-subtle)
              bg-[color-mix(in_oklab,var(--color-bg)_92%,transparent)]
              supports-[backdrop-filter]:bg-[color-mix(in_oklab,var(--color-bg)_72%,transparent)]
              supports-[backdrop-filter]:backdrop-blur-[20px]">
@@ -949,9 +1043,9 @@ to 1.
 ```
 ```tsx
 // after
-<div className="bg-[--accent]">
-<h1 className="text-[--fg]">
-<Button className="bg-[--accent] hover:bg-[--accent-hover]">
+<div className="bg-(--accent)">
+<h1 className="text-(--fg)">
+<Button className="bg-(--accent) hover:bg-(--accent-hover)">
 ```
 
 Gradients that survive:
@@ -1081,15 +1175,15 @@ does not stand out.
 
 ```tsx
 // after — accent appears twice: the primary action, and the link
-<div className="rounded-[10px] border border-[--color-border] p-4">
-  <Icon className="size-4 text-[--color-fg-muted]" />
-  <h3 className="text-[15px] font-medium text-[--color-fg]">…</h3>
+<div className="rounded-[10px] border border-(--color-border) p-4">
+  <Icon className="size-4 text-(--color-fg-muted)" />
+  <h3 className="text-[15px] font-medium text-(--color-fg)">…</h3>
   <span className="inline-flex h-[22px] items-center gap-1.5 rounded-full
-                   bg-[--color-n-2] px-2 text-[12px] font-medium text-[--color-fg-muted]">
-    <span className="size-1.5 rounded-full bg-[--color-success]" />Active
+                   bg-(--color-n-2) px-2 text-[12px] font-medium text-(--color-fg-muted)">
+    <span className="size-1.5 rounded-full bg-(--color-success)" />Active
   </span>
-  <Button className="bg-[--color-accent] text-white hover:bg-[--color-accent-hover]">Continue</Button>
-  <a className="text-[--color-accent] underline-offset-2 hover:underline">Learn more</a>
+  <Button className="bg-(--color-accent) text-white hover:bg-(--color-accent-hover)">Continue</Button>
+  <a className="text-(--color-accent) underline-offset-2 hover:underline">Learn more</a>
 </div>
 ```
 The status badge is now neutral-with-a-coloured-dot: the colour is a 6px dot carrying the semantic
@@ -1100,6 +1194,16 @@ dashboards.
 **links/selected state**. That is it. Everything else — icons, headings, borders, hovers — is
 neutral. Measured on attio.com's hero: "Start for free" is filled dark, "Talk to sales" is bare
 text with no border and no accent at all.
+
+**What restraint costs: wayfinding.** Colour is the fastest channel the eye has for "these things
+are the same kind of thing," and a monochrome interface makes an expert faster and a novice slower.
+Restraint is right for a tool used daily, where the user has learned the layout and colour is noise
+that competes with the one thing they need to find. It is a real cost on a first-run surface, a
+consumer product, a settings page with forty rows of unrelated controls, or anything with a lot of
+categories. The replacement channel is **position, shape and grouping**, not more grey: a settings
+list needs section headings, an icon list needs sorting, a category set past four needs labels
+(§5.4). If you strip the colour and add nothing, you have made it harder to use and called it
+restraint.
 
 ## 5.4 Semantic colour only
 
@@ -1420,8 +1524,8 @@ names. If your typeface is variable — Inter, Geist, Mona Sans, SF, most of wha
 <div className="text-sm text-muted-foreground">DRV-8852</div>
 
 // after — hierarchy from weight + colour at ONE size, which is how dense UI works
-<div className="text-[13px] font-[510] text-[--color-fg]">Faster app launch</div>
-<div className="text-[13px] font-[400] text-[--color-fg-muted]">DRV-8852</div>
+<div className="text-[13px] font-[510] text-(--color-fg)">Faster app launch</div>
+<div className="text-[13px] font-[400] text-(--color-fg-muted)">DRV-8852</div>
 ```
 
 **Three text-contrast levels, defined once:**
@@ -1568,24 +1672,30 @@ for the full calibration table and the fold test.
   </div>
   <Button size="sm">View</Button>
 </div>
-// measured height: 74px
+// measured height: 82px  (p-4 = 32, plus a 24px + 4 + 20px two-line stack, plus 2px of border)
 ```
 ```tsx
 // after — Scan density
-<a className="group flex items-center gap-3 px-3 py-2 hover:bg-[--overlay-hover]">
+<a className="group flex items-center gap-3 px-3 py-2 hover:bg-(--overlay-hover)">
   <Avatar className="size-6" />
   <span className="min-w-0 flex-1 truncate text-[13px] font-[510]">{item.name}</span>
-  <span className="hidden truncate text-[13px] text-[--color-fg-muted] sm:block sm:w-[220px]">
+  <span className="hidden truncate text-[13px] text-(--color-fg-muted) sm:block sm:w-[220px]">
     {item.email}
   </span>
-  <ChevronRight className="size-3.5 shrink-0 text-[--color-fg-subtle] opacity-0
+  <ChevronRight className="size-3.5 shrink-0 text-(--color-fg-subtle) opacity-0
                            group-hover:opacity-100" />
 </a>
-// height: 36px
+// height: 40px  (py-2 = 16, and the size-6 avatar sets the 24px floor)
 ```
 Four changes did it: the card became a row, two stacked lines became two columns, the avatar
-dropped 10px, and the always-visible "View" button became an affordance that appears on hover.
-**74px → 36px.** At 900px of viewport that is 12 rows versus 24.
+dropped 16px, and the always-visible "View" button became an affordance that appears on hover.
+**82px → 40px**, both rendered and measured from the code exactly as printed. At 900px of viewport
+that is 11 rows versus 22.
+
+The avatar is the floor, not the padding: `size-6` + `py-2` cannot go below 40px. Drop to `size-5`
+for a 36px row, or `size-4` + `py-1.5` for the 28px Work-density row in §11.2 A. Shrinking `py`
+alone does nothing until the avatar comes down with it — which is the general shape of this
+mistake, and why §7.3 orders the levers.
 
 ## 7.3 Where the density actually goes
 
@@ -1594,7 +1704,7 @@ Do not take density out of type. Take it out of, in order:
 1. **Vertical padding.** `py-4` → `py-2`. Biggest single win.
 2. **Chrome above the content.** A greeting, a breadcrumb, a page title, a description, a filter
    bar and a table header is six bands before the first datum. Merge the title into the filter
-   bar. Delete the description. Delete the greeting — "Welcome back!" is never information.
+   bar. Delete the description, and delete the greeting ([§9.1](#91-the-eight-moves), move 4).
 3. **Redundant labels.** A column header that says "Name" above a column of names.
 4. **Always-visible row actions.** Move to hover / a `⋯` menu / a keyboard shortcut.
 5. **Icon size**, then finally
@@ -1649,12 +1759,12 @@ generator produces this because a symmetric grid is the safest thing that cannot
   </h1>
   {/* subhead LEFT, secondary link pinned RIGHT on the same baseline */}
   <div className="mt-6 flex items-baseline justify-between gap-8">
-    <p className="max-w-[46ch] text-[15px] text-[--color-fg-muted]">
+    <p className="max-w-[46ch] text-[15px] text-(--color-fg-muted)">
       Purpose-built for planning and building products.
     </p>
     <a className="shrink-0 text-[15px]">
-      <span className="font-[510] text-[--color-fg]">New</span>{" "}
-      <span className="text-[--color-fg-muted]">Loops →</span>
+      <span className="font-[510] text-(--color-fg)">New</span>{" "}
+      <span className="text-(--color-fg-muted)">Loops →</span>
     </a>
   </div>
 </section>
@@ -1677,9 +1787,9 @@ Give yourself three content widths and alternate them deliberately:
 }
 ```
 ```tsx
-<section className="mx-auto max-w-[--w-prose] px-6">   {/* narrative */}
-<section className="mx-auto max-w-[--w-content] px-6"> {/* feature grid */}
-<section className="mx-auto max-w-[--w-wide] px-6">    {/* screenshot */}
+<section className="mx-auto max-w-(--w-prose) px-6">   {/* narrative */}
+<section className="mx-auto max-w-(--w-content) px-6"> {/* feature grid */}
+<section className="mx-auto max-w-(--w-wide) px-6">    {/* screenshot */}
 ```
 Linear ships `--page-max-width: 1024px` with `--page-inset: 32px` — one content width — and then
 breaks out of it for the product screenshot. One width plus one deliberate exception beats three
@@ -1721,7 +1831,7 @@ Or, for a content page, the sidebar that is not half the width:
 ```tsx
 // before: grid-cols-2  ·  after:
 <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_320px]">
-  <article className="max-w-[--w-prose]">…</article>
+  <article className="max-w-(--w-prose)">…</article>
   <aside className="lg:sticky lg:top-20 lg:self-start">…</aside>
 </div>
 ```
@@ -1804,8 +1914,8 @@ page around it.
 
 ```tsx
 // after
-<main className="mx-auto w-full max-w-[--w-content] px-6 lg:px-8">
-  <article className="max-w-[--w-prose]">…</article>
+<main className="mx-auto w-full max-w-(--w-content) px-6 lg:px-8">
+  <article className="max-w-(--w-prose)">…</article>
 </main>
 ```
 
@@ -1819,8 +1929,11 @@ form and the 404, which means none of them was decided.
 
 # 9. Copy surgery
 
-Copy is about 30% of what a designer reads as "quality" and close to 0% of what a generator spends
-effort on. These are the moves, then 15 worked rewrites.
+Copy is **18% of the rubric** — second only to product specificity, and more than typography,
+colour, surface and motion combined — and close to 0% of what a generator spends effort on. It also
+survives a screenshot, which is why it cannot be restyled away. These are the moves, then 15 worked
+rewrites. Deeper treatment, including the error-message and empty-state grammars, is
+[`../craft/copy-and-voice.md`](../craft/copy-and-voice.md).
 
 ## 9.1 The eight moves
 
@@ -1954,18 +2067,18 @@ Every data surface ships all of these. Missing any one is visible.
 {rows.length === 0 && (
   hasActiveFilters ? (
     <div className="px-3 py-10 text-center">
-      <p className="text-[13px] text-[--color-fg-muted]">
-        No invoices match <span className="text-[--color-fg]">“{query}”</span> in Overdue.
+      <p className="text-[13px] text-(--color-fg-muted)">
+        No invoices match <span className="text-(--color-fg)">“{query}”</span> in Overdue.
       </p>
       <button onClick={clearFilters}
-        className="mt-3 text-[13px] text-[--color-accent] underline-offset-2 hover:underline">
+        className="mt-3 text-[13px] text-(--color-accent) underline-offset-2 hover:underline">
         Clear filters
       </button>
     </div>
   ) : (
     <div className="px-3 py-12 text-center">
       <p className="text-[15px] font-[510]">No invoices yet</p>
-      <p className="mx-auto mt-1 max-w-[38ch] text-[13px] text-[--color-fg-muted]">
+      <p className="mx-auto mt-1 max-w-[38ch] text-[13px] text-(--color-fg-muted)">
         Invoices you send appear here with their payment status.
       </p>
       <div className="mt-4 flex justify-center gap-2">
@@ -2011,11 +2124,11 @@ grey rounded rectangles is instantly recognizable.
 // 2. vary the widths so it looks like content, not a form
 // 3. slower, subtler, and no shimmer on the first 150ms (avoid flash for fast responses)
 const W = ["68%", "42%", "81%", "55%", "73%"];
-<ul className="divide-y divide-[--color-border-subtle]" aria-busy="true">
+<ul className="divide-y divide-(--color-border-subtle)" aria-busy="true">
   {W.map((w, i) => (
     <li key={i} className="flex h-9 items-center gap-3 px-3">
-      <div className="size-6 rounded-full bg-[--color-n-2]" />
-      <div className="h-[9px] rounded-[3px] bg-[--color-n-2]" style={{ width: w }} />
+      <div className="size-6 rounded-full bg-(--color-n-2)" />
+      <div className="h-[9px] rounded-[3px] bg-(--color-n-2)" style={{ width: w }} />
     </li>
   ))}
 </ul>
@@ -2042,10 +2155,9 @@ land. A skeleton that flashes for 120ms is worse than no skeleton.
   box-shadow: inset 2px 0 0 var(--color-accent);              /* a leading bar, not a border */
 }
 ```
-The 8% white overlay is measured: linear.app's nav item hover is exactly
-`rgba(255, 255, 255, 0.08)`. Selection needs a second channel (the inset bar) because on a list
-where several rows are hovered in sequence, background alone cannot distinguish "under the cursor"
-from "chosen."
+Selection needs the second channel (the inset bar) because on a list where several rows are hovered
+in sequence, background alone cannot distinguish "under the cursor" from "chosen." Alpha values and
+the reason they do not mirror between themes: [§15.3](#153-overlay-alpha-does-not-mirror-between-themes).
 
 ---
 
@@ -2054,6 +2166,16 @@ from "chosen."
 **The strongest cure in this file.** An interface built from conventional components, with this
 product's real content, its vocabulary, its primary object given priority, and one signature
 decision, does not read as generated. Surface fixes move the score a little; this moves it a lot.
+
+**Budget warning, because this file's own shape argues against it.** The
+[rubric](vibecode-rubric.md) weights product specificity **20** and copy **18** — 38% of the score
+between them. This section and §9 are two of the four shortest in the file; §5, §6, §14 and §15
+together are five times their length and cover dimensions the rubric weights 6–8. That is because
+surface defects are *enumerable* and specificity is not: there is a finite list of wrong radii and
+an infinite list of right domain vocabularies, so a playbook can only be long about the former.
+**Read the length of a section as a measure of how mechanical the fix is, never as a measure of how
+much it matters.** If you have spent more of your budget on §2 and §4 than on this section and §9,
+you have optimised the cheap half of the score.
 
 ## 11.1 The four levers
 
@@ -2113,11 +2235,11 @@ most-repeated thing on screen, and everything else must get out of its way.
 
 // after — the title is the object; everything else recedes
 <a className="grid grid-cols-[auto_64px_1fr_auto_auto] items-center gap-2 px-3 py-2
-              hover:bg-[--overlay-hover]">
+              hover:bg-(--overlay-hover)">
   <PriorityGlyph level={1} className="size-3.5" />
-  <span className="text-[13px] tabular-nums text-[--color-fg-subtle]">DRV-8852</span>
-  <span className="truncate text-[13px] font-[510] text-[--color-fg]">Login fails on Safari</span>
-  <span className="text-[12px] text-[--color-fg-muted]">Aug 14</span>
+  <span className="text-[13px] tabular-nums text-(--color-fg-subtle)">DRV-8852</span>
+  <span className="truncate text-[13px] font-[510] text-(--color-fg)">Login fails on Safari</span>
+  <span className="text-[12px] text-(--color-fg-muted)">Aug 14</span>
   <Avatar className="size-5" />
 </a>
 ```
@@ -2139,6 +2261,51 @@ behind ⌘K).
 **Not a signature:** a gradient, a glassmorphic blur, a neon glow, an animated border. Those are
 effects, and every generator produces them.
 
+## 11.1a The failure mode: invented specificity scores worse than none
+
+This is the section's own tell, and it is the one an agent walks into by trying to follow it.
+"Add domain detail" plus no domain knowledge produces **fabricated evidence**, and the rubric
+treats that as an 8, well below the 6 it gives an honestly generic page. Its worked anchor is a v0
+template whose stat strip reads `98% faster deployment STRIPE · 300% throughput increase LINEAR ·
+6x faster to ship NOTION` — invented numbers attributed to real companies. Generic is unfinished;
+fabricated is a lie, and a reader who knows the domain detects it faster than they detect blandness.
+
+The line, stated so it can be applied:
+
+| Safe to invent | Never invent |
+|---|---|
+| Row data in a demo: names, amounts, dates, statuses, IDs | A metric attributed to a named real company |
+| Fictional-but-plausible customer names (`Northwind Traders`, `Møller & Sønn A/S`) | A real company's logo in a "trusted by" wall |
+| The shape of a workflow, drawn from public documentation | A testimonial with a name and a face |
+| Domain vocabulary from a public glossary, standard or regulator | A certification, an award, a compliance badge, a security claim |
+| Placeholder legal copy explicitly labelled as placeholder | A dosage, a rate, a fee, a limit, a deadline in a regulated domain |
+
+Two operational rules: **fictional entities in demo data are fine and real attributions are not**,
+and **a number that would be wrong to get wrong belongs to the domain expert, not to you.** In
+regulated domains — clinical, financial, legal, safety — leave the value as a visible `{{token}}`
+or an obviously fake sentinel rather than a plausible one; a plausible wrong dose ships, a
+`{{DOSE_MG}}` does not.
+
+**Where to get real vocabulary when you do not have the domain.** In order: the product's own
+existing strings and database column names; the regulator or standards body (`FMCSA` for freight,
+`ICH-GCP` for trials, `ISO 4217` for currency); the incumbent competitor's public docs and pricing
+page; a public glossary or trade publication. If none of those is reachable, say so and use the
+generic noun — "Item" is honest, and an invented term of art is a specificity claim you cannot back.
+
+## 11.1b Where specificity stops
+
+Domain flavour belongs on the surfaces that are *about* the domain. It does not belong on:
+
+- **Auth, billing, account settings, 404s, session-expiry.** These are conventional on purpose —
+  users arrive with expectations built in other products, and a freight-themed password reset is a
+  cost, not a signature. Ship the standard shape (§9.5).
+- **Legal, consent, disclosure and safety strings.** Boring and standard is the requirement.
+- **Anything a novice sees first.** A term of art in the empty state of a tool someone opened for
+  the first time is a wall, not a signal. Domain vocabulary rewards the expert and taxes the
+  newcomer; on onboarding surfaces, gloss the term once and then use it.
+- **A second signature.** Lever 4 says *one*. Two signature decisions is not twice the identity,
+  it is an inconsistent system (§2.6).
+
 ## 11.2 Three worked examples
 
 ### A — A freight-brokerage load board (Work density, dense B2B)
@@ -2152,17 +2319,17 @@ effects, and every generator produces them.
 
 ```tsx
 <a className="grid grid-cols-[168px_92px_1fr_84px_72px] items-center gap-3 px-3 py-1.5
-              text-[13px] hover:bg-[--overlay-hover]">
+              text-[13px] hover:bg-(--overlay-hover)">
   {/* the signature: fixed-width lane pair, tabular, monospace */}
-  <span className="font-mono text-[12px] tabular-nums text-[--color-fg]">
+  <span className="font-mono text-[12px] tabular-nums text-(--color-fg)">
     <span className="inline-block w-[62px]">{load.origin}</span>
-    <span className="mx-1 text-[--color-fg-subtle]">→</span>
+    <span className="mx-1 text-(--color-fg-subtle)">→</span>
     <span className="inline-block w-[62px]">{load.dest}</span>
   </span>
-  <span className="tabular-nums text-[--color-fg-muted]">{load.miles} mi</span>
-  <span className="truncate text-[--color-fg-muted]">{load.equipment} · {fmtLb(load.weight)}</span>
+  <span className="tabular-nums text-(--color-fg-muted)">{load.miles} mi</span>
+  <span className="truncate text-(--color-fg-muted)">{load.equipment} · {fmtLb(load.weight)}</span>
   <span className="text-right tabular-nums font-[510]">{fmtUsd(load.rate)}</span>
-  <span className="text-right tabular-nums text-[--color-fg-muted]">{load.rpm.toFixed(2)}</span>
+  <span className="text-right tabular-nums text-(--color-fg-muted)">{load.rpm.toFixed(2)}</span>
 </a>
 ```
 28px rows. No cards, no shadows, no radius. `tabular-nums` on every numeric column because they
@@ -2182,20 +2349,20 @@ broker is deciding on.
 <li className="grid grid-cols-[1fr_120px_auto_auto] items-center gap-4 px-3 py-2.5">
   <div className="min-w-0">
     <div className="truncate text-[14px] font-[510]">{site.id} — {site.name}</div>
-    <div className="text-[12px] text-[--color-fg-muted]">{site.pi} · {site.country}</div>
+    <div className="text-[12px] text-(--color-fg-muted)">{site.pi} · {site.country}</div>
   </div>
 
   {/* the signature: one shared scale, so rows are comparable at a glance */}
-  <div className="flex h-[6px] w-[120px] overflow-hidden rounded-[2px] bg-[--color-n-2]"
+  <div className="flex h-[6px] w-[120px] overflow-hidden rounded-[2px] bg-(--color-n-2)"
        title={`${site.enrolled} enrolled · ${site.screenFailed} screen-failed · ${site.pending} pending`}>
-    <span style={{ width: pct(site.enrolled) }}    className="bg-[--color-success]" />
-    <span style={{ width: pct(site.screenFailed) }} className="bg-[--color-n-5]" />
+    <span style={{ width: pct(site.enrolled) }}    className="bg-(--color-success)" />
+    <span style={{ width: pct(site.screenFailed) }} className="bg-(--color-n-5)" />
   </div>
 
   <span className="w-[72px] text-right text-[13px] tabular-nums">{site.enrolled}/{site.target}</span>
   {site.deviations > 0 && (
-    <span className="inline-flex h-[20px] items-center gap-1 rounded-[4px] bg-[--color-warning-surface]
-                     px-1.5 text-[11px] font-[510] text-[--color-warning-fg]">
+    <span className="inline-flex h-[20px] items-center gap-1 rounded-[4px] bg-(--color-warning-surface)
+                     px-1.5 text-[11px] font-[510] text-(--color-warning-fg)">
       <AlertGlyph className="size-3" />{site.deviations}
     </span>
   )}
@@ -2216,7 +2383,7 @@ on the page is coloured.
 ```tsx
 <article className="group">
   {/* the art is the object: square, uncropped, no radius, no shadow */}
-  <div className="aspect-square overflow-hidden bg-[--color-n-2]">
+  <div className="aspect-square overflow-hidden bg-(--color-n-2)">
     <img src={r.cover} alt="" className="size-full object-cover" loading="lazy" />
   </div>
 
@@ -2225,27 +2392,46 @@ on the page is coloured.
     <span className="shrink-0 text-[14px] font-[510] tabular-nums">{fmtGbp(r.price)}</span>
   </div>
 
-  <p className="mt-0.5 truncate text-[12px] text-[--color-fg-muted]">
+  <p className="mt-0.5 truncate text-[12px] text-(--color-fg-muted)">
     {r.label} {r.cat} · {r.country} {r.year} {r.pressing}
   </p>
 
-  {/* the signature: fixed-width grade pair, same slot in every card */}
-  <p className="mt-1 font-mono text-[11px] tracking-[0.02em] text-[--color-fg-muted]">
-    <span className="text-[--color-fg]">M:{r.mediaGrade.padEnd(3)}</span>
-    <span className="mx-1">/</span>
-    <span>S:{r.sleeveGrade.padEnd(3)}</span>
+  {/* the signature: fixed-width grade pair, same slot in every card.
+      The width comes from a fixed inline-block box, NOT from padding the string —
+      HTML collapses trailing spaces, so `.padEnd(3)` renders ragged. */}
+  <p className="mt-1 flex items-baseline gap-1 font-mono text-[11px] tracking-[0.02em]
+                text-(--color-fg-muted)">
+    <span className="text-(--color-fg)">M:<b className="inline-block w-[3ch] font-normal">{r.mediaGrade}</b></span>
+    <span aria-hidden>/</span>
+    <span>S:<span className="inline-block w-[3ch]">{r.sleeveGrade}</span></span>
   </p>
 </article>
 ```
+**Rendered and checked.** The `.padEnd(3)` version measured 34.22px for `M:VG+` and 27.38px for
+`M:M` in the same grid — the trailing spaces collapse and the "fixed-width block" is not fixed,
+which defeats the whole point of the signature. `w-[3ch]` on a monospace face holds every grade to
+the same slot. This is the general trap: **a signature that depends on character count has to be
+enforced in layout, not in the string.**
 Here a card **is** right (§1.4): it is independently actionable, the image needs a boundary, and
 the grid is reorderable by sort. But it is a *borderless* card — the sleeve provides the boundary,
 so there is no `border`, no `shadow`, no `radius`, and no `p-6`.
 
-## 11.3 The test
+## 11.3 The three tests
 
-Cover the logo. Show the screen to someone who knows the domain. If they can name the industry in
-five seconds, you have specificity. If they say "some kind of dashboard," you have none, and no
-amount of radius tuning will fix it.
+Run them in this order; each is harder than the last and each fails differently.
+
+1. **The industry test.** Cover the logo. Show the screen to someone who knows the domain. If they
+   name the industry in five seconds, you have specificity. If they say "some kind of dashboard,"
+   you have none, and no amount of radius tuning will fix it.
+2. **The swap test.** Could this screen be dropped into a competitor's product by changing only the
+   logo and the accent? If yes, you have *category* specificity — it looks like an invoicing tool —
+   but not *product* specificity. Lever 4 is what closes this gap, and it is the lever most often
+   skipped, because it is the only one that requires a decision rather than data entry.
+3. **The expert test.** Show it to someone who does this job. They should be able to point at one
+   thing and say either "that's the number I actually look at" or "that's wrong, it's never
+   expressed that way." Both answers are a pass; the failure is a shrug. This is the test that
+   catches §11.1a — invented specificity fails it instantly and generic specificity merely
+   disappoints.
 
 ---
 
@@ -2269,6 +2455,15 @@ amount of radius tuning will fix it.
    reading as responsive.
 7. **Spring physics on layout.** Springs are for direct manipulation (drag, swipe, sheet). A
    spring on a dropdown is a wobble.
+
+**What deleting costs: change blindness.** Motion's real job is telling the user *that something
+changed and where it went*. Delete the transition on a row that disappears from a list, a toast
+that arrives, a panel that opens, or an optimistic value that reverts, and the change simply
+happens — which reads as a glitch, not as speed. The list above is aimed at motion that carries no
+information; §12.2 is the floor, not a suggestion. The specific one agents over-delete: **removing
+`transition` entirely from a hover state.** An instant background snap on a row under a moving
+cursor is harsher than no hover at all; 80–120ms on `background-color` is the whole cost and it is
+what every product measured here ships.
 
 ## 12.2 What to keep, with measured values
 
@@ -2297,7 +2492,7 @@ Keep exactly four kinds of motion:
 "data-[state=open]:animate-in data-[state=open]:fade-in-0
  data-[state=open]:slide-in-from-bottom-1
  data-[state=closed]:animate-out data-[state=closed]:fade-out-0
- duration-150 ease-[--ease-out]"
+ duration-150 ease-(--ease-out)"
 ```
 
 ## 12.3 Reduced motion, non-negotiable
@@ -2375,6 +2570,15 @@ straddles two device pixels and greys; at DPR 2 it is 2.67 device pixels. This i
 That single declaration gives a **1.00px** stroke at 16px, 1.25px at 20px and 1.50px at 24px —
 which is the ramp you want anyway, because a larger icon should carry a slightly heavier line.
 
+**What it costs: contrast, at the bottom of the ramp.** A 1.00px stroke drawn in a muted grey
+(`--color-fg-muted`, ~L 52 on white) at DPR 1 is a genuinely faint mark, and 1.5 applied to a
+12px icon gives **0.75px** — sub-pixel, and it greys out. Two guards: never take the stroke below
+1.5 (there is no 1.25 case), and give icons that are the *only* content of a control — an icon
+button, a close X, a nav glyph with no label — the foreground colour rather than the muted one.
+Check it once at DPR 1 on a real 1× display, not in a retina screenshot, where the defect is
+invisible. Lucide's default 2 on a 24 grid rendered at **24px** is correct and should be left alone
+(§13.6).
+
 ```tsx
 // the React equivalent, if you would rather not reach for CSS
 export function Icon({ as: Glyph, className, ...rest }: IconProps) {
@@ -2441,7 +2645,7 @@ sizes; do not assume the numbers port.
 <p>✨ Powered by AI</p>
 // after
 <h2 className="text-[15px] font-[510]">Get started</h2>
-<p className="text-[13px] text-[--color-fg-muted]">Suggestions are generated and may be wrong.</p>
+<p className="text-[13px] text-(--color-fg-muted)">Suggestions are generated and may be wrong.</p>
 ```
 
 **When emoji are right:** when the emoji is the user's *data*, not the interface — a reaction, a
@@ -2560,17 +2764,17 @@ by nothing.** Pick one and hold it across the product.
 ```tsx
 // after — four roles, four treatments, three different gaps
 <div className="grid gap-1.5">
-  <label htmlFor={id} className="text-[13px] font-[560] leading-5 text-[--color-fg]">
+  <label htmlFor={id} className="text-[13px] font-[560] leading-5 text-(--color-fg)">
     Email address
   </label>
   <input id={id} aria-describedby={`${id}-hint ${id}-err`} aria-invalid={!!error}
          className="h-8 rounded-[6px] px-2.5 text-[14px] …" />
   {/* hint is one step DOWN, and sits closer to the input than the label does */}
-  <p id={`${id}-hint`} className="text-[12px] leading-4 text-[--color-fg-muted]">
+  <p id={`${id}-hint`} className="text-[12px] leading-4 text-(--color-fg-muted)">
     Used for sign-in and receipts.
   </p>
   {error && (
-    <p id={`${id}-err`} className="flex items-start gap-1.5 text-[12px] leading-4 text-[--color-danger]">
+    <p id={`${id}-err`} className="flex items-start gap-1.5 text-[12px] leading-4 text-(--color-danger)">
       <AlertGlyph className="mt-px size-3 shrink-0" />
       {error}
     </p>
@@ -2620,6 +2824,20 @@ Three things that buys you, all of which generated code fights instead:
 .field[aria-invalid="true"]:focus-visible {
   box-shadow: 0 0 0 1px var(--color-danger),
               0 0 0 4px color-mix(in oklab, var(--color-danger) 18%, transparent);
+}
+```
+
+**What the ring costs, and the one line that pays for it.** In forced-colors mode (Windows High
+Contrast, and any OS-level forced palette) the user agent forces `box-shadow: none`. Driven in
+Chromium with `forcedColors: active`, the `.field` above computes to `box-shadow: none` and
+`border: 0px none` — **no visible boundary at all**, while a plain `border: 1px solid` is forced to
+the system border colour and survives. A ring-only field is invisible to exactly the users who most
+need the boundary. It is also dropped by most print stylesheets. Both are fixed by one block, and
+it belongs next to the primitive:
+
+```css
+@media (forced-colors: active), print {
+  .field { border: 1px solid; }        /* colour comes from the forced palette / print black */
 }
 ```
 
@@ -2717,13 +2935,13 @@ the difference between a button that looks *placed* and one that looks *printed*
 <button className="h-9 rounded-md bg-blue-600 px-4 text-sm font-medium text-white
                    hover:bg-blue-700">Save</button>
 // after
-<button className="h-8 rounded-[6px] bg-[--color-accent] px-3 text-[13px] font-[510] text-white
+<button className="h-8 rounded-[6px] bg-(--color-accent) px-3 text-[13px] font-[510] text-white
                    shadow-[inset_0_0_0_1px_rgb(0_0_0/0.12)]
-                   hover:bg-[--color-accent-hover]
-                   active:bg-[--color-accent-active]
+                   hover:bg-(--color-accent-hover)
+                   active:bg-(--color-accent-active)
                    disabled:opacity-50 disabled:pointer-events-none
                    focus-visible:outline-2 focus-visible:outline-offset-2
-                   focus-visible:outline-[--color-ring]">Save</button>
+                   focus-visible:outline-(--color-ring)">Save</button>
 ```
 
 **When to skip it:** on a black or near-black button (Vercel's `#171717` has no rim — there is no
@@ -2783,11 +3001,11 @@ messages, so the eye cannot separate "which field" from "what is wrong."
 ```
 ```tsx
 // after — the boundary and the message carry the error; the name stays a name
-<label htmlFor={id} className="text-[13px] font-[560] text-[--color-fg]">Card number</label>
+<label htmlFor={id} className="text-[13px] font-[560] text-(--color-fg)">Card number</label>
 <input id={id} aria-invalid={!!error} aria-describedby={error ? `${id}-err` : `${id}-hint`}
        className="field" />
 {error && (
-  <p id={`${id}-err`} role="alert" className="flex items-start gap-1.5 text-[12px] text-[--color-danger]">
+  <p id={`${id}-err`} role="alert" className="flex items-start gap-1.5 text-[12px] text-(--color-danger)">
     <AlertGlyph className="mt-px size-3 shrink-0" />
     {error}
   </p>
@@ -2821,22 +3039,22 @@ export function Field({ label, hint, error, size = "md", children }: FieldProps)
   const box = size === "lg" ? "h-10 text-[16px] px-3" : "h-8 text-[13px] px-2.5";
   return (
     <div className="grid gap-1.5">
-      <label htmlFor={id} className="text-[13px] font-[560] leading-5 text-[--color-fg]">
+      <label htmlFor={id} className="text-[13px] font-[560] leading-5 text-(--color-fg)">
         {label}
       </label>
       {children({
         id,
         invalid: !!error,
-        className: `field w-full rounded-[6px] bg-[--color-bg] ${box} text-[--color-fg]
-                    placeholder:text-[--color-fg-subtle]
+        className: `field w-full rounded-[6px] bg-(--color-bg) ${box} text-(--color-fg)
+                    placeholder:text-(--color-fg-subtle)
                     disabled:cursor-not-allowed disabled:opacity-50`,
       })}
       {hint && !error && (
-        <p id={`${id}-hint`} className="text-[12px] leading-4 text-[--color-fg-muted]">{hint}</p>
+        <p id={`${id}-hint`} className="text-[12px] leading-4 text-(--color-fg-muted)">{hint}</p>
       )}
       {error && (
         <p id={`${id}-err`} role="alert"
-           className="flex items-start gap-1.5 text-[12px] leading-4 text-[--color-danger]">
+           className="flex items-start gap-1.5 text-[12px] leading-4 text-(--color-danger)">
           <AlertGlyph className="mt-px size-3 shrink-0" />{error}
         </p>
       )}
@@ -2923,7 +3141,7 @@ divider between two rows of a list shouts as loudly as the edge of the list.
 }
 ```
 ```tsx
-<ul className="divide-y divide-[--color-border-subtle] rounded-[10px] border border-[--color-border]">
+<ul className="divide-y divide-(--color-border-subtle) rounded-[10px] border border-(--color-border)">
 ```
 That one substitution — subtle inside, standard outside — is most of what makes a list read as one
 object rather than a stack of edges.
@@ -2974,9 +3192,8 @@ dark end, where OKLCH lightness compresses hard. Which means:
 - **Do not write `dark:bg-white/5` as the mirror of `bg-black/5`.** Check the composited ΔL. The
   targets that match practice are **−3 to −4 points in light, +7 to +10 in dark.**
 - **`:active` is ×1.5 to ×2 the hover alpha**, not a different colour.
-- **Selection needs a second channel.** An 8–10% accent tint plus a 2px inset leading bar, because a
-  list where the cursor sweeps across several rows cannot distinguish "hovered" from "selected" by
-  background alone ([§10.5](#105-the-four-hoverfocusactiveselected-states-distinguished)).
+- **Selection needs a second channel**, not a stronger overlay —
+  [§10.5](#105-the-four-hoverfocusactiveselected-states-distinguished) has the rule and the code.
 
 ## 15.4 The spacing histogram — nobody ships an 8px grid
 
@@ -3026,7 +3243,26 @@ the column gap of a card grid. Keep those on 8. Stop applying it inside a 28px c
 4-base) trade optical precision for enforceability, and that is the correct trade when hundreds of
 engineers write the CSS. It is the wrong trade when one person is building one product.
 
-## 15.5 Two Tailwind v4 gotchas that produce visible defects
+## 15.5 Three Tailwind v4 gotchas that produce visible defects
+
+**`bg-[--token]` silently emits nothing in v4.** The v3 shorthand for a custom property in an
+arbitrary value was `bg-[--brand]`. In v4 that bracket form is parsed as a literal arbitrary value,
+so it compiles — with no warning, no error and no missing-class report — to `background-color:
+--brand`, which is invalid CSS and gets dropped. Compiled against `tailwindcss@4.3.3`:
+
+```
+.text-\[--color-fg-muted\] { color: --color-fg-muted; }        /* dropped by the browser */
+.text-\(--color-fg-muted\) { color: var(--color-fg-muted); }   /* correct */
+```
+
+The v4 form is the parenthesis: `bg-(--brand)`, `text-(--color-fg)`, `divide-(--border)`,
+`max-w-(--w-prose)`, `shadow-(--shadow-e2)`, `focus-visible:outline-(--color-ring)`. All of them
+work. `bg-[var(--brand)]` also works and is the portable escape hatch.
+
+This compounds with the next gotcha in the ugliest possible way: `border-[--border]` drops the
+colour, preflight leaves the border at `currentColor`, and a hairline you intended at L 90 renders
+as a near-black rule. A converted list or stat strip comes out looking *worse* than the card grid
+it replaced, and the only visible symptom is that it looks bad.
 
 **`border` with no colour is `currentColor`.** v4's preflight is:
 
@@ -3186,15 +3422,15 @@ The generated answer is "turn every row into a card," which reproduces card soup
 
 ```tsx
 {/* option 2, the one you want most of the time */}
-<ul className="divide-y divide-[--color-border-subtle]">
+<ul className="divide-y divide-(--color-border-subtle)">
   {rows.map(r => (
     <li key={r.id}>
-      <a href={r.href} className="block px-5 py-3 active:bg-[--overlay-active]">
+      <a href={r.href} className="block px-5 py-3 active:bg-(--overlay-active)">
         <div className="flex items-baseline justify-between gap-3">
           <span className="truncate text-[15px] font-[510]">{r.name}</span>
           <span className="shrink-0 text-[15px] tabular-nums">{fmt(r.amount)}</span>
         </div>
-        <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-[--color-fg-muted]">
+        <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-(--color-fg-muted)">
           <StatusDot status={r.status} /><span>{r.status}</span>
           <span aria-hidden>·</span><time dateTime={r.iso}>{rel(r.iso)}</time>
         </div>
@@ -3227,12 +3463,12 @@ Everything above is CSS custom properties plus class strings. The translation is
 | Tailwind v4 idiom | Plain CSS | CSS-in-JS / vanilla-extract | SwiftUI / Compose analogue |
 |---|---|---|---|
 | `@theme { --color-x: … }` | `:root { --color-x: … }` | theme contract object | `Color` / design-token enum |
-| `bg-[--color-surface]` | `background: var(--color-surface)` | `background: vars.surface` | `.background(Color.surface)` |
+| `bg-(--color-surface)` | `background: var(--color-surface)` | `background: vars.surface` | `.background(Color.surface)` |
 | `text-[13px] leading-5` | `font-size: 13px; line-height: 20px` | same | `.font(.system(size: 13))` |
-| `divide-y divide-[--border]` | `& > * + * { border-top: 1px solid var(--border) }` | same | `Divider()` between rows |
-| `hover:bg-[--overlay-hover]` | `:hover { background: … }` | same | `.onHover` → background only |
+| `divide-y divide-(--border)` | `& > * + * { border-top: 1px solid var(--border) }` | same | `Divider()` between rows |
+| `hover:bg-(--overlay-hover)` | `:hover { background: … }` | same | `.onHover` → background only |
 | `focus-visible:outline-2 …` | `:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px }` | same | platform focus ring — do not override |
-| `shadow-[--shadow-e2]` | `box-shadow: var(--shadow-e2)` | same | `.shadow(radius:x:y:)`, ring → `.border` |
+| `shadow-(--shadow-e2)` | `box-shadow: var(--shadow-e2)` | same | `.shadow(radius:x:y:)`, ring → `.border` |
 | `tabular-nums` | `font-variant-numeric: tabular-nums` | same | `.monospacedDigit()` |
 | `truncate` | `overflow:hidden; text-overflow:ellipsis; white-space:nowrap` | same | `.lineLimit(1).truncationMode(.tail)` |
 | `-mx-6 px-6` full-bleed band | `margin-inline: -24px; padding-inline: 24px` | same | full-width `ZStack` background |
@@ -3274,70 +3510,19 @@ copy wholesale.
 | **shadcn** sidebar item | 32px | 14px/20 w400 | 8px | `8px` | `bg-accent` |
 | **shadcn** badge | 22px | 12px/16 w500 | 9999px | `2px 8px` | — |
 
-## Form controls, by surface
+## Not repeated here
 
-| | Surface | Input | Label | Gap | Boundary | Focus |
-|---|---|---|---|---|---|---|
-| **GitHub** | sign-in | 40px, 16px/20 w400, r6 | 14px/21 w600 | 4px | `1px #d1d9e0` + `inset 0 1px 0 #1f23280a` | `border #0969da` + `inset 0 0 0 1px #0969da`, 80ms |
-| **Stripe** | sign-in | 44px, 16px/24 w400, r6 | 14px w300 `#414552` | 12px | ring only: `0 0 0 1px #d4dee9` | `0 0 0 1px #a497fc, 0 0 0 4px #e0d9fb`, 240ms |
-| **Notion** | sign-in | 15px/26 in a wrapper box | 12px/16 w500 `#7d7a75` | 8px | on the wrapper | — |
-| **Linear** | sign-in | 44px buttons, **13px** type, r9999 | — | — | — | — |
-| **GitHub** | in-app | 32px (`--control-medium-size`) | — | — | same tokens | same |
-| **shadcn** | default | 36px (`h-9`), 16→14px | 14px w500 | 8px | `1px` + `shadow-xs` (drop) | `ring-[3px] ring-ring/50` grey |
+Six tables that used to sit in this appendix were verbatim copies of the section they came from,
+and a number that exists twice is a number that can disagree with itself. They live in one place:
 
-Primer control sizes: `small 28 · medium 32 · large 40`. Filled-primary edges:
-GitHub `border 1px rgba(31,35,40,.15)` · Notion `inset 0 0 0 1px rgba(15,15,15,.1)` ·
-Stripe `0 0 0 1px #675dff`.
-
-## Hover deltas (OKLCH lightness)
-
-```
-GitHub  primary green  #1f883d → #1c8139     ΔL  −2.1
-Vercel  primary black  #171717 → #383838     ΔL +13.6
-Linear  secondary      #e5e5e6 → #ffffff     ΔL  +7.8
-Tailwind blue-600→700  #2563eb → #1d4ed8     ΔL  −5.8   ← ~3× the real move
-GitHub  nav overlay    rgba(129,139,152,.10) on #fff  → #f2f3f5   ΔL −3.6
-Linear  nav overlay    rgba(255,255,255,.08) on #08090a → #1c1d1e ΔL +9.1
-```
-
-## Hairlines (contrast vs the white they sit on)
-
-```
-Notion ring rgba(42,28,0,.07) 1.15 · Vercel #ebebeb 1.19 · TW slate-200 1.23 · TW gray-200 1.24
-shadcn --border 1.26 · GitHub muted #d1d9e0b3 1.28 · Linear #e2e2e2 1.30 · Stripe #d4dee9 1.36
-Radix gray-6 1.41 · GitHub default #d1d9e0 1.43 · TW gray-300 1.47
-→ the whole shipped band is 1.15–1.47 (OKLCH L 87–95). Two tiers, not one.
-```
-
-## Status colours
-
-```
-GitHub  danger #d1242f L55.7 5.24:1 · success #1a7f37 L52.4 5.08:1
-        attention #9a6700 L55.4 4.87:1 · accent #0969da L54.0 5.19:1   ← one L, four hues
-Tailwind red-500 3.76:1 (fails) · green-500 2.28:1 (fails) · red-600 4.83:1
-```
-
-## Spacing frequency (share of all rendered gap/padding/margin values)
-
-```
-GitHub   16:33% 4:19% 10:14% 8:12% 12:4% 24:3%
-Linear    8:25% 4:17%  6:17% 32:9% 12:8% 24:3%
-Vercel    2:29% 6:27%  4:21% 12:9%  8:5% 20:2%
-Stripe    8:22% 4:21% 16:18%  6:13% 12:5% 10:4%
-Notion    8:49% 3:11% 24:7%  16:7% 12:7%  4:5%
-shadcn    8:38% 4:12%  6:8%  16:6% 10:3% 12:2%
-→ nobody is on an 8px grid inside a control.
-```
-
-## Mobile (390px) vs desktop (1440px)
-
-```
-Linear h1  64/64 w510 −0.022em  →  38/41.8 w510 −0.022em   0.59×   lh 1.00 → 1.10
-Notion h1  96/100 w600 −0.048em →  42/48   w600 −0.036em   0.44×   lh 1.04 → 1.14
-Vercel h1  64/64 w400 −0.060em  →  48/56   w400 −0.060em   0.75×   lh 1.00 → 1.17
-body       Linear 15/24 both · Vercel 16/24 both · Notion lead 20→16
-gutter     Linear 24 · Vercel 24 · Notion 16
-```
+| Looking for | Section |
+|---|---|
+| Form controls by surface (GitHub / Stripe / Notion / shadcn) | [§14.1](#141-the-measurement) |
+| Hover deltas in OKLCH lightness | [§14.7](#147-correction-6--the-hover-delta-is-3-too-big) |
+| Hairline contrast band, and the two tiers | [§15.1](#151-the-hairline-band--and-the-contrarian-finding) |
+| Status colours at one lightness, four hues | [§5.4](#the-measured-correction-pick-status-colours-by-lightness-not-by-palette-step) |
+| Spacing frequency histogram | [§15.4](#154-the-spacing-histogram--nobody-ships-an-8px-grid) |
+| Mobile vs desktop display type | [§16.1](#161-the-display-type-ratios-measured-at-both-ends) |
 
 ## Type
 
@@ -3417,6 +3602,131 @@ Linear page   --page-max-width 1024 · --page-inset 32 · --header-height 72
 - Token system construction → [`../system/3-tokens.md`](../system/3-tokens.md)
 - Per-archetype targets → [`../archetypes/`](../archetypes/)
 
-**The order that matters:** structure → density → colour → type → surface → copy → states →
-specificity. An agent that fixes the radius before the layout has spent its budget on the least
-visible thing in the list.
+**The order that matters:** loud tells → structure → density → content → copy → states →
+specificity, with surface grammar (radius, hairline tier, shadow maths) picked up along the way
+because each of those is a one-line fix, not a phase. Two ways to get this wrong, and the second
+is the common one: an agent that fixes the radius before the layout has spent its budget on the
+least visible thing in the list — and an agent that finishes the whole surface pass and calls it
+done has skipped the 38% of the score that copy and specificity carry.
+
+---
+
+# Adversarial pass (2026-09)
+
+First adversarial review of this file. Everything below was run, not reasoned about: a Tailwind
+v4.3.3 compile of the file's own class strings, and Chromium renders of the before/after pairs
+through the shared browser, measured with `getBoundingClientRect` and `getComputedStyle`.
+
+## The one that mattered
+
+**108 class strings in this file did not work in the stack the file declares.** The file's default
+idiom is Tailwind v4; its code was written in v3's custom-property shorthand, `text-[--color-fg]`.
+Compiled against `tailwindcss@4.3.3` that emits `color: --color-fg-muted` — invalid CSS, dropped
+by the browser, no build error, no missing-class warning. The class simply does nothing.
+
+Rendered side by side at 1440px, §1.3's After A stat strip — the file's flagship remedy — came out
+with a **near-black border and near-black labels**, because `border-[--border]` and
+`text-[--fg-muted]` both no-op'd and v4's preflight leaves `border-color` at `currentColor`
+(§15.5's own second gotcha, arriving through the file's own code). The remedy as written rendered
+*worse than the card grid it replaces*. With `-(--token)` it renders as intended: hairline border,
+muted labels, green and red deltas, 86px tall against the card grid's 192px.
+
+All 108 converted to the v4 parenthesis form. All 41 distinct utilities re-compiled and confirmed
+to emit `var(--token)`. A new §15.5 gotcha documents the trap, because any agent reading this file
+alongside older v3 examples will reproduce it.
+
+## Other defects found by rendering
+
+- **§11.2 C's signature did not work.** `{r.mediaGrade.padEnd(3)}` inside JSX pads with spaces that
+  HTML collapses. Measured in one grid: `M:VG+` 34.22px, `M:M` 27.38px — the "fixed two-character
+  monospace block" was ragged, which is the entire content of the claimed signature. Replaced with
+  a `w-[3ch]` inline-block; re-rendered, the separator now lands at 37.55px in every listing.
+- **§7.2's row heights were both wrong.** Rendering the exact code printed: the "before" measures
+  **82px**, not 74 (`p-4` plus a 24+4+20 two-line stack plus 2px of border), and the "after"
+  measures **40px**, not 36 — the `size-6` avatar sets a 24px floor that `py-2` cannot go under.
+  Corrected, with the lever that actually reaches 36px named.
+- **§14.3's ring primitive is invisible in forced-colors mode.** Driven in Chromium with
+  `forcedColors: active`, `.field` computes to `box-shadow: none` / `border: 0px none` — no
+  boundary at all — while a plain border is forced to the system colour and survives. Same applies
+  to the ring-first elevation system in §4.2. Both now carry the guarded `@media (forced-colors:
+  active), print` border.
+
+## The 10-minute pass was re-ordered, and the re-order was tested
+
+Old order led with shadows, neutral family and radius. A generic dashboard was rendered, then two
+2½-minute edits applied to separate copies: *shadows → neutrals → radius* versus *gradients →
+shadows → button hierarchy*. The first is nearly indistinguishable from the baseline at page scale
+— the gradient hero dominates everything. The second is a different-looking product. Surface
+grammar is real but low-amplitude and cannot be seen until the loud tells are gone, so the loud
+one-line deletions moved to the top. `:focus-visible` + `disabled` + `:active` moved from 9 to 5:
+it is invisible in a screenshot, which is exactly why it kept getting deferred, and unmissable in
+the hand.
+
+## Trade-offs that were missing
+
+Six remedies were stated as free and are not. Costs added in place: what de-carding costs
+(§1.4a — hit-target legibility, squint grouping, ragged content, drag affordance), what accent
+restraint costs (§5.3 — colour is a wayfinding channel and stripping it taxes novices), what a
+1.5 stroke costs (§13.2 — 0.75px at 12px, and muted icon-only controls go faint at DPR 1), what
+deleting motion costs (§12.1 — change blindness), and the two forced-colors costs above.
+
+## Scoping, because these are stated as absolutes elsewhere
+
+New **"Where these remedies stop"** section after the polish pass, bounding the three most
+misappliable rules: *don't use cards* stops at the object grid (a marketplace listing grid
+de-carded is a strictly worse interface — the answer there is a borderless card); the density
+multipliers stop below ~10 rows, at touch, and at anything done once; *nothing moves on hover* is a
+rule about lists and chrome, not about direct manipulation. Plus the general principle both this
+file and the taxonomy were missing: every deletion here removes a signal as well as noise, and the
+job it was doing has to move somewhere.
+
+## Section 11, and the file's shape
+
+§11 carries the rubric's heaviest weight (20) and was 200 lines; §14 carries a 6-weight dimension
+and was 390. That inversion is **not** a bug to fix by padding §11 — surface defects are
+enumerable and specificity is not, so a playbook can only be long about the former. It is a bug if
+an agent reads section length as importance, so §11 now opens by saying so explicitly.
+
+What §11 was actually missing was a failure mode. "Add domain detail" plus no domain knowledge
+produces fabricated evidence, which the rubric scores **8** — worse than the 6 it gives honest
+genericity. New §11.1a draws the line (fictional demo entities fine, real attributions never;
+`{{DOSE_MG}}` over a plausible number in a regulated domain) and gives a sourcing order for
+vocabulary. New §11.1b bounds where specificity stops — auth, billing, 404s, legal strings, and
+first-run surfaces stay conventional. §11.3 grew from one test to three: industry, swap, expert.
+
+## Cuts
+
+Six tables in Appendix B were verbatim copies of the sections they came from — form controls,
+hover deltas, hairlines, status colours, spacing frequency, mobile type — and a number that exists
+twice can disagree with itself. Cut to a pointer table. Three smaller in-file restatements
+collapsed to cross-references.
+
+**And the honest verdict on length: this file should stay long.** It was read end to end looking
+for prose that restates the taxonomy or does not change a decision, and there is very little.
+Nearly every paragraph carries either a measured value or a boundary condition. The net movement
+here is +15KB, and it is defensible only because every addition fixes something that was verified
+broken or unstated. A shorter version of this file would be a worse one; a version with 108
+non-functioning class strings was worse still.
+
+## Corpus consistency
+
+One conflict found and resolved against source. `references/keyboard-first-productivity.md` carried
+a correction saying shadcn's `--radius-2xl: 18` "does not exist". Re-fetched from shadcn's
+`globals.css`: it does, and the scale is multiplicative — `sm ×.6 · md ×.8 · lg ×1 · xl ×1.4 ·
+2xl ×1.8 · 3xl ×2.2 · 4xl ×2.6`. This file's §2.1 and Appendix B were right; the other file has
+been corrected in place. Linear's accent, the 8% dark hover overlay, the `--radius: .625rem` base
+and the hairline band all agree across every file that states them.
+
+## Not verified
+
+- **§3.3's MUI figures** are labelled v9 and were not re-probed; treat the version as the weak part
+  of that claim, not the values.
+- **§5.2's `oklch(0.145 0 0)` for shadcn's `--foreground`** is the CLI registry theme. The v4 docs
+  site's own `globals.css` now ships `oklch(0% 0 0)`. Both may be true of different artifacts; the
+  five-step ramp argument does not depend on which.
+- **Every "measured on <product>" number** was taken on trust except the ones re-derived above.
+  This pass verified the file's *code*, not its field measurements.
+- **The 30% figure for copy** in the old §9 intro was replaced with the rubric's 18% weight, which
+  is at least a number this corpus can defend. Where the 30% came from is unknown.
+
+Renders: `.cache/shots/anti-patterns-remedies-md-v-1..4-1440.png`.

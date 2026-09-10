@@ -8,7 +8,7 @@ The artifact critiqued in [`../../anti-patterns/visual-critique-method.md`](../.
 | `v2.html` | The same screen after the eleven fixes in §9.4, plus the many-items state (20 rows rather than a fixture-sized 8). Craft **7.1**, two findings still open. |
 | `tools/look.mjs` | plain / blur6 / blur14 / grayscale / rotate-180 captures of any URL |
 | `tools/probe.mjs` | computed-style census: font sizes, gaps, radii, hues, containers, focus-rule counts, left-edge histogram |
-| `tools/inkbox.mjs` | optical centering — ink bounding box vs element box, at 4× |
+| `tools/inkbox.mjs` | ink bounding box vs element box, at 4×. **Demoted 2026-09-10** — `above − below` measures descenders, not centering; see `visual-critique-method.md` §"Cut: the optical-centering check" |
 | `tools/fold.mjs` | where the content starts, at 1440 / 390 / 320 |
 
 ## Reproduce the critique
@@ -20,7 +20,7 @@ python3 -m http.server 8971 &
 node tools/fold.mjs   http://localhost:8971/v1.html          # content start at three widths
 node tools/probe.mjs  http://localhost:8971/v1.html V1 1440  # the five counts
 node tools/look.mjs   http://localhost:8971/v1.html v1       # the transform set — then LOOK at the PNGs
-node tools/inkbox.mjs http://localhost:8971/v1.html .pill    # optical centering
+node tools/inkbox.mjs http://localhost:8971/v1.html .pill    # ink box (demoted; read the ink top only)
 
 # then the same four against v2.html and diff the numbers
 ```

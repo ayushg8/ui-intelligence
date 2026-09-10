@@ -3,14 +3,25 @@
 **A 0–10 instrument for "how obviously did a machine make this."** Run it against a screenshot and
 the page's computed CSS. Target **≤2**. Ship gate is **≤3**.
 
-**Evaluated:** 2026-09-09 and 2026-09-10 · Every number and quoted string below was read out of a
-live interface with Playwright (computed styles, `:root` custom properties, raw stylesheet text
-captured off the network) or off a 1440×900 render at 2×. The calibration set is **18** real
-interfaces, listed with their scores in §8, covering three generators — **v0, Lovable and Bolt**,
-which have **different fingerprints** (§6.3). Nothing here is recalled.
+**Evaluated:** 2026-09-09, 2026-09-10 and an adversarial re-run on 2026-09-10 · Every number and
+quoted string below was read out of a live interface with Playwright (computed styles, `:root`
+custom properties, raw stylesheet text captured off the network) or off a 1440×900 render at 2×.
+The calibration set is **28** real interfaces, listed with their scores in §8, covering three
+generators — **v0, Lovable and Bolt**, which have **different fingerprints** (§6.3). Nothing here is
+recalled.
 
-**Five things in this file are corrections to advice that sounds right and measures wrong.** Each
-is marked ⚠, and each was falsified by a specific interface in the calibration set:
+**Before you probe anything, confirm you are looking at the human render.** Two of the ten
+interfaces added in the 2026-09-10 adversarial pass served the headless browser something other
+than the page: `ramp.com` returned a plain-text "Ramp — Machine Version" document (1 text leaf, 1
+font size, 0 rules of any kind — it would score 0 on every dimension by accident), and
+`launched.lovable.dev` returned a Cloudflare "Performing security verification" interstitial.
+Sanity gate before scoring: **element count > 200, more than three distinct font sizes, and the
+product's own h1 present.** If it fails, you are scoring a bot page, not an interface. This is now a
+routine hazard, not an edge case.
+
+**Nine things in this file are corrections to advice that sounds right and measures wrong.** Each
+is marked ⚠, and each was falsified by a specific interface in the calibration set. The last four
+came out of the 2026-09 adversarial pass recorded at the end of this file:
 
 | Retired check | Falsified by |
 |---|---|
@@ -19,6 +30,10 @@ is marked ⚠, and each was falsified by a specific interface in the calibration
 | Unspaced em dashes are an AI tell (§6.2) | **Stripe: 11.** Linear, Mercury and GOV.UK: 0 |
 | Straight apostrophes are an AI tell (§6.2) | **Resend: 19 straight, 0 curly** — and it scores 2.6 |
 | A verbatim `Acme` floors the score (§7) | Resend renders `Weekly Acme Newsletter` in its own hero |
+| Content being *invented* is itself a SPEC deduction (§6.1) | Four builds with entirely fictional companies score SPEC **0–1**; their numbers reconcile |
+| A closed list of shadcn fixture strings floors a fixture page (§7) | Bootstrap's dashboard example ships `Header` ×4 and `random data placeholder text` and matched **none** of the list |
+| Counting `:focus-visible` **rules** measures state design (§6.4) | Halden ships **3** rules and rings **53 of 53** interactive elements; Folio ships **1** and rings **32 of 32** |
+| Title Case headings ≥3 is a finding (§6.2) | **Raycast: 3** (`AI Chat`, `Quick AI`, `AI Extensions`); Halden: **6**, all of them people's names |
 
 Retired means *stop running them*, not *weigh them less*. A check that fires on GOV.UK is not a
 weak check, it is a broken one (§11.9).
@@ -64,7 +79,7 @@ Score each dimension 0–10 on its own anchors (§6), then take the weighted mea
 | 1 | **Product specificity** | **20** | The single strongest signal and the hardest to fake, because faking it requires knowing the domain. It is also the cheapest to *earn* and the one that moves a human's read the most. Linear and shadcn `dashboard-01` are near-identical as component compositions; `DRV-8852 / vehicle_state` versus `Acme Inc. / $1,250.00` is the entire difference. |
 | 2 | **Copy** | **18** | Second-hardest to fake, and it survives a screenshot. Prose is where a model's priors are least disguised: three unrelated v0 templates by three authors independently produced "Everything you need…", and two of them shipped the string **"Global by default."** verbatim. You cannot restyle your way out of this. |
 | 3 | **Component defaults & fingerprints** | **13** | Nearly free to check and nearly conclusive, because scaffolds leave dead artifacts — tokens for components the page does not contain. Weighted below copy only because a competent author can strip them in ten minutes without changing anything a user sees. |
-| 4 | **States & depth** | **10** | The cure for "looks like a mockup." Generated pages have one state per element. All four v0 pages and Bolt's `weight.coach` measure **zero** `:focus-visible` rules; GOV.UK has 28. Held at 10 rather than raised, because ⚠ the check is one-directional: component-library output ships focus states nobody designed (Lovable measures 9–15), so a healthy count proves nothing. See §6.4. |
+| 4 | **States & depth** | **10** | The cure for "looks like a mockup." Generated pages have one state per element. All four v0 pages and Bolt's `weight.coach` ring **zero** interactive elements; GOV.UK `/browse/benefits` rings **56 of 56**. Held at 10 rather than raised, because ⚠ the check is one-directional: component-library output ships focus states nobody designed (Lovable measures 9–15 rules), so healthy coverage proves nothing. Score coverage, never rule count — §6.4. |
 | 5 | **Layout & rhythm** | **10** | Detects "spacing was never decided." Measurable as scale degeneracy: v0 "Agentic" uses `gap: 24px` on 61 elements and applies `padding: 128px 0` to all nine sections; Linear's gaps are 8px×94, 4px×62, 6px×51, 12px×14, 2px×11. |
 | 6 | **Color** | **8** | Real signal (untouched ramps, accent-everywhere) but noisy — many excellent products are also monochrome-plus-one, and the 2023 "purple-blue gradient" tell is mostly extinct. |
 | 7 | **Typography** | **8** | Same: real signal in scale *vocabulary*, but the individual values converged. Tight display tracking is now standard everywhere, good and bad. |
@@ -96,9 +111,24 @@ expectations built in other products, and spending them is a cost, not a virtue.
 with no gradient, no radius, no shadow, no illustration and no personality, because every one of
 those absences is a decision it can defend.
 
-**Novelty is not a defence.** The v0 pages in §8 are visually *more* adventurous than Linear's —
-chromatic-aberration text, iridescent 3D renders, a glassmorphic floating nav — and they score 8.
-Ambition applied to nothing is still nothing.
+**Novelty is not a defence — and it is not a charge either.** The v0 pages in §8 are visually *more*
+adventurous than Linear's — chromatic-aberration text, iridescent 3D renders, a glassmorphic floating
+nav — and they score 8. Ambition applied to nothing is still nothing. Tested from the other side on
+2026-09-10 with **Lusion** (`lusion.co`, Awwwards SOTD studio: WebGL hero, custom cursor,
+scroll-driven everything). It scores **4.0**, and every point is an observable, not a reaction to its
+strangeness: `0` `:focus-visible` against **4** `outline:none` (STATE 9 — removal without
+replacement); a headline reading `Bold Ideas, / Brought to Life` over "digital experiences that feel
+visually striking and technically seamless" (COPY 7 — construction-set plus weightless); no client,
+project or number on the first screen (SPEC 3). Its genuinely authored dimensions score like the good
+set: RHY **2** (9.2% centered, gaps 8.75/14.4/15.84/28.8/168/216px), DEF **2** (31 product tokens, no
+framework contract), MOT **2** (durations 0.2/0.3/0.4/0.5/0.6s, four curves, properties named), ORIG
+**1** — WebGL is this studio's domain, so it is credited, not deducted. **The quiet correct
+interfaces beat it and are meant to:** Stripe sign-in 1.6, Halcyon 1.0, GOV.UK 0.2. An unusual
+interface is not punished here; an empty one is.
+
+⚠ **A scroll-jacked or WebGL page cannot be scored off one 1440×900 frame.** Lusion's first viewport
+contains a wordmark and a render and no other text at all. Capture with `--scroll 3` and score the
+sampled frames, or say which dimensions you could not reach.
 
 **Deduct only on an observable.** Every point off cites an element, a value or a string you can
 paste (§4). "Feels generic" is a zero-point finding. If your only complaint is "this resembles
@@ -150,34 +180,58 @@ Rules:
 
 ## 5 — The fast path (60 seconds, 5 questions)
 
-Use this on every UI change. It is cheap enough that there is no excuse for skipping it, and it
-never misses in the direction that matters — nothing in the calibration set scores low here and
-high on the full path.
+Use this on every UI change. It is cheap enough that there is no excuse for skipping it, and
+nothing in the calibration set scores low here and high on the full path — it does not clear a
+generated page. It errs the other way, and **Q0 below is the fix for the worst of that error.**
 
 | # | Question | Fail if | Points |
 |---|---|---|---|
 | **1** | **Could this screenshot belong to any other product in this category with only the logo swapped?** | Yes | +3 |
 | **2** | **Is there a number, name, ID, unit or label on screen that only this product could produce?** | No | +3 |
 | **3** | **Pick the longest sentence. Would a person who works here have written it?** | No | +2 |
-| **4** | `grep -c ':focus-visible'` on the page CSS, and: does any element show a second state (hover/selected/loading/empty/**disabled**/error)? | 0 **and** none | +1 |
-| **5** | Two or more of these as **exact** strings in product chrome — `Acme Inc.`, `Lorem ipsum`, `$1,250.00`, `1,234`, `45,678`, `+12.5%`, `Total Revenue`, `Trending up this month`, `John Doe`, `Product Name`, `Your Company` — **or** a generator watermark still on the page (`Edit with Lovable`, `MADE IN BOLT.NEW`, `Built with v0`)? | Yes | +1 |
+| **4** | Tab once into the page — does anything show a focus ring? And does any element show a second state (hover/selected/loading/empty/**disabled**/error)? | Neither | +1 |
+| **5** | Two or more filler strings in product chrome — the shadcn seed cluster as **exact** strings (`Acme Inc.`, `Lorem ipsum`, `$1,250.00`, `1,234`, `45,678`, `+12.5%`, `Total Revenue`, `Trending up this month`, `John Doe`, `Product Name`, `Your Company`), **or** any string whose job is to say *text goes here* (`Section title`, `Company name`, a column header reading `Header`, cells drawn from `random / data / placeholder / text / irrelevant / illustrative`), **or** a generator watermark (`Edit with Lovable`, `MADE IN BOLT.NEW`, `Built with v0`)? | Yes | +1 |
+
+**Q0, the surface-class gate — ask it before Q1.** *Is this a surface where generic content is the
+correct content?* Auth, settings, consent and cookie screens, 404s, permission dialogs, payment
+forms, empty states. On those, **Q1 and Q2 do not apply**: score Q3–Q5 only, out of 4, and multiply
+by 2.5. Skipping this gate is the fast path's worst failure and it is measured below.
 
 Sum = fast score, 0–10. Measured against the §8 set, fast score first, full score second:
 
 ```
-GOV.UK 0/0.2   Linear 0/1.4   Basecamp 0/1.4   Mercury 0/1.6   Stripe 0/1.7   Resend 0/2.6
-Lovable-dir 0/2.8   Vercel 2/3.5   blueprintbuddy 1/3.9   liquid-log-glow 6/4.7
-shadcn dash-01 9/5.3   Cruip 9/6.1   TailAdmin 8/6.4   weight.coach 7/7.5
-Compute 9/8.2   Optimus 10/8.1   Agentic 10/8.5
+GOV.UK 0/0.2   GOV.UK Self-Assessment 0/0.2   Halcyon 0/1.0   Halden 0/1.2   Folio 0/1.2
+Deadlines 0/1.2   Linear 0/1.4   Basecamp 0/1.4   Mercury 0/1.6   Stripe sign-in 6→0*/1.6
+Stripe API ref 0/1.7   Raycast 0/2.4   Resend 0/2.6   Lovable-dir 0/2.8   Vercel 2/3.5
+blueprintbuddy 1/3.9   Lusion 8/4.0   ticket-queue v1 6/4.4   liquid-log-glow 6/4.7
+Bootstrap dashboard 8/4.9   shadcn dash-01 9/5.3   Cruip 9/6.1   TailAdmin 8/6.3
+weight.coach 7/7.5   Compute 9/8.2   Optimus 10/8.1   Agentic 10/8.5
+
+* 6 without the Q0 gate, 0 with it.
 ```
 
 (v0 "UXBooster" is omitted from this line only: it was scored on the full path in the 2026-09-09 run
 and never run through the fast path, and inventing its fast score would defeat the point of the line.)
 
-**It is accurate at both ends and runs about 2–3 points hot on templates.** That is by design: the
+**It is accurate at both ends and runs 2–3 points hot on templates.** That is by design: the
 fast path cannot tell "generated" from "somebody else's finished product", because from the outside
 they look the same and both need the same first fix. Use it as the trigger for the full path, not
 as the score. Anything ≥4 on the fast path gets the full path.
+
+**⚠ It runs 4.4 points hot on a generic-by-necessity surface, and that is not by design.** Measured
+2026-09-10 on the **Stripe sign-in page** (`dashboard.stripe.com/login`), which is one of the better
+executed screens in software: five font sizes total (14/16/22/13/12), `sohne-var`, **0.0%** of text
+leaves centered, 16 `:focus-visible` rules, and the real auth surface on screen — `Passkey`, `SSO`,
+`Or sign in with Google`, `Remember me on this device`, `New to Stripe? Create account`. It scores
+**1.6** on the full path and **6 on the fast path**: Q1 fires (+3) because a sign-in card *should*
+be swappable with any other sign-in card, and Q2 fires (+3) because there is nothing on a login
+screen that only Stripe could produce, and there should not be. Both questions are asking a
+question the surface is not allowed to answer.
+
+That is what Q0 is for. With the gate applied, Stripe sign-in scores Q3–Q5 = 0, fast = **0**, and
+the two paths agree. **Run Q0 on every auth, settings, consent, 404, permission and payment
+screen**, or the instrument will send an agent to decorate the one screen in the product where
+decoration is most expensive.
 
 **Two new failure modes, from the Lovable and Bolt rows.** `liquid-log-glow` runs **hot** (6 fast vs
 4.7 full) because a single-purpose utility trips Q1 — any water tracker looks like any other water
@@ -205,13 +259,40 @@ values from §8's set.
 | Score | Anchor |
 |---|---|
 | **0** | Screen contains identifiers, units, vocabulary or obligations from the domain that no generator would invent. Stripe's API reference shows `ch_3MmlLrLkdIwHu7ix0snN0B15` and "The minimum amount is $0.50 US or equivalent in charge currency"; its version selector reads `2026-08-26.dahlia`. Mercury's hero carries a superscript-1 footnote and a bank-partner disclaimer naming Choice Financial Group and Column N.A. |
-| **2** | Real content, real object model, real workflow language. Linear's nav includes `Now` — an item no template ships. Mercury's product menu: `Treasury by Mercury Advisory`, `Venture Debt`, `Earn up to 3.89% yield`, verticals `LLCs / Life Science / Climate / Real Estate & Construction`. |
-| **5** | Plausible domain-shaped content that is nonetheless invented and unverifiable. Cruip's "Simple": the hero mockup is a terminal running `npm login --registry=https://npm.pkg.github.com --scope=@phanatic` on a page selling a *website builder*. Decorative code that does not correspond to the product. |
+| **2** | Real content, real object model, real workflow language — **and the company may be fictional.** Linear's nav includes `Now`, an item no template ships. Mercury's product menu: `Treasury by Mercury Advisory`, `Venture Debt`, `Earn up to 3.89% yield`. The Halden build invents its company and still lands here: `HAL-441 Lumen Tutors want monthly invoicing instead of per-session charges`, `Chargeback evidence upload times out over 5 MB`, `Decide whether the legacy /v1/charges shim survives the Bexley cutover`, `Free since 09:40. Next in their queue is HAL-424.` |
+| **5** | Domain-shaped content that **does not correspond to the product it is on**, or that falls apart the moment you read it twice. Cruip's "Simple": the hero mockup is a terminal running `npm login --registry=https://npm.pkg.github.com --scope=@phanatic` on a page selling a *website builder*. Decorative content, borrowed from a neighbouring domain. |
 | **8** | Numbers presented as evidence that were generated. v0 Optimus: `98% faster deployment / STRIPE`, `300% throughput increase / LINEAR`, `20 days saved on builds / NETFLIX`. v0 Agentic: `50M+ TASKS · 99.9% UPTIME · 180+ COUNTRIES`. v0 Compute: `3500+ autonomous agents active · 99.7% distributed uptime · <50ms execution latency`, logo wall `Meridian Labs / Flux Systems / Beacon AI / Prism Analytics`. |
 | **10** | Fixture data verbatim: `Acme Inc.`, `Total Revenue $1,250.00`, `New Customers 1,234`, `Active Accounts 45,678`, `Growth Rate 4.5%` with `+12.5%` on two tiles. TailAdmin's variant: `$20K ↓`, `$20K ↑`, `$20K ↑` — three different metrics, one number. |
 
+**⚠ Invented is not the deduction — incoherent is.** The earlier version of this anchor read
+"plausible domain-shaped content that is nonetheless invented and unverifiable," and that sentence
+is wrong. Almost every artifact an agent builds is for a company that does not exist yet; if
+inventing the company floors SPEC at 5, then SPEC — the heaviest dimension in the instrument —
+becomes unscorable for the majority of real work, and the ladder in §9 sends every demo to rewrite
+content that was already right. The four builds in `examples/evaluation-builds/` falsify it
+directly: every company in them is fictional and all four score **SPEC 0–1**.
+
+**The check that replaces "is it real": does the fiction reconcile?** Invented content that a person
+built holds together under arithmetic. Invented content that a model emitted does not, because it
+was generated field by field. This is mechanical, pasteable, and it is the single best SPEC check in
+the instrument:
+
+| Interface | Reconciliation test | Result |
+|---|---|---|
+| Halcyon renewal console | sum the ARR column, compare to the header total | **74 rows, 74 money cells, Σ = `$10,810,248`** against a header reading `74 of 412 accounts · $10.81M of $54.28M ARR`, and a footer `74 accounts · $10,810,248` |
+| Halcyon risk panel | sum the seven "what is driving it" weights against the score | `+9 +10 +9 +15 +8 +9 +3` = **63**, and the panel reads `63 High … of 100` |
+| Halden task queue | sum the per-person counts against the header | `4+4+2+12+2+3` = 27 people-owned `+ 4` unassigned = **31**, header reads `31 open`; the client column sums to 31 independently |
+| TailAdmin | read three metric tiles in one row | `$20K ↓`, `$20K ↑`, `$20K ↑` — three different metrics, one number |
+| Bootstrap dashboard example | read the row ids | `1,001 · 1,002 · 1,003 · 1,003 · 1,004` — a duplicated primary key in six visible rows |
+
+**This check must be allowed to return n/a.** GOV.UK's Self Assessment page has nothing to
+reconcile — no table, no total, no derived figure — and that is not a finding. Score it only where
+the screen shows a total, a count, a percentage of a whole, or a decomposition. Where it applies it
+is close to conclusive; where it does not, say `n/a` and move on.
+
 **How to score it fast:** cover the logo and the illustration. Read what is left. If you cannot
-name the product's category from the remaining text, this dimension is ≥7.
+name the product's category from the remaining text, this dimension is ≥7. Then reconcile one
+number on the screen against the numbers it is made of.
 
 **When a high score here is acceptable:** a component-library specimen page, a design-system doc,
 or a Figma-to-code demo whose *purpose* is to show the component. shadcn's blocks page labels its
@@ -243,11 +324,27 @@ proper nouns.
 | Bolt `weight.coach` | **27 / 44** |
 | Linear · Basecamp · Mercury · Stripe · GOV.UK · Resend | **0** / 15, 7, 20, 33, 22, 27 |
 | Lovable `blueprintbuddy` | **0 / 20** |
+| TailAdmin | **5 / 9** — `Monthly Sales`, `Monthly Target`, `Customers Demographic`, `Recent Orders` |
+| ⚠ Raycast | **3 / 14** — `AI Chat`, `Quick AI`, `AI Extensions` |
+| ⚠ Halden (`examples/evaluation-builds/task-manager`) | **6 / 11** — `Priya Raghunathan`, `Marguerite Delacroix-Bell`, `Sam Ng`, `Jonas Weber`, `Dede Ayeni`, `Ilya Petrov` |
 
-Six designed interfaces produced **zero** between them. Three or more is a finding. Note the miss:
-Lovable writes sentence case, so this check catches Bolt and v0 and not Lovable. No single copy
-check covers all three generators — that is why COPY is scored on the whole body of text, not on a
-grep.
+Six designed interfaces produced **zero** between them. Note the miss: Lovable writes sentence case,
+so this check catches Bolt and v0 and not Lovable. No single copy check covers all three generators
+— that is why COPY is scored on the whole body of text, not on a grep.
+
+⚠ **The "not proper nouns" clause is the whole check, and the naive version fires on good
+interfaces.** Halden's six matches are the names of the six people whose work the page lists;
+Raycast's three are the names of three shipped features. Both are designed. Two repairs, and the
+check needs both:
+
+1. **Paste every match before you count it.** §4 already requires this. A list of six human names
+   is self-evidently not a finding; a list reading `Instant Deployment · Real-time Collaboration ·
+   Enterprise Security` is. The pasting *is* the proper-noun filter — there is no regex for it, and
+   an agent that reports the count without the strings has invented evidence.
+2. **The threshold is ≥3 Title Case headings that are common-noun phrases**, i.e. after names of
+   people, companies, products and shipped features are struck out. Raycast sits at exactly 3 before
+   the strike-out and 0 after. TailAdmin sits at 5 before and 4 after (`Customers Demographic` is
+   also ungrammatical, which is its own finding).
 
 **2. Apostrophe direction — an exculpatory check, not an accusatory one.** ⚠ The obvious version of
 this check is wrong. Counts of `’` (U+2019) versus `'` (U+0027) between letters:
@@ -419,22 +516,53 @@ but do not restyle a working admin panel to satisfy this line.
 
 *Does anything on this page have a second state?*
 
+**⚠ Score coverage, not rule count. The rule count is a screening proxy and it is not
+reproducible.** Measured 2026-09-10: Halden ships **3** `:focus-visible` rules and rings **53 of 53**
+interactive elements; Folio ships **1** and rings **32 of 32**; Lovable output ships 9–15 and none of
+them was designed. Rule counts reward a verbose component library and punish one correct universal
+rule — `:focus-visible{outline:2px solid var(--accent);outline-offset:2px}` is a complete keyboard
+system in one line. Worse, the counts do not survive a change of counting method: on `demo.tailadmin.com`
+the same page in the same minute gave `:focus-visible` = **0** through `document.styleSheets`→`cssRules`
+and **3** through raw stylesheet text off the network (`:focus` 0 vs 66, `outline:none` 0 vs 5,
+`:root` props 0 vs 173). A DOM-computed tally on the same page reproduced its published value
+exactly (`gap: 12px` on **125** elements, §6.5). **So: computed-style tallies are quotable and
+CSS-rule counts are not.**
+
+Measure coverage instead — one snippet, no ambiguity:
+
+```js
+// the exact script the numbers in this section were measured with
+const sel = 'a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"]),[role=button],[role=tab],[role=checkbox]';
+const els = [...document.querySelectorAll(sel)].filter(e => e.getClientRects().length);
+let ringed = 0; const bare = [];
+for (const e of els) {
+  const c = getComputedStyle(e);
+  const before = [c.outline, c.outlineWidth, c.boxShadow, c.backgroundColor, c.borderColor].join('|');
+  e.focus({ preventScroll: true });
+  const a = getComputedStyle(e);
+  const after = [a.outline, a.outlineWidth, a.boxShadow, a.backgroundColor, a.borderColor].join('|');
+  if (after !== before && a.outlineStyle !== 'none' && parseFloat(a.outlineWidth) > 0) ringed++;
+  else bare.push(e.tagName + ' ' + (e.textContent || '').trim().slice(0, 24));
+  e.blur();
+}
+console.log(ringed + '/' + els.length, bare);
+```
+
 | Score | Anchor |
 |---|---|
-| **0** | States are a system. GOV.UK: **28** `:focus-visible` rules and **135** `:focus` rules, with a named focus token, and the focus style inverts text and background rather than adding a ring. |
-| **2–3** | Focus authored deliberately, every removal paired with a replacement. Linear: 7 `:focus-visible`, 4 `outline:none`. Stripe: 4 `:focus-visible`, ring composed from `--s--focus-ring` tokens. Resend: 8 `:focus-visible`, 0 bare `:focus`. Vercel: **22** `:focus-visible` against **23** `outline:none` — a one-for-one trade, which is what "we removed the default and replaced it" looks like in a tally. |
-| **6** | Outlines killed, partially restored. TailAdmin: **13** `outline: none` rules, **26** bare `:focus` rules, **2** `:focus-visible` — a keyboard user gets nothing on most controls. |
-| **9–10** | Zero. All four v0 apps measured `0` rules matching `:focus-visible` and `0` matching `:focus`; so does Cruip's "Simple" template. Nothing on the page has a keyboard state, an empty state, an error state or a loading state. |
+| **0** | States are a system. GOV.UK `/browse/benefits`: **56 of 56** interactive elements ringed, a named focus token, and a focus style that inverts text and background rather than adding a ring. |
+| **1–3** | Full or near-full coverage however few rules it took, every `outline:none` paired with a replacement, and at least one second state rendered in the default view. Halden **53/53** from 3 rules with a state switcher covering populated / empty-first-run / empty-filtered / loading / error. Folio **32/32** from 1 rule. Vercel: **22** `:focus-visible` against **23** `outline:none` — a one-for-one trade, which is what "we removed the default and replaced it" looks like in a tally. |
+| **5** | Coverage is fine and nothing else is. TailAdmin rings **42 of 44** (the two misses are both bare `<input>`), and the page shows exactly one populated happy path — no empty, no loading, no error, nothing disabled. Keyboard access alone is not a state system. |
+| **6–8** | Partial coverage: some controls ringed, others stripped. The observable is the `bare` array from the snippet above being non-empty on elements a user must reach — a submit button, a table row, a filter chip. **No interface in the calibration set lands here**, which is itself informative: focus is nearly always all-or-nothing, because it is inherited from one decision. If you land here, name the controls. |
+| **9–10** | Zero coverage. All four v0 apps and Cruip's "Simple" measure `0` rules matching `:focus-visible` and `0` matching `:focus`, and ring nothing. Lusion, an Awwwards-winning WebGL studio site, rings **0 of 38** — `0` `:focus-visible` against **4** `outline:none`, removal without replacement. Nothing on the page has a keyboard state, an empty state, an error state or a loading state. |
 
-⚠ **The zero-focus check has a large blind spot, and it is worth knowing before you rely on it.** It
-catches pages a model wrote from scratch — v0 marketing pages, `weight.coach` (0 `:focus-visible`, 1
-bare `:focus` in 48KB of CSS), Cruip. It **misses everything built on a component library**, because
-the library authored the focus states and they ship whether or not anyone thought about them.
-Lovable output measures **9, 14 and 15** `:focus-visible` rules across the three apps in the set —
-better than Linear's 7 — and none of that is evidence that anyone designed a state.
+⚠ **Zero coverage is strong evidence of generation; full coverage is no evidence of design.** The
+zero case catches pages a model wrote from scratch — v0 marketing pages, `weight.coach` (0
+`:focus-visible`, 1 bare `:focus` in 48KB of CSS), Cruip, Lusion. It **misses everything built on a
+component library**, because the library authored the focus states and they ship whether or not
+anyone thought about them.
 
-So: **zero focus rules is strong evidence of generation; nonzero is no evidence of design.** When the
-count is healthy, stop counting and go look instead. Does any list show what it looks like with
+When coverage is healthy, stop measuring and go look instead. Does any list show what it looks like with
 **zero** rows? Does any number show what it looks like while **loading**? Does any destructive action
 show its **confirmation**? Is any control rendered **disabled** in the default view?
 
@@ -544,7 +672,17 @@ and `transition-property`.**
 | Score | Anchor |
 |---|---|
 | **0–2** | Multiple durations mapped to multiple purposes, a chosen curve, named properties. Linear: `0.1s×50` and `0.16s×18`; easing `cubic-bezier(0.25, 0.46, 0.45, 0.94)` on 26 elements; properties named per element (`color`×38, `filter`×10, `color, background`×8); **zero** `transition: all`. Mercury: `0.3s` with `cubic-bezier(0, 0, 0.2, 1)` on 34, plus `0.15s` on 15. |
-| **8–10** | One duration, one curve, `all`. v0 Optimus: `0.15s×33`, `cubic-bezier(0.4, 0, 0.2, 1)` on **every** transitioning element, `transition-property: all` on 22. shadcn.com/blocks: 113 transitions, all `0.15s`, all `cubic-bezier(0.4,0,0.2,1)`, 54 of them `all`. That curve is Tailwind's `ease-in-out` default. |
+| **5** | One duration and one curve, properties named. Bootstrap's dashboard example: every transition `0.15s`, every easing `ease-in-out`, but the property lists are written out (`color, background-color, border-color` ×14, `…, box-shadow` ×4) and nothing is `all`. Nothing was decided; nothing was left lying around either. |
+| **7** | Several durations, one curve, `all`. TailAdmin: `0.25s×22 · 0.15s×9 · 0.3s×2 · 0.1s×2`, easing `ease×31`, and `transition-property: all` on **31** elements — the duration varies because different components shipped with different defaults, not because anyone chose. |
+| **8–10** | One duration, one curve, `all` — **all three, and the third is load-bearing.** v0 Optimus: `0.15s×33`, `cubic-bezier(0.4, 0, 0.2, 1)` on **every** transitioning element, `transition-property: all` on 22. shadcn.com/blocks: 113 transitions, all `0.15s`, all `cubic-bezier(0.4,0,0.2,1)`, 54 of them `all`. That curve is Tailwind's `ease-in-out` default. |
+
+⚠ **Two of the three clauses convict nobody on their own.** Raycast ships `transition-property: all`
+on **131** elements and is not generated. The Halcyon console runs exactly one duration (`0.12s`) and
+exactly one curve (`ease-out`) across all 39 of its transitions, and that is the right answer for a
+console where every transition is a row highlight — its properties are named (`background`,
+`background, border-color`, `color`) and **zero** are `all`. A single duration is a decision when the
+page has one class of motion; it is a default when the page has several. Ask what the page is
+transitioning before you deduct.
 
 **Also check what hover changes.** Linear has 43 `:hover` rules; 13 change background, 9 change
 opacity, 3 change border, **0 change `box-shadow`**, and the 5 that use `transform` are in a toast
@@ -559,7 +697,7 @@ was, but when present it is worth the full deduction on its own.
 | Score | Anchor |
 |---|---|
 | **0** | A signature move drawn from the domain. Basecamp's primary navigation is a stack of underlined links with dashed one-line explanations and hand-drawn yellow highlighter marks — `Basecamp 5 is here — Major upgrade for 2026`, `91,733 people are working in Basecamp right now!` — on a page selling project management. GOV.UK's `0 2px 0` hard button depth. Linear's 0.5px inset top-light. |
-| **3** | Everything is conventional and everything is correct. |
+| **3** | Everything is conventional and everything is correct. **The observable:** name this artifact's archetype, open its reference product in [`../references/`](../references/), and list three decisions where the two differ. If you cannot find three, you are at 3 or above. |
 | **6** | Everything is conventional *and* every convention chosen is the current default. Maximum. |
 
 **This dimension cannot exceed 6, and there is no route by which it alone lifts a score above 3.**
@@ -593,6 +731,15 @@ Then apply, in this order:
    `Acme Inc.`, `Lorem ipsum`, `$1,250.00`, `1,234`, `45,678`, `+12.5%`, `Total Revenue`,
    `Trending up this month`, `Visitors for the last 6 months`, `John Doe`, `jane@example.com`,
    `Product Name`, `Your Company`.
+   **1b. Or two or more strings whose job is to say *text goes here*, in the same places.** The list
+   above is the shadcn seed file, and a closed list of one framework's fixtures is a check that
+   misses every other framework. Bootstrap's own dashboard example — competent, conventional,
+   correct, and the reference implementation most templates start from — ships four column headers
+   reading `Header`, a section head reading `Section title`, a brand reading `Company name`, and
+   table cells drawn from `random · data · placeholder · text · irrelevant · illustrative · layout ·
+   dashboard`, with the row id `1,003` appearing twice in six visible rows. Not one string on the
+   §7 list appears on it, and the floor did not fire. It should have. Pasteable test: **a cell,
+   header or tile whose text names its own role rather than its value.**
 2. A quantitative claim is attributed to a third party you did not verify — `98% faster
    deployment / STRIPE`, `99.9% uptime`, `50M+ tasks`, a logo wall of companies that are not
    customers.
@@ -627,25 +774,37 @@ demo" is not that exemption; the label has to be on the screen.
 
 ## 8 — Calibration set
 
-18 interfaces, screenshotted at 1440×900 and probed for computed styles on 2026-09-09 (rows 1–14)
-and 2026-09-10 (the four **★** rows, which cover Lovable and Bolt). Dimension codes in weight order:
-SPEC 20 · COPY 18 · DEF 13 · STATE 10 · RHY 10 · COL 8 · TYPE 8 · SURF 6 · MOT 4 · ORIG 3.
+28 interfaces, screenshotted at 1440×900 and probed for computed styles on 2026-09-09 (rows without
+a mark), 2026-09-10 (the four **★** rows, which cover Lovable and Bolt) and the 2026-09-10
+adversarial re-run (the ten **▲** rows, which cover the corpus's own builds and the two failure
+modes §3 exists to prevent). Dimension codes in weight order: SPEC 20 · COPY 18 · DEF 13 · STATE 10 ·
+RHY 10 · COL 8 · TYPE 8 · SURF 6 · MOT 4 · ORIG 3.
 
 | Interface | Score | SPEC | COPY | DEF | STATE | RHY | COL | TYPE | SURF | MOT | ORIG |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | GOV.UK `/browse/benefits` | **0.2** | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 1 |
+| ▲ GOV.UK `/log-in-file-self-assessment-tax-return` | **0.2** | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 1 |
+| ▲ Halcyon renewal console (`evaluation-builds/churn-dashboard`) | **1.0** | 0 | 1 | 1 | 1 | 1 | 1 | 2 | 1 | 3 | 2 |
+| ▲ Halden task queue (`evaluation-builds/task-manager`) | **1.2** | 1 | 1 | 1 | 1 | 1 | 2 | 2 | 1 | 1 | 2 |
+| ▲ Folio API landing (`evaluation-builds/api-landing`) | **1.2** | 1 | 1 | 1 | 2 | 1 | 2 | 1 | 1 | 1 | 1 |
+| ▲ Deadlines (`evaluation-builds/college-deadlines`) | **1.2** | 1 | 0 | 1 | 1 | 2 | 2 | 2 | 2 | 1 | 2 |
 | Linear `linear.app` | **1.4** | 0 | 2 | 2 | 2 | 1 | 2 | 1 | 2 | 1 | 2 |
 | Basecamp `basecamp.com` | **1.4** | 1 | 0 | 1 | 3 | 2 | 2 | 2 | 2 | 3 | 0 |
 | Mercury `mercury.com` | **1.6** | 0 | 2 | 2 | 3 | 2 | 2 | 1 | 2 | 2 | 2 |
+| ▲ Stripe sign-in `dashboard.stripe.com/login` | **1.6** | 3 | 1 | 1 | 1 | 1 | 2 | 1 | 1 | 2 | 3 |
 | Stripe API reference | **1.7** | 0 | 1 | 2 | 2 | 2 | 2 | 4 | 3 | 3 | 3 |
+| ▲ Raycast `raycast.com` | **2.4** | 1 | 5 | 2 | 3 | 1 | 3 | 2 | 2 | 3 | 1 |
 | Resend `resend.com` | **2.6** | 2 | 4 | 2 | 2 | 3 | 3 | 1 | 3 | 3 | 2 |
 | ★ Lovable partner directory | **2.8** | 2 | 3 | 3 | 2 | 4 | 2 | 3 | 3 | 4 | 3 |
 | Vercel `vercel.com` | **3.5** | 2 | 6 | 1 | 3 | 4 | 4 | 3 | 5 | 4 | 4 |
 | ★ Lovable `blueprintbuddy-b2c` | **3.9** | 3 | 5 | 4 | 3 | 5 | 3 | 4 | 4 | 5 | 4 |
+| ▲ Lusion `lusion.co` | **4.0** | 3 | 7 | 2 | 9 | 2 | 3 | 3 | 3 | 2 | 1 |
+| ▲ ticket-queue `v1.html` | **4.4** | 3 | 5 | 1 | 9 | 3 | 6 | 5 | 5 | 6 | 4 |
 | ★ Lovable `liquid-log-glow` | **4.7** | 2 | 6 | 9 | 3 | 3 | 5 | 6 | 4 | 5 | 4 |
+| ▲ Bootstrap 5.3 dashboard example | **4.9** | 9 | 8 | 2 | 3 | 3 | 3 | 2 | 2 | 3 | 4 |
 | shadcn `dashboard-01` preview | **5.3** | 5 | 7 | 4 | 5 | 5 | 6 | 4 | 4 | 9 | 5 |
 | Cruip "Simple" | **6.1** | 7 | 7 | 4 | 9 | 5 | 5 | 6 | 4 | 7 | 5 |
-| TailAdmin demo | **6.4** | 8 | 8 | 5 | 6 | 5 | 6 | 5 | 5 | 6 | 5 |
+| TailAdmin demo | **6.3** | 8 | 8 | 5 | 5 | 5 | 6 | 5 | 5 | 6 | 5 |
 | v0 "UXBooster" dashboard | **7.2** | 7 | 7 | 9 | 10 | 6 | 5 | 6 | 7 | 8 | 4 |
 | ★ Bolt `weight.coach` | **7.5** | 6 | 7 | 9 | 10 | 8 | 8 | 8 | 6 | 8 | 4 |
 | v0 "Optimus" | **8.1** | 9 | 8 | 8 | 10 | 8 | 6 | 7 | 8 | 9 | 4 |
@@ -660,6 +819,41 @@ A rubric that scores "polish" would fail it. It scores 0 because nothing on the 
 19px body, `box-shadow: #083D29 0 2px 0 0` as button depth, 28 `:focus-visible` rules with an
 inverting focus style, and headings that are full conditional sentences — "Benefits and financial
 support if you're temporarily unable to work." Every absence is defended.
+
+**▲ The four `examples/evaluation-builds/` — 1.0 to 1.2, and this is the instrument grading its own
+students.** They were built by agents following this corpus and self-reported 1/10; scored blind
+here they land 1.0, 1.2, 1.2, 1.2, so the self-report holds. What makes them worth a row is that
+**every company in them is fictional** — Halcyon, Halden, Folio, and a student's college list — and
+they still score at the top of the set. The evidence is coherence under load, not verifiability:
+Halcyon's 74 rows sum to the `$10,810,248` its header claims, its seven risk signals sum to the 63
+the panel shows, Halden's per-person counts sum to the `31 open` in its subtitle, Folio's h1 is a
+falsifiable statement about the API (`Every field we return points at the pixels it came from`)
+rather than a promise, and Deadlines opens with `Georgia Tech closes tomorrow night and one short
+answer is still unwritten. Nothing else is due for another 17 days.` All four ring **100%** of their
+interactive elements (53/53, 32/32, 140/140, 27/27) from 1–4 rules, and all four ship a state
+switcher so empty, loading and error are inspectable rather than claimed. Their weakest real
+dimensions are unremarkable: Folio STATE 2 because a marketing page has fewer states to show,
+Halcyon MOT 3 for a single `0.12s ease-out`, Deadlines RHY 2 for 6.3% centering. **If your own
+build cannot survive the reconciliation check in §6.1, it is not in this band, whatever its
+surface looks like.**
+
+**▲ Stripe sign-in — 1.6, and the reason §5 grew a Q0.** Five font sizes, `sohne-var`, 0.0% of text
+leaves centered, 16 `:focus-visible` rules, a real auth surface (`Passkey`, `SSO`,
+`Or sign in with Google`, `Remember me on this device`). SPEC is **3** and cannot be lower: there is
+nothing on a sign-in screen that only Stripe could produce, and putting something there would be a
+defect. This is the case that proves restraint is unpunished on the full path — 1.6 — and unhandled
+on the fast path, which scored it **6** until Q0 existed. Note also that its hero art is a
+full-bleed multi-hue orange-pink-purple gradient ribbon, which is the retired 2023 tell, on one of
+the best-executed screens in software.
+
+**▲ Bootstrap 5.3 dashboard example — 4.9, and the fixture floor missed it.** The reference
+implementation half the world's admin templates start from: 5 font sizes, `system-ui`, 3.2%
+centering, 12 `:focus-visible` rules, named transition properties. Every one of those is fine. SPEC
+is **9** and COPY **8** because the page ships `Company name`, `Section title`, four column headers
+reading `Header`, cells drawn from `random · data · placeholder · text · irrelevant · illustrative`,
+and the row id `1,003` twice in six rows. **Clamp B did not fire**, because the §7 list is shadcn's
+seed file and Bootstrap's placeholders are its own. That is what clause 1b fixes. The lesson
+matches Cruip's: human authorship is not a defence, and neither is a good framework.
 
 **Basecamp — 1.4, ORIG 0.** Underlined text links as primary navigation, hand-drawn highlighter
 marks, a live counter reading `91,733 people are working in Basecamp right now!`, a first-person
@@ -679,7 +873,7 @@ customer logos you can verify, a dated real event, a proprietary typeface, 374 a
 `$1,250.00`, `1,234`, `45,678`, `+12.5%` twice) and MOT is 9 — the page serving it runs 113 transitions, every one `0.15s`, every one
 `cubic-bezier(0.4,0,0.2,1)`, 54 of them `transition-property: all`. It escapes Clamp B only because the page around it
 is visibly labelled "A dashboard with sidebar, charts and data table" beside a Preview/Code toggle
-and an `npx shadcn add dashboard-01` command. **Ship that markup as your product and it is a 6.4 —
+and an `npx shadcn add dashboard-01` command. **Ship that markup as your product and it is a 6.3 —
 same pixels, different claim.**
 
 **Cruip "Simple" — 6.1.** A paid, human-designed template, and it scores above shadcn's own block
@@ -690,7 +884,7 @@ apostrophe in the 64px h1 (`The website builder you're looking for`); `letter-sp
 builder. Human authorship is not a defence either — the rubric detects absent decisions, whoever
 failed to make them.
 
-**TailAdmin — 6.4, the template anchor.** Internally consistent, one accent, correct hierarchy,
+**TailAdmin — 6.3, the template anchor.** Internally consistent, one accent, correct hierarchy,
 correct contrast, nothing broken. It is not vibecode; it is somebody else's finished product with
 your logo on it. The evidence is in the data, not the styling: `$20K ↓ / $20K ↑ / $20K ↑` across
 three different metrics in one row, and "Target you've set for each month" as the subtitle of both
@@ -882,13 +1076,14 @@ Emit this. Not prose.
 
 ```
 VIBECODE  raw 8.1  →  clamped 8.1   (Clamp B fired: fabricated third-party metric)
-1440×900 render + computed CSS.  Dimensions scored: 10/10.
+1440×900 render + computed CSS.  Dimensions scored: 10/10.  Human render confirmed (§11.11).
+Q0: not a generic-by-necessity surface, so fast Q1-Q2 apply.
 
 DIM    S   W    evidence
 SPEC   9  20    "98% faster deployment / STRIPE" ×2 in one viewport; "20 days saved on builds / NETFLIX"
 COPY   8  18    h2 "Global by default." — verbatim match with v0-compute; "Everything you need. Nothing you don't."
 DEF    8  13    :root = 33 props incl. --sidebar-ring, --chart-1..5; no sidebar, no chart on page
-STATE 10  10    0 rules matching /:focus-visible/; 0 matching /:focus\b/; no empty/loading/error state rendered
+STATE 10  10    focus ring on 0 of 38 interactive elements; no empty/loading/error state rendered
 RHY    8  10    padding 128px/128px on 8 of 9 sections; gaps 8/12/16/24/32/64/96 (default scale, untouched)
 COL    6   8    neutral ramp = #fafaf9/#080503/#dad7d0 themed, but --destructive #e40014 unchanged
 TYPE   7   8    30px, 48px, 60px, 160px co-occur; Instrument Sans + JetBrains Mono, weights 400/500 only
@@ -938,13 +1133,19 @@ The instrument is being run by the thing it grades. These are the loopholes to c
    that keeps the instrument from drifting into a list of things a model finds distasteful.
 10. **Report the shape with the score.** A bare number invites the wrong fix (§9). Always emit the
     per-dimension line, so the reader can see whether they are looking at a cleanup or a rebuild.
+11. **Confirm you scored the human render.** Sites now serve agents a different page: `ramp.com`
+    returns a plain-text "Machine Version" document to headless Chromium, `launched.lovable.dev`
+    returns a Cloudflare interstitial. Both would score near 0 on every dimension, for the wrong
+    reason. Gate on element count > 200, more than three distinct font sizes, and the product's own
+    h1 being present, and say in the output which render you scored.
 
 ---
 
 ## 12 — Card
 
 ```
-FAST (60s)                                    WEIGHTS
+FAST (60s)   Q0: auth/settings/404/consent?    WEIGHTS
+             → skip 1+2, score 3-5 of 4, ×2.5
 1 logo-swappable?            +3                SPEC 20  COPY 18  DEF 13  STATE 10
 2 no unfakeable detail?      +3                RHY  10  COL   8  TYPE  8  SURF   6
 3 nobody here wrote that?    +2                MOT   4  ORIG   3 (0-6 only)
@@ -954,8 +1155,8 @@ FAST (60s)                                    WEIGHTS
 TARGET ≤2       SHIP GATE ≤3                            third-party metric → min 6
 
 CHEAPEST DECISIVE CHECKS
-  grep -c ':focus-visible'                     0 on a page with buttons → STATE 10
-                                               (nonzero proves NOTHING — see 6.4)
+  focus() every interactive el, count rings    0/N → STATE 10 · N/N proves NOTHING (6.4)
+                                               rule COUNTS are not reproducible — don't quote them
   resolve --primary/--success/--warning/--error  each == a stock ramp 500 → DEF ≥8
   grep -c -- '--_unused_'                      >0 → Lovable, tokens renamed not deleted
   --destructive == stock (any notation)        nobody themed the error colour
@@ -965,7 +1166,9 @@ CHEAPEST DECISIVE CHECKS
   tally transition-duration + timing-function  one of each → MOT ≥8
   tally border-radius values                   one value, and it's a pill → SURF ≥8
   tally section padding-top/bottom             one value across all sections → RHY ≥8
-  count Title Case h1/h2/h3                    ≥3 → COPY finding (designed set: 0)
+  count Title Case h1/h2/h3, PASTE the list    ≥3 common-noun phrases → COPY finding
+                                               (names of people/features don't count: Raycast 3)
+  reconcile one total against its parts        Σ column ≠ header total → SPEC finding · n/a is OK
   count curly ’ vs straight '                  many curly, ~0 straight → CLEARS copy
   distinct colors among h1 text nodes          ≥2 → ask which words, then judge
   visible watermark                            'Edit with Lovable' / 'MADE IN BOLT.NEW'
@@ -986,8 +1189,68 @@ referenced in §9 · [`../craft/interaction-and-states.md`](../craft/interaction
 the states §6.4 asks for · [`../system/8-gates.md`](../system/8-gates.md) for the craft failures §3
 routes away from this instrument.
 
-> **Two files this corpus links to do not exist yet:** `vibecode-taxonomy.md` (referenced from
-> `anti-patterns/README.md` and `remedies.md`) and `visual-critique-method.md` (referenced from
-> `anti-patterns/README.md`, `remedies.md` and `system/7-critique.md`). Until they are written, §3
-> and §6 of this file carry the taxonomy, and "render it and look at it" is the whole method. Do not
-> follow those links expecting content.
+> **Both companion files now exist** and this note used to say they did not: `vibecode-taxonomy.md`
+> (2,619 lines) and `visual-critique-method.md` (1,138 lines) are present in this directory as of
+> 2026-09-10. Follow those links. §3 and §6 here remain the short form of the taxonomy.
+
+---
+
+## Adversarial pass (2026-09)
+
+First hostile review of this file. Ten interfaces were scored blind and added to §8 — the four
+builds in `examples/evaluation-builds/`, two known-excellent products not previously in the set
+(Raycast, Stripe sign-in), a competent conventional template (Bootstrap 5.3's dashboard example),
+an Awwwards-winning WebGL studio site (Lusion), a second GOV.UK page, and the corpus's own
+`ticket-queue-critique/v1.html`. Every number below was measured with Playwright against the live
+artifact on 2026-09-10 and is pasteable.
+
+**What changed, and what falsified it**
+
+| Change | Falsified by |
+|---|---|
+| §6.1's `5` anchor no longer reads "invented and unverifiable"; the deduction is non-correspondence and incoherence | All four evaluation builds invent their companies and score SPEC 0–1. The old wording floored the heaviest dimension at 5 for every artifact an agent will ever build. |
+| §6.1 gained the **reconciliation check** — does the fiction survive arithmetic | Halcyon: 74 rows, Σ = `$10,810,248` against a header of `$10.81M`; seven risk signals `+9 +10 +9 +15 +8 +9 +3` = the `63` shown. Halden: `4+4+2+12+2+3 + 4` = the `31 open` in its subtitle. TailAdmin: `$20K ↓ / $20K ↑ / $20K ↑`. Bootstrap: `1,003` twice in six rows. |
+| §6.4 scores **focus coverage**, not rule count | Halden rings 53/53 from **3** rules; Folio 32/32 from **1**. And the counts are not reproducible: `demo.tailadmin.com` in the same minute gave `:focus-visible` = 0 via `cssRules` and 3 via raw stylesheet text (`:focus` 0/66, `outline:none` 0/5, `:root` props 0/173). |
+| §5 gained **Q0**, the surface-class gate | Stripe sign-in scores **6 on the fast path and 1.6 on the full path** — a 4.4-point error on one of the best-executed screens in software, because Q1 and Q2 ask a question a sign-in screen is not allowed to answer. |
+| §7 Clamp B gained **clause 1b**, generic filler | Bootstrap's dashboard example ships `Company name`, `Section title`, `Header` ×4 and cells reading `random · data · placeholder · text`, and matched **zero** strings on the §7 list. A closed list of one framework's fixtures is not a check. |
+| §6.2's Title Case check requires the matches to be **pasted** and struck for proper nouns | Raycast: **3 / 14** (`AI Chat`, `Quick AI`, `AI Extensions`). Halden: **6 / 11**, all six the names of the people whose work the page lists. Both designed; the naive threshold fires on both. |
+| §6.9 gained anchors at 5 and 7; one duration alone no longer convicts | Raycast ships `transition-property: all` on **131** elements. Halcyon runs one duration (`0.12s`) and one curve (`ease-out`) across all 39 transitions with every property named and zero `all` — correct for a console with one class of motion. |
+| §6.4 gained a 6–8 band, §6.10's `3` gained an observable | An unanchored band is scored 5 every time, which is the failure §1 opens by warning about. |
+| Header and §11.11: **confirm you scored the human render** | `ramp.com` served headless Chromium a plain-text "Ramp — Machine Version" document (1 text leaf, 1 font size). `launched.lovable.dev` served a Cloudflare interstitial. Both score ~0 on every dimension for the wrong reason. |
+| §3 records the novelty counter-test | Lusion scores **4.0** — every point an observable (0 focus coverage against 4 `outline:none`; `Bold Ideas, / Brought to Life`; no client or number on the first screen), and it loses to Stripe sign-in 1.6, Halcyon 1.0 and GOV.UK 0.2. An unusual interface is not punished; an empty one is. |
+| The closing note claiming two companion files do not exist | Both exist. `vibecode-taxonomy.md` was written 2026-09-10 11:08. |
+
+**What I could not shake**
+
+- **The weighting.** SPEC 20 / COPY 18 / SURF 6 survived every attempt to break it. The two cases
+  built to break it — a beautiful empty page (Lusion 4.0) and an ugly-by-2026-convention full one
+  (Basecamp 1.4) — land where the weighting says they should, and moving SURF up would put Lusion
+  above Basecamp on the strength of its radius scale.
+- **Restraint is genuinely unpunished on the full path.** Two GOV.UK pages score 0.2 independently,
+  and Stripe sign-in — five font sizes, no illustration, no radius above 6px — scores 1.6. There is
+  still no deduction in §6 that fires on absence of decoration. The failure was in §5, not §6.
+- **The four corpus builds are not gaming the instrument.** Their 1/10 self-report reproduces at
+  1.0–1.2 under blind scoring, and it holds up under the checks that did *not* exist when they were
+  built: 100% focus coverage on all four, reconciling arithmetic on the two with tables, 0.7–6.3%
+  centering, zero fixture strings.
+- **The two clamps.** Clamp A never fired incorrectly in this pass; Clamp B fired only where a claim
+  was actually being made.
+
+**What I could not verify**
+
+- **GOV.UK `/browse/benefits` focus-rule counts drifted.** The file's `28 :focus-visible / 135
+  :focus` measured **54 / 312** today by raw-stylesheet text and **0 / 0** by `cssRules`. Its
+  `:root` token count reproduced exactly (24, all `--govuk-*`), as did TailAdmin's `gap: 12px` on
+  125 elements. Computed-style tallies reproduce; CSS-rule counts do not. The §8 rows built on rule
+  counts should be treated as observations from their date, not as constants — which is why §6.4 no
+  longer scores on them.
+- **`examples/ticket-queue-critique/README.md` calls `v1.html` a vibecode **3**; scored blind here
+  it is **4.4**.** The gap is almost entirely STATE — 0 `:focus-visible`, 0 `:focus`, 1
+  `outline:none`, nothing ringed — which the README's own delta table records but its headline
+  number predates. I left that file alone rather than restate a worked example I was not reviewing;
+  the two numbers are the same artifact scored before and after §6.4 existed, and this row is the
+  current one.
+- **No fresh wild generator output.** Both live AI-generated pages I reached were served bot pages
+  instead (above), so the v0/Lovable/Bolt rows are unchanged from 2026-09-09/10 and the fingerprint
+  table in §6.3 was not re-probed. It should be re-run against current v0 and Lovable output before
+  the next refresh; generator fingerprints are the fastest-ageing content in this file.

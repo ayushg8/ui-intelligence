@@ -19,9 +19,19 @@ for (const [k, f] of Object.entries(variants)) {
   await p.evaluate((f) => { document.documentElement.style.filter = f === 'none' ? '' : f; }, f);
   await p.screenshot({ path: `${outDir}/${name}-${k}.png` });
 }
-// upside down
-await p.evaluate(() => { document.documentElement.style.filter=''; const b=document.body; b.style.transform='rotate(180deg)'; b.style.transformOrigin='center center'; });
-await p.screenshot({ path: `${outDir}/${name}-flip.png` });
-await p.evaluate(() => { document.body.style.transform=''; });
+// upside down — rotate the IMAGE, not the DOM. A transform on <body> makes it the
+// containing block for sticky/fixed chrome and rotates the whole document about its own
+// centre, so on any page taller than the viewport the capture is a different slice.
+await p.evaluate(() => { document.documentElement.style.filter=''; });
+const shot = 'data:image/png;base64,' + (await p.screenshot()).toString('base64');
+const helper = await ctx.newPage();
+const flipped = await helper.evaluate(async (u) => {
+  const img = new Image(); img.src = u; await img.decode();
+  const c = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height });
+  const x = c.getContext('2d'); x.translate(img.width, img.height); x.rotate(Math.PI);
+  x.drawImage(img, 0, 0); return c.toDataURL('image/png');
+}, shot);
+fs.writeFileSync(`${outDir}/${name}-flip.png`, Buffer.from(flipped.split(',')[1], 'base64'));
+await helper.close();
 console.log('done', name);
 await b.close();

@@ -811,8 +811,12 @@ screenshotted Linear, Raycast, Raycast's manual, Attio and Zed at 1440 and 390.
 6. **Raycast keycap shadow.** Two inset layers documented, **three** exist. The missing
    `inset 0 -1.5px 0 rgba(0,0,0,0.2)` bottom shade is the layer that actually creates the physical-key
    read, and it unified finding #9 with Zed's `inset 0 -1px 0`.
-7. **shadcn radius scale.** `2xl 18` does not exist. Actual: `--radius: .625rem` → `sm 6 · md 8 ·
-   lg 10 · xl 14`, and the palette's 14px radius is `--radius-xl`, not arbitrary.
+7. **shadcn radius scale.** The palette's 14px radius is `--radius-xl`, not arbitrary. *(Corrected
+   2026-09-10: an earlier version of this note said "`2xl 18` does not exist." It does. Re-fetched
+   from shadcn's `globals.css`, the scale is multiplicative off `--radius: .625rem` —
+   `sm ×.6 = 6 · md ×.8 = 8 · lg ×1 = 10 · xl ×1.4 = 14 · 2xl ×1.8 = 18 · 3xl ×2.2 = 22 ·
+   4xl ×2.6 = 26`. The palette uses `xl`; the steps above it exist and are simply unused there.
+   `anti-patterns/remedies.md` §2.1 and Appendix B state the full scale correctly.)*
 8. **Zed's body font.** "A monospace-adjacent system stack" is wrong: it is `writer` (iA Writer), a
    licensed duospaced face, with `plexSerif` for the hero and `Lilex` for keycaps. `--font-sans` is a
    Tailwind default nothing uses. Also verified the h1 genuinely computes to weight 340.

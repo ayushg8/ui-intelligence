@@ -10,6 +10,12 @@ element geometry, or pixel analysis of a 2×/4× screenshot. The worked example 
 captured at three widths in five states. Reference values were measured from GitHub's issue list,
 Linear, and Stripe on the same day. Nothing here is recalled.
 
+**Adversarially re-run 2026-09-10.** The whole protocol was executed end to end on a second, independent
+interface — `../examples/evaluation-builds/task-manager/` — and every script in §10 was run rather than
+read. Two tests failed: one was measuring the wrong thing and is now cut, one was capturing the
+wrong region and is now fixed (§3.3). The comparison test was demoted from "highest-signal" to
+"calibration" on the evidence of this document's own worked example. See the pass log at the end.
+
 **This instrument runs the opposite direction from
 [`vibecode-rubric.md`](vibecode-rubric.md).** There, 0 is the goal (no generation tells). Here, 10
 is the goal (high craft). They measure different things and a page can score well on one and badly
@@ -22,13 +28,13 @@ real) and **4.4** on craft. Always say which instrument a number came from.
 
 1. [Why looking is a separate skill from reading](#1)
 2. [What to render and capture](#2)
-3. [The looking protocol — nine tests](#3)
+3. [The looking protocol — seven tests](#3)
 4. [The critique rubric — 14 anchored dimensions](#4)
-5. [Comparative critique — the highest-signal technique](#5)
+5. [Comparative critique — the calibration technique](#5)
 6. [From critique to a ranked fix list](#6)
 7. [The iteration loop, and how to know when to stop](#7)
 8. [Self-deception traps](#8)
-9. [Worked example: a support ticket queue, start to finish](#9)
+9. [Two worked examples, start to finish](#9)
 10. [The scripts](#10)
 
 ---
@@ -119,6 +125,20 @@ node $UIL/tools/shot.mjs http://localhost:3000/tickets --out $OUT --name filters
 Then **Read the PNGs.** Reading the file paths the tool printed is not looking. If you have not put
 an image into your context this session, you have not seen your interface.
 
+**`--click` fails silently.** `shot.mjs` runs the click as
+`page.locator(sel).first().click({timeout:4000}).catch(() => {})` — a selector that matches nothing
+prints the same success line and writes the *default* view. Verified 2026-09-10 against
+`--click "#definitely-not-here"`: exit 0, one PNG, no warning. So a `--click` capture is only
+evidence if you can see the state changed in the image. When the state matters, drive it from the
+script in §2.3 and assert on the DOM after the click instead of trusting the flag.
+
+**Strip the harness before you run §3.** Demo scaffolding — a state-switcher bar, a Storybook
+toolbar, a dev overlay — is furniture that is not in the product, and every transform test scores
+it. Measured on the task-manager build: its `position:fixed` demo bar is the **second-strongest mass
+in the blur-14 attention map** and occupies **45% of the 320px viewport**. Hide it
+(`p.evaluate(() => document.querySelector('.scaffold')?.remove())`) before capturing, or every
+finding in §3 is partly about your own test rig.
+
 ### 2.3 The states the CLI can't reach
 
 Drive the page and screenshot. Focus is the important one — it is invisible in a normal capture and
@@ -133,18 +153,20 @@ const p = await b.newPage({ viewport:{width:1440,height:900}, deviceScaleFactor:
 await p.goto('http://localhost:3000/tickets', { waitUntil:'networkidle' });
 
 // keyboard focus — and assert it, don't just look
-for (let i=0;i<5;i++) await p.keyboard.press('Tab');
-console.log(await p.evaluate(() => { const e=document.activeElement, s=getComputedStyle(e);
+for (let i=0;i<12;i++) { await p.keyboard.press('Tab');
+console.log(i+1, await p.evaluate(() => { const e=document.activeElement, s=getComputedStyle(e);
   return { on:e.tagName+':'+e.textContent.trim().slice(0,24),
-           outline:`${s.outlineWidth} ${s.outlineStyle} ${s.outlineColor}`, shadow:s.boxShadow }; }));
+           outline:`${s.outlineWidth} ${s.outlineStyle} ${s.outlineColor}`, shadow:s.boxShadow }; })); }
 await p.screenshot({ path:'.cache/shots/focus.png', clip:{x:0,y:0,width:1440,height:420} });
 
-// empty — mutate the DOM rather than building a fixture route
-await p.evaluate(() => { document.querySelector('tbody').innerHTML=''; });
+// empty — mutate the DOM rather than building a fixture route.
+// `tbody` and `.subject` are placeholders: substitute YOUR list container and YOUR title element.
+// `?.` is load-bearing — without it a wrong selector throws and kills the run silently mid-script.
+await p.evaluate(() => { document.querySelector('tbody')?.replaceChildren(); });
 await p.screenshot({ path:'.cache/shots/empty.png' });
 
 // longest realistic string
-await p.evaluate(() => { document.querySelector('.subject').textContent =
+await p.evaluate(() => { const el = document.querySelector('.subject'); if (el) el.textContent =
   'Webhook retries stop after 3 attempts and the delivery.failed event is never re-queued'; });
 await p.screenshot({ path:'.cache/shots/long.png' });
 await b.close();
@@ -153,33 +175,50 @@ await b.close();
 `outline: 3px none` is the signature of `outline: none` plus a reset that set a width and never a
 style. It reports a width, so a naive check passes. Assert on the **style**, not the width.
 
+**Tab further than you think.** Five presses reaches the first toolbar control and stops. Twelve
+reaches the list rows and the sidebar, which is where a custom `outline: none` on an interactive
+`<div role="button">` actually lives. On the task-manager build, 12 presses returned
+`2px solid rgb(35,88,216)` on every stop, including the row buttons — that is the check passing,
+and five presses would not have shown it.
+
+**A state you drove is only captured if you assert it changed.** Screenshot *and* read back one
+string that only exists in the new state. Every state-capture failure found in this corpus was an
+agent screenshotting the state it was already in.
+
 ---
 
 <a id="3"></a>
-## 3 — The looking protocol, nine tests
+## 3 — The looking protocol, seven tests
 
 Run them in this order. Early tests catch structural problems; running the late ones first means
 polishing a layout you are about to throw away.
 
 Every test below has three parts: **what it diagnoses**, **how to run it**, and **when it lies**.
 The last part matters — each of these tests has a domain where it gives the wrong answer, and an
-agent that applies all nine everywhere will make some interfaces worse.
+agent that applies all seven everywhere will make some interfaces worse.
 
-### 3.1 The five-second test — *is the hierarchy inverted?*
+**It was nine.** Two were cut in the 2026-09 adversarial pass: the five-second test, because §8 is
+right that you cannot run it on your own output (it is folded into 3.1 below as a precondition, not
+a step), and the optical-centering check, because re-measurement showed it was reporting descenders
+as misalignment — see [Cut: the optical-centering check](#cut) at the end of this section. A
+protocol with a step that manufactures false findings is worse than a shorter one, because an agent
+that learns one step is noise starts skimming all of them.
 
-Look at the 1440 render for five seconds. Look away. Write down what you remember, before looking
-again.
+### 3.1 The squint test — *what does the eye hit first?*
 
-You should remember the primary object and the primary action. If you remember the nav, the header,
-the filter bar, a gradient, or "there were some cards", the hierarchy is inverted and no amount of
-color will fix it.
+**Before you blur, ask what you remember.** Look at the 1440 render for five seconds, look away, and
+write down what you saw. You should remember the primary object and the primary action; if you
+remember the nav, the header, the filter bar or "some cards", the hierarchy is inverted. But treat
+that answer as a hypothesis and nothing more — by the time you critique your own output you have
+read the markup forty times and you cannot experience not knowing where things are
+(§8, *Trusting your own five-second test*).
+The blur below is the version of this test whose evidence does not depend on your memory. If you
+want the real five-second test, hand the PNG to a fresh context with no knowledge of the code.
 
-**When it lies:** on a dense professional tool used six hours a day, "I remember a wall of rows"
-is the *correct* answer, not a failure. Linear's issue list and a Bloomberg terminal both fail a
-naive five-second test and both are right. Ask "did I remember the content or the furniture," not
-"was one thing memorable."
-
-### 3.2 The squint test — *what does the eye hit first?*
+On a dense professional tool used six hours a day, "I remember a wall of rows" is the *correct*
+answer, not a failure. Linear's issue list and a Bloomberg terminal both fail a naive five-second
+test and both are right. Ask "did I remember the content or the furniture," not "was one thing
+memorable."
 
 Blur the render. Two radii, and they diagnose different things:
 
@@ -213,12 +252,19 @@ In the worked example the blur-14 ranking came out:
 and the ticket subjects — the entire reason the screen exists — were **fainter than all four**.
 That is a complete finding with a complete fix list attached, produced by one screenshot.
 
+It also works on interfaces that are already good, which is the harder test. Blur-14 on the
+task-manager build (§9.7) ranked: (1) the **selected row**, a full-bleed `#2358D8` fill spanning the
+whole content width; (2) the demo scaffolding bar; (3) two amber in-progress bands; (4) the
+`New task` button; (5) the task titles. Every count in §3.5 says that page is well made, and it is —
+but selection is louder than content, and the row that wins the page is an unassigned task somebody
+happened to click. Nothing in the source says that. One blurred PNG does.
+
 **When it lies:** on an editorial or marketing page where one enormous headline is supposed to win,
 blur-14 will show you a single dark mass and nothing else, and that is correct. And on a
 deliberately quiet interface (a reading view, a form), everything blurring to soft gray is the
 design, not a defect — check the 6px grouping read instead.
 
-### 3.3 The grayscale test — *is color doing structure's job?*
+### 3.2 The grayscale test — *is color doing structure's job?*
 
 ```js
 await p.evaluate(() => { document.documentElement.style.filter = 'grayscale(1)'; });
@@ -245,18 +291,57 @@ and labels are plain text with a 6px colored dot — no filled pill background a
 carries the meaning; color is a 6px accent on top of it. That survives grayscale, survives blur,
 and stops the row from being a color chart.
 
+**This test is in tension with "one mark per state", and the tension is real.** On the task-manager
+build (2026-09-10) an in-progress row carries *both* a 3px `#E29B33` inset left rail *and* a
+`#FFF6E9` full-row fill. Reviewed in color that is a redundancy worth deleting — two marks for one
+status. Desaturated, the fill collapses to a tint you cannot name and **the rail is the only thing
+that still says "in progress."** The resolution is not "keep both": it is that the surviving mark
+should be the *shape*, and the fill is the one to cut. When a build has exactly one mark per state
+and that mark is a hue, grayscale is what tells you.
+
+Same render, the finding that had no redundancy to save it: `waiting 3d` renders `#B3261E` on white
+with no glyph beside it, so in grayscale it is typographically identical to `1d est` two rows up.
+The whole right-hand column drops to one meaning.
+
 **When it lies:** on a data visualization, categorical color *is* the encoding, and grayscale
 correctly destroys it. On a brand or marketing surface, "looks calmer in grayscale" is not a
 finding — of course it does. Restrict this test to functional UI.
 
-### 3.4 The upside-down test — *composition without reading*
+### 3.3 The upside-down test — *composition without reading*
+
+Removing your ability to read removes your ability to rationalise. What is left is mass, gutter and
+balance. This is the test that finds the problems you have stopped seeing.
+
+**Do not rotate the DOM.** The obvious implementation is wrong:
 
 ```js
-await p.evaluate(() => { document.body.style.transform = 'rotate(180deg)'; });
+await p.evaluate(() => { document.body.style.transform = 'rotate(180deg)'; });   // ✗ BROKEN
 ```
 
-Rotating removes your ability to read, which removes your ability to rationalise. What is left is
-mass, gutter and balance. This is the test that finds the problems you have stopped seeing.
+A transform on `body` makes it the containing block for every `fixed` and `sticky` descendant, and
+it rotates the *whole document* about its own centre — not the viewport. Measured on the
+task-manager build at 1440×900: `body` is **1689.5px** tall, so after the rotation the 900px
+viewport shows original y ≈ 790–1690 — the bottom of the page — and the `position:sticky` sidebar
+moves from `{top:0, left:0}` to `{top:789.5, left:1208}`, i.e. **789px below the fold and on the
+wrong side**. The screenshot you then critique is a different region of a different layout. Any page
+taller than its viewport, or with sticky/fixed chrome, hits this — which is most real interfaces.
+
+**Rotate the image, not the page.** Capture normally, flip the PNG through a canvas:
+
+```js
+const png = 'data:image/png;base64,' + (await p.screenshot()).toString('base64');
+const h = await b.newPage();                                  // scratch page, decodes + rotates
+const flipped = await h.evaluate(async u => {
+  const img = new Image(); img.src = u; await img.decode();
+  const c = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height });
+  const x = c.getContext('2d'); x.translate(img.width, img.height); x.rotate(Math.PI);
+  x.drawImage(img, 0, 0); return c.toDataURL('image/png');
+}, png);
+writeFileSync('.cache/shots/flip.png', Buffer.from(flipped.split(',')[1], 'base64'));
+```
+
+Verified 2026-09-10: this preserves the sidebar, the sticky header and the exact slice you were
+looking at. `look.mjs` in §10 carries the fixed version.
 
 What it surfaced in the worked example: the table's five right-hand columns are crushed into the
 right 40% of the width while the ticket-title column carries a 340px dead gutter, because the
@@ -264,94 +349,102 @@ subject text was capped by `max-width` and the columns were auto-sized. Right-si
 titles and never notice; upside-down it is an obvious lopsided band.
 
 **When it lies:** it says nothing about hierarchy or typography, only about composition and
-balance. Do not try to score type from it.
+balance. Do not try to score type from it. It is also the lowest-yield of the four transforms —
+on a build that is already competently composed it returns nothing. Run it, but run it last.
 
-### 3.5 The left-edge scan — *is alignment sloppy?*
+### 3.4 Where the content starts, and what is silently clipped
 
-Run your eye down the left edge of a column region and count distinct x-positions. More than three
-or four in one column means alignment was never decided. This is the fastest way to find the small
-misalignments that read as "unfinished" without ever being individually noticeable.
+`fold.mjs` (§10), three widths, one command. This produced more findings per second than anything
+else in the 2026-09 re-run, and it is the one number in the protocol you can put in a commit
+message.
 
-Do it numerically rather than by eye — the script in §10 dumps a histogram of `getBoundingClientRect().left`:
-
-| Page | Dominant left edges | Reading |
-|---|---|---|
-| **GitHub issues, 1440** | `x=321 ×213`, `x=281 ×72`, `x=364 ×37`, `x=48 ×25` | Three strong spines. 213 elements share one x. |
-| **Beacon v1, 1440** | `x=297 ×23`, `x=321 ×21`, `x=16 ×17`, then **30+ singletons** | No spine. Every table cell invented its own edge. |
-
-**The caveat everyone omits:** right-aligned numeric columns *legitimately* produce a different
-left edge per row, because the digits are different widths. Run the left-edge scan on left-aligned
-content only, and run a **right**-edge scan on numeric columns. A numeric column whose right edges
-vary is the real bug there, and it means you forgot `font-variant-numeric: tabular-nums`.
-
-### 3.6 The optical-centering check — *do the labels sit on the line?*
-
-`align-items: center` centers the **line box**, not the letters. The line box includes the font's
-full ascent and descent, which is taller than the visible glyphs and asymmetric around them. So
-every flex-centered label in a fixed-height chip sits slightly low — and by an amount that
-**changes with the string**, which is what makes it visible.
-
-Measured on an isolated 24px chip, 12px/500 system font on white, by screenshotting each chip at 4×
-and finding the bounding box of its ink (script in §10):
-
-| String | gap above ink | gap below ink | sits low by |
+| | task-manager @1440 | @390 | @320 |
 |---|---|---|---|
-| `Urgent` | 8.25px | 4.75px | **3.50px** |
-| `Open` | 8.25px | 4.75px | **3.50px** |
-| `Pending` | 7.75px | 4.75px | 3.00px |
-| `Escalated` | 8.00px | 6.75px | 1.25px |
-| `Normal` | 8.00px | 6.75px | 1.25px |
-| `Solved` | 8.00px | 6.75px | 1.25px |
-| `Low` | 8.25px | 6.75px | 1.50px |
+| First row top | **124px** of 900 | **292px** of 844 | 292px |
+| Rows fully visible | 14 of 28 | 5 | 5 |
+| Page height | 1690 | 2627 | 2766 |
 
-The cap-top gap is stable at 7.75–8.25px across all seven. The bottom gap is what moves: strings
-with a descender (`g`, `p`) push the ink 2px lower. **Consequence: two chips in the same table row
-are never on the same optical line — `Escalated` and `Urgent` sit 2.25px apart vertically.** At
-32px/14px the same effect measured 2.00px (`Save`) to 4.25px (`Apply`) — a 2.25px spread again.
+Desktop density is excellent and mobile is not: 35% of the phone viewport is spent before the first
+row. A finding that exists only because the same script ran at three widths.
 
-Fixes, in order of preference:
-1. `text-box: trim-both cap alphabetic` (Chrome 133+) — trims to cap-height and baseline, which is
-   what the eye actually centers on. Needs a fallback.
-2. `line-height: 1` on the label plus an explicit 1px asymmetric padding (`padding: 0 10px 1px`).
-3. Give the chip a fixed height and set `padding-bottom` 1px less than `padding-top`. Crude, works.
+**The clipping detector needs one filter or it lies.** It looks for
+`overflowX ∈ {auto,scroll,hidden}` with `scrollWidth - clientWidth > 24` on every element — which is
+exactly what the standard visually-hidden idiom looks like:
 
-**Contradicting the usual advice:** most writing on optical centering is about *horizontal* padding
-around icons. We measured 40 buttons across GitHub, Stripe and Linear at 1440: horizontal padding
-asymmetry was **0px on every one of them** except two Linear sidebar section headers. Nobody is
-nudging button padding by 2px any more. The vertical line-box problem is the one that is still
-everywhere, still visible, and almost never mentioned.
+```css
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+```
 
-**When it lies:** at 16px and above in a generously-sized container the 1–2px offset is below
-perception. This matters at chip, badge, small-button and table-cell scale, not on a hero.
+Unfiltered on the task-manager build it reported `h2.vh +34px` and `label.vh +180px` at 1440 — **two
+findings, both false**. On GitHub's issue list the same day, three of four were `sr-only` /
+`visuallyHidden`. Add:
 
-### 3.7 Count things — *five counts, sixty seconds*
+```js
+.filter(e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e);
+  return r.width > 24 && r.height > 8 && s.visibility !== 'hidden'
+      && s.clip === 'auto' && !/inset\(50%\)/.test(s.clipPath); })
+```
 
-Judgement is unreliable across sessions; counts are not. Take these five numbers on every render
-and on the reference product you are comparing against (§5):
+Filtered, 1440 returns zero — correct — and the phone widths return the one real finding on that
+build: `h2 +58px` at 390, `h2 +120px` at 320. Chased down, the group-header person name loses a flex
+fight with its own meta string: `Ilya Petrov` is 65px of text in a **4.4px** box,
+`Marguerite Delacroix-Bell` 159px of text in **39px**. The list's navigational spine degrades to an
+ellipsis. Nothing else in the protocol found this — it truncates *by rule*, so it looks deliberate in
+a screenshot and only the measurement shows how much is gone.
 
-| Count | Healthy | Worked example v1 | GitHub issues |
-|---|---|---|---|
-| **Distinct font sizes** | 4–6 | 7 (14/12/13/30/11/16/18) | 6, with `12px ×200` dominant |
-| **Distinct border-radius values** | 1–2 families | **4** (8px ×18, 50% ×18, 9999px ×16, 12px ×6) | 2 (6px ×68, pill ×43) |
-| **Distinct accent hues** | 1, plus semantics that are present | **5** (indigo, blue, green, red, amber) | 2 (blue link, red state) + user-defined labels |
-| **Bordered/shadowed containers above the fold** | as few as the content needs | 6 | 1 |
-| **Gap-value histogram** | one dominant value, then halves/doubles | 6×16, 12×11, 10×9, 24×1, 8×1 — no dominant | 4×152, 8×83, 16×27, 12×3 |
+**Note what `hOverflow` does not tell you.** It reads `0` at every width on both builds while a
+container hides hundreds of pixels, because the clipping is inside an `overflow:auto` box. A
+document-level overflow check passes on a page that is eating half its columns.
+
+### 3.5 Count things — *six counts, sixty seconds*
+
+Judgement is unreliable across sessions; counts are not. `probe.mjs` (§10) takes all six on any URL.
+Take them on your render **and** on the reference product you are comparing against (§5).
+
+| Count | Healthy | Worked example v1 | GitHub issues | task-manager |
+|---|---|---|---|---|
+| **Distinct font sizes** | 4–6 | 7 (14/12/13/30/11/16/18) | 7, `12px ×199` dominant | **4** (12 ×126, 13 ×56, 15, 17) |
+| **Radius families** (rule below) | 1–2 | 3 | 2 | 2 |
+| **Distinct accent hues** | 1, plus semantics that are present | **5** (indigo, blue, green, red, amber) | 2 (blue link, red state) + user labels | 4 (blue brand, amber, red, green) |
+| **Bordered/shadowed containers above the fold** | as few as the content needs | 6 | 1 | 1 |
+| **Gap-value histogram** | one dominant value, then halves/doubles | 6×16, 12×11, 10×9, 24×1, 8×1 — no dominant | 4×152, 8×83, 16×27, 12×3 | 8×52, 2×10, 6×6, 16×1, 12×1 |
+| **Left-edge histogram** | 2–4 spines carrying most elements | `x=297 ×23`, `x=321 ×21`, `x=16 ×17`, then **30+ singletons** | `x=321 ×212`, `x=281 ×69`, `x=364 ×31`, `x=48 ×25` | `x=256 ×74`, `x=8 ×42`, `x=282 ×26`, `x=348 ×26` |
 
 The gap histogram is the most diagnostic single number in the table. A real spacing scale looks
 like GitHub's: one value used 152 times, its double used 83 times, its quadruple 27 times. Five
 values with no winner means spacing was decided per component, which is what "it looks a bit loose"
 actually is.
 
+**The radius count needs a stated rule or it is not reproducible.** Re-probed 2026-09-10, GitHub's
+issue list renders **seven** distinct radii (6px ×67, 9999px ×42, 24px ×5, 3px ×2, 20px ×2, 50% ×2,
+4px ×1) — this document previously credited it with "2" while marking Beacon v1's "4" as a defect,
+which is two verdicts for one measurement. The rule that makes both numbers true:
+
+> **Count rectangular radius values occurring ≥3 times. All fully-round values (`50%`, `9999px`)
+> are one family regardless of count, because they are the same decision.**
+
+Under it: GitHub = 2 (6px, round). Beacon v1 = 3 (8px ×18, 12px ×6, round). task-manager = 2 (6px
+×50, 4px ×5; the `3px` ×1 is a status rail, not a corner). This also reconciles
+[`../evaluation/results/2026-09-control-vs-treatment.md`](../evaluation/results/2026-09-control-vs-treatment.md),
+whose "10 → 4" and "10 → 3" are counts of *distinct values*, not families; as families those
+treatments are 2 and 2.
+
+**Left edges: run the scan on left-aligned content only.** Right-aligned numeric columns
+*legitimately* produce a different left edge per row, because the digits are different widths. Run a
+**right**-edge scan on those instead — a numeric column whose right edges vary is the real bug there,
+and it means you forgot `font-variant-numeric: tabular-nums`. This caveat is why the task-manager's
+~20 singleton left edges are not a finding: every one of them is in the right-hand metadata.
+
 **Contrarian note on the 8px grid:** GitHub's dominant gap is **4px**, and its 12px value appears 3
 times against 4px's 152. A strict 8px grid would have forced every one of those 4px gaps to 8 and
 halved the information density of the issue list. The rule that matters is *few values, clearly
 related*, not *multiples of eight*. 4/8/16 is a scale. So is 6/12/24. 6/8/10/12/24 is not.
 
-### 3.8 The comparison test
+### 3.6 The comparison test
 
-The highest-signal single technique in this document. It gets its own section — **[§5](#5)**.
+Calibration rather than discovery, and the section that argues for its own demotion — **[§5](#5)**.
 
-### 3.9 "What would a designer's first comment be?"
+### 3.7 "What would a designer's first comment be?"
 
 Ask it plainly and answer honestly. You usually already know, and the reason you have not written
 it down is that it implies rework. In the worked example the honest answer was *"why is a quarter
@@ -360,6 +453,38 @@ finding #1 in §9 and the fix that moved the score more than the other nine comb
 
 If the answer that comes to mind is "the spacing could be a bit tighter" or "maybe a different
 accent color", you are not answering honestly; those are the answers that require no rework.
+
+<a id="cut"></a>
+### Cut: the optical-centering check
+
+Removed 2026-09-10. It is recorded here so nobody reinstates it.
+
+The claim was that `align-items: center` centers the line box rather than the letters, so every
+flex-centered chip label sits low by 1–3.5px, by an amount that varies with the string — and that
+`Escalated` and `Urgent` therefore sit 2.25px apart in the same table row. The measurements
+reproduce exactly (`inkbox.mjs` against `v1.html`: `Urgent` 2.75px, `Open` 2.50px, `Escalated`
+0.25px). The interpretation does not.
+
+`bias = inkTop − inkBottom` is confounded by descenders. Controlled test, one 24px chip, 12px/500,
+identical string plus one letter:
+
+| String | ink top | ink bottom | "sits low by" |
+|---|---|---|---|
+| `HAMBOX` | 8.25px | 6.75px | 1.50px |
+| `HAMBOXg` | **8.25px** | 4.75px | **3.50px** |
+
+The cap top does not move. The entire 2px is the `g` hanging below the baseline, which is what a `g`
+is for. `Urgent`, `Open` and `Pending` all carry descenders; `Escalated`, `Normal`, `Solved` and
+`Low` do not — that is the whole of the reported "spread". Measured on the cap band instead
+(cap top 8.25 → baseline 17.25, centre 12.75 in a 24px box), the real offset is **≈0.75px**, which
+this document's own "when it lies" clause already called below perception. Applying the recommended
+asymmetric padding would have pushed `Urgent` *above* `Escalated` and created the misalignment the
+test claimed to find.
+
+What survives: **if you measure optical centering, measure cap-top to baseline, never ink-top to
+ink-bottom**, and expect ~0.1–0.8px for a system font. `text-box: trim-both cap alphabetic` is still
+the right tool where a font's ascent/descent ratio is genuinely lopsided — a display serif, a webfont
+with a deep descender — but that is a typography decision, not a protocol step.
 
 ---
 
@@ -565,11 +690,44 @@ surface applied to nothing still scores badly on the other thirteen.
 <a id="5"></a>
 ## 5 — Comparative critique
 
-**This is the technique. If you do one thing from this document, do this one.**
+**The technique that tells you whether your findings are worth acting on. Not the one that finds
+them** — that claim was tested in 2026-09 and withdrawn; see 5.0.
 
 "Is this good?" is unanswerable in isolation — you have no calibration, and your sense of quality
 drifts toward whatever you have been staring at. "How does this differ from something known-good in
 the same archetype?" is answerable, mechanical, and produces a fix list rather than a feeling.
+
+### 5.0 It is not the highest-signal technique. It is the calibration technique.
+
+This document used to open the section with "if you do one thing from this document, do this one."
+That claim did not survive being checked against the document's own evidence.
+
+Take §5.2's three differences — the canonical output — and ask which of them the earlier tests had
+not already produced:
+
+| Comparison difference | Already found by | Where |
+|---|---|---|
+| 1. Content starts at y=493 vs their 352 | `fold.mjs`, before any reference was opened | §9.1 geometry table |
+| 2. Row title is the 4th-loudest thing in its row | blur-14 attention map | §9.2, ranked list |
+| 3. 4 radius values and 5 hues vs their 2 and 2 | the counts | §9.2, `probe.mjs` census |
+
+**Zero of three.** All three comparison findings are restatements of findings the transforms and the
+counts had already delivered, and the §9.4 fix list traces every item back to blur-14, grayscale,
+`fold.mjs` or the census — not to the reference. Re-running the whole protocol on a second build
+(task-manager, 2026-09-10) reproduced the pattern: the comparison against GitHub produced no finding
+the earlier tests had missed, and cost a network round trip, an archetype judgement and a second
+census.
+
+**What it does do, which nothing else does, is tell you where you are allowed to differ.** On that
+second build the comparison's real output was *"you start content at y=124 where they start at
+y=311, and 14 rows against their 8 — you are denser than the reference and that is correct for
+triage-by-person."* That is not a finding; it is permission, and without it the density numbers
+have no meaning at all. It is also the only test that stops you shipping a page that improved five
+times and is still bad (§7).
+
+So: run it, run it once, and run it **after** the transforms and the counts — as the thing that
+ranks and sanity-checks your fix list, not as the thing that generates it. If you are budget-
+constrained, blur-14 and `fold.mjs` are where the findings are.
 
 ### 5.1 Procedure
 
@@ -581,7 +739,7 @@ the same archetype?" is answerable, mechanical, and produces a fix list rather t
    screenshots. For this document we used GitHub's public issue list (fully measurable) plus
    Linear's product renders on `linear.app/plan`.
 3. **Capture at the same width, same DPR, same day.** Different widths make every comparison lie.
-4. **Look at them side by side**, then **run the same five counts (§3.7) on both.**
+4. **Look at them side by side**, then **run the same six counts (§3.5) on both.**
 5. **Name the three biggest differences.** Exactly three. Ranked. Specific enough that each implies
    a code change.
 
@@ -604,6 +762,13 @@ From the worked example, comparing Beacon v1 against GitHub's issue list at 1440
 
 Every one of those three sentences is a diff a coding agent can act on. None of them is "theirs
 feels more polished."
+
+**Re-probed 2026-09-10, logged out: GitHub's content now starts at y=311, not 352, and 8 rows are
+visible, not 7.** The design numbers held (gaps `4×152 / 8×83 / 16×27 / 12×3`, left spine
+`x=321 ×212`, `:focus-visible` ×115 — all reproduced) but the *geometry above the list* did not,
+because a logged-out visitor gets a marketing nav bar that a signed-in user does not. **Reference
+geometry is auth-state dependent.** State which session you captured in, or two people running the
+same comparison will disagree by 40px and neither will know why.
 
 ### 5.3 The three differences are almost always the same three
 
@@ -775,17 +940,28 @@ The ways an agent convinces itself its output is good. Each has a name, a tell, 
 | **Fixing what's easy** | Your last three changes were radius, shadow, accent | The level rule in §6.1: no level 6–8 change while a level 1–3 finding is open |
 | **Declaring done without rendering** | No image entered your context this session | Then you do not know what you built. This is not a metaphor |
 | **Novelty as quality** | You added a gradient, a glow, or a signature animation to a queue | Ambition applied to nothing is nothing. See `vibecode-rubric.md` §3 |
-| **Trusting your own five-second test** | You ran it after reading the markup forty times | You cannot un-know the layout. That is why §3 has eight other tests that do not depend on naive eyes |
+| **Trusting your own five-second test** | You ran it after reading the markup forty times | You cannot un-know the layout. That is why §3's tests are transforms and counts, which do not depend on naive eyes |
+| **The self-reported score** | Your score is a round number at the good end and no line in it carries a `::` observable | Evidence or no score (§4.1). In this corpus's own evaluation, **all four** treatment builds self-reported vibecode **1/10**; independent review of the renders put one of them at **2** — its selected row is a full-bleed saturated `#2358D8` bar, and its in-progress rows carry a left rail *and* a full amber fill: two marks for one status. Both are visible in one screenshot. Neither appeared in the self-score |
+| **Believing your last screenshot** | You edited code after your most recent capture | Re-capture after *every* edit, including one-liners. A one-line change in this corpus shipped `Cannot access nf before initialization` and **blanked the entire page**; it was caught only because the agent re-screenshotted. A code review passes a blank page |
+| **Critiquing your own test rig** | Your attention map's top finding is a toolbar you added to demo the states | Remove demo scaffolding before §3 (see §2.2). On the task-manager build the `position:fixed` demo bar is the **second-strongest mass at blur-14** and eats **45% of the 320px viewport** |
+| **The dead interaction** | You screenshotted a state; you never asserted you were in it | A `<dialog>` in this corpus sat inside a `display:none` aside at phone width — tapping a school opened nothing. Invisible in source, invisible in a still of the *closed* state. Drive it and read back a string only the new state contains |
+| **Redundancy scored as discipline** | You "simplified" a state down to a single mark, and the mark is a hue | Check it in grayscale before you delete the shape (§3.2). One mark per state is right; one *hue* per state is a WCAG 1.4.1 failure |
 
-The last one deserves emphasis. **Self-critique is structurally compromised.** The transforms
-(blur, grayscale, rotate) and the comparison are load-bearing precisely because they produce
-evidence that does not depend on your judgement. When the stakes are high, hand the screenshot to a
-fresh context with no knowledge of the code and ask for three findings.
+The five-second row deserves emphasis. **Self-critique is structurally compromised.** The transforms
+(blur, grayscale, rotate) and the counts are load-bearing precisely because they produce evidence
+that does not depend on your judgement. When the stakes are high, hand the screenshot to a fresh
+context with no knowledge of the code and ask for three findings.
+
+**And the self-reported row is the one this corpus has hard evidence for.** Four capable agents,
+following this system, each scored their own work at the ceiling; the two defects an outside reader
+found in ninety seconds were both *color decisions that felt like polish*. A score you gave yourself
+with no observable attached is not a measurement, it is a mood — which is why §4.1 refuses it and
+why §6 makes the fix list, not the number, the deliverable.
 
 ---
 
 <a id="9"></a>
-## 9 — Worked example
+## 9 — Worked examples
 
 **Brief:** "a ticket queue screen for a B2B support tool." Built the way a capable agent builds it
 with no further instruction — the goal was a *credible* mediocre interface, not a strawman. It has
@@ -803,13 +979,14 @@ empty, one-item, long-text and focus states.
 ### 9.1 Capture log
 
 ```
-node tools/shot.mjs http://localhost:8971/v1.html --name v1 --widths 1440 --wait 1500
+T=examples/ticket-queue-critique/tools        # the four scripts of §10 live here
+node tools/shot.mjs http://localhost:8971/v1.html --name v1  --widths 1440 --wait 1500
 node tools/shot.mjs http://localhost:8971/v1.html --name v1m --widths 390
 node tools/shot.mjs http://localhost:8971/v1.html --name v1s --widths 320
-node scratch/look.mjs   http://localhost:8971/v1.html v1     # plain, blur6, blur14, gray, flip
-node scratch/states.mjs                                       # empty, one-item + long text
-node scratch/focus.mjs  http://localhost:8971/v1.html focus-v1 5
-node scratch/probe.mjs  http://localhost:8971/v1.html V1 1440 # computed-style census
+node $T/look.mjs  http://localhost:8971/v1.html v1 .cache/shots  # plain, blur6, blur14, gray, flip
+node $T/fold.mjs  http://localhost:8971/v1.html "tbody tr"       # content start + clipping, 3 widths
+node $T/probe.mjs http://localhost:8971/v1.html V1 1440          # computed-style census
+node scratch/states.mjs                                          # empty, one-item, long text, Tab focus
 ```
 
 Measured geometry:
@@ -851,9 +1028,10 @@ desaturated. Both diagnoses at once: hue is the only encoding, and the encoding 
 **Counts.** 7 font sizes / 4 radius families / 5 accent hues / 6 containers / gap histogram
 `6×16, 12×11, 10×9, 24×1, 8×1` with no dominant value.
 
-**Optical centering.** Run against the real chips in `v1.html`: `Urgent` sits **2.75px** low in its
-24px pill, `Open` 2.50px, `Escalated` 0.25px. Two chips in the same table row are **2.5px apart on
-the vertical** — `Escalated` and `Urgent` sit side by side in row 1.
+**Optical centering.** *(Struck 2026-09-10.)* This pass reported `Urgent` sitting 2.75px low, `Open`
+2.50px and `Escalated` 0.25px, and called it a misalignment. The numbers reproduce; the reading was
+wrong — the spread is the descender in `g` and `p`, and the chips share a baseline. The test is cut;
+see [Cut: the optical-centering check](#cut).
 
 **States.**
 - *Empty:* `Showing 0 of 0` in the panel header, `Page 1 of 39` in the pager with live
@@ -970,6 +1148,66 @@ further passes would be surface fiddling.
 - **Fixing things creates things to fix.** Two of five pass-2 findings were introduced by pass-1
   fixes, and neither was visible in the diff — only in a re-render.
 
+### 9.7 Second run: the method against a build this corpus calls good
+
+The worked example above is a build made to be critiqued. That is a soft test — a method can look
+sharp on a strawman and find nothing on real work. So on **2026-09-10** the whole protocol was run,
+end to end, against
+[`../examples/evaluation-builds/task-manager/`](../examples/evaluation-builds/task-manager/): the
+treatment build from
+[`../evaluation/results/2026-09-control-vs-treatment.md`](../evaluation/results/2026-09-control-vs-treatment.md),
+produced by an agent following this system, and one of the four the evaluation holds up as the
+library working. Archetype `technical-productivity`. Reference: GitHub's issue list, same day.
+
+**Capture:** 1440 / 390 / 320, plus first-run empty, filtered-empty, loading, error, and a 12-press
+Tab walk. `look.mjs`, `fold.mjs`, `probe.mjs`, `inkbox.mjs` all run.
+
+**Census @1440:** 350 elements · **4** font sizes (12 ×126, 13 ×56, 15, 17) · 2 radius families ·
+4 hues · 1 shadowed container · 3 `:focus-visible` + 2 `:focus` rules · transitions scoped to
+`background-color`/`border-color`, never `all` · first row at **y=124**, 14 of 28 rows visible. By
+every count in §3.5 this is a well-made page, and it is.
+
+**The protocol found six things anyway:**
+
+```
+#  LEVEL   finding (observable)                                              → fix                                         via
+1  HIER    blur-14 rank: (1) the selected row — a full-bleed #2358D8 fill    → selection = 2px left rail + #EDF1FC tint;   blur-14
+           across the full content width, (2) demo bar, (3) two amber           reserve the saturated fill for :focus
+           bands, (4) New task, (5) the task titles. Selection outranks
+           every title, and the selected row is an *unassigned* task
+2  COLOR   in-progress carries a 3px #E29B33 inset rail AND a #FFF6E9        → keep the rail, drop the fill                grayscale
+           full-row fill — two marks for one status
+3  A11Y    `waiting 3d` is #B3261E text with no glyph; in grayscale it is    → add the blocked dot to the right column      grayscale
+           identical to `1d est`. Right column drops to one meaning             or set the string in 500 weight
+4  RESP    @320 the group-header name loses a flex fight with its own meta   → meta wraps below the name under 380px       fold.mjs
+           string: `Ilya Petrov` = 65px of text in a **4.4px** box;
+           `Marguerite Delacroix-Bell` = 159px in **39px**
+5  DENS    @390/320 first row at y=292 of 844 (35%) vs y=124 of 900 on       → collapse the filter row into the header     fold.mjs
+           desktop; 5 rows visible against 14
+6  STATE   the first-run empty state renders four skeleton bars *above*      → skeleton belongs to loading only            state capture
+           "Nobody has anything on yet" — a loading artifact in a
+           non-loading state
+```
+
+Findings 1 and 2 are the two the evaluation's own honest-limitations section reached by eye
+(*"its selected row is a full-bleed saturated blue bar… two marks for one status"*). **The protocol
+reproduced both from a single blurred screenshot and a single desaturated one, without knowing they
+were there** — which is the strongest evidence in this document that the transforms work. Findings
+3–6 are new; none of them is visible at 1440 in color on the populated state, which is the only
+capture most agents take.
+
+**Craft: 7.5.** Hierarchy 7 *(finding 1)* · Density 8 · Product fit 9 · States 7 *(6)* · Spacing 8 ·
+Typography 9 · Accessibility 6 *(3)* · Copy 9 · Color 6 *(1, 2)* · Composition 7 · Responsiveness 6
+*(4, 5)* · Consistency 8 · Interaction 7 · Originality 5. Vibecode **2**, matching the evaluation's
+outside review and not the build's self-reported **1**.
+
+**What the run says about the method.** The fix list is specific, every row carries an observable,
+and the top item is structural — so the method is not producing mush on real work. But the yield
+was concentrated: **blur-14, grayscale and `fold.mjs` produced all six findings between them.** The
+comparison against GitHub produced none (§5.0), the flip produced none, the left-edge histogram
+produced none, and the optical-centering check produced a false one. That distribution is why §3 is
+now seven tests instead of nine.
+
 ---
 
 <a id="10"></a>
@@ -994,15 +1232,27 @@ for (const [k,f] of Object.entries({ plain:'', blur6:'blur(6px)', blur14:'blur(1
   await p.evaluate(f => { document.documentElement.style.filter = f; }, f);
   await p.screenshot({ path:`${outDir}/${name}-${k}.png` });
 }
-await p.evaluate(() => { document.documentElement.style.filter='';
-  document.body.style.transform='rotate(180deg)'; });
-await p.screenshot({ path:`${outDir}/${name}-flip.png` });
+// flip: rotate the IMAGE, never the DOM (§3.3 — rotating body relocates sticky/fixed
+// chrome and, on any page taller than the viewport, captures a different slice entirely)
+await p.evaluate(() => { document.documentElement.style.filter=''; });
+const png = 'data:image/png;base64,' + (await p.screenshot()).toString('base64');
+const h = await b.newPage();
+const flipped = await h.evaluate(async u => {
+  const img = new Image(); img.src = u; await img.decode();
+  const c = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height });
+  const x = c.getContext('2d'); x.translate(img.width, img.height); x.rotate(Math.PI);
+  x.drawImage(img, 0, 0); return c.toDataURL('image/png');
+}, png);
+(await import('node:fs')).writeFileSync(`${outDir}/${name}-flip.png`,
+  Buffer.from(flipped.split(',')[1], 'base64'));
 await b.close();
 ```
 
+Strip demo scaffolding first (§2.2) — every one of these five images scores it otherwise.
+
 ### `probe.mjs` — the computed-style census
 
-Dumps the five counts of §3.7 plus focus-rule counts, transitions, `:root` custom properties and the
+Dumps the six counts of §3.5 plus focus-rule counts, transitions, `:root` custom properties and the
 left-edge histogram. Full source is long; the essential loop:
 
 ```js
@@ -1023,47 +1273,22 @@ const top = (m,n=14) => [...m].sort((a,b)=>b[1]-a[1]).slice(0,n).map(([k,v]) => 
 ```
 
 Read the output as a diagnosis, not a dump: *one* dominant gap value is health; five equal ones are
-"spacing was never decided". *Two* radius values is health; four is "each component chose its own".
+"spacing was never decided". For radii, apply the counting rule in §3.5 before you judge the
+number — raw distinct values are not comparable between pages (GitHub renders seven; two are
+families).
 
-### `inkbox.mjs` — optical centering
+### `inkbox.mjs` — ink-box measurement *(demoted 2026-09-10)*
 
-Screenshots one element at 4×, finds the bounding box of its non-background pixels, and reports the
-gap above the ink versus below it. This is the only way to measure optical centering from outside
-the font metrics.
+Screenshots one element at 4× and reports the gap above its ink versus below it. It still ships in
+`../examples/ticket-queue-critique/tools/`, but it is no longer part of the protocol, because
+`above − below` is not a centering measurement — it is dominated by whether the string has a
+descender. Controlled: `HAMBOX` reads 8.25/6.75, `HAMBOXg` reads 8.25/4.75. Same cap top, 2px of
+"sits low" that is entirely the `g`. See [Cut: the optical-centering check](#cut).
 
-```js
-// node inkbox.mjs <url> <selector>
-import { execSync } from 'node:child_process'; import { createRequire } from 'node:module';
-const { chromium } = createRequire(execSync('npm root -g').toString().trim()+'/')('playwright');
-const [url, sel] = process.argv.slice(2);
-const b = await chromium.launch();
-const p = await b.newPage({ viewport:{width:1440,height:900}, deviceScaleFactor:4 });
-await p.goto(url, { waitUntil:'domcontentloaded' }); await p.waitForTimeout(1500);
-const helper = await b.newPage();                        // decodes PNGs via canvas
-for (const el of await p.$$(sel)) {
-  const box = await el.boundingBox(); const txt = (await el.textContent()).trim();
-  const png = 'data:image/png;base64,' + (await el.screenshot()).toString('base64');
-  const m = await helper.evaluate(async u => {
-    const img = new Image(); img.src = u; await img.decode();
-    const c = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height });
-    const x = c.getContext('2d'); x.drawImage(img, 0, 0);
-    const d = x.getImageData(0, 0, c.width, c.height).data;
-    let top = null, bot = null;
-    for (let j = 0; j < c.height; j++) {
-      let hit = false;
-      for (let i = 0; i < c.width; i++) if (d[(j*c.width+i)*4] < 200) { hit = true; break; }
-      if (hit) { if (top === null) top = j; bot = j; }
-    }
-    return { h: c.height, top, bot };
-  }, png);
-  const above = m.top/4, below = (m.h-1-m.bot)/4;
-  console.log(`"${txt}" box=${box.height}px above=${above.toFixed(2)} below=${below.toFixed(2)} bias=${(above-below).toFixed(2)}px low`);
-}
-await b.close();
-```
-
-The `< 200` luma threshold assumes dark text on a light chip. Invert it for dark mode, and raise it
-if your text color is a mid gray.
+If you run it: read the **ink top only** (that is the cap top, and it is stable to ~0.5px across
+strings), derive the baseline from a descender-free string in the same style, and centre the cap
+band, not the ink box. The `< 200` luma threshold assumes dark text on a light chip — invert it for
+dark mode, raise it for mid-gray text.
 
 ### `fold.mjs` — where the content starts, and what is silently clipped
 
@@ -1086,6 +1311,10 @@ for (const [w,h] of [[1440,900],[390,844],[320,844]]) {
       clipped: [...document.querySelectorAll('*')]
         .filter(e => { const s = getComputedStyle(e);
           return /auto|scroll|hidden/.test(s.overflowX) && e.scrollWidth - e.clientWidth > 24; })
+        // required — without it, .vh/.sr-only text is reported as a clipped column (§3.4)
+        .filter(e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e);
+          return r.width > 24 && r.height > 8 && s.visibility !== 'hidden'
+              && s.clip === 'auto' && !/inset\(50%\)/.test(s.clipPath); })
         .slice(0,4).map(e => `${e.tagName.toLowerCase()}.${(e.className||'').toString().split(' ')[0]} +${e.scrollWidth-e.clientWidth}px`),
     };
   }, [h, rowSel]));
@@ -1110,7 +1339,9 @@ passes on a page that is silently eating half its columns** — the clipping is 
 element rather than at `document.scrollWidth`.
 
 All four scripts, runnable, are in
-[`../examples/ticket-queue-critique/tools/`](../examples/ticket-queue-critique/tools/).
+[`../examples/ticket-queue-critique/tools/`](../examples/ticket-queue-critique/tools/). `look.mjs`
+and `fold.mjs` carry the 2026-09-10 corrections (image-space flip; visually-hidden filter); every one
+of the four was executed against two live interfaces on that date, not read.
 
 ---
 
@@ -1136,3 +1367,107 @@ direction) · [`remedies.md`](remedies.md) for before/after code on the specific
 [`../system/7-critique.md`](../system/7-critique.md) for the short in-flow version of this loop ·
 [`../craft/density-and-hierarchy.md`](../craft/density-and-hierarchy.md) and
 [`../craft/space-and-layout.md`](../craft/space-and-layout.md) for the underlying craft.
+
+---
+
+## Adversarial pass (2026-09)
+
+Run 2026-09-10. The brief was to break the file, not to endorse it: execute the whole protocol on an
+interface it had never seen, run every script rather than read it, and cut anything that did not
+earn its place. Target build:
+[`../examples/evaluation-builds/task-manager/`](../examples/evaluation-builds/task-manager/) served
+at `localhost:8971`. Reference: GitHub's issue list, re-probed the same day. Everything below is
+either a command that ran or a number that came back.
+
+### Changed
+
+- **Cut the optical-centering check** (was §3.6), and demoted `inkbox.mjs` out of the protocol. Its
+  measurements reproduce exactly; its interpretation is wrong. Controlled test, one 24px chip:
+  `HAMBOX` → ink top 8.25 / bottom 6.75; `HAMBOXg` → **8.25** / 4.75. The cap top does not move — the
+  entire reported 1.25–3.50px "sits low" spread is the descender in `g` and `p`. `Urgent`, `Open` and
+  `Pending` carry descenders; `Escalated`, `Normal`, `Solved` and `Low` do not, and that is the whole
+  of the pattern. Measured on the cap band the real offset is ≈0.75px, below the threshold the
+  section itself called imperceptible, and the prescribed asymmetric-padding fix would have created
+  the misalignment it claimed to find. Kept as a labelled cut so it is not reinstated.
+- **Fixed the upside-down test** (§3.3) and `look.mjs`. `document.body.style.transform =
+  'rotate(180deg)'` is broken on real layouts: on the target build `body` is **1689.5px** tall in a
+  900px viewport, so the rotated capture shows original y≈790–1690 — the bottom of the page — and the
+  `position:sticky` sidebar moves from `{top:0,left:0}` to `{top:789.5,left:1208}`, off-screen. Both
+  verified by measuring `getBoundingClientRect()` before and after. Replaced with a canvas rotation of
+  the captured PNG, which preserves the exact slice; re-ran and confirmed.
+- **Fixed `fold.mjs`'s clipping detector** and documented the filter (§3.4, §10). Unfiltered it
+  reported `h2.vh +34px` and `label.vh +180px` at 1440 on the target build — 2 of 2 false — and 3 of 4
+  false on GitHub. All were the standard `.vh`/`.sr-only` 1px box. With the filter, 1440 returns zero
+  and 320 returns the one real finding.
+- **Demoted the comparison test** from "the highest-signal technique in this document" to the
+  calibration technique (§5.0). Evidence is internal: all three of §5.2's canonical differences
+  restate findings §9.1 and §9.2 had already produced with `fold.mjs`, blur-14 and the census —
+  zero of three were new. The second run reproduced this: the GitHub comparison added no finding.
+  What it *does* do, and nothing else does, is license a deviation — it is how you learn your density
+  is correctly *higher* than the reference.
+- **Merged the left-edge scan into the counts** (now six counts, §3.5) and **promoted `fold.mjs` to
+  a numbered step** (§3.4). Nine tests became seven. `fold.mjs` had been the single most productive
+  measurement in the protocol while living only in §10 and being absent from §9.1's capture log.
+- **Gave the radius count a stated rule.** GitHub renders **seven** distinct radii today (6px ×67,
+  9999px ×42, 24px ×5, 3px ×2, 20px ×2, 50% ×2, 4px ×1); the file credited it with "2" while marking
+  Beacon v1's "4" as a defect. Rule now stated: rectangular values occurring ≥3 times, all round
+  values as one family. This also reconciles the "10 → 4 / 10 → 3" radius numbers in
+  [`../evaluation/results/2026-09-control-vs-treatment.md`](../evaluation/results/2026-09-control-vs-treatment.md),
+  which are distinct values, not families.
+- **Reconciled §3.1 with §8.** The five-second test was step one of a protocol whose own trap list
+  says you cannot run it on your own output. It is now a precondition inside the squint test, with
+  the fresh-context escape hatch named.
+- **Fixed §9.1's capture log**, which invoked `scratch/focus.mjs` and `scratch/states.mjs` — neither
+  exists anywhere in the corpus — while omitting `fold.mjs`.
+- **Added three verified capture traps** (§2.2, §2.3): `shot.mjs --click` swallows a non-matching
+  selector via `.catch(() => {})` and writes the default view with an exit code of 0 (verified with
+  `--click "#definitely-not-here"`); the §2.3 script's `tbody`/`.subject` selectors throw a
+  `TypeError` and kill the run on any page without them (verified), now guarded with `?.`; and demo
+  scaffolding must be stripped before §3, because the target build's `position:fixed` demo bar is the
+  second-strongest mass in its own blur-14 attention map and eats 45% of the 320px viewport.
+- **Added five self-deception traps** (§8) with corpus evidence behind each: the self-reported score
+  (all four treatment builds claimed vibecode 1; outside review found a full-bleed saturated selection
+  bar and two marks for one status on one of them), believing your last screenshot (a one-line edit
+  shipped `Cannot access nf before initialization` and blanked a whole page, caught only by
+  re-screenshotting), critiquing your own test rig, the dead interaction, and redundancy scored as
+  discipline.
+- **Added §9.7**, the full second run with its six-item fix list and scores.
+
+### Verified and could not shake
+
+- **The transforms carry the method.** Blur-14, grayscale and `fold.mjs` produced all six findings on
+  the second run, including both defects an independent human reviewer had found by eye — from a
+  blurred PNG and a desaturated one, with no prior knowledge that they were there.
+- **The evidence-line rule (§4.1) and the level rule (§6.1).** Every finding in the second run wrote
+  itself into `<DIM> <score> <where> :: <observable>` without strain, and the ranking fell out of the
+  level order unchanged.
+- **The GitHub design numbers.** Re-probed same day: gaps `4×152 / 8×83 / 16×27 / 12×3`, left spine
+  `x=321 ×212`, `:focus-visible` ×115 / `:focus` ×149 — all reproduced, some byte-for-byte. This is
+  `START-HERE.md`'s "design numbers age well" claim holding under test.
+- **`hOverflow: 0` while a container hides hundreds of pixels.** Reproduced on both builds. The
+  document-level overflow check really is useless on its own.
+- **The §9 ticket-queue numbers.** `inkbox.mjs` against `v1.html` returned `Urgent` 2.75 / `Open` 2.50
+  / `Escalated` 0.25 — the §9.2 figures exactly. The measurements were never the problem.
+
+### Could not verify
+
+- **GitHub's y=352 content start.** Logged out it is **y=311** with 8 rows visible, not 7. The 41px is
+  the marketing nav a signed-out visitor gets. Recorded as an auth-state caveat in §5.2 rather than
+  overwritten, because the original may well be correct for a signed-in capture — but neither reading
+  is reproducible without stating the session.
+- **The Linear `linear.app/plan` measurements** in §3.2 (segmented ring, dashed ring, bar glyph). Not
+  re-rendered this pass; the claim is plausible and structurally load-bearing, but it is the one
+  reference value here now standing on a single observation.
+- **The §9 pass-2 and pass-3 numbers** (craft 7.1, the five P2 findings). `v2.html` exists and renders,
+  but the pass was not re-run end to end; only `v1.html` was re-measured.
+- **Dark mode, 200% zoom and screen-reader behaviour on either build.** The capture matrix lists dark
+  mode; neither example implements it, so row 11 of §2.1 has never actually been exercised in this
+  document.
+
+### The one thing that should not be cut
+
+This file should stay long. Every attempt to compress a step here removed the measured value that
+makes it usable — the `1689.5px` that proves the flip is broken, the `HAMBOX`/`HAMBOXg` pair that
+proves the descender confound, the `4×152 / 8×83` that makes "a real spacing scale" mean something.
+A short version of this document is `system/7-critique.md`, and it already exists. What was cut here
+was cut for being wrong, not for being long.
