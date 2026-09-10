@@ -1,0 +1,1213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deadlines</title>
+<!--
+  DIRECTION SPEC
+  Archetype:   expressive-consumer (host) — the fact layer drops the register at its own boundary
+  Density:     comfortable — 16/22 body, 96px application rows, 48px controls, 12px floor
+  Type:        system stack · 12/13/16/20/28 · weights 400/600/700 · tabular-nums on every date and count
+  Neutrals:    warm ink #1F1B16 on warm paper #FAF7F2; secondary is alpha, never a hex
+  Accent:      one indigo #4640C4, background fill ONLY (never `color:`) — primary action, current tab, checked box
+  Semantics:   amber = due inside 7 days · red = past due · green = submitted. Never decoration.
+  Radius:      exactly two — 12px containers/controls, 999px on chips, dots, meters, checkboxes
+  Elevation:   no soft shadows; 3px hard bottom offset on the primary button; one overlay shadow, for the sheet
+  Motion:      150ms micro · 220ms sheet · one 320ms tick when you check something off. Reduced motion substitutes the end state.
+  Chrome:      bottom tab bar, 3 labelled items; at 1040px+ the sheet becomes a persistent right pane and the tabs move up
+  Signature:   THE RAIL — vertical distance between two date markers is literally the days between the deadlines,
+               labelled, so four schools landing on Nov 1 look like a pileup and a clear fortnight looks clear.
+-->
+<style>
+  /* ── tokens ─────────────────────────────────────────────────────────── */
+  :root{
+    color-scheme: light;
+    --paper:#FAF7F2;
+    --surface:#FFFFFF;
+    --sunken:#F2EDE4;
+    --ink:#1F1B16;
+    --ink-2:rgba(31,27,22,.66);
+    --line:rgba(31,27,22,.11);
+    --line-strong:rgba(31,27,22,.22);
+    --fill-quiet:rgba(31,27,22,.07);
+
+    --accent:#4640C4;
+    --accent-press:#38329F;
+    --accent-quiet:#EAE9FA;
+
+    --soon:#8A5300;          /* text */
+    --soon-edge:#E1972B;     /* 3px edge + dot */
+    --soon-quiet:#FBF0DA;
+    --late:#A32217;
+    --late-edge:#C3392A;
+    --done:#1E6B47;
+    --done-quiet:#E3EFE8;
+
+    --r:12px;
+    --r-pill:999px;
+
+    --t-fast:150ms;
+    --t-std:220ms;
+    --t-tick:320ms;
+    --ease:cubic-bezier(.2,0,0,1);
+
+    --rail-x:22px;           /* the axis of the signature rail */
+    --gutter:16px;
+    --tabbar:58px;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:16px;
+    line-height:22px;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,p,ul,ol,figure{ margin:0; padding:0; }
+  ul,ol{ list-style:none; }
+  button{ font:inherit; color:inherit; background:none; border:0; margin:0; }
+  :focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+    border-radius:6px;
+  }
+  .sr{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+  }
+  .skip{
+    position:absolute; left:8px; top:-60px; z-index:60;
+    background:var(--accent); color:#fff; padding:10px 14px;
+    border-radius:var(--r); font-size:13px; font-weight:600; text-decoration:none;
+    transition:top var(--t-fast) var(--ease);
+  }
+  .skip:focus{ top:56px; }
+
+  /* ── demo scaffolding (not the product) ─────────────────────────────── */
+  .demo{
+    position:fixed; inset:0 0 auto 0; z-index:50;
+    display:flex; flex-wrap:wrap; align-items:center; gap:5px;
+    padding:5px 8px;
+    background:#1F1B16; color:#F4EFE7;
+    border-bottom:1px solid rgba(255,255,255,.14);
+  }
+  .demo-label{
+    font-size:12px; line-height:16px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase;
+    color:rgba(244,239,231,.72);
+    margin-right:1px; padding:4px 0;
+  }
+  .demo-label::after{ content:""; }
+  @media (min-width:600px){ .demo-label::after{ content:" scaffolding · state"; } }
+  .demo button{
+    min-height:40px; padding:0 10px;
+    font-size:12px; font-weight:600;
+    color:#F4EFE7;
+    border:1px solid rgba(255,255,255,.28);
+    border-radius:var(--r);
+    cursor:pointer;
+    transition:background var(--t-fast) var(--ease);
+  }
+  .demo button:hover{ background:rgba(255,255,255,.10); }
+  .demo button[aria-pressed="true"]{ background:#F4EFE7; color:#1F1B16; border-color:#F4EFE7; }
+  .demo :focus-visible{ outline-color:#F4EFE7; }
+
+  /* ── shell ──────────────────────────────────────────────────────────── */
+  .app{
+    padding-top:var(--demo-h,56px);
+    padding-bottom:calc(var(--tabbar) + 16px + env(safe-area-inset-bottom));
+    min-height:100svh;
+  }
+  .split{ display:block; }
+  /* the pane wrapper stays in the tree at phone widths: a <dialog> inside a
+     display:none ancestor cannot open. The closed dialog is what hides it. */
+  .col-pane{ display:block; }
+
+  .hdr{
+    padding:20px var(--gutter) 8px;
+  }
+  .eyebrow{
+    font-size:12px; line-height:16px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-2);
+    font-variant-numeric:tabular-nums;
+  }
+  .titlerow{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin-top:4px;
+  }
+  h1{
+    font-size:28px; line-height:32px; font-weight:700; letter-spacing:-.01em;
+  }
+  .btn-add{
+    min-height:44px; padding:0 14px;
+    border:1px solid var(--line-strong); border-radius:var(--r);
+    font-size:13px; font-weight:600; white-space:nowrap; cursor:pointer;
+    background:var(--surface);
+    transition:background var(--t-fast) var(--ease);
+  }
+  .btn-add:hover{ background:var(--sunken); }
+  .lede{
+    margin-top:10px; font-size:16px; line-height:24px; color:var(--ink-2);
+    max-width:56ch;
+  }
+  .lede b{ color:var(--ink); font-weight:600; }
+
+  /* ── the rail ───────────────────────────────────────────────────────── */
+  .listwrap{ padding:8px var(--gutter) 24px; }
+  .rail{ position:relative; padding-left:44px; }
+  .rail::before{
+    content:""; position:absolute; left:var(--rail-x); top:6px; bottom:10px;
+    width:2px; background:var(--line-strong); border-radius:var(--r-pill);
+  }
+
+  .marker{
+    position:relative;
+    display:flex; align-items:baseline; flex-wrap:wrap; gap:0 8px;
+    padding:2px 0 8px;
+  }
+  .marker::before{               /* the dot sits ON the axis */
+    content:""; position:absolute;
+    left:calc(var(--rail-x) - 44px - 4px); top:5px;
+    width:10px; height:10px; border-radius:var(--r-pill);
+    background:var(--ink); box-shadow:0 0 0 4px var(--paper);
+  }
+  .marker.is-soon::before{ background:var(--soon-edge); }
+  .marker.is-today::before{ background:var(--surface); border:2px solid var(--ink); }
+  .marker-date{
+    font-size:13px; line-height:18px; font-weight:700;
+    font-variant-numeric:tabular-nums;
+  }
+  .marker-rel{ font-size:13px; line-height:18px; color:var(--ink-2); }
+  .marker.is-soon .marker-rel{ color:var(--soon); font-weight:600; }
+  .marker-count{ font-size:13px; line-height:18px; color:var(--ink-2); }
+
+  .gap{
+    position:relative;
+    display:flex; align-items:center;
+    margin-left:-44px; padding-left:44px;
+  }
+  .gap-label{
+    font-size:13px; line-height:18px; color:var(--ink-2);
+    font-variant-numeric:tabular-nums;
+  }
+  .gap-label b{ color:var(--ink); font-weight:600; }
+
+  /* ── the application card ───────────────────────────────────────────── */
+  .apps{ display:flex; flex-direction:column; gap:8px; padding-bottom:4px; }
+  .card{
+    display:block; width:100%; text-align:left; cursor:pointer;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--r);
+    padding:13px 14px 14px;
+    transition:background var(--t-fast) var(--ease);
+  }
+  .card:hover{ background:#FCFAF7; }
+  .card.is-soon{ border-left:3px solid var(--soon-edge); padding-left:12px; }
+  .card.is-late{ border-left:3px solid var(--late-edge); padding-left:12px; }
+  .card[aria-current="true"]{ border-color:var(--ink); }
+  .card-school{
+    font-size:16px; line-height:22px; font-weight:600;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .card-meta{
+    display:flex; align-items:center; gap:10px;
+    margin-top:8px;
+  }
+  .chip{
+    font-size:12px; line-height:16px; font-weight:700;
+    letter-spacing:.04em; text-transform:uppercase;
+    padding:2px 8px; border-radius:var(--r-pill);
+    background:var(--fill-quiet);
+    white-space:nowrap;
+  }
+  .chip.is-binding{ background:var(--accent-quiet); }
+  .chip.is-done{ background:var(--done-quiet); }
+  .card-count{
+    font-size:13px; line-height:18px; color:var(--ink-2);
+    font-variant-numeric:tabular-nums;
+  }
+  .meter{ display:flex; gap:3px; flex:1 1 60px; min-width:56px; }
+  .meter i{
+    display:block; height:4px; flex:1 1 0; border-radius:var(--r-pill);
+    background:var(--fill-quiet);
+    transition:background var(--t-std) var(--ease);
+  }
+  .meter i.on{ background:var(--ink); }
+  .card.is-done .meter i.on{ background:var(--done); }
+  .card-next{
+    margin-top:9px; font-size:13px; line-height:18px; color:var(--ink-2);
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .card-next b{ color:var(--ink); font-weight:600; }
+
+  /* ── sections that are not on the rail ──────────────────────────────── */
+  .section{ margin-top:28px; }
+  .section-h{
+    font-size:12px; line-height:16px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2);
+    padding-bottom:8px;
+  }
+  .section-note{
+    font-size:13px; line-height:18px; color:var(--ink-2); padding-bottom:10px;
+  }
+  .undo{
+    margin-top:8px; font-size:13px; line-height:18px; color:var(--ink-2);
+  }
+  .undo button{
+    min-height:44px; padding:0 10px; margin-left:2px;
+    font-size:13px; font-weight:600; cursor:pointer;
+    border:1px solid var(--line-strong); border-radius:var(--r);
+    background:var(--surface);
+  }
+  .undo button:hover{ background:var(--sunken); }
+
+  /* ── states ─────────────────────────────────────────────────────────── */
+  .empty{ padding:16px 0 8px; }
+  .empty h2{ font-size:20px; line-height:26px; font-weight:700; }
+  .empty p{ margin-top:8px; font-size:16px; line-height:24px; color:var(--ink-2); max-width:46ch; }
+  .btn-primary{
+    display:inline-block; margin-top:18px;
+    min-height:52px; padding:0 20px;
+    background:var(--accent); color:#fff;
+    border-radius:var(--r);
+    border-bottom:3px solid var(--accent-press);
+    font-size:16px; font-weight:600; cursor:pointer;
+    transition:background var(--t-fast) var(--ease);
+  }
+  .btn-primary:hover{ background:var(--accent-press); }
+  .btn-primary:active{ border-bottom-width:0; margin-top:21px; }
+  .btn-primary[disabled]{ background:var(--fill-quiet); color:var(--ink-2); border-bottom-color:var(--line-strong); cursor:default; }
+
+  .banner{
+    background:var(--soon-quiet);
+    border:1px solid rgba(225,151,43,.5);
+    border-left:3px solid var(--soon-edge);
+    border-radius:var(--r);
+    padding:14px 14px 16px;
+    margin-bottom:16px;
+  }
+  .banner h2{ font-size:16px; line-height:22px; font-weight:600; }
+  .banner p{ margin-top:4px; font-size:13px; line-height:18px; color:var(--ink-2); }
+  .btn-quiet{
+    margin-top:12px; min-height:44px; padding:0 14px;
+    border:1px solid var(--line-strong); border-radius:var(--r);
+    background:var(--surface); font-size:13px; font-weight:600; cursor:pointer;
+    transition:background var(--t-fast) var(--ease);
+  }
+  .btn-quiet:hover{ background:var(--sunken); }
+
+  .sk{ background:var(--fill-quiet); border-radius:var(--r-pill); }
+  .sk-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+    padding:13px 14px 14px; height:99px;
+  }
+  .sk-line{ height:14px; margin-bottom:10px; }
+
+  /* ── tab bar ────────────────────────────────────────────────────────── */
+  .tabs{
+    position:fixed; left:0; right:0; bottom:0; z-index:40;
+    display:flex;
+    background:var(--surface);
+    border-top:1px solid var(--line);
+    padding-bottom:calc(6px + env(safe-area-inset-bottom));
+  }
+  .tabs button{
+    flex:1 1 0;
+    min-height:var(--tabbar);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    font-size:12px; line-height:16px; font-weight:600;
+    color:var(--ink-2); cursor:pointer;
+    transition:color var(--t-fast) var(--ease);
+  }
+  .tabs button svg{ width:20px; height:20px; display:block; }
+  .tabs button[aria-current="page"]{ color:var(--ink); }
+  .tabs .dot{
+    width:5px; height:5px; border-radius:var(--r-pill); background:transparent;
+  }
+  .tabs button[aria-current="page"] .dot{ background:var(--accent); }
+
+  /* ── sheet / detail pane ────────────────────────────────────────────── */
+  dialog{
+    padding:0; border:0; color:var(--ink); background:transparent;
+  }
+  dialog::backdrop{ background:rgba(31,27,22,.44); }
+  #sheet{
+    position:fixed; inset:auto 0 0 0;
+    width:100%; max-width:none; max-height:88svh;
+    margin:0;
+    background:var(--surface);
+    border-radius:var(--r) var(--r) 0 0;
+    box-shadow:0 -8px 32px rgba(31,27,22,.22);
+    display:flex; flex-direction:column;
+    overflow:hidden;
+  }
+  #sheet[open]{ animation:sheet-in var(--t-std) var(--ease); }
+  @keyframes sheet-in{ from{ transform:translateY(16px); opacity:0; } }
+  .grabber{
+    width:32px; height:5px; border-radius:var(--r-pill);
+    background:var(--line-strong); opacity:.7;
+    margin:8px auto 0; flex:none;
+  }
+  .sheet-head{
+    display:flex; align-items:flex-start; gap:12px;
+    padding:10px 16px 12px;
+    border-bottom:1px solid var(--line);
+    flex:none;
+  }
+  .sheet-head h2{ font-size:20px; line-height:26px; font-weight:700; }
+  .sheet-sub{ margin-top:4px; font-size:13px; line-height:18px; color:var(--ink-2); font-variant-numeric:tabular-nums; }
+  .btn-close{
+    margin-left:auto; flex:none;
+    width:44px; height:44px; border-radius:var(--r);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    border:1px solid var(--line);
+    transition:background var(--t-fast) var(--ease);
+  }
+  .btn-close:hover{ background:var(--sunken); }
+  .sheet-body{
+    overflow-y:auto; overscroll-behavior:contain;
+    padding:4px 16px 8px;
+    flex:1 1 auto;
+  }
+  .sheet-foot{
+    flex:none; padding:12px 16px calc(16px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line);
+    background:var(--surface);
+  }
+  .sheet-foot .btn-primary{ margin-top:0; width:100%; }
+  .sheet-foot .btn-primary:active{ margin-top:3px; }
+  .note{
+    margin:10px 0 2px; padding:10px 12px;
+    background:var(--sunken); border-radius:var(--r);
+    font-size:13px; line-height:18px; color:var(--ink-2);
+  }
+  .note b{ color:var(--ink); font-weight:600; }
+
+  .checks{ padding:4px 0 12px; }
+  .check{
+    display:flex; align-items:flex-start; gap:12px;
+    width:100%; text-align:left; cursor:pointer;
+    padding:11px 4px; min-height:48px;
+    border-bottom:1px solid var(--line);
+    transition:background var(--t-fast) var(--ease);
+  }
+  .check:last-child{ border-bottom:0; }
+  .rows li:last-child .check{ border-bottom:0; }
+  .rows .check{ padding-inline:14px; }
+  .check:hover{ background:var(--sunken); }
+  .box{
+    flex:none; width:24px; height:24px; margin-top:1px;
+    border:2px solid var(--line-strong); border-radius:var(--r-pill);
+    display:flex; align-items:center; justify-content:center;
+    transition:background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+  }
+  .check[aria-checked="true"] .box{ background:var(--accent); border-color:var(--accent); }
+  .box svg{ width:14px; height:14px; }
+  .box path{
+    stroke:#fff; stroke-width:2.5; fill:none; stroke-linecap:round; stroke-linejoin:round;
+    stroke-dasharray:20; stroke-dashoffset:20;
+  }
+  .check[aria-checked="true"] .box path{
+    stroke-dashoffset:0;
+    transition:stroke-dashoffset var(--t-tick) var(--ease);
+  }
+  .check-t{ display:block; font-size:16px; line-height:22px; }
+  .check[aria-checked="true"] .check-t{ color:var(--ink-2); }
+  .check-m{ display:block; font-size:13px; line-height:18px; color:var(--ink-2); margin-top:2px; }
+  .check-m.is-late{ color:var(--soon); font-weight:600; }
+  .check-left{
+    display:block; font-size:13px; line-height:18px; color:var(--ink-2);
+    padding-bottom:10px;
+  }
+
+  /* ── tasks + decisions views ────────────────────────────────────────── */
+  .rows{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r); overflow:hidden; }
+  .row{
+    display:flex; align-items:flex-start; gap:12px;
+    padding:14px; min-height:56px;
+    border-bottom:1px solid var(--line);
+  }
+  .row:last-child{ border-bottom:0; }
+  .row-t{ display:block; font-size:16px; line-height:22px; font-weight:600; }
+  .row-m{ display:block; font-size:13px; line-height:18px; color:var(--ink-2); margin-top:3px; }
+  .row-m.is-soon{ color:var(--soon); font-weight:600; }
+  .tick{
+    flex:none; width:22px; height:22px; margin-top:1px; border-radius:var(--r-pill);
+    display:flex; align-items:center; justify-content:center;
+    background:var(--done-quiet);
+  }
+  .tick svg path{ stroke:var(--done); stroke-width:2.5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  .tick.is-open{ background:transparent; border:2px solid var(--line-strong); }
+  .tick.is-open svg{ display:none; }
+  .prose{ font-size:16px; line-height:24px; color:var(--ink-2); max-width:56ch; }
+  .prose b{ color:var(--ink); font-weight:600; }
+
+  /* ── 1040px+ : the sheet becomes a pane, the tabs move up ───────────── */
+  @media (min-width:1040px){
+    :root{ --gutter:24px; }
+    .app{
+      padding-bottom:32px;
+      padding-top:calc(var(--demo-h,56px) + 8px);
+    }
+    .split{
+      display:grid;
+      grid-template-columns:minmax(400px,560px) minmax(340px,460px);
+      gap:32px;
+      align-items:start;
+      width:min(1052px, calc(100% - 48px)); margin-inline:auto;
+    }
+    body[data-view="tasks"] .split,
+    body[data-view="decisions"] .split,
+    body[data-state="empty"] .split,
+    body[data-state="loading"] .split{ grid-template-columns:minmax(420px,640px); }
+    .col-pane{ display:block; position:sticky; top:calc(var(--demo-h,56px) + 24px); }
+    body[data-view="tasks"] .col-pane,
+    body[data-view="decisions"] .col-pane,
+    body[data-state="empty"] .col-pane,
+    body[data-state="loading"] .col-pane{ display:none; }
+
+    #sheet{
+      position:static; inset:auto;
+      max-height:none; border-radius:var(--r);
+      border:1px solid var(--line);
+      box-shadow:none;
+      animation:none;
+    }
+    #sheet .grabber,
+    #sheet .btn-close{ display:none; }
+    #sheet .sheet-body{ max-height:min(58vh,560px); }
+    #sheet .sheet-foot{ padding-bottom:16px; }
+    #sheet .check{ padding-block:9px; }
+    /* a full-width primary is a phone pattern; on a pointer it just shouts */
+    #sheet .sheet-foot .btn-primary{ width:auto; min-height:44px; font-size:14px; }
+
+    .tabs{
+      position:static;
+      width:min(1052px, calc(100% - 48px)); margin-inline:auto;
+      padding:0 var(--gutter) 4px;
+      background:transparent; border-top:0;
+      gap:4px; justify-content:flex-start;
+    }
+    .tabs button{
+      flex:0 0 auto; min-height:44px; padding:0 14px;
+      flex-direction:row; gap:8px; border-radius:var(--r);
+      font-size:13px;
+    }
+    .tabs button:hover{ background:var(--fill-quiet); }
+    .tabs button[aria-current="page"]{ background:var(--fill-quiet); }
+    .tabs .dot{ display:none; }
+    .app{ order:2; }
+    body{ display:flex; flex-direction:column; }
+    .tabs{ order:1; margin-top:calc(var(--demo-h,56px) + 16px); }
+    .app{ padding-top:0; }
+  }
+
+  @media (max-width:359px){
+    :root{ --gutter:12px; }
+    h1{ font-size:24px; line-height:28px; }
+    .card{ padding:12px; }
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+      animation-duration:.01ms !important; animation-iteration-count:1 !important;
+      transition-duration:.01ms !important; scroll-behavior:auto !important;
+    }
+  }
+</style>
+</head>
+<body data-view="deadlines" data-state="populated">
+
+<a class="skip" href="#view">Skip to deadlines</a>
+
+<div class="demo" role="region" aria-label="Demo scaffolding">
+  <span class="demo-label">Demo</span>
+  <button type="button" data-demo="populated" aria-pressed="true">Populated</button>
+  <button type="button" data-demo="empty" aria-pressed="false">First run</button>
+  <button type="button" data-demo="loading" aria-pressed="false">Loading</button>
+  <button type="button" data-demo="error" aria-pressed="false">Offline</button>
+</div>
+
+<nav class="tabs" aria-label="Sections">
+  <button type="button" data-tab="deadlines" aria-current="page">
+    <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6">
+      <rect x="2.8" y="4" width="14.4" height="13.2" rx="2"/><path d="M6.5 2.5v3M13.5 2.5v3M2.8 8.2h14.4" stroke-linecap="round"/>
+    </svg>
+    Deadlines<span class="dot"></span>
+  </button>
+  <button type="button" data-tab="tasks" aria-current="false">
+    <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M3 5.6l1.8 1.8L8 4.2M3 13.6l1.8 1.8L8 12.2M10.6 6.2h6.6M10.6 14.2h6.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Tasks<span class="dot"></span>
+  </button>
+  <button type="button" data-tab="decisions" aria-current="false">
+    <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6">
+      <rect x="2.6" y="4.4" width="14.8" height="11.2" rx="2"/><path d="M2.9 5.6l7.1 5 7.1-5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Decisions<span class="dot"></span>
+  </button>
+</nav>
+
+<div class="app">
+  <div class="split">
+    <main class="col-main" id="view"></main>
+    <aside class="col-pane">
+      <dialog id="sheet" aria-labelledby="sheet-title"></dialog>
+    </aside>
+  </div>
+</div>
+
+<p class="sr" id="live" aria-live="polite"></p>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ── the clock this demo runs on ──────────────────────────────────── */
+  var TODAY = new Date(2026, 9, 14);              // Wednesday, October 14, 2026
+  var DAY = 86400000;
+
+  var fmtLong  = new Intl.DateTimeFormat('en-US', { weekday:'long', month:'long', day:'numeric' });
+  var fmtShort = new Intl.DateTimeFormat('en-US', { weekday:'short', month:'short', day:'numeric' });
+  var fmtMed   = new Intl.DateTimeFormat('en-US', { month:'short', day:'numeric' });
+
+  function d(s){ var p = s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function daysFromToday(dt){ return Math.round((dt - TODAY) / DAY); }
+  function plural(n, one, many){ return n + ' ' + (n === 1 ? one : many); }
+
+  /* ── the data: one senior's actual list ───────────────────────────── */
+  var APPS = [
+    {
+      id:'gt', school:'Georgia Institute of Technology', round:'Early Action I', code:'EA I',
+      deadline:'2026-10-15', decision:'Decision posted Jan 24',
+      items:[
+        { t:'Common App personal essay', m:'650 words, final draft', done:true },
+        { t:'Activities list', m:'10 entries', done:true },
+        { t:'Official transcript', m:'Sent by Ms. Whitfield on Sep 24', done:true },
+        { t:'Counselor recommendation', m:'Submitted Sep 30', done:true },
+        { t:'Application fee', m:'$85, waiver approved Sep 18', done:true },
+        { t:'Short answer: why this major', m:'300 words. Your draft is at 412.', done:false }
+      ]
+    },
+    {
+      id:'nu', school:'Northwestern University', round:'Early Decision I', code:'ED I', binding:true,
+      deadline:'2026-11-01', decision:'Decision mid-December',
+      note:'Binding. If Northwestern admits you in December, you withdraw everywhere else.',
+      items:[
+        { t:'Common App personal essay', m:'Same essay as Georgia Tech', done:true },
+        { t:'Counselor recommendation', m:'Submitted Sep 30', done:true },
+        { t:'Official transcript', m:'Sent Sep 24', done:true },
+        { t:'Teacher recommendation', m:'Ms. Alvarez, submitted Sep 30', done:true },
+        { t:'Why Northwestern', m:'300 words, not started', done:false },
+        { t:'ED agreement', m:'Needs your signature, a parent’s and Ms. Whitfield’s', done:false },
+        { t:'Application fee', m:'$75, waiver request sent Oct 2', done:false }
+      ]
+    },
+    {
+      id:'um', school:'University of Michigan', round:'Early Action', code:'EA',
+      deadline:'2026-11-01', decision:'Decision by late January',
+      items:[
+        { t:'Common App personal essay', m:'650 words', done:true },
+        { t:'Activities list', m:'10 entries', done:true },
+        { t:'Why Michigan', m:'550 words, not started', done:false },
+        { t:'Community essay', m:'300 words, not started', done:false },
+        { t:'Teacher recommendation', m:'Mr. Boateng, asked Sep 22, nothing yet', done:false, late:true },
+        { t:'Application fee', m:'$75, waiver request sent Oct 2', done:false }
+      ]
+    },
+    {
+      id:'pu', school:'Purdue University', round:'Early Action', code:'EA',
+      deadline:'2026-11-01', decision:'Decision by Jan 15',
+      items:[
+        { t:'Common App personal essay', m:'650 words', done:true },
+        { t:'Official transcript', m:'Sent Sep 24', done:true },
+        { t:'SAT scores', m:'1380, sent Oct 6', done:true },
+        { t:'Purdue short answers', m:'Three at 100 words each, one written', done:false },
+        { t:'Application fee', m:'$60, waiver request sent Oct 2', done:false }
+      ]
+    },
+    {
+      id:'osu', school:'The Ohio State University', round:'Early Action', code:'EA',
+      deadline:'2026-11-01', decision:'Decision by late January',
+      note:'Nov 1 is the scholarship priority date, not the last day to apply.',
+      items:[
+        { t:'Common App personal essay', m:'650 words', done:true },
+        { t:'Ohio State essay', m:'Pick one of two prompts, 500 words', done:false },
+        { t:'SAT scores', m:'1380, not sent yet', done:false },
+        { t:'Official transcript', m:'Request not sent', done:false },
+        { t:'Application fee', m:'$60, waiver request sent Oct 2', done:false }
+      ]
+    },
+    {
+      id:'uw', school:'University of Washington', round:'One deadline for everyone', code:'RD',
+      deadline:'2026-11-15', decision:'Decision by Mar 15',
+      items:[
+        { t:'UW essay', m:'650 words. A different prompt from the Common App one.', done:false },
+        { t:'Short response', m:'300 words', done:false },
+        { t:'Activities list', m:'Copy over from the Common App', done:false },
+        { t:'Official transcript', m:'Request not sent', done:false },
+        { t:'Application fee', m:'$80, waiver available', done:false }
+      ]
+    },
+    {
+      id:'ucb', school:'University of California, Berkeley', round:'UC application', code:'UC',
+      deadline:'2026-11-30', decision:'Decision by Mar 31',
+      note:'The UC application takes no letters of recommendation, so Mr. Boateng isn’t blocking this one.',
+      items:[
+        { t:'Personal insight questions', m:'Four of eight prompts, 350 words each. Two written.', done:false },
+        { t:'Course history', m:'Every grade since 9th, typed in by hand. Done Oct 5.', done:true },
+        { t:'Activities and awards', m:'20 slots, 14 filled', done:true },
+        { t:'Application fee', m:'$80 per campus, waiver covers four', done:false }
+      ]
+    },
+    {
+      id:'em', school:'Emory University', round:'Early Decision II', code:'ED II', binding:true,
+      deadline:'2027-01-01', decision:'Decision mid-February',
+      note:'Also binding. Only send this one if Northwestern doesn’t come through.',
+      items:[
+        { t:'Common App personal essay', m:'The same one Georgia Tech has', done:true },
+        { t:'Emory short answers', m:'Two at 150 words', done:false },
+        { t:'Teacher recommendation', m:'Ms. Alvarez said yes on Sep 12', done:false },
+        { t:'Counselor recommendation', m:'Ms. Whitfield', done:false },
+        { t:'ED II agreement', m:'Three signatures', done:false },
+        { t:'Application fee', m:'$75, waiver available', done:false }
+      ]
+    },
+    {
+      id:'bu', school:'Boston University', round:'Regular Decision', code:'RD',
+      deadline:'2027-01-04', decision:'Decision by late March',
+      items:[
+        { t:'Common App personal essay', m:'The same one Georgia Tech has', done:true },
+        { t:'Why BU', m:'250 words', done:false },
+        { t:'Teacher recommendation', m:'Ms. Alvarez said yes on Sep 12', done:false },
+        { t:'Counselor recommendation', m:'Ms. Whitfield', done:false },
+        { t:'Mid-year report', m:'Sent after first-semester grades close', done:false },
+        { t:'Application fee', m:'$80, waiver available', done:false }
+      ]
+    }
+  ];
+
+  var ROLLING = {
+    id:'psu', school:'Penn State University', round:'Rolling', code:'Rolling',
+    priority:'2026-11-30', decision:'Decisions go out as applications are read',
+    note:'No cliff on this one. Applications are read as they arrive, so earlier is genuinely better.',
+    items:[
+      { t:'Common App personal essay', m:'650 words', done:true },
+      { t:'Activities list', m:'10 entries', done:true },
+      { t:'Penn State questions', m:'Two at 200 words', done:false },
+      { t:'Official transcript', m:'Request not sent', done:false },
+      { t:'Application fee', m:'$65', done:false }
+    ]
+  };
+
+  var SUBMITTED = [
+    {
+      id:'unc', school:'University of North Carolina at Chapel Hill', round:'Early Action', code:'EA',
+      deadline:'2026-10-15', submittedOn:'2026-10-09', decision:'Decision by Jan 31', done:true,
+      items:[
+        { t:'Common App personal essay', m:'650 words', done:true },
+        { t:'Two UNC short answers', m:'200 words each', done:true },
+        { t:'Teacher recommendation', m:'Ms. Alvarez, submitted Sep 30', done:true },
+        { t:'Counselor recommendation', m:'Submitted Sep 30', done:true },
+        { t:'Official transcript', m:'Sent Sep 24', done:true },
+        { t:'Application fee', m:'$85, waiver approved Sep 18', done:true }
+      ]
+    }
+  ];
+
+  var TASKS = [
+    { t:'FAFSA', m:'Opened Oct 1. Started Oct 3, waiting on your dad’s 2025 tax numbers.', done:false, soon:false, who:'Every school on your list' },
+    { t:'CSS Profile', m:'$25 per school. Northwestern, Emory and BU want it.', done:false, who:'3 schools' },
+    { t:'Brag sheet for Ms. Whitfield', m:'She asked for it by Oct 20, six days from now.', done:false, soon:true, who:'Counselor letter' },
+    { t:'Teacher letter: Ms. Alvarez', m:'Submitted Sep 30. Covers Northwestern, UNC, Emory, BU.', done:true, who:'4 schools' },
+    { t:'Teacher letter: Mr. Boateng', m:'Asked Sep 22. Michigan needs it by Nov 1 and he hasn’t started.', done:false, soon:true, who:'Michigan' },
+    { t:'Official transcript request', m:'Sent Sep 24 for the four schools that had asked by then.', done:true, who:'4 schools' },
+    { t:'SAT score sends', m:'1380. Sent to Purdue. Ohio State still needs it; the rest are test-optional and you decided not to send.', done:false, who:'Ohio State' },
+    { t:'Common App fee waiver', m:'Approved Sep 18. Covers the application fee at every Common App school.', done:true, who:'9 schools' }
+  ];
+
+  var DECISIONS = [
+    { school:'Northwestern University', when:'Mid-December', m:'Early Decision, so this one is an answer, not an option.' },
+    { school:'Purdue University', when:'By Jan 15', m:'Early Action' },
+    { school:'Georgia Institute of Technology', when:'Jan 24', m:'Early Action I' },
+    { school:'University of North Carolina at Chapel Hill', when:'By Jan 31', m:'Early Action, submitted Oct 9' },
+    { school:'University of Michigan', when:'Late January', m:'Early Action' },
+    { school:'The Ohio State University', when:'Late January', m:'Early Action' },
+    { school:'Emory University', when:'Mid-February', m:'Early Decision II, if you send it' },
+    { school:'University of Washington', when:'By Mar 15', m:'One round for everyone' },
+    { school:'University of California, Berkeley', when:'By Mar 31', m:'UC application' },
+    { school:'Boston University', when:'Late March', m:'Regular Decision' }
+  ];
+
+  /* ── state ────────────────────────────────────────────────────────── */
+  var state = 'populated';
+  var view = 'deadlines';
+  var selected = null;
+  var justSubmitted = null;
+
+  var view$ = document.getElementById('view');
+  var sheet = document.getElementById('sheet');
+  var live  = document.getElementById('live');
+
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c];
+    });
+  }
+  function countDone(app){ var n = 0; app.items.forEach(function(i){ if (i.done) n++; }); return n; }
+  function nextItem(app){
+    for (var i = 0; i < app.items.length; i++) if (!app.items[i].done) return app.items[i];
+    return null;
+  }
+  function all(){ return APPS.concat([ROLLING]).concat(SUBMITTED); }
+  function byId(id){
+    var list = all();
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+
+  /* ── the rail: gap height is literally the days between deadlines ─── */
+  function gapHeight(days){ return Math.max(24, Math.min(104, Math.round(days * 5.5))); }
+
+  function meter(app){
+    var done = countDone(app), out = '';
+    for (var i = 0; i < app.items.length; i++) out += '<i class="' + (i < done ? 'on' : '') + '"></i>';
+    return '<span class="meter" aria-hidden="true">' + out + '</span>';
+  }
+
+  function cardHTML(app, opts){
+    opts = opts || {};
+    var done = countDone(app), total = app.items.length, left = nextItem(app);
+    var days = app.deadline ? daysFromToday(d(app.deadline)) : null;
+    var urgent = days !== null && days >= 0 && days <= 7 && !opts.submitted;
+    var cls = 'card' + (urgent ? ' is-soon' : '') + (opts.submitted ? ' is-done' : '');
+    var line;
+
+    if (opts.submitted) {
+      line = 'Sent ' + fmtMed.format(d(app.submittedOn)) + '. ' + app.decision + '.';
+    } else if (left) {
+      line = '<b>Left:</b> ' + esc(left.t) + (left.m ? '. ' + esc(left.m) : '');
+    } else {
+      line = '<b>Everything is done.</b> It’s waiting on you to hit send.';
+    }
+
+    return '<li>' +
+      '<button type="button" class="' + cls + '" data-app="' + app.id + '"' +
+        (selected === app.id ? ' aria-current="true"' : '') + '>' +
+        '<span class="card-school">' + esc(app.school) + '</span>' +
+        '<span class="card-meta">' +
+          '<span class="chip' + (app.binding ? ' is-binding' : '') + (opts.submitted ? ' is-done' : '') + '">' + esc(app.code) + '</span>' +
+          '<span class="card-count">' + done + ' of ' + total + '</span>' +
+          meter(app) +
+        '</span>' +
+        '<span class="card-next">' + line + '</span>' +
+      '</button>' +
+      (justSubmitted === app.id
+        ? '<p class="undo">Submitted just now. <button type="button" data-undo="' + app.id + '">Undo</button></p>'
+        : '') +
+    '</li>';
+  }
+
+  function railHTML(){
+    var live$ = APPS.slice().sort(function(a,b){ return d(a.deadline) - d(b.deadline); });
+    var groups = [], last = null;
+    live$.forEach(function(app){
+      if (!last || last.key !== app.deadline){ last = { key:app.deadline, apps:[] }; groups.push(last); }
+      last.apps.push(app);
+    });
+
+    var out = '<ol class="rail">';
+    out += '<li class="marker is-today"><span class="marker-date">Today, ' + fmtMed.format(TODAY) + '</span></li>';
+
+    var prev = TODAY;
+    groups.forEach(function(g){
+      var dt = d(g.key);
+      var gapDays = Math.round((dt - prev) / DAY);
+      var days = daysFromToday(dt);
+      var soon = days >= 0 && days <= 7;
+
+      if (gapDays > 0) {
+        out += '<li class="gap" style="height:' + gapHeight(gapDays) + 'px">' +
+          '<span class="gap-label">' + gapText(gapDays, g.apps.length) + '</span>' +
+        '</li>';
+      }
+
+      out += '<li class="marker' + (soon ? ' is-soon' : '') + '">' +
+        '<span class="marker-date">' + fmtShort.format(dt) + '</span>' +
+        '<span class="marker-rel">' + relative(days) + '</span>' +
+        (g.apps.length > 1 ? '<span class="marker-count">' + g.apps.length + ' schools</span>' : '') +
+      '</li>';
+
+      out += '<li><ul class="apps">' + g.apps.map(function(a){ return cardHTML(a); }).join('') + '</ul></li>';
+      prev = dt;
+    });
+    out += '</ol>';
+    return out;
+  }
+
+  function relative(days){
+    if (days === 0) return 'today';
+    if (days === 1) return 'tomorrow';
+    if (days < 0) return plural(-days, 'day', 'days') + ' ago';
+    return 'in ' + plural(days, 'day', 'days');   // never rounded: this is a date, not a feeling
+  }
+
+  var WORD = { 1:'one', 2:'two', 3:'three', 4:'four', 5:'five' };
+  function gapText(gapDays, n){
+    var lead = '<b>' + plural(gapDays, 'day', 'days') + '</b>';
+    if (gapDays <= 3) return lead;
+    if (gapDays >= 28) return lead + ' clear, with winter break in the middle';
+    if (n > 1) return lead + ' clear, then ' + (WORD[n] || n) + ' land together';
+    return lead + ' clear';
+  }
+
+  /* ── views ────────────────────────────────────────────────────────── */
+  function headerHTML(){
+    var lede;
+    if (state === 'empty') {
+      lede = '';
+    } else if (state === 'loading') {
+      // reserve the exact space the sentence will take, so nothing jumps when it lands
+      lede = '<p class="lede" aria-hidden="true">' +
+        '<span class="sk" style="display:block;height:16px;margin:4px 0 10px"></span>' +
+        '<span class="sk" style="display:block;height:16px;width:64%;margin:0 0 6px"></span></p>';
+    } else {
+      lede = '<p class="lede"><b>Georgia Tech closes tomorrow night</b> and one short answer is ' +
+             'still unwritten. Nothing else is due for another 17 days.</p>';
+    }
+    return '<header class="hdr">' +
+      '<p class="eyebrow">' + fmtLong.format(TODAY) + '</p>' +
+      '<div class="titlerow"><h1>Deadlines</h1>' +
+        (state === 'empty' ? '' : '<button type="button" class="btn-add" data-add="1">Add a school</button>') +
+      '</div>' +
+      lede +
+    '</header>';
+  }
+
+  function skeletonHTML(){
+    var card = '<li><div class="sk-card">' +
+      '<div class="sk sk-line" style="width:72%"></div>' +
+      '<div class="sk sk-line" style="width:38%;height:12px"></div>' +
+      '<div class="sk" style="height:4px;width:100%;margin:14px 0 12px"></div>' +
+      '<div class="sk sk-line" style="width:60%;height:12px;margin:0"></div>' +
+    '</div></li>';
+    return '<ol class="rail" aria-busy="true">' +
+      '<li class="marker is-today"><span class="marker-date">Today, ' + fmtMed.format(TODAY) + '</span></li>' +
+      '<li class="gap" style="height:24px"><span class="gap-label">1 day</span></li>' +
+      '<li class="marker"><span class="sk" style="display:inline-block;width:96px;height:14px"></span></li>' +
+      '<li><ul class="apps">' + card + '</ul></li>' +
+      '<li class="gap" style="height:94px"><span class="gap-label">17 days</span></li>' +
+      '<li class="marker"><span class="sk" style="display:inline-block;width:110px;height:14px"></span></li>' +
+      '<li><ul class="apps">' + card + card + '</ul></li>' +
+    '</ol>';
+  }
+
+  function deadlinesHTML(){
+    if (state === 'loading') {
+      return headerHTML() + '<div class="listwrap">' + skeletonHTML() + '</div>';
+    }
+    if (state === 'empty') {
+      return headerHTML() +
+        '<div class="listwrap"><div class="empty">' +
+          '<h2>No schools yet</h2>' +
+          '<p>Add the ones you’re applying to. Each gets a countdown and a list of what it still ' +
+          'needs from you, from the essay down to the fee.</p>' +
+          '<button type="button" class="btn-primary" data-add="1">Add your first school</button>' +
+        '</div></div>';
+    }
+
+    var banner = '';
+    if (state === 'error') {
+      banner = '<div class="banner" role="status">' +
+        '<h2>Could not check for changes</h2>' +
+        '<p>You’re offline. These are the dates saved on this device on Tuesday at 4:12 PM, and ' +
+        'nothing you’ve ticked off is lost.</p>' +
+        '<button type="button" class="btn-quiet" data-retry="1">Try again</button>' +
+      '</div>';
+    }
+
+    var sub = '<section class="section"><h2 class="section-h">No fixed deadline</h2>' +
+      '<p class="section-note">' + esc(ROLLING.note) + ' Scholarship priority is ' +
+      fmtMed.format(d(ROLLING.priority)) + '.</p>' +
+      '<ul class="apps">' + cardHTML(ROLLING) + '</ul></section>';
+
+    var done = '<section class="section"><h2 class="section-h">Submitted</h2>' +
+      '<ul class="apps">' + SUBMITTED.map(function(a){ return cardHTML(a, { submitted:true }); }).join('') + '</ul></section>';
+
+    return headerHTML() + '<div class="listwrap">' + banner + railHTML() + sub + done + '</div>';
+  }
+
+  function tasksHTML(){
+    var openN = 0;
+    TASKS.forEach(function(t){ if (!t.done) openN++; });
+    return '<header class="hdr">' +
+        '<p class="eyebrow">' + fmtLong.format(TODAY) + '</p>' +
+        '<div class="titlerow"><h1>Tasks</h1></div>' +
+        '<p class="lede">Eight things that aren\u2019t tied to one school, and ' +
+        '<b>' + (WORD[openN] || openN) + ' are still open</b>. Two of those are waiting on somebody else.</p>' +
+      '</header>' +
+      '<div class="listwrap"><ul class="rows">' +
+        TASKS.map(function(t, i){
+          return '<li><button type="button" class="check" role="checkbox" aria-checked="' + (t.done ? 'true' : 'false') + '" data-task="' + i + '">' +
+            '<span class="box" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5 10.5l3.4 3.4L15 6.8"/></svg></span>' +
+            '<span><span class="check-t">' + esc(t.t) + '</span>' +
+            '<span class="check-m' + (t.soon && !t.done ? ' is-late' : '') + '">' + esc(t.m) + '</span>' +
+            '<span class="check-m">' + esc(t.who) + '</span></span>' +
+          '</button></li>';
+        }).join('') +
+      '</ul></div>';
+  }
+
+  function decisionsHTML(){
+    return '<header class="hdr">' +
+        '<p class="eyebrow">' + fmtLong.format(TODAY) + '</p>' +
+        '<div class="titlerow"><h1>Decisions</h1></div>' +
+        '<p class="lede">Nothing is back yet. The first answer is Northwestern in mid-December, ' +
+        'and it’s the one that decides what you do with the rest of this list.</p>' +
+      '</header>' +
+      '<div class="listwrap"><ul class="rows">' +
+        DECISIONS.map(function(x){
+          return '<li class="row">' +
+            '<span><span class="row-t">' + esc(x.school) + '</span>' +
+            '<span class="row-m">' + esc(x.m) + '</span></span>' +
+            '<span class="row-m" style="margin-left:auto;margin-top:2px;text-align:right;white-space:nowrap">' + esc(x.when) + '</span>' +
+          '</li>';
+        }).join('') +
+      '</ul></div>';
+  }
+
+  /* ── the sheet ────────────────────────────────────────────────────── */
+  function sheetHTML(app){
+    var done = countDone(app), total = app.items.length, isDone = done === total;
+    var days = app.deadline ? daysFromToday(d(app.deadline)) : null;
+    var when = app.deadline
+      ? fmtShort.format(d(app.deadline)) + ', ' + relative(days)
+      : 'Rolling, scholarship priority ' + fmtMed.format(d(app.priority));
+    if (app.submittedOn) when = 'Sent ' + fmtMed.format(d(app.submittedOn));
+
+    return '<div class="grabber"></div>' +
+      '<div class="sheet-head">' +
+        '<div><h2 id="sheet-title">' + esc(app.school) + '</h2>' +
+        '<p class="sheet-sub">' + esc(app.round) + ' · ' + when + ' · ' + done + ' of ' + total + ' done</p></div>' +
+        '<button type="button" class="btn-close" data-close="1" aria-label="Close ' + esc(app.school) + '">' +
+          '<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>' +
+        '</button>' +
+      '</div>' +
+      '<div class="sheet-body">' +
+        (app.note ? '<p class="note">' + esc(app.note) + '</p>' : '') +
+        '<ul class="checks">' +
+          app.items.map(function(item, i){
+            return '<li><button type="button" class="check" role="checkbox" aria-checked="' + (item.done ? 'true' : 'false') + '" data-item="' + i + '">' +
+              '<span class="box" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5 10.5l3.4 3.4L15 6.8"/></svg></span>' +
+              '<span><span class="check-t">' + esc(item.t) + '</span>' +
+              (item.m ? '<span class="check-m' + (item.late && !item.done ? ' is-late' : '') + '">' + esc(item.m) + '</span>' : '') +
+              '</span>' +
+            '</button></li>';
+          }).join('') +
+        '</ul>' +
+      '</div>' +
+      '<div class="sheet-foot">' +
+        (app.submittedOn
+          ? '<p class="sheet-sub" style="margin:0">' + esc(app.decision) + '.</p>'
+          : '<span class="check-left">' + leftLine(done, total) + '</span>' +
+            '<button type="button" class="btn-primary" data-submit="' + app.id + '">Mark as submitted</button>') +
+      '</div>';
+  }
+
+  function leftLine(done, total){
+    var n = total - done;
+    return n === 0
+      ? 'Everything on the list is ticked off.'
+      : plural(n, 'thing', 'things') + ' still unticked.';
+  }
+
+  var isWide = window.matchMedia('(min-width:1040px)');
+
+  function openApp(id){
+    var app = byId(id);
+    if (!app) return;
+    selected = id;
+    sheet.innerHTML = sheetHTML(app);
+    if (!sheet.open) {
+      if (isWide.matches) sheet.show(); else sheet.showModal();
+    }
+    if (isWide.matches) {
+      // the pane is persistent furniture, not an overlay: it must not steal focus
+      if (document.activeElement && sheet.contains(document.activeElement)) document.activeElement.blur();
+    } else {
+      var first = sheet.querySelector('.check');
+      if (first) first.focus();
+    }
+    paintSelection();
+  }
+
+  function closeSheet(){
+    if (sheet.open) sheet.close();
+    selected = null;
+    paintSelection();
+  }
+
+  function paintSelection(){
+    Array.prototype.forEach.call(document.querySelectorAll('.card'), function(el){
+      if (el.getAttribute('data-app') === selected) el.setAttribute('aria-current', 'true');
+      else el.removeAttribute('aria-current');
+    });
+  }
+
+  /* ── render ───────────────────────────────────────────────────────── */
+  function render(){
+    document.body.setAttribute('data-view', view);
+    document.body.setAttribute('data-state', state);
+    if (view === 'tasks') view$.innerHTML = tasksHTML();
+    else if (view === 'decisions') view$.innerHTML = decisionsHTML();
+    else view$.innerHTML = deadlinesHTML();
+
+    var showPane = isWide.matches && view === 'deadlines' && (state === 'populated' || state === 'error');
+    if (showPane) {
+      if (!selected) selected = APPS[0].id;
+      openApp(selected);
+    } else if (isWide.matches) {
+      closeSheet();
+    }
+    paintSelection();
+  }
+
+  function say(msg){ live.textContent = msg; }
+
+  /* ── events ───────────────────────────────────────────────────────── */
+  document.addEventListener('click', function(e){
+    var t = e.target.closest ? e.target.closest('button') : null;
+    if (!t) return;
+
+    if (t.hasAttribute('data-demo')) {
+      state = t.getAttribute('data-demo');
+      Array.prototype.forEach.call(document.querySelectorAll('[data-demo]'), function(b){
+        b.setAttribute('aria-pressed', b === t ? 'true' : 'false');
+      });
+      if (state !== 'populated' && state !== 'error') { selected = null; closeSheet(); }
+      view = 'deadlines';
+      setTab('deadlines');
+      render();
+      return;
+    }
+    if (t.hasAttribute('data-tab')) {
+      view = t.getAttribute('data-tab');
+      setTab(view);
+      render();
+      return;
+    }
+    if (t.hasAttribute('data-app')) { openApp(t.getAttribute('data-app')); return; }
+    if (t.hasAttribute('data-close')) { closeSheet(); return; }
+    if (t.hasAttribute('data-retry')) {
+      state = 'loading'; render();
+      Array.prototype.forEach.call(document.querySelectorAll('[data-demo]'), function(b){
+        b.setAttribute('aria-pressed', b.getAttribute('data-demo') === 'loading' ? 'true' : 'false');
+      });
+      return;
+    }
+    if (t.hasAttribute('data-add')) {
+      say('Adding a school isn’t wired up in this demo.');
+      return;
+    }
+    if (t.hasAttribute('data-undo')) {
+      var id = t.getAttribute('data-undo');
+      for (var i = 0; i < SUBMITTED.length; i++) {
+        if (SUBMITTED[i].id === id) {
+          var app = SUBMITTED.splice(i, 1)[0];
+          delete app.submittedOn;
+          APPS.push(app);
+          break;
+        }
+      }
+      justSubmitted = null;
+      say('Put back on the list.');
+      render();
+      return;
+    }
+    if (t.hasAttribute('data-submit')) {
+      var sid = t.getAttribute('data-submit');
+      for (var j = 0; j < APPS.length; j++) {
+        if (APPS[j].id === sid) {
+          var a = APPS.splice(j, 1)[0];
+          a.submittedOn = '2026-10-14';
+          SUBMITTED.unshift(a);
+          justSubmitted = sid;
+          say(a.school + ' marked as submitted.');
+          break;
+        }
+      }
+      if (!isWide.matches) closeSheet(); else selected = null;
+      render();
+      return;
+    }
+    if (t.classList.contains('check')) {
+      if (t.hasAttribute('data-task')) {
+        var ti = +t.getAttribute('data-task');
+        TASKS[ti].done = !TASKS[ti].done;
+        t.setAttribute('aria-checked', TASKS[ti].done ? 'true' : 'false');
+        var soonEl = t.querySelector('.check-m');
+        if (soonEl) soonEl.className = 'check-m' + (TASKS[ti].soon && !TASKS[ti].done ? ' is-late' : '');
+        var openN2 = 0; TASKS.forEach(function(x){ if (!x.done) openN2++; });
+        var bEl = view$.querySelector('.lede b');
+        if (bEl) bEl.textContent = (WORD[openN2] || openN2) + ' are still open';
+        say(TASKS[ti].t + (TASKS[ti].done ? ' checked off. ' : ' unchecked. ') + openN2 + ' still open.');
+        return;
+      }
+      var app2 = byId(selected);
+      if (!app2) return;
+      var idx = +t.getAttribute('data-item');
+      var item = app2.items[idx];
+      item.done = !item.done;
+      t.setAttribute('aria-checked', item.done ? 'true' : 'false');
+      var doneN = countDone(app2), totalN = app2.items.length;
+      // repaint the count, the meter and the footer without losing the user's place
+      var sub = sheet.querySelector('.sheet-sub');
+      if (sub) sub.textContent = sub.textContent.replace(/\d+ of \d+ done/, doneN + ' of ' + totalN + ' done');
+      var leftEl = sheet.querySelector('.check-left');
+      if (leftEl) leftEl.textContent = leftLine(doneN, totalN);
+      var card = document.querySelector('.card[data-app="' + app2.id + '"]');
+      if (card) {
+        var wrap = card.parentNode;
+        var tmp = document.createElement('div');
+        tmp.innerHTML = cardHTML(app2);
+        wrap.parentNode.replaceChild(tmp.firstChild, wrap);
+        paintSelection();
+      }
+      say(item.t + (item.done ? ' checked off. ' : ' unchecked. ') + doneN + ' of ' + totalN + ' done.');
+      return;
+    }
+  });
+
+  function setTab(name){
+    Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function(b){
+      b.setAttribute('aria-current', b.getAttribute('data-tab') === name ? 'page' : 'false');
+    });
+  }
+
+  sheet.addEventListener('close', function(){
+    if (!isWide.matches) { selected = null; paintSelection(); }
+  });
+
+  // the demo bar is variable-height at narrow widths; measure it rather than guess
+  function measureDemo(){
+    var h = document.querySelector('.demo').offsetHeight;
+    document.documentElement.style.setProperty('--demo-h', h + 'px');
+  }
+  window.addEventListener('resize', function(){ measureDemo(); });
+  isWide.addEventListener('change', function(){ closeSheet(); render(); });
+
+  measureDemo();
+  render();
+})();
+</script>
+</body>
+</html>

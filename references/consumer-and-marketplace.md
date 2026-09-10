@@ -42,7 +42,7 @@ Products where the user is *browsing*, not *working*: they arrived with a fuzzy 
 | Booking.com | **12px/18px w400** | **312 → 304** | 13px/20 w400 (125), 14px/20 w400 (117), 16px/24 w500 (55) | 20px/28 w700 (Blue Sans) |
 | Spotify | 16px/normal w400 | 39 | 14px/normal w400 (35), 12px (12) | 48px w800 (`SpotifyMixUITitle`) |
 | Pinterest | 16px/19.2 w500 | 34 | 16px/22.4 w400 (9), 12px/18 (7) | 36px/39.6 w700, ls −0.5px |
-| Duolingo | 15px/20 w700 ls 0.8px | 42 → **42** | 15px/22 w700 (36), 13px/16 w700 (30), 17px/24 w500 (5) | 48px w700 `feather` (re-probe; the 64px in the first pass was a wider-viewport hero) |
+| Duolingo | 15px/20 w700 ls 0.8px | 42 → **42** | 15px/22 w700 (36), 13px/16 w700 (30), 17px/24 w500 (5) | 48px w700 `feather` ×5 **and** 64px ls−1.28px ×2 — both ship at 1440 (re-probed 2026-09-10 for `archetypes/expressive-consumer.md`; the earlier "the 64 was a wider-viewport hero" reading was wrong, they coexist) |
 | Discord | 16px/24 w400 | 26 | 20px/26 w400, ls 0.25px | 56px/**48px** w700 uppercase, ls −0.56px |
 | Instagram | 12px/16 w400 | 31 | 14px/18 w600 (27) | 24px/30 w700 |
 | Vinted | 12px/16 **w375** | 389 → **770** | 14px/18 w375 (181), 16px/22 w500 (35) | 22px/28 **w580** (5) |
@@ -535,7 +535,7 @@ An independent re-probe of the live sites plus a screenshot review at 1440 and 3
 | "92% of listings sit between 4.6 and 5.0" (unsourced) | measured across 28: min **4.53**, median **4.98**, max **5.00**; 27/28 ≥ 4.6; **10/28 exactly 5.0** | §6 |
 | "a badge that appears on 90% of results" | Booking scarcity string on **13/25 (52%)**; Airbnb `Guest favorite` **18/28**, `Free cancellation` **12/28**, `Book early to save` **2/28** | §12, Copy |
 | Duolingo "`12px` ×2. Nothing else." | `12px` ×7 **and** `2px` ×3 | radii census, §9 |
-| Duolingo display 64px `feather` | 48px w700 in this pass; `feather` on 7 elements vs `duolingo-sans` on 135 | type table, §9 |
+| Duolingo display 64px `feather` | Both sizes ship at 1440: `feather 48px w700 ×5` **and** `64px ls−1.28px ×2`; `feather` on 7 elements vs `duolingo-sans` on 135 (re-probed 2026-09-10 — this row's own earlier correction was itself half wrong) | type table, §9 |
 | Duolingo accent `#58CC02` | `#A5ED6E` on 65 text elements is dominant; `#58CC02` on 6 | accents, §9 |
 | Bandcamp `$10 more than the min` | `€3 more than the min`, **11px/20 w700 `#008000`** | reference table, §12, Copy |
 | Allbirds banner "orders may take up to 30 days to ship" | no longer live; current bar reads `Free ground shipping on orders over $100` | Copy |

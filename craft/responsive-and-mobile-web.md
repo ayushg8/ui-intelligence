@@ -37,10 +37,15 @@ sheet. The generated version keeps every element in place and reduces `padding: 
    `height: 100vh` is taller than the visible area whenever the toolbars are showing and your
    bottom-anchored button sits under them. Vercel uses `svh` 23 times to `dvh`'s 8. Airbnb ships the
    safe pair everywhere: `min-height:100vh; min-height:100dvh`.
-5. **Test at 320px and fix any horizontal scroll.** Thirteen of the fourteen top products measured
-   have **zero** horizontal overflow at a 320x568 viewport. The exception — supabase.com, at 339px of
-   scroll width in a 320px viewport — is the kind of 19px leak that ships when nobody looks. `320` is
-   the iPhone SE and the Galaxy S9+; it is a live device, not a museum piece.
+5. **Test at 320px with `documentElement.scrollWidth`, and clip decorative overflow at the
+   component, never on `body`.** Thirteen of the fourteen top products measured have **zero**
+   horizontal document overflow at 320x568. The exception — supabase.com, at 339px of scroll width in
+   a 320px viewport — is the kind of 19px leak that ships when nobody looks. `320` is the iPhone SE
+   and the Galaxy S9+; it is a live device, not a museum piece. Note what "zero overflow" does *not*
+   mean: at 320px Stripe has **728 elements whose right edge is past the viewport** and still
+   `scrollWidth === 320`, because every one of them sits inside an explicit clip (473 `overflow:hidden`
+   ancestors, 62 `overflow:clip`, 193 `overflow:auto`). Overflow is normal; *unclipped* overflow is
+   the bug.
 
 ---
 
@@ -144,6 +149,84 @@ breakpoint could ever express that.
 
 Zero is the correct answer for a page with no fixed bottom bar and no full-bleed edge content. Apple
 and Airbnb need it because both ship persistent bottom chrome.
+
+### Mobile-craft declarations actually shipped (counts in production CSS, iPhone 14 Pro load)
+
+| Product | `aspect-ratio` | `text-size-adjust` | `-webkit-tap-highlight-color` | `touch-action` | `overflow-wrap` / `word-break` | `scroll-margin` / `-padding` | `content-visibility` | `min-width:0` |
+|---|---|---|---|---|---|---|---|---|
+| **Vercel** | **108** | 6 | 3 (`transparent`, `#0000`) | 7 | 10 / 12 | **20** / 2 | 3 | 13 |
+| **Airbnb** | **80** | 3 | 2 | 8 | 7 / 11 | 9 / **18** | **8** | 10 |
+| **Stripe** | 53 | 3 | 0 (keeps the default) | 3 | 1 / 1 | 6 / 2 | 2 | 8 |
+| **GitHub** | 20 | 0 | 0 | 0 | 4 / 0 | 3 / 0 | 0 | 9 |
+| **Notion** | 12 | 2 | 0 | 1 | 0 / 1 (+22 `hyphens`) | 0 / 2 | 1 | 8 |
+| **Apple** | 0 | 4 | 4 | 0 | 0 / 0 | 0 / 0 | 0 | 0 |
+| **Linear** | **1** | 0 | 2 | 4 | 4 / 0 | 0 / 0 | 0 | 3 |
+
+Counts are from a single homepage load at 393px (Linear's 62KB and Apple's 245KB are marketing-page
+sheets, not the logged-in app), so read them as ratios between products, not as totals for the
+codebase.
+
+Read that table as a checklist of things nobody thinks to write. `aspect-ratio` at 108 uses is Vercel
+saying "no image on this site will ever shift the layout." Linear at 1 use is a product whose
+marketing page is mostly type and whose app is behind a login. Neither is wrong; the difference is
+image density, and it tells you which lever matters for *your* page.
+
+Literal values worth copying:
+
+```
+text-size-adjust: 100%;                     /* Apple, Stripe, Airbnb, Vercel, Notion, GitHub, Tailwind — universal */
+touch-action: pan-x pan-y pinch-zoom;       /* Vercel — kills the tap delay, KEEPS pinch-zoom     */
+touch-action: pan-x pan-y;                  /* Stripe — same, minus zoom; use only on a canvas    */
+overflow-wrap: anywhere;                    /* Airbnb — the one that actually breaks a long token */
+word-break: keep-all;                       /* Airbnb — CJK: do NOT break mid-word                */
+overscroll-behavior-inline: contain;        /* Airbnb — stops swipe-back on a horizontal rail     */
+content-visibility: auto;
+contain-intrinsic-size: calc(var(--vw) - 48px) 100px;   /* Airbnb — skip offscreen card paint     */
+```
+
+### Main-thread cost on a mid-tier phone (Pixel 5 profile, cold load, 6x CPU throttle)
+
+`6x` approximates a mid-range Android against this Mac. `longTaskMs` is total time the main thread
+was blocked for >50ms — the thing that makes a tap feel dead.
+
+| Site | LCP 1x → 6x | Long tasks 1x → 6x | Total blocked (6x) | Longest single task (6x) | CLS (6x) | JS heap |
+|---|---|---|---|---|---|---|
+| **Hacker News** | 192 → **280 ms** | 0 → 1 | **91 ms** | 91 ms | 0 | 9.5 MB |
+| **Apple** | 292 → **700 ms** | 0 → 5 | **391 ms** | 108 ms | 0 | 9.5 MB |
+| **Vercel** | 504 → 712 ms | 1 → 11 | 1,477 ms | 580 ms | 0 | 22 MB |
+| **Notion** | 440 → 1,020 ms | 2 → 11 | 2,304 ms | 508 ms | 0 | 26 MB |
+| **Linear** ‡ | 3,556 → 4,248 ms | 1 → 17 | 2,455 ms | 532 ms | 0 | 32 MB |
+| **Airbnb** | 1,020 → **3,344 ms** | 0 → 22 | 3,388 ms | 359 ms | 0.019 | 16 MB |
+| **Figma** | 1,060 → 3,420 ms | 4 → 20 | 3,660 ms | 840 ms | 0 | 82 MB |
+| **Stripe** | 544 → 740 ms | 3 → 18 | **4,625 ms** | **1,073 ms** | 0 | 40 MB |
+| **NYT** | 2,800 → **15,676 ms** | 4 → 43 | **11,374 ms** | **2,220 ms** | **0.474** | 125 MB |
+
+Three things fall out of this and they are the whole mobile performance story:
+
+- **The gap between the best and worst is 56x on LCP** (280ms vs 15.7s) and both are shipped by
+  companies with money. It is a choice, made in the bundle.
+- **Fast paint does not mean responsive.** Stripe's LCP at 6x is 740ms — fourth best in the table —
+  and it still blocks the main thread for 4.6 seconds afterward, including one unbroken 1,073ms task.
+  Every tap in that window does nothing. Measure `longtask`, not just LCP.
+- **CLS only appears under throttle.** NYT is 0.437 at 1x and 0.474 at 6x; Airbnb is 0.000 at 1x and
+  0.019 at 6x. If you test layout stability on a fast machine you will measure zero and ship shift.
+
+‡ `linear.app`'s 1× LCP was re-probed on 2026-09-10 and came back at **1,344ms**, not 3,556ms — the
+page changed between passes. Treat the Linear row's 6× figures as stale until re-run;
+[`performance-and-perceived-speed.md`](performance-and-perceived-speed.md) §Table A carries the
+current desktop numbers.
+
+Note also that the CLS figures in this table and the ones in
+[`performance-and-perceived-speed.md`](performance-and-perceived-speed.md) §Table A are of the same
+pages and do not match — 0.437 here vs 0.127 there for NYT. Neither is wrong: **CLS accumulates over
+the observation window**, and this table observes longer and scrolls. A CLS number without its
+window is not comparable to any other CLS number.
+
+```js
+// paste this in the console on a throttled device profile — it is the whole audit
+new PerformanceObserver(l => l.getEntries().forEach(e =>
+  console.log('BLOCKED', Math.round(e.duration), 'ms'))).observe({type:'longtask', buffered:true});
+```
 
 ### Payload on a mobile connection (uncompressed bytes over the wire, `iPhone 14 Pro` emulation)
 
@@ -351,7 +434,11 @@ the label-repetition problem in its worst form.
 
 Apple's HIG says 44x44pt. Material says 48x48dp. Both are correct and both are widely ignored, on
 purpose. Measured mobile primary buttons cluster at **40-48px**, median 44 — but 41% of Apple's
-homepage targets and 52% of Airbnb's are *under* 44px, and neither product is hard to use.
+homepage targets and 52% of Airbnb's are *under* 44px, and neither product is hard to use. Measured
+again at **320px** on Airbnb's homepage — 65 links and buttons, **median height 18px, p90 40px, and
+61 of 65 (94%) under 44px.** A product with a bottom tab bar and a 125px nav is shipping a median
+18px target. It works because the 18px items are chip labels and text links inside larger padded
+rows; the *hit area*, not the painted box, is what clears 44.
 
 The resolution is that **44px is a hit-area minimum, not a paint minimum.** Linear's shipped pattern,
 found on their interactive controls:
@@ -528,8 +615,13 @@ desktop.
 - **`font-size: 16px` minimum on every focusable input, textarea and select.** Non-negotiable on iOS.
   If your design system's input is 14px, override it at mobile widths rather than shipping the zoom.
   Do **not** solve this with `maximum-scale=1` in the viewport meta — that disables pinch-zoom for
-  everyone, which is a real accessibility failure. Vercel and Spotify both ship `maximum-scale=1`;
-  it is the one thing in this document that two good products get wrong.
+  everyone, which is a real accessibility failure. Measured viewport metas: **Vercel, Spotify and
+  Airbnb all ship `maximum-scale=1`** (Airbnb's full string is
+  `width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover`) — three good products
+  getting the same thing wrong. For contrast, GitHub ships bare `width=device-width` with no
+  `initial-scale` at all, and Apple, Stripe and Linear ship the correct
+  `width=device-width, initial-scale=1[, viewport-fit=cover]`. Linear additionally sets
+  `height=device-height`, which is legacy and does nothing you want.
 - **The keyboard covers roughly the bottom 40% of the screen and does not resize the layout on iOS
   Safari** (it resizes `visualViewport`, not the layout viewport). A submit button positioned with
   `position: fixed; bottom: 0` sits *underneath* the keyboard. Two fixes: put the submit inline at
@@ -646,6 +738,159 @@ appears) and the jump reads as a bug.
 
 ---
 
+## Decision: where does the overflow go?
+
+At 320px, **Stripe has 728 elements whose right edge is past the viewport and a document
+`scrollWidth` of exactly 320.** So does Linear (375), GitHub (170), Vercel (78), Apple (9). Overflow
+is not the bug. Overflow that reaches `<html>` is the bug.
+
+Measured — for every one of those elements, on all five sites, the nearest ancestor with a
+horizontal-overflow rule was an explicit clip or scroller. **Zero true leaks, across all five sites.**
+
+| Site | Overflowing elements @320 | nearest ancestor `hidden` | `clip` | `auto`/`scroll` | true leaks | `body { overflow-x }` | doc scrollWidth |
+|---|---|---|---|---|---|---|---|
+| Stripe | 728 | 473 | 62 | 193 | **0** | `visible` | 320 |
+| Linear | 375 | 291 | 0 | 84 | **0** | **`hidden`** | 320 |
+| GitHub | 170 | 159 | 11 | 0 | **0** | `visible` | 320 |
+| Vercel | 78 | 77 | 1 | 0 | **0** | `visible` | 320 |
+| Apple | 9 | 0 | 9 | 0 | **0** | `visible` | 320 |
+
+Apple is the outlier worth noticing: nine overflowing elements on the whole page, all nine inside
+`overflow: clip`. The other four sites are running marquees and bleeding hero art, which is a
+legitimate reason to have 700 clipped elements — but Apple proves you can build a visually elaborate
+page that simply does not overflow anything.
+
+**Clip at the component that owns the overflow, not on `body`.** Linear is the only one of the five
+using `body { overflow-x: hidden }` and it is the pattern to avoid, for three reasons: it silently
+hides the bug so you never find the element that is 40px too wide; on some engines it promotes
+`<body>` to a scroll container, which breaks `position: sticky` on descendants; and it does nothing
+for the *cause*, so the page still lays out 400px wide internally and every `100%` width is measured
+against the wrong box.
+
+**Prefer `overflow: clip` to `overflow: hidden` for decoration.** `hidden` creates a scroll container
+(programmatically scrollable, focus-scrollable, a `position: sticky` boundary). `clip` just clips.
+For a marquee, a glow, a hero illustration bleeding off the edge — the thing you want is `clip`, and
+you can clip one axis while leaving the other visible, which `hidden` cannot do:
+
+```css
+.hero-art { overflow-x: clip; }              /* bleed vertically, clip horizontally */
+.logo-marquee { overflow: clip; }            /* 6,192px of logos in a 320px viewport — Stripe */
+```
+
+**The only overflow test that means anything:**
+
+```js
+document.documentElement.scrollWidth <= window.innerWidth   // must be true at 320
+```
+
+When it fails, *then* run the element scan — and filter out anything with a clipping ancestor, or you
+will get 728 results and give up.
+
+**The three causes, in order of how often they are it:** (1) a fixed `width`/`min-width` on a card or
+media element larger than 320 minus the gutters; (2) an unbreakable string — a URL, an API key, a
+German compound, a file path — in a container with no `overflow-wrap`; (3) a grid whose
+`minmax(320px, 1fr)` floor exceeds the viewport once you subtract padding. Fix (2) globally and be
+done with it:
+
+```css
+/* Airbnb ships `overflow-wrap: anywhere`; `break-word` alone will not break a long unbroken token */
+.prose, td, .cell { overflow-wrap: anywhere; }
+:lang(zh), :lang(ja), :lang(ko) { word-break: keep-all; }   /* Airbnb — never break mid-word in CJK */
+```
+
+`minmax(min(320px, 100%), 1fr)` is the grid fix, and it is worth making a habit: the `min()` clamps
+the track floor to the container when the container is narrower than your ideal card.
+
+---
+
+## Decision: anchor links under a sticky header
+
+If you have a sticky header and in-page anchors, every `#section` link lands with the heading hidden
+behind the header. The fix people reach for is `scroll-margin-top` on every heading. The fix real
+products ship is **one declaration on the root**:
+
+| Site | Sticky/fixed header height @393px | `html { scroll-padding-top }` | `scroll-margin-top` on headings | Result |
+|---|---|---|---|---|
+| **Vercel docs** | 64px (`position: sticky; top: 0; z-index: 75`) | **64px** | 0 | exact |
+| **Stripe docs** | — | **64px** | 0 | exact |
+| **Tailwind docs** | 113px (`position: fixed; top: 0`) | **`auto`** | 0 | heading lands under the header |
+
+```css
+html { scroll-padding-top: var(--header-h); }   /* one line, covers every anchor forever */
+```
+
+Two notes. `scroll-padding` on the root also fixes keyboard focus scrolling and browser find-in-page,
+which `scroll-margin` on headings does not. And **none of the three ships `scroll-behavior: smooth`
+globally** — all three compute to `auto`. Smooth scrolling on a 15-screen jump is a second of
+motion sickness; if you want it, scope it to short in-page moves and gate it behind
+`@media (prefers-reduced-motion: no-preference)`.
+
+---
+
+## Decision: the four mobile defaults nobody sets
+
+Small, cheap, and each one is a class of bug.
+
+**1. `-webkit-text-size-adjust: 100%` on `html`.** Measured on every single site probed —
+Apple, Stripe, Airbnb, Vercel, Notion, GitHub, Tailwind, Mercury all compute to `100%`. Without it,
+iOS Safari "boosts" the font size of text blocks it thinks are too small when you rotate to landscape,
+so your carefully set 14px metadata renders at 17px in landscape only and your layout breaks in a way
+you cannot reproduce in portrait. Set it to `100%` (never `none`, which also disables the
+accessibility text-size setting on some engines).
+
+**2. Decide about `-webkit-tap-highlight-color`.** It defaults to `rgba(51, 181, 229, 0.4)` — a
+translucent blue box that flashes over the whole tapped element. Measured split: **Linear, Vercel,
+Tailwind and Mercury set it to `transparent`; Stripe, Airbnb, GitHub, Notion and Apple leave the
+default.** The rule: you may only remove it **if you ship your own `:active` state.** Removing the
+highlight and providing nothing means a tap on a slow connection produces zero feedback and the user
+taps three more times.
+
+```css
+button, a { -webkit-tap-highlight-color: transparent; }
+button:active { background: var(--surface-pressed); }   /* the trade you just made */
+```
+
+**3. `touch-action` on interactive elements — with `pinch-zoom` preserved.** Vercel ships
+`touch-action: pan-x pan-y pinch-zoom`. That combination removes the legacy ~300ms double-tap delay
+without taking pinch-zoom away from anyone. `touch-action: manipulation` is the shorter equivalent
+and is fine. **`touch-action: none` is only for a drag surface** — a canvas, a slider thumb, a sheet
+grabber — because it disables scrolling *and* zoom on that element.
+
+**4. `aspect-ratio` on every image and embed.** This is the CLS fix and it costs one line. Vercel
+ships 108 declarations, Airbnb 80, Stripe 53. Note the measurement above: CLS reads 0.000 on a fast
+machine and non-zero under 6x throttle, so "we have no layout shift" measured locally means nothing.
+Set `width`/`height` attributes on `<img>` (the browser derives the ratio) or set `aspect-ratio`
+explicitly on the container.
+
+---
+
+## Decision: horizontal rails, specified
+
+Airbnb's category chip rail at 320px, measured in full — this is the whole spec, copy it:
+
+| Property | Measured value |
+|---|---|
+| Container | `clientWidth: 320`, `scrollWidth: 467` — 147px past the right edge, so the next chip visibly peeks |
+| `scroll-snap-type` | `inline mandatory` |
+| `scroll-padding-inline-start` | `16px` (matches the page gutter, so a snapped chip is not flush) |
+| `overscroll-behavior-x` | `contain` |
+| `gap` | `8px` |
+
+And the counter-example, on the same page: Airbnb's listing carousel is `clientWidth: 308`,
+`scrollWidth: 987`, with `scroll-snap-type: none` and `overscroll-behavior-x: auto`. Even at Airbnb,
+one rail is specified and the next one is not — swiping the second past its end can trigger
+browser-back. The lesson is that rails need a component, not a pattern people re-implement.
+
+**Airbnb's bottom tab bar at 320px, measured:** a `<nav>` with `position: fixed`, total height
+**125px**, of which **`padding-bottom: 60px`** is dead clearance, `background: #fff`,
+`border-top: 1px solid #ebebeb`, `z-index: 1`. The row of labels occupies roughly the top 65px; the
+60px below it keeps them off the home indicator and out of the swipe-up gesture strip (that 60px is
+a design token, not `env()` — Airbnb layers `env(safe-area-inset-bottom)` separately for notched
+devices). If your fixed bottom bar is `height: 56px` with nothing under the labels, its bottom third
+is fighting the OS gesture area on every modern phone.
+
+---
+
 ## Decision: landscape and tablet
 
 Tablet is not "a small desktop" and landscape phone is not "a wide phone." Both fail on **height**,
@@ -735,6 +980,17 @@ building a responsive layout, you are building a second product with extra steps
   unpredictable, and it means no two users see the same page.
 - **`viewport-fit=cover` is wrong if you have no edge-to-edge content.** It creates safe-area padding
   obligations across the whole app in exchange for nothing.
+- **"`aspect-ratio` on everything" is wrong for text containers.** It is an image and embed fix. On a
+  box containing text it becomes a fixed height by another name and clips in German, Finnish and at
+  200% zoom. Apple ships **zero** `aspect-ratio` declarations on its homepage and has no CLS.
+- **"Always `overflow: clip`" is wrong when you need the content scrollable.** `clip` is unscrollable
+  by definition — programmatically, by keyboard, by find-in-page. Decoration gets `clip`; a table
+  rail, a code block or a chip row gets `auto`. Getting this backwards produces content nobody can
+  reach on a small screen with no scrollbar to tell them.
+- **Long-task totals are not a budget you can hit on a marketing site.** Stripe blocks the main
+  thread for 4.6s at 6x and is a category-leading product. The number is a *comparison* tool: measure
+  before and after your change, and care about the longest single task more than the total, because
+  that is the one that eats a tap.
 - **Testing in Chrome device emulation is not testing.** It has no collapsing toolbar, no keyboard,
   no safe areas, no momentum scroll, and a CPU 20x faster than the phone. Use it for layout;
   use a real device or a remote device lab for anything in this document's second half.
@@ -814,7 +1070,42 @@ card rail triggers browser back.
 *Correction:* `overscroll-behavior: contain` on every nested scroller. It is one line and it is
 almost always right.
 
-**12. Never testing 320.**
+**12. `body { overflow-x: hidden }` as the fix for horizontal scroll.**
+What it looks like: one line at the top of the stylesheet that makes the bug invisible and leaves the
+cause in place. The page still lays out wider than the viewport internally, `100%` widths are wrong,
+and `position: sticky` inside `<body>` can stop working.
+*Correction:* find the element (`documentElement.scrollWidth > innerWidth`, then scan and filter out
+anything with a clipping ancestor) and clip it at its own component with `overflow: clip`. Four of the
+five products measured leave `body { overflow-x: visible }` and clip locally — Stripe clips 535
+elements that way and still reports a 320px document.
+
+**13. Shipping `aspect-ratio: 0` and calling CLS clean.**
+What it looks like: no `width`/`height` on `<img>`, no `aspect-ratio`, CLS measured as 0.000 on a
+MacBook, and a visibly jumping page on a phone. Measured: Airbnb goes 0.000 → 0.019 and NYT 0.437 →
+0.474 purely from 6x CPU throttling.
+*Correction:* `aspect-ratio` or explicit dimensions on every image, embed and skeleton — Vercel
+ships 108 of them — and re-measure with `Emulation.setCPUThrottlingRate` at 4-6x, never at 1x.
+
+**14. Anchors that land under the sticky header.**
+What it looks like: a docs page with `position: sticky` nav and `#install` links that scroll the
+heading behind it. Tailwind's own docs do this: 113px fixed header, `scroll-padding-top: auto`.
+*Correction:* `html { scroll-padding-top: var(--header-h) }`. One line. Vercel docs and Stripe docs
+both ship exactly `64px` to match a 64px header.
+
+**15. `touch-action: none` sprayed on interactive elements.**
+What it looks like: someone read that it removes the tap delay and put it on every button. It also
+disables pinch-zoom on those elements, which is a WCAG failure, and disables scrolling that starts on
+them, which makes a list of buttons unscrollable.
+*Correction:* `touch-action: manipulation`, or Vercel's explicit `pan-x pan-y pinch-zoom`. Reserve
+`none` for a drag handle or a canvas.
+
+**16. Removing the tap highlight and shipping nothing in its place.**
+What it looks like: `-webkit-tap-highlight-color: transparent` in the reset, no `:active` styles,
+and a button that gives zero feedback for the 800ms before the route changes.
+*Correction:* either keep the default highlight (Stripe, Airbnb, GitHub, Notion and Apple all do) or
+remove it and add a real `:active` background/scale. Never remove it alone.
+
+**17. Never testing 320.**
 What it looks like: laid out at 375 or 390, ships, and a 320px device gets a horizontal scrollbar
 from one `min-width: 340px` card or one long unbroken token.
 *Correction:* the check below.
@@ -825,9 +1116,18 @@ from one `min-width: 340px` card or one long unbroken token.
 
 Run against your own output. Any "no" is a bug.
 
-1. At a **320x568** viewport, is `document.documentElement.scrollWidth === 320`? Run it:
-   `[...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > innerWidth + 2)`
-   — the survivors are your offenders. Thirteen of fourteen top products return an empty list.
+1. At a **320x568** viewport, is `document.documentElement.scrollWidth <= window.innerWidth`? That
+   is the test. Only if it fails, scan for the culprit — **and filter out anything with a clipping
+   ancestor**, or you will get hundreds of false positives (Stripe: 728, all of them intentional):
+   ```js
+   [...document.querySelectorAll('body *')].filter(e => {
+     if (e.getBoundingClientRect().right <= innerWidth + 2) return false;
+     for (let a = e.parentElement; a; a = a.parentElement)
+       if (/(hidden|clip|auto|scroll)/.test(getComputedStyle(a).overflowX)) return false;
+     return true;   // this one actually leaks
+   });
+   ```
+   And confirm the fix is not `body { overflow-x: hidden }`.
 2. Count the distinct breakpoints in the file. More than four for a page, or more than two for a
    component, means you picked them from a list. Are any of them a number you found by dragging?
 3. Does at least one component on the page **change shape** (absorb into a trigger, drill down, swap)
@@ -851,12 +1151,22 @@ Run against your own output. Any "no" is a bug.
 14. Do the primary buttons measure 40-48px tall, and do sub-44px targets have a hit expander?
 15. Take a screenshot at **320, 393, 744 and 1440** and look at all four. Not three. The 744 one is
     where "tablet as afterthought" shows up.
+16. Does `html` carry `-webkit-text-size-adjust: 100%`? Every product measured does. Then rotate to
+    landscape and confirm no text got bigger on its own.
+17. Does `html` carry `scroll-padding-top` equal to your sticky header height? If you have anchors
+    and a sticky header and this is `auto`, every anchor link is broken.
+18. Does every image, embed and skeleton have `aspect-ratio` or `width`/`height`? Then re-measure CLS
+    at **4-6x CPU throttle** — it reads 0.000 on your laptop regardless.
+19. Run a `longtask` PerformanceObserver at 6x throttle. Total blocked time over ~2s means taps will
+    feel dead; a single task over ~500ms means one of them will be swallowed entirely.
+20. If you removed `-webkit-tap-highlight-color`, is there an `:active` state? If not, put the
+    highlight back.
 
 ---
 
 ## Provenance
 
-Values measured 2026-09-09 via Playwright. Breakpoints and feature counts were extracted by
+Values measured 2026-09-09 and 2026-09-10 via Playwright. Breakpoints and feature counts were extracted by
 intercepting every `text/css` response plus inline `<style>` content and tallying `@media` /
 `@container` conditions in the shipped bytes — these are usage counts in production CSS, not
 documentation claims. Computed styles and bounding boxes were read at `iPhone 14 Pro` (393x660,
@@ -867,6 +1177,18 @@ macbook-pro/specs), airbnb.com, notion.com, tailwindcss.com (+ /docs), github.co
 nytimes.com, mercury.com, figma.com, shopify.com, booking.com, squareup.com, klarna.com,
 robinhood.com, arc.net, raycast.com, supabase.com, news.ycombinator.com, and the mobile login forms
 of Stripe, GitHub, Google, X, Vercel, Notion, Supabase and Shortcut.
+
+The September 10 pass added: shipped-declaration counts for `aspect-ratio`, `text-size-adjust`,
+`-webkit-tap-highlight-color`, `touch-action`, `overflow-wrap`/`word-break`, `scroll-margin`/
+`scroll-padding`, `content-visibility` and `min-width:0` (same CSS-interception method); the 320px
+overflow-and-clip audit (per-element bounding boxes plus ancestor `overflow-x`, at 320x568 DPR 2
+mobile emulation); sticky-header and `scroll-padding-top` measurements on vercel.com/docs,
+docs.stripe.com/api and tailwindcss.com/docs; Airbnb's chip rail, listing carousel, bottom tab bar and
+touch-target distribution at 320px; and the main-thread table, captured on the Playwright `Pixel 5`
+profile with `Emulation.setCPUThrottlingRate` at 1x and 6x, one cold sample per site, LCP/CLS/longtask
+read from `PerformanceObserver` with `buffered: true` five seconds after load. Single samples on a
+shared connection — treat LCP as order of magnitude and the long-task and CLS *deltas* between 1x and
+6x as the real signal.
 
 Device viewport table from the Playwright device registry. Payload figures are decompressed response
 bytes on a cold load at the `iPhone 14 Pro` profile, one sample per site — treat them as order of

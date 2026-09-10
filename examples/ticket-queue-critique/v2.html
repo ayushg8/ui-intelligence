@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>All tickets — Beacon</title>
+<style>
+:root{
+  --bg:#FFFFFF; --bg-sunk:#FAFAFA; --line:#E8E8E6; --line-soft:#F1F1EF;
+  --ink:#18181B; --ink-2:#52525B; --ink-3:#8A8A93;
+  --accent:#3D3D46; --urgent:#B42318; --warn:#B54708;
+  --row:36px; --gutter:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:400 13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus{outline:none}
+:focus-visible{outline:2px solid #1F6FEB;outline-offset:1px;border-radius:4px}
+.layout{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:212px;border-right:1px solid var(--line);padding:10px 8px;flex-shrink:0;background:var(--bg-sunk);overflow:auto}
+.brand{display:flex;align-items:center;gap:8px;height:30px;padding:0 8px;margin-bottom:14px}
+.brand-mark{width:18px;height:18px;border-radius:4px;background:var(--ink);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.brand-name{font-size:13px;font-weight:600;letter-spacing:-.01em}
+.nav-label{font-size:11px;font-weight:500;color:var(--ink-3);padding:0 8px;margin:14px 0 4px}
+.nav-label:first-of-type{margin-top:0}
+.nav-item{display:flex;align-items:center;gap:8px;height:26px;padding:0 8px;border-radius:5px;font-size:13px;color:var(--ink-2);text-decoration:none}
+.nav-item:hover{background:rgba(0,0,0,.04)}
+.nav-item[aria-current=page]{background:rgba(0,0,0,.06);color:var(--ink);font-weight:500}
+.nav-item .n{margin-left:auto;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.nav-item .n.hot{color:var(--urgent);font-weight:500}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.head{display:flex;align-items:center;gap:10px;height:44px;padding:0 var(--gutter);border-bottom:1px solid var(--line);flex-shrink:0}
+h1{font-size:14px;font-weight:600;letter-spacing:-.005em}
+.count{font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.sep{width:1px;height:16px;background:var(--line);margin:0 2px}
+.stat{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.stat b{font-weight:600;color:var(--ink)}
+.stat.bad b{color:var(--urgent)}
+.spacer{flex:1}
+.ghost{height:26px;padding:0 8px;border:1px solid var(--line);border-radius:5px;background:var(--bg);font-size:12px;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.ghost:hover{background:rgba(0,0,0,.03)}
+.primary{height:26px;padding:0 10px;border:1px solid var(--ink);border-radius:5px;background:var(--ink);color:#fff;font-size:12px;font-weight:500;cursor:pointer}
+.subhead{display:flex;align-items:center;gap:6px;height:36px;padding:0 var(--gutter);border-bottom:1px solid var(--line);flex-shrink:0}
+.search{flex:1;max-width:280px;height:24px;border:1px solid var(--line);border-radius:5px;padding:0 8px;font-size:12px;background:var(--bg)}
+.search::placeholder{color:var(--ink-3)}
+.chip{height:24px;padding:0 8px;border:1px solid var(--line);border-radius:5px;background:var(--bg);font-size:12px;color:var(--ink-2);cursor:pointer}
+.list{flex:1;overflow:auto}
+.grp{display:flex;align-items:center;gap:8px;height:28px;padding:0 var(--gutter);background:var(--bg-sunk);border-bottom:1px solid var(--line-soft);position:sticky;top:0;font-size:12px;font-weight:500;color:var(--ink-2)}
+.grp .n{color:var(--ink-3);font-weight:400;font-variant-numeric:tabular-nums}
+.row{display:grid;grid-template-columns:15px 22px minmax(0,1fr) 96px 88px 76px 62px;align-items:center;gap:10px;height:var(--row);padding:0 var(--gutter);border-bottom:1px solid var(--line-soft);cursor:default}
+.row:hover{background:rgba(0,0,0,.025)}
+.pri{display:flex;align-items:flex-end;gap:1.5px;height:9px}
+.pri i{width:2.5px;background:#C9C9CF;border-radius:.5px}
+.pri i:nth-child(1){height:3px}.pri i:nth-child(2){height:6px}.pri i:nth-child(3){height:9px}
+.pri[data-p="3"] i{background:var(--urgent)}
+.pri[data-p="2"] i:nth-child(1),.pri[data-p="2"] i:nth-child(2){background:var(--warn)}
+.pri[data-p="2"] i:nth-child(3){background:#E4E4E7}
+.pri[data-p="1"] i:nth-child(1){background:#8A8A93}
+.pri[data-p="1"] i:nth-child(2),.pri[data-p="1"] i:nth-child(3){background:#E4E4E7}
+.pri[data-p="0"] i:nth-child(1){background:#C9C9CF}
+.pri[data-p="0"] i:nth-child(2),.pri[data-p="0"] i:nth-child(3){background:#EFEFF1}
+.st{width:12px;height:12px;border-radius:50%;border:1.6px solid #A1A1AA;position:relative;flex-shrink:0}
+.st.open{border-color:#6E6E78}
+.st.open::after{content:"";position:absolute;inset:2px;border-radius:50%;background:conic-gradient(#6E6E78 0 25%,transparent 0)}
+.st.pending{border-color:#B54708;border-style:dashed}
+.st.esc{border-color:var(--urgent);background:var(--urgent)}
+.st.esc::after{content:"";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700;line-height:9px;top:-1px;left:2.4px}
+.st.solved{border-color:#3F7D58;background:#3F7D58}
+.st.solved::after{content:"";position:absolute;left:2.6px;top:.6px;width:3px;height:6px;border:solid #fff;border-width:0 1.6px 1.6px 0;transform:rotate(43deg)}
+.subj{font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subj .cust{color:var(--ink-3)}
+.who{font-size:12px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who.none{color:var(--urgent)}
+.sla{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;text-align:right}
+.sla.breach{color:var(--urgent);font-weight:500}
+.sla.warn{color:var(--warn)}
+.upd{font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums;text-align:right}
+.hdr{display:grid;grid-template-columns:15px 22px minmax(0,1fr) 96px 88px 76px 62px;gap:10px;padding:0 var(--gutter);height:26px;align-items:center;border-bottom:1px solid var(--line);font-size:11px;color:var(--ink-3)}
+.hdr .r{text-align:right}
+@media (max-width:760px){
+ .sidebar{display:none}
+ .row,.hdr{grid-template-columns:15px 22px minmax(0,1fr) 64px;grid-auto-rows:min-content;height:auto;padding:7px var(--gutter);align-items:start}
+ .hdr{display:none}
+ .row{row-gap:2px}
+ .subj{white-space:normal}
+ .who,.sla{grid-column:3;font-size:12px}
+ .who{color:var(--ink-3)}
+ .sla{text-align:left}
+ .upd{align-self:start}
+ .head{flex-wrap:wrap;height:auto;padding:8px var(--gutter);row-gap:6px}
+}
+</style></head><body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">B</div><div class="brand-name">Beacon</div></div>
+  <div class="nav-label">Queues</div>
+  <a class="nav-item" href="#" aria-current="page">All tickets<span class="n">312</span></a>
+  <a class="nav-item" href="#">Assigned to me<span class="n">18</span></a>
+  <a class="nav-item" href="#">Unassigned<span class="n">7</span></a>
+  <a class="nav-item" href="#">Escalated<span class="n hot">4</span></a>
+  <div class="nav-label">Views</div>
+  <a class="nav-item" href="#">Breaching SLA<span class="n hot">9</span></a>
+  <a class="nav-item" href="#">Awaiting customer<span class="n">41</span></a>
+  <a class="nav-item" href="#">Solved today<span class="n">63</span></a>
+  <div class="nav-label">Workspace</div>
+  <a class="nav-item" href="#">Team</a>
+  <a class="nav-item" href="#">Macros</a>
+  <a class="nav-item" href="#">Settings</a>
+</aside>
+<main class="main">
+  <div class="head">
+    <h1>All tickets</h1><span class="count">312</span>
+    <div class="sep"></div>
+    <span class="stat bad"><b>9</b> breaching SLA</span>
+    <span class="stat"><b>1h 42m</b> median first response</span>
+    <span class="stat"><b>7</b> unassigned</span>
+    <div class="spacer"></div>
+    <button class="ghost">Assign…</button>
+    <button class="primary">New ticket</button>
+  </div>
+  <div class="subhead">
+    <input class="search" placeholder="Search or filter…">
+    <button class="chip">Status</button><button class="chip">Assignee</button><button class="chip">Priority</button>
+    <div class="spacer"></div>
+    <button class="chip">SLA due ↑</button>
+  </div>
+  <div class="list">
+    <div class="hdr"><span></span><span></span><span>Ticket</span><span>Requester</span><span>Assignee</span><span class="r">SLA due</span><span class="r">Updated</span></div>
+
+    <div class="grp">Breaching SLA <span class="n">2</span></div>
+    <div class="row"><span class="pri" data-p="3" title="Urgent"><i></i><i></i><i></i></span><span class="st esc" title="Escalated"></span><span class="subj">Webhook retries stop after 3 attempts <span class="cust">· delivery.failed dropped on 4th retry</span></span><span class="who">Dana Mireles</span><span class="who">Priya N.</span><span class="sla breach">−34m</span><span class="upd">4m</span></div>
+    <div class="row"><span class="pri" data-p="3" title="Urgent"><i></i><i></i><i></i></span><span class="st open" title="Open"></span><span class="subj">SAML login loops for @northwind.co users <span class="cust">· ACS URL bounce since IdP change</span></span><span class="who">Tomas Keil</span><span class="who">Marco B.</span><span class="sla breach">−11m</span><span class="upd">22m</span></div>
+
+    <div class="grp">Due today <span class="n">3</span></div>
+    <div class="row"><span class="pri" data-p="2" title="High"><i></i><i></i><i></i></span><span class="st open" title="Open"></span><span class="subj">Invoice PDF shows tax at 0% for EU customers <span class="cust">· VAT line renders, amount zero</span></span><span class="who">Ada Osei</span><span class="who">Priya N.</span><span class="sla warn">1h 20m</span><span class="upd">1h</span></div>
+    <div class="row"><span class="pri" data-p="2" title="High"><i></i><i></i><i></i></span><span class="st pending" title="Pending"></span><span class="subj">Bulk CSV import times out at ~40k rows <span class="cust">· job dies 09:58, no error logged</span></span><span class="who">Ruth Salgado</span><span class="who none">Unassigned</span><span class="sla warn">3h 05m</span><span class="upd">2h</span></div>
+    <div class="row"><span class="pri" data-p="1" title="Normal"><i></i><i></i><i></i></span><span class="st open" title="Open"></span><span class="subj">Can we get seat count on the usage API? <span class="cust">· scraping the admin page today</span></span><span class="who">Jae Woo</span><span class="who">Marco B.</span><span class="sla warn">5h 40m</span><span class="upd">3h</span></div>
+
+    <div class="grp">Later this week <span class="n">15</span></div>
+    <div class="row"><span class="pri" data-p="1" title="Normal"><i></i><i></i><i></i></span><span class="st pending" title="Pending"></span><span class="subj">Slack notifications duplicated for shared channels <span class="cust">· double posts in #beacon-alerts</span></span><span class="who">Lena Fischer</span><span class="who">Ines R.</span><span class="sla">Thu 14:00</span><span class="upd">5h</span></div>
+    <div class="row"><span class="pri" data-p="0" title="Low"><i></i><i></i><i></i></span><span class="st open" title="Open"></span><span class="subj">Request: export ticket history as JSON <span class="cust">· CSV loses threading</span></span><span class="who">Miles Kovač</span><span class="who none">Unassigned</span><span class="sla">Fri 09:00</span><span class="upd">1d</span></div>
+    <div class="row"><span class="pri" data-p="1" title="Normal"><i></i><i></i><i></i></span><span class="st solved" title="Solved"></span><span class="subj">Password reset email lands in spam (Outlook) <span class="cust">· DMARC passes, still quarantined</span></span><span class="who">Sofia Brandt</span><span class="who">Ines R.</span><span class="sla">—</span><span class="upd">1d</span></div>
+    <div class="row"><span class="pri" data-p="1" title="Normal"><i></i><i></i><i></i></span><span class="st open" title="Open"></span><span class="subj">Rate limit headers missing on /v2/messages <span class="cust">· X-RateLimit-Remaining absent since Tue</span></span><span class="who">Oyin Adebayo</span><span class="who">Marco B.</span><span class="sla">Thu 16:30</span><span class="upd">6h</span></div>
+    <div class="row"><span class="pri" data-p="1" title="Normal"><i></i><i></i><i></i></span><span class="st pending" title="Pending"></span><span class="subj">Attachment preview blank for .heic uploads <span class="cust">· thumbnails 404, download works</span></span><span class="who">Klara Nowak</span><span class="who">Ines R.</span><span class="sla">Thu 17:00</span><span class="upd">7h</span></div>
+    <div class="row"><span class="pri" data-p="0" title="Low"><i></i><i></i><i></i></span><span class="st open" title="Open"></span><span class="subj">Docs: webhook signing example uses old header <span class="cust">· X-Beacon-Sig vs X-Beacon-Signature</span></span><span class="who">Ben Ortiz</span><span class="who none">Unassigned</span><span class="sla">Fri 11:00</span><span class="upd">8h</span></div>
+    <div class="row"><span class="pri" data-p="1" title="Normal"><i></i><i></i><i></i></span><span class="st open" title="Open"></span><span class="subj">Merge duplicate contacts keeps the older email <span class="cust">· support@ vs help@ collapse order</span></span><span class="who">Yuki Tanabe</span><span class="who">Priya N.</span><span class="sla">Fri 12:00</span><span class="upd">9h</span></div>
+    <div class="row"><span class="pri" data-p="2" title="High"><i></i><i></i><i></i></span><span class="st open" title="Open"></span><span class="subj">Search returns 0 results for tickets older than 90d <span class="cust">· index cutoff not documented</span></span><span class="who">Hannah Reiss</span><span class="who">Marco B.</span><span class="sla">Fri 09:30</span><span class="upd">11h</span></div>
+    <div class="row"><span class="pri" data-p="0" title="Low"><i></i><i></i><i></i></span><span class="st solved" title="Solved"></span><span class="subj">Add Portuguese (BR) to the macro language list <span class="cust">· requested by 4 accounts</span></span><span class="who">Rafa Lima</span><span class="who">Ines R.</span><span class="sla">—</span><span class="upd">1d</span></div>
+    <div class="row"><span class="pri" data-p="1" title="Normal"><i></i><i></i><i></i></span><span class="st pending" title="Pending"></span><span class="subj">CSV export drops the "resolved by" column <span class="cust">· present in UI, missing in file</span></span><span class="who">Nils Berg</span><span class="who">Priya N.</span><span class="sla">Mon 10:00</span><span class="upd">1d</span></div>
+    <div class="row"><span class="pri" data-p="1" title="Normal"><i></i><i></i><i></i></span><span class="st open" title="Open"></span><span class="subj">SSO group sync removes agents on rename <span class="cust">· Okta group renamed → 12 agents deactivated</span></span><span class="who">Amara Diallo</span><span class="who">Marco B.</span><span class="sla">Mon 11:00</span><span class="upd">1d</span></div>
+    <div class="row"><span class="pri" data-p="0" title="Low"><i></i><i></i><i></i></span><span class="st open" title="Open"></span><span class="subj">Feature: keyboard shortcut for "assign to me" <span class="cust">· agents currently use the menu</span></span><span class="who">Ellis Ward</span><span class="who none">Unassigned</span><span class="sla">Tue 09:00</span><span class="upd">2d</span></div>
+    <div class="row"><span class="pri" data-p="1" title="Normal"><i></i><i></i><i></i></span><span class="st solved" title="Solved"></span><span class="subj">Timezone shown as UTC on the SLA timer <span class="cust">· account is Europe/Berlin</span></span><span class="who">Greta Sol</span><span class="who">Ines R.</span><span class="sla">—</span><span class="upd">2d</span></div>
+    <div class="row"><span class="pri" data-p="0" title="Low"><i></i><i></i><i></i></span><span class="st open" title="Open"></span><span class="subj">Trial banner persists after upgrade <span class="cust">· cache TTL 24h on billing state</span></span><span class="who">Pavel Novak</span><span class="who">Priya N.</span><span class="sla">Tue 15:00</span><span class="upd">2d</span></div>
+    <div class="row"><span class="pri" data-p="1" title="Normal"><i></i><i></i><i></i></span><span class="st pending" title="Pending"></span><span class="subj">Inbound email threading breaks on Re: Re: <span class="cust">· new ticket created instead of reply</span></span><span class="who">Sara Haddad</span><span class="who">Marco B.</span><span class="sla">Wed 10:00</span><span class="upd">3d</span></div>
+  </div>
+</main>
+</div>
+</body></html>

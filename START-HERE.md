@@ -83,6 +83,7 @@ characteristic failure. Start at [`archetypes/README.md`](archetypes/README.md) 
 | Button labels, errors, empty states, tone | [`craft/copy-and-voice.md`](craft/copy-and-voice.md) |
 | Breakpoints, mobile, touch | [`craft/responsive-and-mobile-web.md`](craft/responsive-and-mobile-web.md) |
 | Photos, illustration, screenshots, logos, icons in place | [`craft/imagery-and-illustration.md`](craft/imagery-and-illustration.md) |
+| Does it feel fast? Loading, CLS, INP, fonts, optimistic UI | [`craft/performance-and-perceived-speed.md`](craft/performance-and-perceived-speed.md) |
 
 **Reference products.** [`references/`](references/) — teardowns of the best interfaces in the
 world, with measured values. Read the one matching your archetype before you design, and use it for

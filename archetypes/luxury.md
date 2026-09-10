@@ -20,11 +20,11 @@ Four archetypes put a photograph, big type and a lot of space on one page. Side 
 | | **luxury** | `premium-marketing` | `ecommerce` (PDP) | `editorial` |
 |---|---|---|---|---|
 | Body | 15–17px / **1.40–1.65** | 16–17px / 1.5–1.6 | 15–16px / 1.5 | 17–19px serif · 18–20px grotesque |
-| Display | **24–50px, w200–400**, tracking 0 to −0.5px | 56–72px, w300–510, −0.02 to −0.04em | 20–34px product name, w500–700 | 32–48px, w400–500 |
+| Display | **24–50px, w200–400**, tracking 0 to −0.5px | 48–112px (mode 56–72), w300–510, −0.02 to −0.04em | 20–34px product name, w500–700 | 32–48px, w400–500 |
 | Meta→display ratio | **1:1 to 3.8×** | 4.6× | ~2.5× | 2.0–2.4× |
 | Secondary text | 11–14px **uppercase, +0.3 to +2px**, w300–400 | 14px sentence case, one size for five roles | 12/16 w500 uppercase +0.6px, labels only | 12–14px sans, muted, sentence case |
 | The list unit | **there is no row** — image aspect sets height (B&O tile 268×390) | 28–44px nav / changelog rows | cart line 72–88px around a 64–72px thumb | index row 88–112px, content-sized |
-| Primary control | 44–48px, **one per band** | nav 32–40 / hero 44–56 | ATC 48–60, **one per viewport plus a sticky one** | 36–40 desktop, 44 mobile, 3–4 per page |
+| Primary control | 44–48px, **one per band** | nav 28–44 / hero 44–56 | ATC 48–60, **one per viewport plus a sticky one** | 36–40 desktop, 44 mobile, 3–4 per page |
 | Radius | **0–3px**; pill only on top of photography | bimodal 0–6px **or** pill — pick a lane | 0px **or** pill + 8–16px containers | 2–4px controls, 0 on media |
 | Accent | **marks the brand; never touches a button** | the CTA and the diagram | the purchase path, once per viewport, full strength | links only |
 | Hover / reveal | 200–250ms colour · 500–1200ms opacity | 100–300ms colour · 600–1000ms opacity/clip | 150–200ms, everything | 120ms controls · **0ms inside the text** |

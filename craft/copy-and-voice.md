@@ -187,6 +187,135 @@ Per-site punctuation, because the aggregate hides the shape:
 
 Read that table as a calibration instrument. **Two em dashes on a 400-word page puts you above Stripe's rate.** And exclamation marks are concentrated: Duolingo, a company whose entire brand is enthusiasm, uses three on its homepage. Mercury, Ramp, Slack, GitHub, Intercom, Vercel and Retool use zero.
 
+
+### 8. The in-product corpus — 24,899 shipped strings
+
+Homepages are written by marketers. The strings a user actually lives in are written by engineers, and they are measurable: every product with a translation pipeline ships its entire English UI as a JSON file. I took four, all shipped, all open source, all in daily production use.
+
+"Label" below means a string of **≤4 words, with no interpolated variable and no terminal punctuation** — i.e. something that is almost certainly a button, menu item, column header or tab.
+
+| Corpus | Strings | Words | Unique labels | Median label chars | Mean words/label | ≤2 words | Sentence case (multi-word) | Title Case | ALL CAPS | Verb-first |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **Excalidraw** | 614 | 2,586 | 398 | **11** | 1.96 | 72.6% | **93.3%** | 6.7% | 0.0% | 31.7% |
+| **Grafana** | 11,500 | 50,713 | 4,736 | **14** | 2.33 | 60.1% | **89.7%** | 10.2% | 0.1% | 29.2% |
+| **Bitwarden** | 4,419 | 29,702 | 2,365 | **15** | 2.37 | 58.9% | **88.9%** | 11.0% | 0.2% | 28.4% |
+| **Mattermost** | 8,366 | 57,067 | 2,880 | **15** | 2.33 | 60.7% | 55.9% | **43.6%** | 0.5% | 29.8% |
+
+Four things to take from this table.
+
+**Sentence case is not a preference, it is the shipped default.** Three of four products run 89–93% sentence case on multi-word labels — higher than the 76% I measured on marketing pages, because marketing pages contain campaign headlines and product names. Mattermost is the control group: at 43.6% Title Case it is the one product here with no enforced convention, and you can measure exactly what that costs. **Counting multi-word labels that differ from another label only in capitalisation:**
+
+| Corpus | Multi-word labels | Label pairs differing only in case |
+|---|---|---|
+| Excalidraw | 238 | **0** |
+| Bitwarden | 1,928 | 24 |
+| Grafana | 3,669 | 66 |
+| Mattermost | 1,991 | **101** |
+
+Mattermost ships `Try Again` and `Try again`, `Leave Channel` and `Leave channel`, `Learn More` and `Learn more`, `Save Changes` and `Save changes`, `First Name` and `First name` — 101 such pairs, which is 101 duplicated translation keys, 101 chances for two screens to disagree, and a QA problem nobody will ever finish. **This is the actual argument for sentence case, and it is not aesthetic:** Title Case requires a judgement call on every string, judgement calls drift, and drift is measurable. Excalidraw, with one enforced convention, has zero.
+
+**The label budget is 11–15 characters, and it holds across wildly different products.** A drawing tool and an enterprise chat server land within four characters of each other. If your labels average 20+ characters, you are writing sentences on buttons.
+
+**Only ~30% of labels start with a verb** — lower than you would guess from "always use a verb". The other 70% are nouns, because most short strings in a real app are not buttons: they are section titles, column headers, settings names and status values. The verb rule applies to *actions*, and applying it to everything produces the `Manage Your Settings` school of navigation. Top label first-words across the four: `add`, `no`, `delete`, `show`, `cancel`, `select`, `save`, `new`, `view`, `edit`, `copy`, `search` — a verb list with `no` (empty states) and `new` sitting in the middle of it.
+
+**`Submit` appears exactly once per product.** So does `OK` in three of four. These are not extinct; they are vestigial. One per 5,000 strings is the shipped rate, and it is always in the oldest screen.
+
+### 9. What shipped products do vs. what their own style guides say
+
+Same four corpora. Raw counts, then rate per 10,000 words.
+
+| Pattern | Excalidraw (2.6k words) | Grafana (50.7k) | Bitwarden (29.7k) | Mattermost (57.1k) |
+|---|---|---|---|---|
+| `please` | 9 · **34.8**/10k | 108 · 21.3 | 80 · 26.9 | 202 · **35.4** |
+| `successfully` | **0** | 44 · 8.7 | 32 · 10.8 | 27 · 4.7 |
+| `something went wrong` | **0** | 9 | 4 | 16 |
+| `oops` | **0** | 1 | 0 | 3 |
+| `sorry` | **0** | 7 | 1 | 0 |
+| `are you sure` | 4 | **66** | 54 | **89** |
+| `click here` | 0 | 2 | 1 | 3 |
+| exclamation marks | 5 · 19.3/10k | 20 · 3.9 | 36 · 12.1 | 39 · 6.8 |
+| em dashes (per 1,000 words) | **0 · 0.00** | 25 · **0.49** | 1 · 0.03 | 28 · **0.49** |
+| emoji | 0 | 0 | 0 | 2 |
+
+**This table is the most honest thing in this file, and it cuts both ways.**
+
+The em dash and emoji findings are unambiguous: **in-product copy runs at 0.0–0.5 em dashes per 1,000 words**, five times below the marketing rate of 2.4, and effectively zero emoji in 140,068 words. If an agent writes a settings description with an em dash in it, that string is statistically unlike every string around it.
+
+But `please`, `sorry`, `Something went wrong` and `Are you sure` are *everywhere* in shipped software — 209 uses of `Are you sure` across three products, 399 uses of `please`. The GOV.UK and Atlassian bans on those words are real, well-argued guidance that most shipped software does not follow. So do not write "nobody says please" — that is false and an engineer will catch you. Write it as what it is: **a quality gradient.** The product with zero `successfully`, zero `sorry`, zero `Oops` and zero em dashes is the one with the best-reviewed copy in the set, and it is also the smallest. Copy discipline decays with string count unless someone owns it.
+
+Error strings specifically (keys matching `error|fail|invalid|required|denied|unable|cannot`):
+
+| Corpus | Error strings | Median length | Ends with a period | Contains `please` | Contains `valid`/`invalid` |
+|---|---|---|---|---|---|
+| Excalidraw | 48 | 7 words | 64.6% | 8.3% | 12.5% |
+| Grafana | 575 | **5 words** | **31.0%** | 8.9% | 6.6% |
+| Bitwarden | 203 | 8 words | 65.5% | 13.8% | 12.8% |
+| Mattermost | 461 | 8 words | 62.0% | 16.9% | 4.6% |
+
+Grafana's error strings are the shortest and least punctuated because most of them are *titles* for an error component (`Failed to load Alertmanager configuration`, `Failed to fetch contact points`), with the detail coming from the API underneath. That is the right architecture: a fixed human title naming the operation, plus the server's own message. The five-word median is what "name the operation that failed" costs.
+
+### 10. Localisation expansion, actually measured
+
+33,145 English→target string pairs from the same four shipped products. Ratio is target characters ÷ English characters, per string, identical strings excluded.
+
+| Corpus | Pairs (de) | de median | de p90 | de >1.3× | de >1.5× | fr median | ja median | ja p90 |
+|---|---|---|---|---|---|---|---|---|
+| Excalidraw | 564 | **1.27** | 1.73 | 44.0% | 20.2% | **1.32** (p90 1.86) | **0.57** | 0.82 |
+| Grafana | 10,031 | 1.24 | 1.64 | 39.0% | 16.2% | — | 0.56 | 0.80 |
+| Bitwarden | 4,197 | 1.25 | 1.62 | 40.2% | 15.6% | — | — | — |
+| Mattermost | 6,742 | 1.20 | 1.59 | 32.9% | 13.2% | — | — | — |
+
+**The real German budget is +20–27% at the median and +60–86% at p90.** The familiar "+35%" is between the two and describes neither. Plan the *layout* against p90 (a control that fits 1.7× the English string never breaks) and the *copy* against the median.
+
+**French expands more than German** in this data (1.32 vs 1.27 on the same product). German gets the reputation because its long compounds break single words across a fixed control; French adds length in small words that wrap gracefully. If you only test one language, test German for *breakage* and French for *length*.
+
+**Japanese contracts to 0.56–0.57× the English character count**, and never exceeds 1.3× (0.2% of pairs). So a Japanese UI is not a width problem — it is a *legibility* problem: CJK needs a larger minimum font size and looser line-height than Latin at the same visual weight, in half the horizontal space. Budgeting +35% globally over-sizes every Japanese control.
+
+**A finding that contradicts the standard expansion chart:** the well-known IBM/Microsoft tables predict that very short strings expand *hugely* (up to 200–300% for 1–10 characters). Measured across 21,534 real German pairs, the median short label (≤3 words) expands **1.21–1.27×** — essentially the same as the median full sentence (1.18–1.26×). The difference is in the tail, not the median. Design for the tail; do not repeat the "short strings triple" claim as if it were the typical case.
+
+### 11. Accessible-name copy, harvested from live products
+
+The strings nobody reviews. Every one of these was read off a live page at 1440px.
+
+| Product | What is on screen | The accessible name / `title` |
+|---|---|---|
+| **GitHub** issue row | Issue title, an `Open` chip, `#98493`, avatar, relative time | `Stale "use cache" segment after a client-side navigation that changes a root param: Status: Open. #98493 In vercel/next.js;· amannn opened on Sep 10, 2026. More information available below.` |
+| **GitHub** star button | `142,216` | `142216 users starred this repository` — **ungrouped digits in the accessible name while the visible number is grouped** |
+| **GitHub** filter menus | Chevron dropdowns labelled `Author`, `Labels`, `Projects` | `Filter by author`, `Filter by labels`, `Filter by projects` |
+| **GitHub** timestamps | `2 days ago` | `title="Sep 10, 2026, 2:28 AM PDT"` — absolute, with the timezone abbreviation |
+| **Grafana** sidebar chevrons | icon only | `Expand section: Starred`, `Collapse section: Synthetics` |
+| **Grafana** row overflow menu | `⋯` | `Actions for folder Grafana Synthetic Monitoring (default)` |
+| **Grafana** feedback thumbs | 👍 👎 | `I love this feature` / `I don't like this feature` |
+| **Grafana** sidebar (bug) | `Alerts & IRM` | `Expand section: Alerts &amp; IRM` — the attribute is double-encoded, so a screen reader says "amp" |
+| **Excalidraw** toolbar | icon + shortcut digit | `title="Rectangle — R or 2"`, `title="Keep selected tool active after drawing — Q"` |
+
+The conventions that fall out, and they are worth copying verbatim:
+
+1. **A row's accessible name is a linearised sentence, not a list of its chips.** GitHub concatenates title, status, id, repo, actor and date into one readable string. A screen-reader user hears one sentence per row instead of seven fragments.
+2. **Icon-only controls get `verb + object + the object's name`.** `Actions for folder meta-monitoring` beats `More`, `Options` and `Actions` — because a page has 20 of those and the accessible names must be unique.
+3. **State goes in the name.** `Expand section: Starred` vs `Collapse section: Synthetics` — the label says what will happen, and it changes when the state changes.
+4. **Tooltips carry the shortcut after an em dash** (`Rectangle — R or 2`). This is the one place in product UI where an em dash is conventional, and it is a separator, not prose.
+5. **Format numbers in accessible names too.** GitHub does not, and `142216` is read as "one hundred forty-two thousand two hundred sixteen" by some screen readers and as six digits by others. Run the same `Intl.NumberFormat` over the `aria-label` that you ran over the visible text.
+
+### 12. The template corpus — where the slop is not
+
+9 Tailwind UI templates (Salient, Spotlight, Syntax, Studio, Protocol, Commit, Transmit, Pocket, Keynote), 5,185 words. These are the most-cloned SaaS/marketing templates in existence and a plausible source of generated-copy habits.
+
+| Measure | Template corpus (5,185 words) | Shipped homepages (20,282 words) |
+|---|---|---|
+| em dashes / 1,000 words | 1.9 | 2.4 |
+| exclamation marks | 4 | 17 |
+| `seamless` | 1 | 5 |
+| `cutting-edge` | 2 · **3.9/10k** | 1 · 0.49/10k |
+| `everything you need` | 2 | 2 |
+| `harness` / `leverage` / `empower` | 1 each | 1 / 2 / 3 |
+| ✨ 🚀 | **0** | **0** |
+| `Get started` | **9 — five of them on one page** | — |
+
+**The templates are not the problem.** Their prose rates sit at or below shipped marketing pages, their headlines are concrete (`Accounting made simple for small businesses.`, `Open-source Git client for macOS minimalists`, `Invest at the perfect time.`), and they contain zero emoji. The one measurable template habit worth un-learning is **CTA monotony**: Salient ships `Get started` five times on a single page, which is what every cloned landing page then inherits.
+
+So when generated copy reads like slop, it is not because it was trained on Tailwind templates. It is the model's own prior — and that means the fix is a checklist, not a better reference site.
+
 ---
 
 ## Buttons and action labels
@@ -206,7 +335,7 @@ The rule that generates almost all correct button copy: **the button label shoul
 
 Measured: 76% of multi-word labels in shipped products are sentence case. The reasons are mechanical, not aesthetic.
 
-1. **Title Case requires a style guide nobody reads.** Is it "Sign Up for Updates" or "Sign up for Updates" or "Sign Up For Updates"? Every Title Case system needs a rule for prepositions, and every team applies it inconsistently, so Title Case products drift within a single screen. Vercel's docs — an otherwise very disciplined product — carries `Deployment Methods`, `Accessing Deployments`, `Using the Dashboard` and `Resources Tab and Deployment Summary` next to `CLI workflows` and `Explore deployments`. That inconsistency is not carelessness; it is the predictable output of a rule with judgement calls in it. Sentence case has one rule: capitalise the first word and proper nouns.
+1. **Title Case requires a style guide nobody reads.** Is it "Sign Up for Updates" or "Sign up for Updates" or "Sign Up For Updates"? Every Title Case system needs a rule for prepositions, and every team applies it inconsistently, so Title Case products drift within a single screen. Vercel's docs — an otherwise very disciplined product — carries `Deployment Methods`, `Accessing Deployments`, `Using the Dashboard` and `Resources Tab and Deployment Summary` next to `CLI workflows` and `Explore deployments`. That inconsistency is not carelessness; it is the predictable output of a rule with judgement calls in it. Measured in shipped translation files: Mattermost carries **101 label pairs that differ only in capitalisation** (`Try Again`/`Try again`, `Leave Channel`/`Leave channel`), Grafana 66, Bitwarden 24, and Excalidraw — the only one of the four with a single enforced convention — **zero**. Sentence case has one rule: capitalise the first word and proper nouns.
 2. **Sentence case is shorter to read.** Capitals reduce word-shape variation, which is the cue readers use for fast recognition.
 3. **Sentence case survives translation.** German capitalises all nouns; French capitalises almost nothing in headings. A Title Case source string forces every localiser to make a decision your system cannot verify.
 4. **UPPERCASE destroys length budgets.** Uppercase text runs roughly 12–15% wider in the same face at the same size, and it disables the descender/ascender cues that make truncation readable. In an interface with 28–36px controls, that is the difference between a label fitting and ellipsing.
@@ -314,6 +443,21 @@ Analytics needs the GitHub integration.
 Only workspace admins can connect it. Ask an admin →
 ```
 
+### Two names for two things, and the numbers that go with them
+
+Atlassian's design system splits what most teams call "empty state" into two, and the split is worth adopting because it forces the branch:
+
+- **Blank slate** — the person has never used this feature. Teaching copy is allowed here.
+- **Empty state** — the person cleared it or finished it. "These messages are a way to celebrate, add energy, and motivate people to get on with their next task."
+
+Their published budgets, which match what shipped products actually do: **title 3–4 words**, **body 1–2 sentences**, **CTA 1–2 words**, title in sentence case with **no terminal punctuation unless it is a question**. Their success-message page adds the rule most generated UI breaks first: *"Avoid using 'Success!' or 'successfully' in a title"*, and *"Avoid using exclamations! We don't want to be overly enthusiastic about everything!"*
+
+What the shipped corpus does with empty states: of the strings starting with `No `, the overwhelming majority are three or four words naming the missing object — `No teams found via LDAP`, `No datasources found`, `No saved searches yet`, `No access rules yet`, `No critical applications at risk`. Two habits in there are worth stealing and one worth avoiding:
+
+- **Steal:** `yet` for a genuine blank slate (`No saved searches yet`) and no `yet` for a filtered result (`No applications match these filters`). That one word carries the entire branch, and it is free.
+- **Steal:** naming the mechanism in the body — Mattermost's `No attributes yet. Click "New attribute" to create one.` names the control by its label so the sentence still works when the button moves.
+- **Avoid:** the trailing ellipsis. Excalidraw ships `No items added yet...`, `No matching items found...`, `No matches found...`, `No matching commands...` — four empty states that all imply something is still loading. An empty state is a finished state. No ellipsis.
+
 ### The specifics that make empty states good
 
 - **The heading names the object, not the absence.** `No invoices yet` beats `Nothing here`.
@@ -350,6 +494,16 @@ Two more of their rules that agents routinely violate:
 - **Instructions for empty, descriptions for wrong.** `Enter your name` (empty) but `Name must be 35 characters or less` (too long). `Enter a date after 31 August 2017 for when you started the course` is worse than `Date you started the course must be after 31 August 2017`. Pick per situation, then be consistent across the product.
 - **Do not clear the fields.** Keep both the passing and the failing answers.
 - **Do not repeat an on-screen example in the error.** If the hint already shows `QQ 12 34 56 C`, the error does not need to.
+
+### The shape that scales: a written title, a server-supplied body
+
+Grafana's 575 error strings have a **five-word median** and are almost all titles, not sentences: `Failed to create alert rule`, `Failed to load Alertmanager configuration`, `Failed to fetch contact points`, `Unable to display all events`. The detail comes from the API response rendered underneath.
+
+That split is the only error architecture that survives a large product. **The human writes one title per operation — `Failed to <operation>` or `Couldn't <operation>` — and the system supplies the specifics.** It gives you: a string that is always accurate (the operation is known at the call site even when the failure is not), a stable translation key, and a body that can carry a real cause without anyone having to pre-write 500 of them.
+
+The failure mode it prevents is the one generated UI always ships: a single `Something went wrong. Please try again.` reused at 40 call sites, each of which knew exactly which operation had failed and threw that information away.
+
+Excalidraw's variant is the same idea in the other verb: `Couldn't create shareable link: the scene is too big`, `Couldn't insert SVG image. The SVG markup looks invalid.`, `Couldn't import scene from the supplied URL. It's either malformed, or doesn't contain valid Excalidraw JSON data.` Pick `Couldn't` (warmer, contracted, user-facing) or `Failed to` (flatter, closer to a log line) and use one of them everywhere. Do not mix.
 
 ### Real errors, graded
 
@@ -466,6 +620,18 @@ The whole discipline is: **say what this screen wants and why, in the fewest wor
 - **Legal microcopy goes under the button, not above the form.** Supabase's live version: `By continuing, you agree to Supabase's Terms of Service and Privacy Policy, and to receive periodic emails with updates.` Note that it discloses the marketing email consent in the same sentence rather than in a pre-ticked checkbox.
 - **The empty product after onboarding is part of onboarding.** Most of the teaching belongs in the first-run empty states, in context, not in a five-screen carousel the user swipes through.
 
+**A shipped first-run screen worth studying.** Excalidraw's welcome state, at 1440px, contains no greeting, no benefit, no carousel and no account prompt. Under the wordmark, three sentences at 18px/21.6px:
+
+```
+Your drawings are saved in your browser's storage.
+Browser storage can be cleared unexpectedly.
+Save your work to a file regularly to avoid losing it.
+```
+
+Then four menu items — `Open  Cmd+O`, `Help  ?`, `Live collaboration...`, `Sign up` — and two hand-drawn arrows annotating the real UI (`Export, preferences, languages, …` pointing at the hamburger; `Pick a tool & Start drawing!` pointing at the toolbar).
+
+The entire first-run copy is a **risk disclosure**, not a pitch: the one thing that will hurt this user is losing work to cleared browser storage, so that is the only thing the screen says. Compare what a model produces for "write an onboarding screen for a whiteboard app" — a welcome, three benefits and a `Get Started` button. **The test for first-run copy is not "what is great about this product" but "what will this person get wrong in the next ten minutes".**
+
 **The generic default you are avoiding:** `Welcome to [Product]! 👋 Let's get you set up in just a few steps.` followed by a carousel of three benefit slides.
 
 ---
@@ -480,7 +646,7 @@ Rules ordered by how often they are broken:
 4. **Never fabricate a percentage.** A progress bar that sits at 92% for forty seconds destroys more trust than an indeterminate spinner ever did.
 5. **Never use jokes on a timer.** "Reticulating splines" is funny the first time and infuriating the ninth, and it is unlocalisable.
 6. **Change the button, not the page.** A submit button going `Save changes` → `Saving…` (disabled) keeps the user's eyes where they already are. Do not also show a full-screen overlay.
-7. **Ellipsis convention:** one character `…` or three periods, chosen once. Trailing ellipsis means "in progress"; on a *menu item* it means "this opens a dialog that asks for more input" (`Export…`). Do not mix the two meanings on one surface.
+7. **Ellipsis convention:** one character `…` or three periods, chosen once. Trailing ellipsis means "in progress"; on a *menu item* it means "this opens a dialog that asks for more input" (`Export…`). Do not mix the two meanings on one surface. **Measured:** shipped products overwhelmingly use three periods, not the single glyph — Grafana 210 `...` vs 21 `…`, Excalidraw 18 vs 2, Mattermost 107 vs 19. And they mix them *on one screen*: Excalidraw's welcome screen shows the annotation `Export, preferences, languages, …` (glyph) directly above the menu item `Live collaboration...` (three periods). Pick the three-period form because it is what everything else does, then lint for the glyph.
 
 **The generic default you are avoiding:** a full-screen spinner over `Loading your data, please wait...` for a 200ms fetch.
 
@@ -519,6 +685,41 @@ A notification competes with whatever the user is doing. It has to survive being
 
 ---
 
+## The strings nobody reviews: accessible names, tooltips and placeholders
+
+Three surfaces carry copy that never appears in a design review because it is not visible in the mock. All three are measurable, and all three are where generated UI is worst — the model writes the visible string and leaves the invisible ones as `aria-label="button"`.
+
+### Accessible names
+
+An accessible name is the string a screen reader announces. It is also the string a voice-control user has to say out loud to click the thing. Rules, taken from what GitHub and Grafana actually ship (see table 11):
+
+- **Icon-only control:** `verb + object + the object's own name`. `Actions for folder meta-monitoring`, not `More`. If a page has six overflow menus, six identical `More` buttons make the page unusable by voice.
+- **A row or card:** one linearised sentence, in reading order, with the status included. GitHub's issue rows are the model: `«title»: Status: Open. #98493 In vercel/next.js;· amannn opened on Sep 10, 2026.`
+- **A toggle or disclosure:** name the action *and* the target, and swap it with state: `Expand section: Starred` / `Collapse section: Synthetics`.
+- **Never duplicate the visible text into `aria-label` with different words.** A voice-control user says what they see. If the button says `Save changes` and the label says `Submit form`, saying "Save changes" does nothing.
+- **Run your number, date and currency formatters over accessible names.** GitHub's star button is the counter-example, shipping `142216 users starred this repository` beside a visible `142,216`.
+- **`aria-live` for anything you decided not to toast.** If you deleted the success message because the state change is visible, the change is still invisible to a screen reader. A polite live region carrying `Invoice sent` costs nothing and is the actual reason "delete the success toast" is safe advice.
+
+### Tooltip copy
+
+- **A tooltip is a label, not a paragraph.** Excalidraw's are the shape to copy: `Rectangle — R or 2`, `Hand (panning tool) — H`, `Keep selected tool active after drawing — Q`. Name, then the shortcut after an em dash. That is the one conventional em dash in product UI.
+- **Never put information only in a tooltip.** It does not exist on touch, and it is a hover-delay away from existing on desktop.
+- **Do not restate the visible label.** A tooltip that says `Save` on a button that says `Save` is noise with a 500ms delay.
+
+### Placeholder copy, and the two-search problem
+
+Grafana's Checks page shows both halves of this on one screen at 1440px: the global search box reads `Search...` and the page's own search box reads `Search by job name, endpoint, or label`. The second is right and the first is a default nobody revisited.
+
+**Rule:** a scoped search names its scope and its searchable fields; only a true omnisearch may be generic, and even then `Search or jump to…` (GitHub) beats `Search...`. If a user cannot tell which of two search boxes on the screen will find their thing, the placeholder is the only thing that can tell them, and `Search...` refuses to.
+
+### Marketing voice inside the product
+
+On that same Grafana screen, a dismissible banner sits above the page heading reading **`Your Users Shouldn't Be Your Monitors`** — Title Case, five words, an aphorism — directly above a sentence-case product heading (`Checks`) and a sentence-case nav (`Testing & synthetics`, `Alerts & IRM`, `Machine learning`). Mattermost's admin console ships `Effortlessly collaborate across languages with auto-translation. Messages in shared channels are instantly translated based on each user's language preference—no extra steps required.` — an `Effortlessly`, an unspaced em dash, and a benefit stack, inside an admin settings page.
+
+Upsells, feature-discovery cards and trial banners are the single most reliable place for marketing voice to leak into a product. **The rule is that in-product promotional copy takes the product's voice, not the homepage's:** sentence case like everything around it, a specific capability instead of an aphorism, and the constraint stated (`Enterprise Advanced only`) rather than buried. If the banner's headline would look wrong as a settings heading on the same page, it is wrong.
+
+---
+
 ## Person, tense and voice
 
 The one convention worth memorising: **"your" for things belonging to the user, imperative for things the user does to the system, and "we" only when a human at the company is genuinely the actor.**
@@ -533,6 +734,10 @@ The one convention worth memorising: **"your" for things belonging to the user, 
 
 **Why not "My".** `My Files` / `My Account` reads as the product talking in the user's voice, which is a 2005 desktop convention. It also collides badly the moment the interface addresses the user in second person elsewhere on the same screen: "My Projects — invite people to your projects." Pick second person and hold it. **Exception:** where the possessive genuinely disambiguates ownership in a shared space — `Assigned to me` and `Created by me` are *correct* in GitHub's issue sidebar, because there `me` distinguishes a filter from `Assigned to Priya`. First person for filters, second person for everything else.
 
+**Two respected systems flatly contradict each other here, and you have to pick.** Apple's Human Interface Guidelines: *"Use possessive pronouns sparingly… 'Favorites' conveys the same message as 'Your Favorites', and is more succinct. Avoid using we altogether because it may be unclear who the 'we' in question refers to. This is particularly problematic in error messages like 'We're having trouble loading this content.' Something like 'Unable to load content' is much clearer."* Atlassian's error-message guidance says the opposite: *"Use we instead of you, as emphasizing the relationship between the person and the problem could make them feel like they're being held responsible."*
+
+They are both right inside their own domain. Apple writes for an OS where the software is not a company — there is no "we" that could have done anything, and screen real estate is measured in millimetres. Atlassian writes for a hosted service where a server your company operates genuinely failed, and saying so protects the user from feeling blamed. **The decision rule:** if a named party (your servers, your API, your billing provider) actually did the thing, say `We couldn't reach the payment provider`. If nothing did — a file is malformed, a field is empty — drop the actor entirely: `Unable to load content`, not `We couldn't load this content`. Never use `we` as a friendliness marker on a failure that is nobody's doing.
+
 **Tense.** Present tense for state (`3 issues are blocked`), simple past for completed events (`Deploy failed`), simple future only for things that will actually happen later (`Your card will be charged $49 on Oct 1`). Avoid the perfect tenses — `Your changes have been saved` is passive and longer than `Changes saved`, which is longer than showing the saved state.
 
 **Voice.** Active, with the actor named. Passive voice is a tell because it is what you write when you do not want to say who did it. The exception is when the actor genuinely does not matter or is the user themselves at fault — `The file was deleted` may be kinder than `You deleted the file`.
@@ -546,7 +751,8 @@ The one convention worth memorising: **"your" for things belonging to the user, 
 - **Group with `Intl.NumberFormat`, never a regex.** German uses `.` where English uses `,`; Hindi groups in lakhs.
 - **Round to the precision the decision needs, not to the precision you have.** `$1,234.56` in a ledger; `$1.2K` in a summary tile; never `$1234.5600000001`.
 - **Compact notation rounds by default.** `12,500` renders `13K` unless you pass `maximumFractionDigits: 1`. Decide whether your dashboard is allowed to be 4% wrong.
-- **Tabular figures on every column of numbers that aligns or updates.** Inter's `1` is ~41% narrower than its `0`; a right-aligned money column jitters without `font-variant-numeric: tabular-nums`. Measured: real products apply it to ~2–12% of digit-bearing nodes, not globally.
+- **Tabular figures on every column of numbers that aligns or updates.** Inter's `1` is ~41% narrower than its `0`; a right-aligned money column jitters without `font-variant-numeric: tabular-nums`. Measured: marketing pages apply it to ~2–12% of digit-bearing nodes, but a real data surface is the opposite — on Grafana's Checks page, **72 of 133 digit-bearing leaf nodes (54%)** carry `tabular-nums`. The rule is not "use it sparingly", it is "use it wherever numbers stack", and a dashboard is nearly all stacked numbers.
+- **The grouping bug is real and it ships.** On that same Grafana page, at 1440px, the check cards read `8928 executions / month`, `133920 executions / month` and `5963ms` — six-digit counts with no thousands separator, in a monitoring product whose entire job is numbers. This is what `${n} executions / month` produces. Every number that reaches a user goes through a formatter, including the ones in chips, badges, tooltips and `aria-label`s.
 - **Zero is a value, not an empty state.** `0 open issues` is information; a blank cell is ambiguous between zero and unknown. Use `—` for unknown and `0` for zero, and never the same glyph for both.
 - **Units go next to the number, spaced by locale rule.** `4.2 MB`, `250 ms`. In German the percent sign takes a space (`3 %`), in English it does not (`3.4%`) — `Intl` knows this and you do not.
 
@@ -574,7 +780,7 @@ Even if you never localise, these rules make copy better in English. If you do l
 
 1. **Never concatenate a sentence from fragments.** `"You have " + n + " new " + (n === 1 ? "message" : "messages")` is unlocalisable: `Intl.PluralRules` classifies 2 as `few` in Polish and Russian, and word order differs. Use full templated strings per plural category (ICU MessageFormat), one message per category.
 2. **Never build a sentence around an injected UI element.** `Click [Save] to continue` puts a button in the middle of a sentence and forces a word order English has and Japanese does not. Write `Select Save to continue.`
-3. **Budget +35% length.** German runs roughly a third longer than English; a 12-character button label becomes 16. If your control is sized to the English string, it will ellipse. This is why fixed-width buttons and single-line nav items are localisation traps.
+3. **Budget the measured expansion, not the folklore number.** Across 21,534 shipped English→German string pairs, German runs **1.20–1.27× at the median and 1.59–1.73× at p90**; French runs slightly longer than German (1.32 median, 1.86 p90); Japanese *contracts* to **0.56×** and essentially never exceeds 1.3×. Size controls against p90 (≈1.7×) and write against the median. This is why fixed-width buttons and single-line nav items are localisation traps — and why a global "+35% padding" rule silently ruins your Japanese UI, which needs a larger font in less width, not more room.
 4. **Do not encode grammar in code.** Gendered adjectives, articles that depend on the following noun (`a`/`an`), and possessives (`Priya's project`) all break outside English. Prefer `Project owner: Priya`.
 5. **Avoid idiom, sport metaphor and alliteration.** `Knock it out of the park` is untranslatable. `Set and forget` requires an explanation. Product copy that leans on wordplay ships as literal nonsense in twelve languages.
 6. **Avoid text in images and icon-only labels for text-heavy actions.** Both are invisible to translation pipelines.
@@ -737,6 +943,8 @@ This is the payload. Each entry: the pattern, why it is empty, and the specific 
 
 ## The rewrite drill
 
+### Drill one: fifteen generic strings
+
 Fifteen strings, sharpened. Each rewrite uses one of the four moves: **name the thing**, **user's words**, **real number**, **mechanism**.
 
 | # | Generic | Sharpened | Move |
@@ -758,6 +966,29 @@ Fifteen strings, sharpened. Each rewrite uses one of the four moves: **name the 
 | 15 | `Upgrade now to unlock more features!` | `You've used 4 of 5 free projects. Pro is $20/user/month and lifts the limit.` | real number |
 
 Two patterns to extract from that table. First, **the sharpened version is often longer**, and that is fine: length is not the enemy, emptiness is. Second, **six of the fifteen contain a number that the generic version did not**. If you are rewriting a string and cannot find a number to put in it, you usually do not know enough about the situation to write the string.
+
+---
+
+### Drill two: twelve strings that actually shipped
+
+The first drill uses invented generics. This one uses strings I pulled verbatim out of four shipped products' translation files and one live page. These are not strawmen — they are in production right now, in software people pay for. That is the point: this is the level the bar actually sits at.
+
+| # | Shipped string (source) | What's wrong | Sharpened |
+|---|---|---|---|
+| 1 | `Something went wrong...` (Bitwarden) | No object, no next step, and a trailing ellipsis that implies it is still trying | `We couldn't load your vault. Check your connection, then reload. Nothing was changed.` |
+| 2 | `Please try again` (Bitwarden) | A whole string that is only politeness | `Try again` — and name the failed operation in the title above it |
+| 3 | `Oops, something went wrong` (Grafana) | Interjection + the union of all errors | `Couldn't load the Alertmanager configuration.` + a `Retry` button + the server's own message underneath |
+| 4 | `Sorry! You do not have permission to edit this rule.` (Grafana) | Apology, exclamation, dead end | `You don't have permission to edit this rule. Ask an org admin for the Editor role.` |
+| 5 | `Rules successfully deleted from folder` (Grafana) | `successfully`, no count, no object name, no undo | `3 rules deleted from "Production alerts"` + `Undo` |
+| 6 | `Your new account has been created! You may now log in.` (Bitwarden) | Passive perfect, exclamation, and it tells you to do the thing it could have just done | `Account created` — then log them in |
+| 7 | `Hold your horses, you're too fast for us! Please wait a moment before trying again.` (Excalidraw) | A joke on a rate limit, an idiom that will not localise, and "a moment" is not a duration | `Too many requests. Try again in 30 seconds.` |
+| 8 | `No items added yet...` (Excalidraw library) | Empty state punctuated as if still loading; does not say how to fill it | `No saved shapes yet. Select shapes, then choose Add to library.` |
+| 9 | `Data successfully imported` (Bitwarden) | `successfully`, no count, no destination, no way to see the result | `Imported 348 items into Personal vault` + `View items` |
+| 10 | `Something went wrong. Try again` (Mattermost channel search) | Right shape, wrong specificity — the code knows which call failed | `Couldn't search channels. Try again` |
+| 11 | `Congratulations! Platform adoption is strong across your organization. To ensure uninterrupted growth, our team can assist in scaling your license to meet operational requirements.` (Mattermost, admin seat alert) | Sales copy in an admin console; 27 words to avoid saying "you are over your seat count" | `You're using 512 of 500 licensed seats. Add seats to keep new users active.` |
+| 12 | `8928 executions / month` (Grafana Checks, live at 1440px) | Unformatted integer in a monitoring product | `8,928 executions/month` |
+
+Read down the "what's wrong" column and notice how few of these are *tone* problems. Ten of twelve are missing a noun, a number, or a next step. **Tone is almost never the reason a string is bad.** That is why "make it friendlier" is the least useful instruction in product copy, and "which object, how many, what now?" is the most useful.
 
 ---
 
@@ -790,6 +1021,12 @@ Every rule above has a domain. These are the boundaries.
 - Consumer habit products where enthusiasm is the product. Duolingo's three exclamation marks are load-bearing.
 - User-authored content and reactions.
 - Genuine celebration moments in a consumer app — a streak, a milestone — where the entire retention mechanic is the feeling.
+
+**"Sentence case, always" has one platform-shaped exception worth knowing:** Apple's HIG explicitly declines to mandate either — *"Title case is generally considered formal, while sentence case is more casual. Choose a style for each UI element type and use it consistently"* — and native Apple platforms conventionally use Title Case for alert buttons and many controls (`Get Started`, `Done`, `Allow Once`). If you are building a SwiftUI or Catalyst app, sentence-case buttons will read as foreign in a way they never do on the web. The web default and the Apple-platform default genuinely differ; consistency inside the platform beats consistency with this file.
+
+**"Never say `please`, `sorry`, or `Are you sure`" is stated more absolutely than the evidence supports.** GOV.UK bans them, Atlassian bans `please` and `sorry` explicitly (*"saying 'please' can undermine the authority and credibility of your message and lead people to think a required step is optional"*), and I agree with both. But measured: 399 uses of `please` and 209 of `Are you sure` across four shipped products. Use this as a quality gradient, not a law — and never argue the point with an engineer by claiming real products don't do it. They do. The argument is that the ones with the best copy don't.
+
+**"Errors should be short" is wrong for:** anything the user must act on outside your product. A string like `Reconnect Google Drive` is short and useless if the person does not know that reconnecting happens in Settings → Integrations and requires admin rights. Atlassian's own rule allows for this: keep the message to 1–2 sentences, then link — but the link must be the *action*, not "learn more".
 
 **"Empty states should be text-only" is wrong for:**
 - Consumer onboarding, where an illustration carries brand and reduces perceived effort.
@@ -833,6 +1070,12 @@ Every rule above has a domain. These are the boundaries.
 | 20 | Mixed `My` and `Your` on one screen | No person convention | Second person by default; first person only for filters (`Assigned to me`) |
 | 21 | Notification copy: `You have a new notification` | No access to the event's content | Actor + verb + object, front-loaded for truncation |
 | 22 | Every heading a category label (`Overview`, `Features`, `Benefits`) | Structure without content | A heading either names a place (nav, docs) or states something true. Never a claim-shaped nothing |
+| 23 | `aria-label="button"`, `aria-label="More"` ×6, or no accessible name at all on icon buttons | The invisible string is not in the mock, so it is never reviewed | `verb + object + name`: `Actions for folder meta-monitoring`. Every accessible name on a page must be unique |
+| 24 | Numbers formatted in the visible text but raw in `aria-label`, tooltips, badges and page titles | The formatter is applied at one call site | One formatting layer; every surface reads through it. Shipped counter-example: GitHub's `142216 users starred this repository` |
+| 25 | `…` and `...` mixed on one screen; empty states punctuated with a trailing ellipsis | Two authors, or one model with no convention | Three periods everywhere, and never on an empty state — an empty state is a finished state |
+| 26 | Marketing voice in an in-product banner: Title Case aphorism, `Effortlessly`, benefit stack | The upsell copy is written by a different pipeline than the product copy | In-product promo takes the product's voice: sentence case, one specific capability, the constraint stated |
+| 27 | A generic `Search...` placeholder on a scoped search box | The placeholder ships as the component default | Name the scope and the fields: `Search by job name, endpoint, or label` |
+| 28 | "+35% for localisation" applied as global padding, including CJK | A remembered rule of thumb | Measured: de 1.20–1.27× median / 1.6–1.7× p90, fr slightly longer, **ja 0.56×**. Size to p90, and treat CJK as a font-size problem, not a width problem |
 
 ---
 
@@ -858,6 +1101,20 @@ Run this against your own strings before you call the screen done.
 - [ ] Every success toast survives the question "would the user notice this without it?" If yes, delete it.
 - [ ] Anything irreversible produces a receipt with an identifier.
 - [ ] Loading copy shows nothing under 1s, a skeleton to 5s, and a named step or count beyond.
+- [ ] Every toast you deleted has an `aria-live` region carrying the same fact.
+
+**The invisible strings**
+- [ ] Every icon-only control has a unique accessible name of the form verb + object + name.
+- [ ] No two controls on the page share an accessible name.
+- [ ] The `aria-label` matches the words a voice-control user would say from the visible label.
+- [ ] Numbers, dates and currency are formatted in `aria-label`s, tooltips, badges and the page `<title>`, not just the visible text.
+- [ ] Every scoped search box names its scope; no bare `Search...` outside a global omnisearch.
+
+**Length and localisation**
+- [ ] Labels average 11–15 characters; nothing over ~25 without a reason.
+- [ ] Every control still works at 1.7× its English string length (German p90).
+- [ ] No sentence assembled from fragments, and no UI element embedded mid-sentence.
+- [ ] Ellipsis form is consistent, and no empty state ends in one.
 - [ ] No progress percentage that the code cannot actually compute.
 
 **Data**

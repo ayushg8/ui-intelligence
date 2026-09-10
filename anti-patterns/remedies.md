@@ -2,9 +2,15 @@
 
 **Measured:** 2026-09. Every number in this file was read out of a live product or a shipped
 package with Playwright (computed styles, CSS custom properties, `getBoundingClientRect`) or
-extracted from source: `tailwindcss@4.3.3` `theme.css` from npm, the shadcn `new-york-v4` registry
-JSON, and live probes of linear.app, vercel.com, ui.shadcn.com, mui.com, docs.stripe.com,
-attio.com, notion.com, raycast.com, railway.com, mercury.com, radix-ui.com/themes, github.com.
+extracted from source. Sources:
+
+- **Source files:** `tailwindcss` `theme.css` and the shadcn `new-york-v4` registry, both fetched
+  from their repositories; the shadcn `Button` and `globals.css` quoted here are verbatim.
+- **Live probes:** linear.app, vercel.com, github.com, notion.com, docs.stripe.com, attio.com,
+  raycast.com, railway.com, mercury.com, apple.com, radix-ui.com (themes *and* icons),
+  ui.shadcn.com (dashboard, blocks, charts), lucide.dev, mantine.dev, daisyui.com, heroui.com,
+  chakra-ui.com, mui.com, v0.app, lovable.dev, bolt.new.
+
 OKLCH values were computed from measured hex. Nothing here is recalled. Where a number is
 approximate it says *approx*.
 
@@ -22,7 +28,7 @@ inside `@theme`, so every remedy here is portable to plain CSS by deleting the `
 
 Run this in order on anything you just built. It is sorted by **perceived quality gained per
 minute spent**, which is not the same as sorted by importance. Steps 1–4 are mechanical and take
-seconds; they are first because they are cheap, not because they matter most. Step 10 matters
+seconds; they are first because they are cheap, not because they matter most. Step 11 matters
 most.
 
 | # | Change | Time | Why it is this high |
@@ -31,14 +37,15 @@ most.
 | 2 | Replace every `gray-*` / `slate-*` with **one** neutral family, chosen once. Delete the other two families you accidentally used. | 60s | Mixed neutral families produce a faint colour disagreement a designer sees instantly. |
 | 3 | Set exactly one `--radius` and derive the rest from it. Delete every `rounded-*` that is not derived. | 60s | Four unrelated radii in one screen reads as assembled, not designed. |
 | 4 | Kill every gradient that is not a scrim, a chart fill, or a deliberate hero. `bg-gradient-to-r from-blue-500 to-purple-600` → a flat brand colour. | 30s | Purple-blue gradient is the highest-recognition tell in existence. |
-| 5 | Body copy 16px → 14px on any surface that is a control panel, and drop every vertical padding one step (`py-4` → `py-2.5`). | 90s | Default output runs 30–40% too airy. See §7 for per-archetype multipliers. |
-| 6 | Replace all placeholder content with real, *varied*, domain-specific content: real names, real amounts with different digit counts, real timestamps at irregular intervals, one item with an ugly long name. | 3 min | Highest ratio in the list after §11. Uniform fake data is visible from across the room. |
-| 7 | One filled button per view. Demote the rest to ghost/text at the **same height**. | 60s | Two primaries means no primary. |
-| 8 | Add `:focus-visible` rings if you removed them, and a `disabled` + `:active` state to the primary action. | 60s | Missing states is what makes a build feel like a mockup. |
-| 9 | Rewrite the three most-visible strings using §9's moves. Headline, primary button, empty state. | 2 min | Copy is 30% of perceived design quality and 0% of most build effort. |
-| 10 | Give the app's **primary object** more visual weight than its chrome, and add one signature decision drawn from the domain. | rest of the budget | §11. Everything above is subtraction; this is the only addition. |
+| 5 | Icons: add `.lucide, [class*="tabler-icon"] { stroke-width: 1.5 }` to your CSS, and drop every `size-5`/`size-6` icon sitting next to 13–14px text to `size-4`. | 30s | lucide's default is a 2-unit stroke on a 24 grid rendered at 16px = a **1.33px** line. Nothing else on the screen is 1.33px. §13. |
+| 6 | Body copy 16px → 14px on any surface that is a control panel, and drop every vertical padding one step (`py-4` → `py-2.5`). | 90s | Default output runs 30–40% too airy. See §7 for per-archetype multipliers. |
+| 7 | Replace all placeholder content with real, *varied*, domain-specific content: real names, real amounts with different digit counts, real timestamps at irregular intervals, one item with an ugly long name. | 3 min | Highest ratio in the list after §11. Uniform fake data is visible from across the room. |
+| 8 | One filled button per view. Demote the rest to ghost/text at the **same height**. | 60s | Two primaries means no primary. |
+| 9 | Add `:focus-visible` rings if you removed them, and a `disabled` + `:active` state to the primary action. | 60s | Missing states is what makes a build feel like a mockup. |
+| 10 | Rewrite the three most-visible strings using §9's moves. Headline, primary button, empty state. | 2 min | Copy is 30% of perceived design quality and 0% of most build effort. |
+| 11 | Give the app's **primary object** more visual weight than its chrome, and add one signature decision drawn from the domain. | rest of the budget | §11. Everything above is subtraction; this is the only addition. |
 
-If you have 60 seconds and not 10 minutes, do 1, 2, 4, 7.
+If you have 60 seconds and not 10 minutes, do 1, 2, 4, 5.
 
 **Verify by rendering.** `node $UI_LIBRARY/tools/shot.mjs <url> --widths 1440,390` and open the
 PNGs. You cannot see any of this in JSX.
@@ -597,6 +604,76 @@ leaves it recognizably Material.
   `motionDurationMid: 0.2s` wave animation on click (`wave: false`), and `Table`'s
   `rowSelection` checkbox column width. Change the blue first.
 
+
+## 3.5 Mantine, daisyUI, HeroUI, Chakra v3 — measured 2026-09
+
+The four libraries a generator reaches for when it is not reaching for shadcn. Probed live on each
+project's own docs site, which is the best available proxy for "what you get with zero config."
+
+| | Version probed | Radius default | Shadow default | Primary | The first thing to change |
+|---|---|---|---|---|---|
+| **Mantine** | 9.6.1 | `--mantine-radius-default: .5rem` (8px); docs buttons render **34px** | `--mantine-shadow-xs: 0 1px 3px #0000000d, …` — Tailwind's `shadow-sm`, re-badged | `blue` | the global `scale`, then the blue |
+| **daisyUI** | 5.7.32 | `--radius-field .25rem` (4) · `--radius-box .5rem` (8) · `--radius-selector .5rem` (8) | none by default — **the only one that gets this right** | `oklch(58% 0.233 277)` | `--color-primary` |
+| **HeroUI** | 3.2.4 | `--radius` × .25/.5/.75/1/1.5/2/3/4; **dominant rendered radii are 12px and 24px** | `--drop-shadow-lg: 0 4px 4px #00000026` — blur = offset, 15% alpha, no ring | brand blue | the radius, then the pills |
+| **Chakra** | 3.37.0 | 4px (288 elements on the docs page); buttons **36px** | `0 Npx 2Npx gray-900/10%` at every step — blur is exactly 2× offset, always | `blue` | the transition list |
+
+Three specific findings:
+
+**daisyUI's `--color-primary` is `oklch(58% 0.233 277.117)`** — a violet at chroma 0.233. That is
+the most saturated default primary of the four, and hue 277 is within a few degrees of the purple
+end of the AI gradient (§5.1). Changing that one variable does more for a daisyUI app than
+anything else in the theme.
+
+**Chakra v3 transitions `translate` and `transform` on every Button by default.** The measured
+transition-property list on `chakra-ui.com`'s own buttons:
+`background-color, border-color, color, fill, stroke, opacity, box-shadow, translate, transform 0.2s ease`.
+That is why Chakra apps drift into hover lifts without anyone writing one — the transition is
+already wired, so any stray `_hover={{ transform: … }}` animates smoothly and looks intentional.
+
+**Mantine multiplies every size token by `var(--mantine-scale)`** — `--mantine-radius-default` is
+literally `calc(.5rem * var(--mantine-scale))`, and so are all five font sizes. That makes Mantine
+the only one of the four with a single-value density lever.
+
+```ts
+// Mantine — density in one line, then the two real changes
+<MantineProvider theme={{
+  scale: 0.92,            // every size token scales; 34px buttons → 31px
+  defaultRadius: 6,       // default is 8
+  primaryColor: "dark",   // the default `blue` is the tell
+}}>
+```
+
+```css
+/* daisyUI v5 — the theme block, not a class override */
+@plugin "daisyui/theme" {
+  name: "app"; default: true;
+  --color-primary:    oklch(52% 0.13 250);  /* chroma .233 → .13 */
+  --radius-field:     0.375rem;             /* 6px  buttons, inputs, selects */
+  --radius-box:       0.5rem;               /* 8px  cards, modals            */
+  --radius-selector:  0.25rem;              /* 4px  checkbox, radio, toggle  */
+}
+```
+
+```css
+/* Chakra v3 — kill the transform transition, wherever your build puts the class */
+.chakra-button, [data-scope="button"] [data-part="root"] {
+  transition-property: background-color, border-color, color, box-shadow, opacity;
+  transition-duration: 120ms;
+}
+```
+
+```css
+/* HeroUI — its radius scale is multiplicative off one base; set the base low and stop
+   using the ×1.5 and ×2 steps on anything under 400px tall. */
+:root { --radius: 8px; }   /* → xs 2 · sm 4 · md 6 · lg 8 · xl 12 · 2xl 16 */
+```
+
+**When these defaults are right:** daisyUI's zero-shadow default is genuinely better than shadcn's
+`shadow-sm`, and its `--radius-field` / `--radius-box` / `--radius-selector` split is the right
+*shape* of a radius system (§2.2) — three names by role rather than five by size. Mantine's 8px is
+fine for a Scan-density product. HeroUI's 12–24px radii are correct for a consumer app and wrong
+for anything an operator uses all day.
+
 ---
 
 # 4. Shadow and elevation
@@ -737,6 +814,64 @@ the dialog, not to imply a light source.
 
 `shadow-sm` on a card is the generator's way of saying "this is a distinct thing" without
 committing to a boundary decision. It is hedging. Pick: border (attached) or shadow (floating).
+
+
+## 4.7 Glass — the alpha does the work, the blur does the polish
+
+Measured `backdrop-filter` on live products, 2026-09, with the background colour it sits on:
+
+```
+apple.com/mac    nav bar          blur(20px)   over rgba(232, 232, 237, 0.40)
+raycast.com      floating panel   blur(36px)   over rgba( 34,  34,  34, 0.85)
+raycast.com      modal scrim      blur( 2px)   over rgba(  0,   0,   0, 0.44)
+notion.com       sticky header    blur(12px)   over rgba(  0,   0,   0, 0.05)
+linear.app       inline chip      blur( 4px)   over rgba(255, 255, 255, 0.05)
+vercel.com       — none on the page at all —
+```
+
+```tsx
+// before — the glassmorphism default, and it is always these three classes
+<header className="sticky top-0 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md">
+```
+10% alpha. Every product above that puts **text** on its glass runs 0.40–0.85. Raycast's floating
+panel is **85% opaque** — you could delete the `backdrop-filter` entirely and most people would
+not notice. The blur is a refinement on a surface that is already nearly solid; in generated code
+it is doing the whole job, which is why the text on it is never quite legible.
+
+```tsx
+// after — the shape apple.com's nav actually has
+<header
+  className="sticky top-0 z-30 border-b border-[--color-border-subtle]
+             bg-[color-mix(in_oklab,var(--color-bg)_92%,transparent)]
+             supports-[backdrop-filter]:bg-[color-mix(in_oklab,var(--color-bg)_72%,transparent)]
+             supports-[backdrop-filter]:backdrop-blur-[20px]">
+```
+The `supports-[backdrop-filter]` split is the part generated code never has. Without it, the
+fallback in every browser or context where `backdrop-filter` is disabled — reduced-transparency
+settings, some embedded webviews, print — is unreadable text over live content.
+
+**Three rules from the measurements:**
+
+1. **Alpha ≥ 0.6 on any glass carrying text.** Below that you are relying on the blur to create
+   contrast, and blur does not create contrast — it removes high-frequency detail while preserving
+   average luminance, which is exactly the quantity your text is competing with.
+2. **Blur radius tracks distance, not taste.** A header sitting on the page: 12–20px. A panel
+   floating well above it: 36px. **2–4px is a scrim**, not a material — its job is to make what is
+   behind a modal unreadable, and Raycast uses it exactly that way at 0.44 black.
+3. **In dark mode, glass gets lighter, not darker** — same rule as §4.4. Raycast's
+   `rgba(34,34,34,0.85)` over a near-black canvas reads as raised because L is higher than the
+   canvas, not because of the blur.
+
+**The cost.** `backdrop-filter` forces a full-viewport composite on every frame the surface is
+over moving content. A sticky blurred header above a long virtualised list is usually the most
+expensive paint on the page. Measure it on a mid-range Android before shipping one.
+
+**When glass is right:** a floating surface over genuinely busy content — a map, a photo grid, a
+video, a canvas; an OS-like palette (Raycast's whole visual identity); a media player. **When it
+is wrong — and this is the common case:** a panel over a flat background. You are blurring a solid
+colour, which returns that solid colour, at the cost of a compositing layer and a legibility
+problem. If the thing behind your glass is `#fff`, delete the `backdrop-blur` and set the alpha
+to 1.
 
 ---
 
@@ -963,6 +1098,69 @@ Two rules that generated dark modes always miss:
    — gaps of 10, 23 and 14 points. Generated dark modes bunch them at 90/80/70 and the hierarchy
    collapses.
 
+
+## 5.6 Chart colour — the palette that ships wrong
+
+From shadcn's `globals.css`, fetched from source 2026-09, with each value's Tailwind OKLCH
+resolved:
+
+```css
+--chart-1: var(--color-blue-300);   /* oklch(80.9% 0.105 251.8) */
+--chart-2: var(--color-blue-500);   /* oklch(62.3% 0.214 259.8) */
+--chart-3: var(--color-blue-600);   /* oklch(54.6% 0.245 262.9) */
+--chart-4: var(--color-blue-700);   /* oklch(48.8% 0.243 264.4) */
+--chart-5: var(--color-blue-800);   /* oklch(42.4% 0.199 265.6) */
+```
+
+Five steps of one hue. ΔL between chart-2→3, 3→4 and 4→5 is **7.7, 5.8 and 6.4 points** — and the
+hue moves 13°, which is nothing. This is a **sequential** ramp, and every stacked bar and
+multi-series line in the demos uses it as a **categorical** palette. Three adjacent series in a
+stacked bar are separated by ~6 points of lightness at the same hue; at 50% zoom, in a screenshot,
+or for a reader with reduced contrast sensitivity, they are one band.
+
+Sequential and categorical are different objects and they are not interchangeable:
+
+```css
+@theme {
+  /* CATEGORICAL — unordered series. Separated in hue AND lightness.
+     The test: render it greyscale. If two series merge, one of them is wrong. */
+  --chart-cat-1: oklch(58% 0.16 250);   /* blue    L 58 */
+  --chart-cat-2: oklch(72% 0.14 155);   /* green   L 72 */
+  --chart-cat-3: oklch(64% 0.15  55);   /* amber   L 64 */
+  --chart-cat-4: oklch(48% 0.18 310);   /* purple  L 48 */
+  --chart-cat-5: oklch(80% 0.09 205);   /* pale cyan L 80 */
+
+  /* SEQUENTIAL — ordered magnitude. One hue, monotone lightness, even ΔL.
+     shadcn's default is fine here; this is the job it was built for. */
+  --chart-seq-1: oklch(92% 0.04 250);
+  --chart-seq-2: oklch(80% 0.10 252);
+  --chart-seq-3: oklch(66% 0.18 258);
+  --chart-seq-4: oklch(53% 0.24 263);
+  --chart-seq-5: oklch(41% 0.20 266);
+}
+```
+Note the categorical L column — 58 / 72 / 64 / 48 / 80. It is deliberately non-monotone, because a
+categorical palette that happens to be ordered by lightness implies a ranking that the data does
+not have.
+
+**Two rules the generated chart always misses:**
+
+1. **Most charts have one subject and the rest is context.** "Your usage" against "your plan
+   limit" is one accent line and one grey dashed one — not two colours. Colour every series only
+   when every series is equally the point. A four-series line chart where three are grey and one
+   is the accent is nearly always the better chart, and it is never what gets generated.
+2. **Grid lines, axes and labels are not chart colours.** They come off the neutral ramp
+   (`--color-n-3` for grid, `--color-n-6` for tick labels) and must be lighter than the lightest
+   series. Generated charts frequently draw gridlines at `border` strength, which competes with
+   the data.
+
+**When shadcn's mono-blue ramp is right:** a single series; ordered bins (a histogram, a
+choropleth, a cohort heat map); a magnitude encoding. In those cases it is a better default than
+a rainbow, and swapping it for the categorical palette above would be the mistake.
+
+Full treatment — mark specs, legends, tooltip rules, accessible palette validation — is the
+`dataviz` skill's job; this section only covers the token defect.
+
 ---
 
 # 6. Typographic correction
@@ -1055,6 +1253,42 @@ Measured display type on live sites, 1440px:
 Measured confirmation from Attio: its 12px eyebrow runs **+0.72px = +0.06em** with weight 600,
 while its 64px headline runs **−0.02em**. Same page, opposite directions. That inversion is the
 whole rule.
+
+### The correction to the rule: tracking is a property of the typeface
+
+Measured on live pages the same day, converted to em:
+
+| Site | Face | Size / weight | Computed `letter-spacing` | em |
+|---|---|---|---|---|
+| **Vercel** | Geist Sans | 64px / 400 | −3.84px | **−0.060em** |
+| Notion | NotionInter | 96px / 600 | −4.60px | −0.048em |
+| Notion | NotionInter | 54px / 700 | −1.875px | −0.035em |
+| **Linear** | Inter Variable | 64px / 510 | −1.408px | **−0.022em** |
+| Linear | Inter Variable | 48px / 510 | −1.056px | −0.022em |
+| Linear | Inter Variable | 20px / 590 | −0.24px | −0.012em |
+| Linear | Inter Variable | 15px / 400 | −0.165px | −0.011em |
+| **GitHub** | Mona Sans VF | 32px / 600 | `normal` | **0** |
+| **Stripe docs** | system (SF) | 24px / 700 | `normal` | **0** |
+
+At the *same* 64px, Geist is tracked nearly **three times tighter than Inter**, and Mona Sans and
+SF are not tracked at all. So `tracking-tight` (−0.025em) applied uniformly is roughly right for
+Inter at display size, much too loose for Geist, and wrong for Mona Sans and system-SF — where
+the face already carries its own optical sizing and negative tracking closes the counters.
+
+Contrarian, and worth internalising: **`tracking-tight` on a system-font stack is a downgrade.**
+SF Pro and Segoe UI Variable ship optical size axes that already tighten as size grows; adding
+−0.025em on top double-applies the correction. Set `letter-spacing: normal` on any headline using
+the system stack and look at it before you decide otherwise.
+
+**The one place negative tracking below 16px is defensible** is light type on a dark background:
+Linear runs −0.011em on 15px body text on `#08090a`, because light-on-dark optically inflates the
+letterforms (halation) and a hair of negative tracking cancels it. Do not port that value to a
+light theme — on white it just looks cramped.
+
+**How to decide, in 30 seconds:** set the headline at 0, screenshot it, and look for gaps that
+read as holes — usually after round letters (`o`, `e`, `c`) and around `T`, `V`, `W`, `Y`. Track
+until those close and the straight-sided pairs (`ll`, `in`, `HI`) have not yet started to touch.
+That is the number, and it belongs to the face, not to the size.
 
 ## 6.4 Weight and contrast levels
 
@@ -1411,6 +1645,66 @@ Pricing tables. Comparison grids. Anything where the user's task is to compare l
 asymmetry there is actively harmful, because it implies a ranking you may not intend. Also: dense
 app chrome, where a predictable grid is what makes the interface learnable. **Asymmetry is a
 marketing and editorial tool, not a product-chrome tool.**
+
+
+## 8.8 The three-tell line: `min-h-screen bg-gray-50 max-w-7xl`
+
+```tsx
+// before — near-verbatim in every generated page
+<div className="min-h-screen bg-gray-50">
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+```
+
+Three separate defaults, none of them chosen.
+
+**`max-w-7xl` is 80rem = 1280px**, straight off Tailwind's stock container scale. Probed 2026-09:
+`ui.shadcn.com`, `lovable.dev` and `v0.app` all ship that scale unmodified —
+`--container-xs…7xl = 20 / 24 / 28 / 32 / 36 / 42 / 48 / 56 / 64 / 72 / 80rem`. vercel.com
+**replaces** it outright:
+
+```
+--container-sm: 401px   --container-md: 601px   --container-lg: 961px
+--container-xl: 1200px  --container-2xl: 1400px
+```
+Breakpoint-plus-one values, picked for their layout. That is the difference between a container
+scale and an inherited one.
+
+Real measured content widths at a 1440px viewport:
+
+```
+Linear         --page-max-width 1024px, --page-inset 32px
+GitHub         repo content column caps at 1012px
+Vercel         homepage column renders 1392px; its own --container-xl token is 1200px
+Stripe API ref page 1540px · prose column 503px · code panel ~1160px
+Notion         dominant rendered widths 1229 / 794 / 602
+shadcn dashboard  max-w 1400px
+```
+Nothing converges on 1280. And the number that actually governs readability is not the page
+width — Stripe runs a **503px** prose column inside a 1540px page. Set the measure, then set the
+page around it.
+
+**The three fixes:**
+
+1. **`min-h-screen` → delete it, or `min-h-dvh`.** `100vh` on mobile Safari excludes the
+   collapsing toolbar, so a `min-h-screen` page overflows by ~60px and produces a phantom scroll.
+   Keep it only where a genuinely short page needs its footer pushed down, and use `dvh` there.
+2. **`bg-gray-50` → your `--color-bg`.** A grey page with white cards on it is the substrate of
+   card soup (§1) — the cards only read as objects because the page is not white. Once you
+   de-card, the grey has no job. If the page background is not white, say why.
+3. **`max-w-7xl` → one of the named widths from §8.3**, and vary them across the page.
+
+```tsx
+// after
+<main className="mx-auto w-full max-w-[--w-content] px-6 lg:px-8">
+  <article className="max-w-[--w-prose]">…</article>
+</main>
+```
+
+**When the before is right:** 1280px is a perfectly good content width, and `bg-gray-50` is a
+perfectly good app-shell background behind a genuinely white content panel — Stripe's docs sit a
+white prose column against a tinted code panel and it works. The tell is not any of the three
+values. It is that the **same** three appear on the marketing page, the app shell, the settings
+form and the 404, which means none of them was decided.
 
 ---
 
@@ -1921,6 +2215,166 @@ Note this kills animation *duration*, not the end state — elements still arriv
 - **A brand moment** on a marketing hero, one per page, that the user did not have to wait for.
 - **Charts entering.** A 400ms axis-anchored grow on first paint reads the data direction. But
   never re-animate on filter change.
+
+
+# 13. Icon and glyph correction
+
+Icons are the second-most-repeated visual element in an interface after the type, and the one
+place where every generated app makes the identical choice. This section is entirely new
+measurement, taken 2026-09 by reading the computed `fill`, `stroke`, `stroke-width` and
+`viewBox` of every `<svg>` under 32px on six products.
+
+## 13.1 The measurement
+
+| Product | Icon set | Authored grid | Rendered at | Fill or stroke | `stroke-width` | Effective stroke |
+|---|---|---|---|---|---|---|
+| **Linear** | in-house | 16 | 12 / 14 / 16 | **filled**, `stroke: none` | — | — |
+| **GitHub** | Octicons | 16 | 16 (149 of 152 on the page) | **filled** | — | — |
+| **Vercel** | Geist Icons | 16 | 14 / 16 | **filled**, `currentColor` | — | — |
+| **Radix** | Radix Icons | 15 | 15 (all 327) | **filled** | — | — |
+| **Notion** | in-house | 20 | 24 | **filled** | — | — |
+| **Apple** | SF-derived | 20 | 20 | **filled** | — | — |
+| **Raycast** | in-house | 16 | 16 | stroked, `linecap: round` | **1.5** | **1.50px** |
+| **shadcn / v0 output** | lucide + tabler | **24** | **16** | stroked, `linecap: round` | **2** | **1.33px** |
+| same, small variant | lucide | 24 | 12 | stroked | 2 | 1.00px |
+
+Two things fall out, and both are actionable in one line.
+
+**Six of the seven product sets are filled at 16px, not stroked.** The stroked-outline icon is not
+a neutral default; it is a specific style, and it is the one every generator picks.
+
+**The 1.33px stroke.** From shadcn's `Button` source, verbatim:
+
+```
+[&_svg:not([class*='size-'])]:size-4
+```
+
+Every icon inside every shadcn button is 16px, and `lucide-react` defaults to `strokeWidth={2}` on
+a `0 0 24 24` viewBox. `2 × 16/24 = 1.333px`. Nothing else on the screen is 1.33px: your borders
+are 1px, your dividers are 1px, and the stems of Inter at 13px are ≈1.4px. At DPR 1 that stroke
+straddles two device pixels and greys; at DPR 2 it is 2.67 device pixels. This is the whole of the
+"icons look chunky and slightly fuzzy" read, and it is a five-second fix.
+
+## 13.2 The fix, in one CSS rule
+
+```css
+/* app.css — CSS beats the SVG presentation attribute, so this catches every icon
+   from every entry point, including ones inside third-party components. */
+.lucide,
+[class*="tabler-icon"] { stroke-width: 1.5; }
+```
+That single declaration gives a **1.00px** stroke at 16px, 1.25px at 20px and 1.50px at 24px —
+which is the ramp you want anyway, because a larger icon should carry a slightly heavier line.
+
+```tsx
+// the React equivalent, if you would rather not reach for CSS
+export function Icon({ as: Glyph, className, ...rest }: IconProps) {
+  return <Glyph strokeWidth={1.5} className={cn("size-4 shrink-0", className)} {...rest} />;
+}
+// <Icon as={Search} />        16px, 1.00px stroke
+// <Icon as={Search} className="size-5" />  20px, 1.25px stroke
+```
+
+```tsx
+// and if you keep lucide at its default weight, render it on the grid it was drawn for
+<Search className="size-6" />   // 24px, 2 → 2px: crisp, and correct in a Glance surface
+```
+
+## 13.3 Size the icon to the row, not to the sentence
+
+Measured icon-to-label pairs:
+
+```
+Linear   32px nav row     13px label   14px icon   1.08×
+Vercel   32px button      14px label   14px icon   1.00×
+GitHub   30px file row    14px label   16px icon   1.14×
+shadcn   36px button      14px label   16px icon   1.14×
+Notion   44px nav item    16px label   24px icon   1.50×   ← the outlier, and a Glance surface
+```
+
+**Rule: icon ≈ 1.0–1.15× the label's font-size in any dense surface.** `size-5` (20px) next to
+`text-sm` (14px) is 1.43× and reads as an icon with a caption attached rather than a labelled
+icon. `size-6` next to 13px text is 1.85× and the icon becomes the row's subject.
+
+```tsx
+// before
+<div className="flex items-center gap-3 px-3 py-2 text-sm">
+  <Inbox className="size-5" /> Inbox
+</div>
+// after
+<div className="flex h-8 items-center gap-2 px-3 text-[13px]">
+  <Inbox className="size-3.5" /> Inbox
+</div>
+```
+
+One more thing that bites when you swap sets: **lucide draws edge-to-edge in its 24 box, Octicons
+and SF icons are drawn with optical padding inside theirs.** So a 16px lucide glyph is visually
+*bigger* than a 16px octicon at the same declared size. After any icon-set swap, re-eyeball the
+sizes; do not assume the numbers port.
+
+## 13.4 One family — and emoji are not icons
+
+- **One icon set per product.** Mixing lucide with heroicons is visible at 16px: lucide is
+  `stroke-linecap: round` at 2 on a 24 grid; heroicons' outline set is 1.5 on a 24 grid. Different
+  weight, different terminals, same screen. If you need a glyph your set does not have, draw it on
+  your set's grid at your set's weight — do not import a second package for one icon.
+- **Emoji are not icons.** They render as full-colour bitmaps from a different foundry on every OS
+  (Apple Color Emoji, Noto Color Emoji, Segoe UI Emoji — three different drawings of 👍), ignore
+  `currentColor`, ignore your type ramp, sit on the baseline differently per platform, and cannot
+  be recoloured for a selected or disabled row. A 👋 in an empty state, a 🚀 on a feature card and
+  a ✨ next to an AI button are three of the highest-frequency tells in the taxonomy, and they are
+  tells precisely because they are the only element on the page that the design system does not
+  control.
+
+```tsx
+// before
+<h2 className="text-lg font-semibold">🚀 Get started</h2>
+<p>✨ Powered by AI</p>
+// after
+<h2 className="text-[15px] font-[510]">Get started</h2>
+<p className="text-[13px] text-[--color-fg-muted]">Suggestions are generated and may be wrong.</p>
+```
+
+**When emoji are right:** when the emoji is the user's *data*, not the interface — a reaction, a
+status, a page icon the user chose, a channel name. Notion's page-icon picker is emoji and that is
+correct: the user selected it, so it carries their meaning, not the product's.
+
+## 13.5 Colour, alignment and the details that show
+
+```tsx
+// before
+<Icon className="mr-2 h-4 w-4 text-blue-500" />
+```
+- **Icons are neutral by default.** An icon takes accent colour only when it is carrying the same
+  meaning the accent carries elsewhere (§5.3). A row of six coloured icons in a settings list is
+  decoration; measured on Linear, Vercel and GitHub, essentially every chrome icon is the same
+  colour as, or one step muted from, the text beside it (`#8a8f98` next to `#f7f8f8` on Linear).
+- **`shrink-0` on every icon in a flex row**, always. Without it a long label squashes the glyph
+  to an ellipse — one of the ugliest and most common layout defects in generated lists.
+- **Optical alignment, not box alignment.** `items-center` centres the 16px box; a glyph whose
+  ink sits high in that box (arrows, chevrons) needs `translate-y-px`. Check it at 400% zoom once
+  per icon set, not per icon.
+- **Never animate an icon on hover** unless the icon is the affordance (a chevron that rotates
+  when a disclosure opens is information; an arrow that slides 4px right on a link is §12.1).
+
+## 13.6 When the "before" is right
+
+- **Stroked, rounded icons are correct for a warm product** — consumer, education, health,
+  anything for a non-expert. Lucide's rounded terminals *are* the friendliness signal. Do not
+  strip them from a product that wants to feel approachable; just fix the weight.
+- **24px is right in a Glance surface**: a mobile tab bar, an empty state, a marketing feature
+  list, a large empty-canvas call to action.
+- **Above ~28px, stroked beats filled.** A filled glyph at 32px is a solid blob; that is why
+  Notion renders its 20-grid filled icons at 24 and stops there.
+- **Duotone and filled-plus-stroke sets** (Phosphor's duotone, SF Symbols' hierarchical) are a
+  legitimate signature decision (§11, lever 4) — but they are a decision, and one set, applied
+  everywhere.
+
+## 13.7 What the generic version was optimizing for
+
+`import { Search } from "lucide-react"` is one line, always available, and never wrong. It is also
+what every other generated interface did this week. The icon set is as identifying as a typeface;
+shipping the default one is the visual equivalent of shipping `font-family: sans-serif`.
 
 ---
 

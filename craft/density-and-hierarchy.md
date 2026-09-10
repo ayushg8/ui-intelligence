@@ -1,17 +1,15 @@
 # Information density and hierarchy
 
-**Measured 2026-09.** Every number in this file was read out of a live product with Playwright —
-computed styles, `getBoundingClientRect`, and the CSS custom properties the product ships — at a
-1440×900 viewport unless stated. Contrast ratios were computed with `tools/contrast.mjs` from the
-measured colors. Values are exact unless marked *approx*. Nothing here is recalled from memory.
+**Measured 2026-09, re-verified 2026-09 (see Direction pass at the end).** Every number was read
+out of a live product with Playwright at 1440×900 unless stated — `getComputedStyle`,
+`getBoundingClientRect`, and shipped CSS custom properties. Contrast from `tools/contrast.mjs`.
+Nothing here is recalled from memory. Element *counts* drift with page state; heights, colors and
+paddings do not.
 
-This is the single most-botched dimension in AI-generated UI. Not color, not typography, not
-motion — **scale**. Generated interfaces are usually a correct layout at the wrong size: roughly
-30–40% too large and too airy for what the user is actually doing. The components are rarely the
-problem. The **allocation** is.
+Generated interfaces are usually a correct layout at the wrong size. The components are rarely the
+problem — the **allocation** is.
 
-Here is the finding that should reframe the whole topic. Three real interfaces, same viewport
-(1440×900), same job (look at a list of records):
+Three real interfaces, same viewport (1440×900), same job (look at a list of records):
 
 | Surface | Row height | Chrome above first row | Data rows visible |
 |---|---|---|---|
@@ -19,36 +17,39 @@ Here is the finding that should reframe the whole topic. Three real interfaces, 
 | **GitHub** repo file list (`github.com/vercel/next.js`) | **41px** | 307px | **14** |
 | **shadcn/ui `dashboard-01`** (the canonical AI-generated dashboard) | **53px** | **825px** | **1.4** |
 
-All three measured, not estimated. The shadcn dashboard puts its first data row at y=825 on a
-900px-tall viewport. You scroll before you see one record. That is not a styling problem you fix
-with a color token; it is 800 pixels spent on chrome before the product starts.
+The shadcn dashboard puts its first data row at y=825 on a 900px viewport: you scroll before you
+see one record. 825 of 900 pixels are chrome.
 
 ---
 
 ## If you only apply five things
 
 1. **Compute the fold before you write CSS.** `rows_visible = (viewport_height − chrome_above_first_row) / row_height`.
-   Write the target number in a comment. If a work-all-day surface shows fewer than 15 rows at
-   1440×900, you have already failed and no amount of polish recovers it.
+   Write the target in a comment: `/* density-target: work · 32px rows · ≥15 visible @1440×900 */`.
+   **Scope: this test applies when N can exceed ~20.** A surface whose N is structurally small — five
+   environments, four invoices, eight team members — passes at 6 visible rows and fails if you chase
+   15. Check N first, then the fold.
 2. **Row height is set by the tallest control inside the row, not by the text.** Measured on
-   shadcn `dashboard-01`: cells have `p-2` (8px), the text is 14px/20 — but one cell contains a
-   36px `<Button>`, so the row is 36 + 8 + 8 + 1px border = **53px**. Replace that button with a
-   plain link and the same row is 20 + 16 + 1 = **37px**. Audit rows for nested controls before you
-   touch padding.
-3. **UI text is 14px. Once.** Measured: GitHub uses 14px/21 for **296** of the text elements on a
-   repo page; Attio's product surface uses 14px/20 w500 for **141**; Grafana 14px/22 for 35;
-   Linear drops to 13px/19.5; Grist to 13px/18. `text-base` (16px) is a *reading* size — Notion's
-   document body is 16px/24 in a 720px column, and that is correct *for a document*. Drop to 14 once
-   and take every further gain from padding, not from shrinking type again.
+   shadcn `dashboard-01`: cells have `p-2` (8px), text is 14px/20, and the row is **53px** because
+   one cell holds a 36px `<Button>` (36 + 8 + 8 + 1px border). Note the trap: the same row also
+   holds **two 32px `<Input>`s and a 32px icon button**, so deleting only the 36px button gives 49px,
+   not 37px. You reach 37px (20 + 16 + 1) only when *every* control is out. Enumerate all cells;
+   fixing the tallest one just promotes the second-tallest.
+3. **UI text is 14px. Once.** Measured: 14px/21 w400 is **434** of the text elements on a GitHub repo
+   page — 4× the next bucket. Attio's product surface uses 14px/20 w500; Grafana 14px/22; Linear
+   13px/19.5; Grist 13px. `text-base` (16px) is a *reading* size — Notion's document body is 16px/24
+   in a 720px column, correct *for a document*. Drop to 14 once, then take every further gain from
+   padding, not from shrinking type again.
 4. **Hierarchy comes from position, then weight, then color. Size is fourth and decoration is not
    on the list.** Inside a GitHub file row, the filename, the commit message and the date are all
    14px/21 weight 400. The only difference is color: `#1F2328` (15.80:1) vs `#59636E` (6.11:1).
    Three ranks, one size, one weight, zero badges.
 5. **One filled control per view, at the same height as its neighbors.** GitHub's green `Code`
-   button is 32px, `padding: 0 12px`, `border-radius: 6px`, `font-weight: 400` — byte-for-byte the
-   same geometry as the grey branch picker beside it. It wins by being the only saturated thing on
-   screen. Meanwhile `Star`/`Fork`/`Notifications` are *smaller* (28px, 12px text). Bigger is not
-   more primary.
+   button is 32px, `0 12px`, radius 6px, weight **400** — identical geometry to the grey branch
+   picker beside it. It wins by being the only saturated thing on screen. `Star`/`Fork`/`Notifications`
+   are *smaller* (28px, 12px/20 w500). Bigger is not more primary. **Scope: one fill assumes one
+   intended action.** On a surface whose whole job is a repeated binary decision, two fills are
+   correct — see *Two primaries* below.
 
 ---
 
@@ -58,18 +59,18 @@ with a color token; it is 800 pixels spent on chrome before the product starts.
 
 | Product / surface | Row height | Pitch | Text | Padding | Divider | Notes |
 |---|---|---|---|---|---|---|
-| **Grist** grid row (light) | **23px** | 23px | 13px/18 | — | full 1px cell grid | Spreadsheet convention; column header 11px/13.2 |
+| **Grist** grid row (light) | **23px** | 23px | 13px, `line-height: normal` | — | full 1px cell grid | Spreadsheet convention; column header 11px/13.2. First row at y=127; **33 rows visible** |
 | **Linear** issue row (dark, app shell on linear.app) | **40px** | 40px | 13px/19.5, ls −0.13px | `0 28px 0 36px` | **none** | ID `#8A8F98` w400; first row 44px below panel top |
 | **Linear** sidebar item | **28px** | 30px | 13px/19.5 | — | none | 2px gap between items |
 | **Attio** record row (light, product mock on attio.com) | **36px** | 36px | 14px/20 **w500**, ls −0.14px | `0 4px 0 16px`, gap 8px | 1px `#EEEFF1` (**1.15:1**) | Row text is medium, not regular |
 | **Grafana** dashboard list row (dark) | **36px** | 36px | 14px/22, ls +0.15px | gap 8px | none | Nav item 32px |
-| **GitHub** repo file row (light) | **41px** | 41px | 14px/21 w400 | `0 0 0 16px` per cell | 1px `#D1D9E0` (**1.43:1**) | 3 columns; date right-aligned |
+| **GitHub** repo file row (light) | **41px** | 41px | 14px/21 w400 | `0 0 0 16px` per cell | 1px `#D1D9E0` (**1.43:1**) on the *cell*, not the `<tr>` | 3 columns; date right-aligned. First row at y=307; **14 visible** |
 | **Notion** page-link block (real renderer, notion.site) | 40px | — | 16px/20.8 w500 | — | none | 720px content column; title 40px/48 w700 |
-| **shadcn `dashboard-01`** table row | **53px** | 53px | 14px/20 w400 | `8px` all sides | 1px per row | 36px `<Button>` inside a cell sets the height |
+| **shadcn `dashboard-01`** table row | **53px** | 53px | 14px/20 w400 | `8px` all sides | 1px per row | 36px `<Button>` sets the height; two 32px `<Input>`s and a 32px icon button sit under it |
 | **shadcn `dashboard-01`** table header | 40px | — | 14px/20 | — | 1px | |
 
-**Read this table as a ladder, not a menu.** 23 → 28 → 36 → 40 → 41 → 53. Everything a professional
-built lands between 23 and 41. The generated one is above all of them.
+**Read this table as a ladder, not a menu.** 23 → 28 → 36 → 40 → 41 → 53. Everything hand-built
+lands between 23 and 41. The generated one is above all of them.
 
 ### Type scale actually in use, per screen
 
@@ -83,11 +84,17 @@ Counted by walking every element with a direct text node and bucketing by
 | **GitHub** repo page | 14px/21 (296), 16px/24 (66+20+16), 12px/18 (37+14+7), 32px, 24px | **5** |
 | **Attio** product mock | 14px/20 (141+42+36), 12px/16 (61), 10px/15 (25), 15px (20), 9px (9) | **5** in-product |
 | **Linear** in-product | 13px/19.5 (rows, nav), 12px/14 (labels, meta), 14px/32 (panel titles) | **3** |
-| **shadcn `dashboard-01`** | 14px/20 (34+32), 12px/16 (25+16), 30px/36 (4), 16px (3), 14px/17.5, 12px/18 | **6** |
+| **shadcn `dashboard-01`** | 14px/20 w500 (58), 14px/20 w400 (36), 12px/16 w500 (27), **14px/14 w500 (24)**, 12px/16 w400 (16), 30px/36 (4), 16px ×3 variants, 14px/17.5, 12px/18 | 4 sizes but **12 combos** |
 
-Dense products run **three or four** type sizes on a working screen. Note that Attio ships **10px
-and 9px** labels in production and Linear ships 12px sidebar section headers — both below the "never
-go under 12px" rule of thumb, deliberately, for non-essential metadata.
+Dense products run **three or four** type sizes on a working screen.
+
+**Count combos, not sizes.** shadcn `dashboard-01` uses only four font *sizes* — it would pass a
+naive "≤5 sizes" check — but ships **12 distinct `size/line-height/weight` combinations**, including
+14px at three different line-heights (20, 17.5, 14). That is the actual mess: same size, arbitrary
+line box, so nothing aligns. Bucket by the full triple.
+
+Attio ships **10px and 9px** labels in production and Linear ships 12px sidebar section headers —
+both below the "never go under 12px" rule of thumb, deliberately, for non-essential metadata.
 
 ### Text hierarchy: what the levels actually are
 
@@ -138,8 +145,8 @@ are touch sizes that leaked into pointer UI. Radius tracks height: 6px at 28–3
 | GitHub row divider | `#D1D9E0` | 1.43:1 | The heaviest divider measured |
 | GitHub button surface | `#F6F8FA` | 1.06:1 | A tint, not a border |
 
-Real dividers are 1.1–1.45:1. A border you can clearly *see* at arm's length is already too heavy
-for a dense list, and Linear ships **zero** dividers on its 40px issue rows.
+Real dividers are 1.1–1.45:1. Above 1.5:1 the line competes with the text; Linear ships **zero**
+dividers on its 40px issue rows. Measure it, do not squint at it.
 
 ### The AI default, measured in full
 
@@ -162,9 +169,9 @@ generated dashboards converge on. Not a strawman; the actual reference implement
 | First data row `top` | **825px** |
 | Data rows visible at 900px | **1.4** |
 
-The primitives are fine. The sidebar rows are 32px. The buttons are 32px. **The failure is
-allocation**: 204px per number, 392px for one chart, 24px between everything, and a 36px control
-dropped into a table cell.
+The primitives are fine. The sidebar rows are 32px. The toolbar buttons are 32px. **The failure is
+allocation**: 204px per number, 392px for one chart, 24px between everything, and four controls
+dropped into a table row.
 
 ---
 
@@ -179,7 +186,7 @@ target columns are the measured ranges above.
 | Row text | 16px/24 | **14px/20** | **13px/18–19.5** |
 | Cell padding (vertical) | 16px (`py-4`) | **10px** | **6–8px** |
 | Cell padding (horizontal) | 24px | **16px** | **12px** |
-| Controls nested in a cell | 36px `<Button>` | **plain text/link**, or 24px ghost on row hover | same |
+| Controls nested in a cell | 36px `<Button>`, 32px `<Input>` | **plain text/link**; 24px ghost on row hover *unless* the action fires on >20% of rows | same |
 | Sidebar / nav item | 44–48px | **32px** | **28px** |
 | Button height | 40–44px (`h-10`/`h-11`) | **32px** | **28px** |
 | Input height | 40–44px | **32px** | **28px** |
@@ -201,6 +208,10 @@ Applying the Compact column to `dashboard-01` — 32px rows, a 56px KPI strip, a
 greeting — puts the first data row at roughly y=425 (48 toolbar + 56 KPI strip + 200 chart + 40 tabs
 + 32 table header + three 16px gaps) and takes visible rows from 1.4 to about 15. Same components,
 same data, ten times the information.
+
+**Scope on the whole table: it assumes a pointer, an adult-general audience, and N > ~20.** Touch,
+accessibility-first audiences and small-N surfaces use the Comfortable column or larger — see
+*When this advice is wrong*.
 
 ---
 
@@ -238,23 +249,29 @@ a row problem.
 
 ## The levers, in order of impact
 
-Apply top-down. Each lever is roughly an order of magnitude less powerful than the one above it, and
-people almost always reach for lever 6 first.
+Apply top-down. Lever 1 is worth 100–500px; levers 3–8 are worth single-digit pixels each. Generated
+code starts at lever 6.
 
 ### 1. Delete chrome above the fold (worth 100–500px)
 
-This is the whole ballgame and nothing else comes close. On `dashboard-01`, 825px of the 900px
-viewport is chrome. The specific offenders, measured:
+On `dashboard-01`, 825 of 900 viewport pixels are chrome — more than levers 2–8 could recover
+combined. The offenders, measured:
 
 - A 4-card KPI grid: **204px** + 24px gap = 228px to show four numbers.
 - A chart card: **392px**.
 - A greeting or "Welcome back" block: 80–180px.
 - A tab strip plus a right-side button cluster: ~60px.
 
-A 56px horizontal strip of `label / value / delta` triples carries the same four numbers as the
-228px grid. A 200px chart reads the same as a 392px chart for a trend. The page title belongs
-*inline* in a 40–48px toolbar next to the actions — which shadcn actually gets right (its `h1` is
-16px/24 w500 in the toolbar), and which generated variants usually undo.
+A 56px strip of `label / value / delta` triples carries the same four numbers as the 228px grid. A
+200px chart reads the same as a 392px chart for a trend. The page title belongs *inline* in a
+40–48px toolbar next to the actions — shadcn gets this right (its `h1` is 16px/24 w500 in the
+toolbar); generated variants usually undo it.
+
+**Scope: do not shrink the identity of the thing being acted on.** In a multi-tenant console, an
+env-switching deploy tool, or anything where the operator moves between accounts, a 14px inline
+title is how you drop a production database instead of staging. When acting on the wrong object is
+the expensive error, the object's name gets its own high-contrast, persistent, unmissable slot —
+and it still does not need 180px. Kill the *greeting*; keep the *identity*.
 
 ### 2. Remove controls from rows (worth 15–20px per row, compounding)
 
@@ -264,16 +281,21 @@ The measured mechanism:
 row_height = tallest_inline_child + padding_top + padding_bottom + border
 ```
 
-`dashboard-01`: 36 + 8 + 8 + 1 = **53px**. The 36px child is a `<Button>` in the "reviewer" cell.
-Nothing about the data needs it. Three fixes, in order of preference:
+`dashboard-01`: 36 + 8 + 8 + 1 = **53px**. The 36px child is a `<Button>` in the reviewer cell, and
+two 32px `<Input>`s wait underneath it — remove the button alone and you land at 49px. Three fixes,
+in order of preference:
 
 1. **Render it as text.** A reviewer name is a name. 20px line box → row = 37px.
 2. **Reveal it on row hover** as a 24px ghost icon button, absolutely positioned so it does not
-   participate in height. This is what Linear, GitHub and Attio all do.
+   participate in height. Linear, GitHub and Attio all do this. **Scope: hover-reveal is wrong when
+   the action is the task.** In a triage queue where the operator acts on most rows, hiding the
+   control adds a move-and-wait to every single one — keep a 24px ghost control *visible at rest*
+   and let contrast, not disclosure, keep it quiet. Hover-reveal also needs a tap and a keyboard
+   path; if you cannot supply both, do not hide it.
 3. **Move it into a right-aligned `⋯` menu**, one 24px trigger for all row actions.
 
-Check every cell for: buttons, selects, badges taller than the line box, avatars over 20px, and
-two-line text. Any one of them silently sets your row height.
+Check **every** cell for: buttons, selects, inputs, badges taller than the line box, avatars over
+20px, and two-line text. Fixing the tallest promotes the next one — enumerate, then cut.
 
 ### 3. Vertical padding (worth 8–16px per row)
 
@@ -304,24 +326,29 @@ slabs — with equal gaps, nothing groups.
 
 ### 7. Borders and chrome (worth 1–2px each, but large perceptually)
 
-A 1px divider on every row of a 30-row list adds 30px and, more importantly, adds 30 horizontal
-lines competing with your content. Single-line rows ≤40px need **zero** dividers — alignment and
-row-hover already delimit them. Reserve 1px for boundaries between *groups*, and keep it at
-1.1–1.45:1 contrast.
+A 1px divider on every row of a 30-row list adds 30px and 30 horizontal lines competing with the
+content. Single-line rows ≤40px need **zero** dividers — alignment and row-hover already delimit
+them. Reserve 1px for boundaries between *groups*, at 1.1–1.45:1.
+
+**Scope: "zero dividers" holds up to about five columns, and only where row-hover exists.** At six
+or more columns the reader tracks a value across 1000px+ of width and the eye drops a row; there,
+use a 1.1–1.45:1 divider or zebra striping. Same for any view with no hover state — print, PDF and
+CSV-preview surfaces, and touch. Linear can ship zero dividers because its issue row is three
+fields wide with a persistent hover; a nine-column reconciliation grid cannot.
 
 ### 8. Radius and shadow (worth 0px, but they read as "big")
 
-A 12px radius on a 32px control makes it read as a pill and visually inflates the row. Keep radius
-≤ ⅓ of height. Shadows on list items are the single fastest way to make a dense surface feel like a
-consumer app; the measured products use zero shadow on rows.
+A 12px radius on a 32px control reads as a pill and inflates the row. Keep radius ≤ ⅓ of height.
+Every product measured here ships **zero** shadow on list rows; a `shadow-sm` on each row adds a
+soft 2–4px halo that reads as extra height you did not spend.
 
 ---
 
 ## Comfortable and compact modes
 
-**Ship one mode by default and set it from the usage pattern.** Ship two only when you have a real
-bimodal audience: an admin who lives in the tool eight hours a day *and* an occasional user who
-opens it monthly. Gmail (Default/Comfortable/Compact) and Jira both ship a density control for exactly this reason.
+**Ship one mode by default and set it from the usage pattern.** Ship two only for a genuinely
+bimodal audience: an admin in the tool eight hours a day *and* an occasional user who opens it
+monthly. Gmail and Jira both ship a density control for that reason.
 
 If you ship two, implement it as **one variable, three consumers**:
 
@@ -345,14 +372,13 @@ Rules that keep it from becoming a mess:
 
 ## Scannability
 
-### The F-pattern is real but almost always misapplied
+### Design for the column, not the F
 
-The eye-tracking result is about **unstructured prose on content pages** — users scan the first
-lines, then the left edge. It says almost nothing about a structured table, where the eye follows
-whatever alignment and contrast you built. In a dense grid the reader is doing **column-wise
-comparison**, not F-shaped reading. Design for the column, not the F.
+The F-pattern result describes **unstructured prose on content pages**. In a dense grid the reader
+is doing column-wise comparison, and the eye follows whatever alignment and contrast you built. Do
+not lay out a table around an F.
 
-What actually drives scannability in dense UI, in order:
+What drives scannability in dense UI, in order:
 
 1. **A hard left edge.** Every row's first character starts at the same x. This is the strongest
    scanning aid that exists and it is free. GitHub's file list: filename, message and date each have
@@ -378,9 +404,14 @@ right-aligned numbers. That is a convention, not a contradiction.
 
 ### Truncate, do not wrap
 
-In a fixed-height row, wrapping is not an option — it either clips or blows up the row. Truncate
-with `text-overflow: ellipsis` and give the full value in a `title`. Truncate the **middle** for
-paths and IDs (`app/…/route.ts`), the **end** for prose.
+In a fixed-height row, wrapping either clips or blows up the row. Truncate with
+`text-overflow: ellipsis` and put the full value in a `title`. Truncate the **middle** for paths and
+IDs (`app/…/route.ts`), the **end** for prose.
+
+**Scope: truncate only what the reader can identify from its head.** Filenames, names, IDs and
+subjects survive truncation. Log lines, error messages, support-ticket bodies and diff hunks do not
+— the distinguishing token is usually at the end, and a 30-row list of identically-truncated strings
+is unusable. There, drop the fixed row height, wrap to two lines, and virtualize.
 
 ---
 
@@ -388,18 +419,17 @@ paths and IDs (`app/…/route.ts`), the **end** for prose.
 
 Use these in order. Exhaust each before moving to the next.
 
-**1. Position.** Reading order is hierarchy. The first thing in the row, the first row in the group,
-the top-left of the screen. Position is free, it survives dark mode, colorblindness, and print, and
-it is the only signal that works before the reader has parsed anything. Most "we need a badge here"
-problems are actually "this is in the wrong place" problems.
+**1. Position.** Reading order is hierarchy: first in the row, first row in the group, top-left of
+the screen. It costs zero pixels and survives dark mode, colorblindness and print. Most "we need a
+badge here" problems are "this is in the wrong place" problems.
 
 **2. Weight.** Measured: Linear moves 400 → 510 → 590. Attio sets its entire row text at **500** and
 uses 400 only for de-emphasized rows. GitHub uses 400 → 600. One weight step is a large perceptual
 jump at 13–14px and costs zero pixels. Variable fonts make 510 and 590 real values, not rounding.
 
-**3. Color (lightness, not hue).** Two or three inks: ~15:1, ~6:1, and — if you truly need a third —
-~3.5:1 for non-essential labels. Grafana and Attio implement this as **one ink at several alphas**,
-which is the most maintainable version and automatically composites correctly over any surface.
+**3. Color (lightness, not hue).** Two or three inks: ~15:1, ~6:1, and — only for non-essential
+labels — ~3.5:1. Grafana and Attio implement this as **one ink at several alphas**, which composites
+correctly over any surface and costs one token instead of three.
 
 **4. Size.** Fourth, not first. Inside a 40px row, size does almost nothing: Linear's issue ID and
 issue title are both 13px. Size is for *between* levels of the page (28px page title vs 14px row),
@@ -412,12 +442,10 @@ with no lines at all.
 
 ### Why AI reaches for color and decoration first
 
-Because decoration is *legible in source code* and hierarchy is not. `<Badge variant="success">` is
-visibly "doing design work" in a diff; `font-weight: 510` is not. Every enum value gets its own
-colored pill, every group gets its own card, every non-title element gets `text-muted-foreground`,
-and the result is a screen where six accent colors compete and nothing is emphasized because
-everything is. The fix is a rule: **hue encodes state that changes the user's behavior. Nothing
-else.** Everything else is lightness.
+Decoration is legible in a diff and hierarchy is not. `<Badge variant="success">` looks like design
+work in source; `font-weight: 510` does not. So every enum gets a pill, every group gets a card,
+every non-title element gets `text-muted-foreground` — six accent colors competing, nothing
+emphasized. The rule: **hue encodes state that changes the user's behavior. Nothing else is hue.**
 
 ### The 3-level rule
 
@@ -461,9 +489,15 @@ Three facts fall out:
 
 Rules:
 
-- **One filled control per view.** If two things are filled, neither is primary. If you genuinely
-  have two equally-weighted actions, that is a decision the user has to make, and it belongs in a
-  dialog with its own primary.
+- **One filled control per view.** If two things are filled, neither is primary.
+
+**Two primaries — the one real exception.** When the surface exists to make the *same binary
+decision* over and over — a moderation queue, a claims-adjudication desk, an expense-approval
+inbox — a single fill is worse. The reviewer's job is Approve-or-Reject 400 times an hour; demoting
+Reject to a ghost button makes the operator re-find it on every item and biases the outcome toward
+the filled option. Ship **two fills of equal height, separated by hue** (green/red, or accent/neutral-dark),
+never by size. The test: is the second action taken on more than ~20% of items? If yes, it is a
+co-primary, not a secondary. Everywhere else — a settings page, a detail view, a form — one fill.
 - **Everything else is outline, ghost, or plain text**, in that order of decreasing prominence.
 - **Position beats treatment.** Bottom-right of a dialog, right end of a toolbar, end of a form. A
   correctly placed ghost button beats a badly placed filled one.
@@ -489,9 +523,11 @@ The pattern the best products converge on:
 2. **Color the menu item red only at the last level, if at all.** Many products (Grist, Linear,
    Notion) don't, because a red item in a grey menu is a target that attracts the cursor — the
    opposite of what you want. If you do use red, use it on the *label text*, never as a fill.
-3. **Never render a filled red button in a resting view.** A red fill is a very loud, very
-   attractive click target for the action you least want misclicked. Reserve filled red for the
-   confirm button *inside* the confirmation dialog, where it is the intended target.
+3. **Never render a filled red button in a resting view.** A red fill is a loud, attractive click
+   target for the action you least want misclicked. Reserve filled red for the confirm button
+   *inside* the confirmation dialog. **Exception: the two-primaries case above** — on a queue whose
+   job is accept/reject, Reject is not destructive-by-surprise, it is half the task, and it gets a
+   fill.
 4. **Show the keyboard shortcut next to it** (Grist shows `⌘Backspace`). Power users learn the
    shortcut and stop opening the menu; everyone else never sees it.
 5. **Guard proportionally to reversibility, not to scariness.** Undo-able? No dialog at all — do it
@@ -513,8 +549,9 @@ exists. Budget it.
 
 **Hide, safely:**
 
-- **Row actions** behind hover + `⋯`. The single highest-value hide in dense UI: it removes a whole
-  column and 15px of row height.
+- **Row actions** behind hover + `⋯` — **when the action fires on under ~20% of rows.** The
+  highest-value hide in dense UI: it removes a whole column and 15px of row height. Above that
+  threshold, keep a 24px ghost control visible at rest (see lever 2).
 - **Rarely-changed settings** behind an "Advanced" disclosure. If under ~10% of users touch it, it
   should not cost 100% of users vertical space.
 - **Detail behind the row itself.** A side panel or a drill-down is better than a second line in
@@ -561,8 +598,15 @@ its background is not progressive disclosure, it is a secret.
   targets. Linear's 3.45:1 sidebar label would be a defect in that context. Support browser zoom to
   200% without horizontal scroll — which dense layouts break unless columns can drop.
 - **Data with genuinely long text.** Log lines, support tickets, transcripts, code review comments.
-  Forcing 32px rows on wrapping content just truncates the thing the user came to read. Use variable
-  row heights and virtualize.
+  Forcing 32px rows on wrapping content truncates the thing the user came to read. Use variable row
+  heights and virtualize.
+- **Surfaces with no hover and no pointer.** Print stylesheets, PDF exports, emailed reports, kiosk
+  and TV displays, and touch. Every rule here that leans on row-hover — no dividers, hidden row
+  actions, truncate-with-`title` — silently fails. On those, restore zebra or dividers, show the
+  actions, and wrap the text.
+- **High-stakes single actions.** Wire transfers, production deploys, key revocation, medical
+  ordering. Density is not the goal on a confirm surface; unmissable identity and one deliberate
+  target are. Comfortable spacing, 16px text, one filled control.
 - **The "always use an 8px grid" rule is wrong here.** Every measured system ships sub-8 values:
   Primer has 2, 4 and 6; Attio pads rows `0 4px 0 16px`; Superhuman's mock uses a 4px gap unit;
   Linear pads its nav item `0 7px`. Icon-to-label gaps, chip padding, and border compensation all
@@ -570,12 +614,18 @@ its background is not progressive disclosure, it is a secret.
 - **The "never go below 12px" rule is wrong here.** Attio ships 10px and 9px labels; Grist ships an
   11px column header and a 10px section label. Below 12px is fine for metadata that is redundant
   with position — and never fine for anything the user must read to act.
-- **The "always animate on hover" instinct is wrong here, full stop.** In a 30-row list, movement on
-  hover is nausea. Background-color change only.
+- **The "always animate on hover" instinct is wrong here.** In a 30-row list, movement on hover is
+  nausea. Background-color change only.
 
 ---
 
 ## What AI-generated UI does, and the correction
+
+Items 1–20 are the structural failures — they have been stable since 2023 and are still what
+`v0` / Lovable / Bolt / Cursor emit by default. Items 21–29 are the **2026 layer**: newer tells,
+all of which cost density or hierarchy specifically. (Pure color and type tells — AI purple, the
+cream + `Instrument Serif` + emerald "tasteful default", emoji-as-icons — live in `color.md` and
+`typography.md`; only their density consequences are listed here.)
 
 | # | What generated UI does | Why it happens | Correction |
 |---|---|---|---|
@@ -599,42 +649,76 @@ its background is not progressive disclosure, it is a secret.
 | 18 | Icon + label + description on every sidebar item | Nav items look "explained" | Label only, 28–32px rows. If a nav label needs a description, the label is wrong |
 | 19 | `min-h-screen flex items-center justify-center` on an app page | Centering is the landing-page reflex | Application content starts top-left. Centering is for empty states and single-message dialogs |
 | 20 | Uppercase + letterspaced section labels everywhere | "Eyebrow" styling from marketing pages | Linear's sidebar group labels are 12px/14 w510, sentence case, `#62666D`. No uppercase, no tracking |
+| 21 | `backdrop-blur-*` + `bg-white/10` glass cards over a list | Glassmorphism is the 2026 default "premium" move | Blur destroys the 1.1–1.45:1 divider band and makes every hairline unmeasurable against a moving backdrop. Opaque surfaces in application chrome. Blur belongs on a modal scrim, nowhere else |
+| 22 | A bento grid where the answer is a table | "Dashboard" now retrieves bento, not rows | Bento is a *marketing* layout for 5–9 heterogeneous tiles. Homogeneous records are rows. If every tile has the same shape, you built a bad table |
+| 23 | `bg-clip-text text-transparent` gradient on the KPI number | Gradient text reads as "designed" | It breaks `tabular-nums` alignment, has no single measurable contrast ratio, and disappears in forced-colors mode. Solid ink, one weight step, `tabular-nums` |
+| 24 | Neon-on-dark: `text-cyan-400` on `bg-slate-950`, `shadow-[0_0_20px]` glow on cards | The v0/Cursor dark default | Glow is unquantifiable visual weight — it inflates perceived row height with zero pixels. Near-black surface (`#08090A`-class), ink hierarchy at 18:1 / 13:1 / 6:1, zero glow. Linear ships none |
+| 25 | Nested cards: `<Card>` wrapping `<Card>` wrapping a list | Every generation step adds one more container | Each nesting level costs 2 × padding + 2 × border + 1 radius, ~50px of dead frame. One container per surface. Never nest |
+| 26 | `rounded-2xl` / `rounded-3xl` (16–24px) as the card default | Untouched shadcn/Tailwind default | Radius ≤ ⅓ of height. shadcn's own `dashboard-01` card measures 14px at 204px tall; 24px on an 80px strip reads as a pill |
+| 27 | `initial={{opacity:0,y:20}}` + `whileInView` stagger on every block | Motion library is installed, so it gets used | A list that assembles itself on scroll cannot be scanned. Entrance animation on application data is a defect. Reserve motion for state that actually changed |
+| 28 | ✨ as the only affordance for an AI feature; shimmer text as the only loading state | It is the 2026 convention and costs no design decision | The sparkle is fine as an icon and useless as hierarchy — it does not say what the feature does or whether it is running. Label the action; use a determinate or skeleton state that reserves the real row height so nothing reflows |
+| 29 | Sidebar icons at 14–16px next to 14px labels, in a 44px row | Copying the Claude/Cursor/Codex chrome without its density | Those apps pair small icons with **28–32px rows**. Small icon + tall row is the worst pair: you pay the height and lose the target. Match the source: 16px icon, 28–32px row, 8px gap |
 
 ---
 
 ## Self-check list
 
-Run against your own output before calling it done. Anything you cannot answer with a number is not
-yet a decision.
+Every item is a command or a screenshot reading with a pass threshold. No item is answerable by
+opinion. Run the console block once, then the greps.
 
-1. **What is the density target and why?** One sentence naming role, frequency and N. Written in the
-   file as a comment.
-2. **What is `rows_visible` at 1440×900?** Compute it. Work surface: ≥15. Scan: ≥12. If it is under
-   5, find the chrome and delete it.
-3. **What is the tallest child of a table cell?** If it is a control, that control is setting your
-   row height. Justify it or remove it.
-4. **How many distinct font sizes are on the screen?** More than five on a working surface means you
-   are using size where you should be using weight or color.
-5. **What is the contrast of your secondary text?** It should be 5.5–6.2:1. Check it; do not eyeball
-   it.
-6. **How many filled controls are visible at rest?** One. Is your primary the same height as its
-   neighbors?
-7. **How many distinct hues are on the screen?** Excluding content (avatars, logos, charts): one
-   accent. Does each hue encode state that changes the user's behavior?
-8. **How many hierarchy levels are in one row?** Three. If four, move one into a detail view.
-9. **Do your rows have dividers?** If they are single-line and ≤40px, delete them and use hover
-   instead. If you keep them, is the contrast 1.1–1.45:1?
-10. **Does anything move on hover?** It should not. Background-color change only.
-11. **Where does the destructive action live?** In an overflow menu, last, in body color, with a
-    shortcut. Not filled, not red, not in the row at rest.
-12. **What is hidden, and does the user know it exists?** Every hidden thing needs a visible
-    affordance with real contrast and, where it is a count, the number.
-13. **Do you have exactly three gap values?** Grep for `gap-` and `space-y-`. If you find five, the
-    grouping is accidental.
-14. **Is every number a token?** No arbitrary px. Radius ≤ ⅓ of the control's height.
-15. **Did you render it and look at it?** `node tools/shot.mjs <url> --widths 1440,390` and open the
-    PNGs. You cannot judge density by reading JSX — the 825px number in this file was invisible in
-    the source and obvious in the screenshot.
+**Setup — paste this into DevTools on the running page (or `page.evaluate` it in Playwright):**
+
+```js
+const R = (sel) => [...document.querySelectorAll(sel)];
+const box = (e) => e.getBoundingClientRect();
+window.__d = {
+  rowH: (sel) => R(sel).slice(0,5).map(e => +box(e).height.toFixed(1)),
+  fold: (sel) => { const r = R(sel).find(e => box(e).top > 0);
+    return r ? { firstRowTop: Math.round(box(r).top), rowH: +box(r).height.toFixed(1),
+      visible: +((innerHeight - box(r).top) / box(r).height).toFixed(1) } : null; },
+  tallest: (rowSel) => R(rowSel + ' *')
+    .filter(e => !/^(TD|TH)$/.test(e.tagName))
+    .map(e => ({ tag: e.tagName, cls: (e.className||'').toString().slice(0,32),
+                 h: +box(e).height.toFixed(1) }))
+    .sort((a,b) => b.h - a.h).slice(0,5),
+  typeCombos: () => { const bk = {}; for (const e of R('*')) {
+      if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
+      const c = getComputedStyle(e); if (c.display === 'none') continue;
+      const k = `${c.fontSize}/${c.lineHeight} w${c.fontWeight}`; bk[k] = (bk[k]||0)+1; }
+    return Object.entries(bk).sort((x,y) => y[1]-x[1]); },
+  hues: () => [...new Set(R('*').flatMap(e => { const c = getComputedStyle(e);
+      return [c.color, c.backgroundColor, c.borderTopColor]; })
+    .map(v => (v.match(/\d+/g)||[]).slice(0,3).map(Number))
+    .filter(([r,g,b]) => r !== undefined && Math.max(r,g,b) - Math.min(r,g,b) > 24)
+    .map(([r,g,b]) => Math.round(Math.atan2(1.732*(g-b), 2*r-g-b) * 57.3 / 30) * 30))],
+  mutedShare: (mutedRgb) => { const t = R('*').filter(e =>
+      [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()));
+    return +(t.filter(e => getComputedStyle(e).color === mutedRgb).length / t.length).toFixed(2); },
+};
+```
+
+| # | Check | How to run it | Pass |
+|---|---|---|---|
+| 1 | Density target is written down | `rg -n "density-target:" src/` | ≥1 hit per list surface, naming role · row height · target rows |
+| 2 | Rows visible at 1440×900 | `__d.fold('tbody tr')` | Work: ≥15. Scan: ≥12. Glance/small-N: N itself. Under 5 with N>20 → fail |
+| 3 | Nothing tall is inside a row | `__d.tallest('tbody tr:first-child')` | Top entry ≤ 24px, or ≤ line-height. A 32/36px `<Button>`/`<Input>` here is the failure |
+| 4 | Type combinations, not sizes | `__d.typeCombos().length` | ≤6 combos on a working surface. `dashboard-01` scores 12 — and only 4 *sizes*, which is why counting sizes misses it |
+| 5 | Secondary-text contrast | `node tools/contrast.mjs "<L2 hex>" "<bg hex>"` | 5.5–6.2:1. Under 4.5 fails outright; over 8 is not a second level |
+| 6 | Filled controls at rest | `rg -n 'variant="default"\|bg-primary\|btn-primary' <view>` and count saturated fills in the screenshot | 1 — or exactly 2 of equal height if this is a repeated-binary-decision surface |
+| 7 | Distinct hues | `__d.hues()` | ≤2 buckets (one accent + one status), excluding avatars/logos/charts |
+| 8 | Hierarchy levels in one row | In the screenshot, count distinct text colors inside one row | ≤3. A 4th means a detail view is missing |
+| 9 | Muted has not become the body color | `__d.mutedShare('rgb(115,115,115)')` (your muted token) | ≤0.33 |
+| 10 | Dividers | `__d.rowH('tbody tr')` + `rg -n 'divide-y\|border-b' <view>` | Zero on single-line rows ≤40px with ≤5 columns and a hover state. Otherwise present at 1.1–1.45:1 |
+| 11 | Nothing moves on hover | `rg -n 'hover:scale\|hover:-translate\|hover:shadow\|whileHover\|whileInView\|animate-bounce'` | 0 hits on list/row/card components |
+| 12 | Destructive action placement | `rg -n 'variant="destructive"\|bg-red-\|bg-destructive' <view>` | 0 hits outside a `Dialog`/`AlertDialog` file — unless it is a co-primary on a review queue |
+| 13 | Every hover-reveal has a non-hover path | `rg -n 'group-hover:opacity\|group-hover:visible\|opacity-0'` then confirm each hit has a focus-visible and a touch/tap sibling | Every hit paired, or 0 hits |
+| 14 | Exactly three gap values | `rg -o 'gap-\d+\|space-[xy]-\d+\|gap-\[[^]]*\]' -N src/ \| sort \| uniq -c \| sort -rn` | ≤3 distinct values dominate; a 4th appearing <5× is a leak, fix it |
+| 15 | No arbitrary pixel values | `rg -n '\[[0-9]+px\]' src/` | 0 hits, or each hit has a comment saying why |
+| 16 | Radius ≤ ⅓ of control height | `rg -o 'rounded-(2xl\|3xl\|full)' src/` cross-checked against the element's measured height | No `rounded-2xl`+ on anything under 64px tall |
+| 17 | No blur behind application chrome | `rg -n 'backdrop-blur\|bg-\w+/[0-9]' src/` | 0 hits outside modal scrims |
+| 18 | Card nesting depth | `R('[data-slot=card]').filter(c => c.closest('[data-slot=card]') !== c).length` | 0 |
+| 19 | Automated consistency scan | `node tools/audit.mjs <url> --widths 1440,390` | No horizontal overflow; distinct font-size / radius / shadow counts inside the budgets above |
+| 20 | You looked at it | `node tools/shot.mjs <url> --widths 1440,390` and open both PNGs | The 825px number in this file was invisible in the source and obvious in the screenshot. Non-negotiable |
 
 ---
 
@@ -654,9 +738,117 @@ yet a decision.
   (`vercel/next.js`), Attio (product surface on attio.com), Grist (`templates.getgrist.com`),
   Grafana (`play.grafana.org`), Notion (real page renderer on `notion.site`), shadcn/ui blocks and
   `dashboard-01`, Primer, Atlassian Design System, Shopify Polaris.
+- **Re-verification (2026-09 direction pass)**: seven headline claims were independently re-probed
+  on live pages — GitHub rows and buttons, GitHub L1/L2 inks, shadcn `dashboard-01` geometry, Grist
+  rows and fold, Linear row and nav heights. All seven held exactly. Five values were corrected; see
+  *Direction pass* at the end of this file. **Attio could not be re-probed** — `attio.com` no longer
+  renders the product mock — so every Attio number here is single-source.
 - **Not measurable**: Datadog, Retool, Airtable and Superhuman are behind authentication and their
   marketing sites are not their products. Grafana stands in for Datadog and Grist for Airtable
   throughout; Superhuman's numbers here come from the interface mock its own team ships on
   superhuman.com (14px/21 rows, 21px display lines, 4px gap unit) and should be treated as
   directional, not as the shipped client. Where a value could not be measured it is absent rather
   than guessed.
+
+---
+
+## Direction pass (2026-09)
+
+### Re-probed with Playwright (Chromium, 1440×900, live pages)
+
+| Claim in this file | Re-measured | Verdict |
+|---|---|---|
+| GitHub repo file row = 41px, first row at y=307, 14 visible | 41.0px; `top` 307, 348, 389, 430 … (41px pitch, exact) | **Confirmed** |
+| GitHub `Code` button: 32px, 14px/21 w400, `0 12px`, radius 6px, `#1F883D` | 32.0px, `14px/21px`, `400`, `0px 12px`, `6px`, `rgb(31,136,61)` | **Confirmed** |
+| GitHub `Star`/`Fork`/`Notifications` = 28px, 12px, w500 | 28.0px, `12px/20px`, `500`, `3px 12px`, radius 6px, `#F6F8FA` on `#D1D9E0` | **Confirmed** |
+| GitHub L1 `#1F2328` 15.80:1 / L2 `#59636E` 6.11:1 | `rgb(31,35,40)` ×150, `rgb(89,99,110)` ×218 on `rgb(255,255,255)`; `tools/contrast.mjs` → 15.80 and 6.11 | **Confirmed** |
+| shadcn `dashboard-01`: 53px row, 40px header, first row y=825, 8px cell padding, 204×262 KPI, 392px chart, 14px radius | All exact. Row border 1px, `docH` 1436 on a 900 viewport | **Confirmed** |
+| Grist: 23px rows, 127px chrome, 33 visible | 33 `.record` rows at 23.0px, first `top` = 127, pitch 23 | **Confirmed** |
+| Linear: 40px issue row, 28px sidebar item | `bVIB3G_row` = 40.0px ×14; nav ingredient = 28.0px; group header 36px | **Confirmed** |
+
+### Numbers corrected
+
+1. **GitHub 14px/21 element count: 296 → 434.** Re-counted on `github.com/vercel/next.js`; the next
+   bucket is 12px/18 at 44. The *ratio* (≈10:1 over the runner-up) is the durable signal — raw
+   element counts move with lazy-loaded regions, so they are now labelled as state-dependent in the
+   preamble.
+2. **"Replace the 36px button with a link and the row is 37px" was wrong.** The `dashboard-01` row
+   also contains two 32px `<Input>`s and a 32px icon button. Removing only the tallest child yields
+   **49px**, not 37px. Corrected in *If you only apply five things* #2, lever 2, and the reference
+   table. This was the most dangerous error in the file: an agent following it would make the edit,
+   measure 49, and conclude the model was wrong.
+3. **shadcn `dashboard-01` "6 distinct sizes" → 4 sizes / 12 combos.** Measured buckets include
+   14px at three different line-heights (20, 17.5, 14). The old count both understated the mess and
+   made the self-check unable to catch it.
+4. **Grist cell type: "13px/18" → 13px with `line-height: normal`.** The 18 was inferred from the row
+   box, not read from computed style.
+5. **GitHub row divider location.** The 1px `#D1D9E0` hairline is on the cell, not the `<tr>` —
+   `getComputedStyle(tr).borderBottomWidth` is `0px`. The color and ratio were right; the selector
+   an agent would copy was not.
+
+### Rules stress-tested, and the scopes added
+
+Each rule below was run against a realistic product where following it literally makes the interface
+worse. The scope is now in the rule, not only in *When this advice is wrong*.
+
+1. **"One filled control per view."** Adversarial case: a content-moderation queue. Approve and
+   Reject are the same decision, made 400×/hour, and Reject fires on ~40% of items. Demoting it to a
+   ghost button costs a re-find on every item and biases outcomes toward the filled option. **Scope
+   added:** two equal-height fills separated by hue when a second action fires on >~20% of items.
+   Propagated to the destructive-action rule, which otherwise forbids exactly this.
+2. **"Single-line rows ≤40px need zero dividers."** Adversarial case: a nine-column financial
+   reconciliation grid at 1440px. With no divider and no zebra, the eye drops a row while tracking a
+   value across 1100px. Linear can ship zero dividers because its row is three fields wide with a
+   persistent hover. **Scope added:** ≤5 columns *and* a hover state; otherwise divider or zebra at
+   1.1–1.45:1. Extended to a new *no hover, no pointer* bullet covering print, PDF, email and kiosk.
+3. **"Hide row actions behind hover + `⋯`."** Adversarial case: a triage inbox where the operator
+   acts on most rows. Hover-reveal adds move → wait → aim to every interaction, and is dead on touch
+   and keyboard. **Scope added:** keep a 24px ghost control visible at rest when the action fires on
+   >20% of rows; hover-reveal requires both a tap and a focus path or it does not ship.
+4. **"Compute the fold; ≥15 rows or you failed."** Adversarial case: a settings surface listing five
+   environments. Chasing 15 rows produces a cramped strip in an ocean of white. **Scope added:** the
+   fold test applies only when N can exceed ~20; check N first.
+5. **"Delete the greeting; title goes inline in the toolbar."** Adversarial case: a multi-tenant
+   deploy console where the operator switches between 40 customer accounts. A 14px inline title is
+   how someone drops production instead of staging. **Scope added:** kill the greeting, keep the
+   *identity* — when acting on the wrong object is the expensive error, the object's name gets a
+   persistent high-contrast slot.
+6. **"Truncate, do not wrap."** Adversarial case: a log viewer. The distinguishing token in a log
+   line or stack frame is at the *end*; 30 identically-truncated strings are unusable. **Scope
+   added:** truncate only content identifiable from its head; otherwise variable row height + wrap +
+   virtualize.
+
+### Anti-pattern section brought current
+
+The 2023-era list (items 1–20) still describes what `v0`, Lovable, Bolt and Cursor emit — every one
+was re-checked against `dashboard-01` and remains accurate. Nine 2026-specific tells were missing and
+are now items 21–29: glass/`backdrop-blur` cards over lists, bento grids where a table belongs,
+`bg-clip-text` gradient on KPI numbers, neon-on-dark glow (`shadow-[0_0_*]`, `text-cyan-400` on
+`bg-slate-950`), nested cards, `rounded-2xl`/`3xl` defaults, `whileInView` stagger on every block,
+✨-and-shimmer as the only AI affordance, and tiny sidebar icons inside tall rows. Pure color and
+type tells found in the same research — AI purple/indigo, the cream + `Instrument Serif` + emerald
+"tasteful default", emoji-as-icons, `text-center` hero + three feature cards — are named here only
+where they cost density, and belong in `color.md` and `typography.md`.
+
+Sources for the 2026 tells: [SmoothUI, *AI Design Slop*](https://smoothui.dev/blog/ai-design-slop);
+[Jim Nielsen, *The AI Aesthetic*, summarized](https://explainx.ai/blog/ai-aesthetic-design-patterns-jim-nielsen-2026);
+[*Unslop UI* banned-pattern list](https://www.claudecodehq.com/playbooks/unslop-ui);
+[vibecodekit, *AI Slop Design*](https://vibecodekit.dev/ai-slop-design);
+[925 Studios, *AI Slop Fonts and Gradients*](https://www.925studios.co/blog/ai-slop-design-tells).
+
+### Self-check list rewritten
+
+The old list had items no one could fail: "What is the density target and why?", "does the user know
+it exists?", "did you render it and look at it?" — questions, not tests. All 20 items are now a
+shell command, a console expression, or a specific reading off a screenshot, each with a numeric
+pass threshold. A reusable `window.__d` probe block ships with the list. Item 4 in particular was
+changed from *font sizes* to *size/line-height/weight combos* because the old form passed
+`dashboard-01`, the file's own worked example of failure.
+
+### Still unverified
+
+Attio's numbers could not be re-probed: `attio.com` no longer renders the product mock this file
+measured, and the row detector now returns marketing nav (26px, 16px/22). Attio rows, dividers and
+alpha ramp in the tables above are **carried forward from the 2026-09 first pass, not re-measured**.
+Grafana, Notion, Primer and Atlassian were not re-probed this pass. Superhuman remains directional
+only. Treat every Attio value as one-source until someone re-measures it inside the product.

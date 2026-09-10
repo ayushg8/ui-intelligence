@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Halden — Who’s on what</title>
+<style>
+/* ─────────────────────────────────────────────────────────────────────────
+   Halden · shared work queue for a six-person payments-integration team
+   Archetype: technical-productivity (light), calibrated for N≈31, not N≈200.
+   Density target: SCAN→WORK — 36px task row, 40px now-bar, 28px lane header,
+   13px body. Every value below comes from this token block.
+   ───────────────────────────────────────────────────────────────────────── */
+:root{
+  /* Neutrals — cool (hue ~250), 12 steps, 4–7 luminance points apart, so that
+     amber "in progress" never drags toward a warm ground. */
+  --n-0:#FFFFFF;  --n-25:#FAFAFB; --n-50:#F5F6F8; --n-100:#EFF0F3;
+  --n-150:#E7E9EE; --n-200:#DEE0E6; --n-300:#C9CCD5; --n-400:#A4A9B6;
+  --n-500:#8A90A0; --n-600:#5B6273; --n-700:#3D424C; --n-800:#272B33;
+  --n-900:#16181D;
+
+  --hairline:rgba(17,20,28,.08);
+  --hover:rgba(17,20,28,.045);
+
+  /* Accent — exactly one. Allowed: focus ring, selected-row fill, the single
+     primary action, active nav. Not: headings, icons, status, borders. */
+  --accent:#2358D8;            /* 6.07:1 on white */
+  --accent-press:#1C48B2;
+  --accent-quiet:#EDF1FC;
+
+  /* Semantic — status only, never decoration. */
+  --amber:#A65A00;  --amber-bg:#FFF6E9;  --amber-edge:#E29B33;
+  --green:#106B3F;  --green-bg:#ECF7F0;
+  --red:#B3261E;    --red-bg:#FDECEA;
+
+  /* Type — 12/13/15/17, a 1.42× range. Hierarchy is weight and colour. */
+  --t-meta:12px; --t-body:13px; --t-read:15px; --t-title:17px;
+  --f:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --f-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+
+  --s-1:2px; --s-2:4px; --s-3:6px; --s-4:8px; --s-5:12px; --s-6:16px; --s-7:24px; --s-8:32px;
+  --r-ctl:6px; --r-pop:10px;
+  --shadow-pop:0 2px 4px rgba(17,20,28,.06),0 8px 28px rgba(17,20,28,.14);
+
+  --d-out:150ms; --d-hover:100ms; --d-revert:250ms;
+  --ease:cubic-bezier(.25,.46,.45,.94);
+
+  --rail:232px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--n-25); color:var(--n-900);
+  font-family:var(--f); font-size:var(--t-body); line-height:1.5;
+  letter-spacing:-.006em;
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+button,input{font:inherit;color:inherit;letter-spacing:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+.dense:focus-visible{outline-width:1px}
+
+.skip{position:absolute;left:var(--s-4);top:var(--s-4);z-index:99;background:var(--n-0);
+  padding:var(--s-5) var(--s-6);border-radius:var(--r-ctl);box-shadow:var(--shadow-pop);
+  transform:translateY(-300%)}
+.skip:focus{transform:none}
+
+/* ── Shell ──────────────────────────────────────────────────────────────── */
+.app{display:flex;min-height:100dvh;align-items:stretch}
+
+/* ── Left rail: scope selector ──────────────────────────────────────────── */
+.rail{
+  width:var(--rail);flex:0 0 var(--rail);
+  border-right:1px solid var(--hairline);
+  background:var(--n-25);
+  padding:var(--s-4) var(--s-5) 72px var(--s-4);
+  overflow-y:auto;
+  position:sticky;top:0;height:100dvh;
+}
+.wordmark{display:flex;align-items:baseline;gap:var(--s-3);padding:var(--s-3) var(--s-4) var(--s-5)}
+.wordmark b{font-size:var(--t-read);font-weight:600;letter-spacing:-.02em}
+.wordmark span{font-size:var(--t-meta);color:var(--n-600)}
+.railgroup{margin-top:var(--s-6)}
+.railgroup h2{
+  font-size:var(--t-meta);font-weight:500;color:var(--n-600);
+  margin:0 0 var(--s-2);padding:0 var(--s-4);
+}
+.nav{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--s-1)}
+.nav a{
+  display:flex;align-items:center;gap:var(--s-4);height:28px;padding:0 7px;
+  border-radius:var(--r-ctl);text-decoration:none;
+  color:var(--n-700);font-weight:500;
+  transition:background-color var(--d-hover) var(--ease);
+}
+.nav a:hover{background:var(--hover)}
+.nav a[aria-current="page"]{background:var(--accent-quiet);color:var(--accent);font-weight:600}
+.nav .label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav .count{font-size:var(--t-meta);color:var(--n-600)}
+.nav a[aria-current="page"] .count{color:var(--accent)}
+
+/* ── Avatar ─────────────────────────────────────────────────────────────── */
+.av{
+  flex:0 0 auto;display:grid;place-items:center;border-radius:50%;
+  background:var(--n-150);color:var(--n-700);
+  font-size:var(--t-meta);font-weight:600;letter-spacing:0;
+  width:20px;height:20px;
+}
+.av.lg{width:24px;height:24px}
+
+/* ── Main ───────────────────────────────────────────────────────────────── */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.viewhead{
+  padding:var(--s-5) var(--s-7) var(--s-5);
+  display:flex;align-items:flex-end;gap:var(--s-6);flex-wrap:wrap;
+}
+.viewhead .titles{flex:1;min-width:0}
+h1{font-size:var(--t-title);font-weight:600;letter-spacing:-.014em;margin:0}
+.viewmeta{font-size:var(--t-meta);color:var(--n-600);margin-top:var(--s-1)}
+.viewmeta .flag{color:var(--amber);font-weight:500}
+.headtools{display:flex;align-items:center;gap:var(--s-4)}
+
+.filter{position:relative;display:flex;align-items:center}
+.filter svg{position:absolute;left:8px;color:var(--n-600);pointer-events:none}
+.filter input{
+  height:28px;width:216px;padding:0 var(--s-4) 0 26px;
+  border:1px solid var(--n-200);border-radius:var(--r-ctl);
+  background:var(--n-0);
+  transition:border-color var(--d-hover) var(--ease);
+}
+.filter input::placeholder{color:var(--n-600)}
+.filter input:hover{border-color:var(--n-300)}
+.filter kbd{
+  position:absolute;right:7px;font-family:var(--f-mono);font-size:var(--t-meta);
+  color:var(--n-600);box-shadow:inset 0 0 0 1px var(--n-200);
+  border-radius:3px;padding:0 4px;line-height:16px;pointer-events:none;
+}
+.filter input:focus + kbd{display:none}
+
+.btn{
+  height:28px;display:inline-flex;align-items:center;gap:var(--s-3);
+  padding:0 var(--s-5);border-radius:var(--r-ctl);
+  border:1px solid var(--n-200);background:var(--n-0);color:var(--n-700);
+  font-weight:500;cursor:pointer;white-space:nowrap;
+  transition:background-color var(--d-hover) var(--ease),border-color var(--d-hover) var(--ease);
+}
+.btn:hover{background:var(--n-50);border-color:var(--n-300)}
+.btn:active{background:var(--n-100)}
+.btn[disabled]{color:var(--n-500);cursor:not-allowed;background:var(--n-50)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-press);border-color:var(--accent-press)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--n-600)}
+.btn.ghost:hover{background:var(--hover);border-color:transparent;color:var(--n-800)}
+.btn.sm{height:24px;padding:0 var(--s-4);font-size:var(--t-meta)}
+
+/* ── Active-filter chips ────────────────────────────────────────────────── */
+.chips{display:flex;align-items:center;gap:var(--s-3);flex-wrap:wrap;
+  padding:0 var(--s-7) var(--s-4)}
+.chip{
+  display:inline-flex;align-items:center;gap:var(--s-3);height:24px;padding:0 var(--s-2) 0 var(--s-4);
+  border-radius:var(--r-ctl);background:var(--n-100);color:var(--n-700);font-size:var(--t-meta);
+}
+.chip b{font-weight:600}
+.chip button{
+  border:0;background:transparent;cursor:pointer;color:var(--n-600);
+  width:18px;height:18px;border-radius:4px;display:grid;place-items:center;
+  transition:background-color var(--d-hover) var(--ease);
+}
+.chip button:hover{background:var(--hover);color:var(--n-900)}
+
+/* ── Board ──────────────────────────────────────────────────────────────── */
+.board{
+  flex:1;padding:0 var(--s-7) 88px;
+  scrollbar-gutter:stable;
+}
+.lane{margin-bottom:var(--s-7)}
+.lanehead{
+  display:flex;align-items:center;gap:var(--s-4);height:28px;margin-bottom:var(--s-3);
+}
+.lanehead h2{font-size:var(--t-body);font-weight:600;margin:0;letter-spacing:-.008em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lanehead .role{font-size:var(--t-meta);color:var(--n-600);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.lanehead .spacer{flex:1;min-width:var(--s-4)}
+.lanehead .tally{font-size:var(--t-meta);color:var(--n-600);white-space:nowrap}
+.lanehead .tally .split{color:var(--amber);font-weight:600}
+.unassigned-glyph{
+  flex:0 0 auto;width:20px;height:20px;border-radius:50%;
+  border:1px dashed var(--n-400);
+}
+
+/* ── The now-line — the signature ───────────────────────────────────────── */
+.now{
+  display:flex;align-items:center;gap:var(--s-4);
+  height:40px;padding:0 var(--s-4) 0 var(--s-5);
+  border-radius:var(--r-ctl);
+  background:var(--amber-bg);
+  box-shadow:inset 3px 0 0 var(--amber-edge);
+  margin-bottom:var(--s-1);
+  width:100%;text-align:left;border:0;cursor:pointer;font:inherit;
+  transition:background-color var(--d-hover) var(--ease);
+}
+.now:hover{background:#FFF1DC}
+.now .bar{flex:0 0 auto;width:6px;height:6px}
+.now .id{font-family:var(--f-mono);font-size:var(--t-meta);color:var(--n-600);flex:0 0 auto;width:58px}
+.now .title{font-weight:500;color:var(--n-900);flex:0 1 auto;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.now .second{font-size:var(--t-meta);color:var(--amber);flex:1 1 auto;min-width:0;padding-left:var(--s-4);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.now .client{font-size:var(--t-meta);color:var(--n-600);flex:0 0 auto;width:160px;text-align:right;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.now .elapsed{font-size:var(--t-meta);color:var(--amber);font-weight:600;flex:0 0 auto;
+  width:84px;text-align:right}
+
+.now.free{
+  background:transparent;box-shadow:none;border:1px dashed var(--n-300);
+  cursor:default;height:40px;
+}
+.now.free:hover{background:transparent}
+.now.free .title{color:var(--n-600);font-weight:400;margin-left:calc(6px + var(--s-4) + 58px + var(--s-4));flex:1}
+.now.free .title b{color:var(--n-800);font-weight:500}
+
+/* ── Task rows ──────────────────────────────────────────────────────────── */
+.rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--s-1)}
+.row{
+  display:flex;align-items:center;gap:var(--s-4);
+  height:36px;padding:0 var(--s-4) 0 var(--s-5);
+  border-radius:var(--r-ctl);background:transparent;
+  width:100%;text-align:left;border:0;cursor:pointer;font:inherit;
+  transition:background-color var(--d-hover) var(--ease);
+}
+.row:hover{background:var(--hover)}
+.row .dot{flex:0 0 auto;width:6px;height:6px;border-radius:50%;background:var(--n-300)}
+.row.blocked .dot{background:var(--red)}
+.row.shipped .dot{background:var(--green)}
+.row .id{font-family:var(--f-mono);font-size:var(--t-meta);color:var(--n-600);
+  flex:0 0 auto;width:58px}
+.row .title{font-weight:500;color:var(--n-900);flex:0 1 auto;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .second{font-size:var(--t-meta);color:var(--red);flex:1 1 auto;min-width:0;padding-left:var(--s-4);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .client{font-size:var(--t-meta);color:var(--n-600);flex:0 0 auto;width:160px;text-align:right;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .meta{font-size:var(--t-meta);color:var(--n-600);flex:0 0 auto;width:84px;text-align:right}
+.row.blocked .meta{color:var(--red)}
+.row.shipped .meta{color:var(--green)}
+.row.shipped .title{color:var(--n-600);font-weight:400}
+
+/* Selection is the caret, not hover. Two states, per archetype. */
+.board:not(.blurred) .row[aria-current="true"]{background:var(--accent);}
+.board:not(.blurred) .row[aria-current="true"] .title{color:#fff}
+.board:not(.blurred) .row[aria-current="true"] .second,
+.board:not(.blurred) .row[aria-current="true"] .id,
+.board:not(.blurred) .row[aria-current="true"] .client,
+.board:not(.blurred) .row[aria-current="true"] .meta{color:rgba(255,255,255,.82)}
+.board:not(.blurred) .row[aria-current="true"] .dot{background:rgba(255,255,255,.7)}
+.board.blurred .row[aria-current="true"]{background:var(--n-150)}
+.row[aria-current="true"]{transition:background-color 0s}
+.row:not([aria-current="true"]){transition:background-color var(--d-out) var(--ease)}
+
+.row.reverting{background:var(--red-bg);transition:background-color var(--d-revert) var(--ease)}
+
+.more{
+  height:28px;padding:0 var(--s-5);border:0;background:transparent;border-radius:var(--r-ctl);
+  color:var(--n-600);font-size:var(--t-meta);cursor:pointer;text-align:left;
+  transition:background-color var(--d-hover) var(--ease);
+}
+.more:hover{background:var(--hover);color:var(--n-800)}
+
+/* ── Assign popover ─────────────────────────────────────────────────────── */
+.pop{
+  position:fixed;z-index:650;width:288px;
+  background:var(--n-0);border:1px solid var(--n-200);border-radius:var(--r-pop);
+  box-shadow:var(--shadow-pop);padding:var(--s-2);
+}
+.pop .pophead{font-size:var(--t-meta);color:var(--n-600);padding:var(--s-3) 7px var(--s-2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pop .pophead b{color:var(--n-800);font-weight:500}
+.pop ul{list-style:none;margin:0;padding:0}
+.pop li button{
+  display:flex;align-items:center;gap:var(--s-4);width:100%;height:32px;padding:0 7px;
+  border:0;background:transparent;border-radius:var(--r-ctl);cursor:pointer;text-align:left;
+  transition:background-color 0s;
+}
+.pop li button:hover,.pop li button[data-cursor="1"]{background:var(--accent);color:#fff}
+.pop li button:hover .who,.pop li button[data-cursor="1"] .who{color:rgba(255,255,255,.82)}
+.pop li button:hover .av,.pop li button[data-cursor="1"] .av{background:rgba(255,255,255,.22);color:#fff}
+.pop .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.pop .who{font-size:var(--t-meta);color:var(--n-600);flex:0 0 auto}
+.pop .who.warn{color:var(--amber);font-weight:500}
+.pop .cap{font-family:var(--f-mono);font-size:var(--t-meta);color:var(--n-600);flex:0 0 auto}
+
+/* ── Undo strip — non-modal, never a dialog ─────────────────────────────── */
+.undo{
+  position:fixed;left:var(--s-7);bottom:64px;z-index:800;
+  display:flex;align-items:center;gap:var(--s-5);
+  background:var(--n-900);color:#fff;border-radius:var(--r-ctl);
+  padding:var(--s-4) var(--s-4) var(--s-4) var(--s-5);font-size:var(--t-body);
+  box-shadow:var(--shadow-pop);max-width:calc(100vw - 48px);
+}
+.undo .msg{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.undo button{
+  border:0;background:rgba(255,255,255,.14);color:#fff;height:24px;padding:0 var(--s-4);
+  border-radius:4px;cursor:pointer;font-size:var(--t-meta);font-weight:500;white-space:nowrap;
+}
+.undo button:hover{background:rgba(255,255,255,.24)}
+.undo kbd{font-family:var(--f-mono);font-size:var(--t-meta);color:rgba(255,255,255,.62)}
+
+/* ── Empty / error / loading ────────────────────────────────────────────── */
+.firstrun{padding:var(--s-8) 0 0;max-width:520px}
+.firstrun svg{display:block;margin-bottom:var(--s-7);color:var(--n-100)}
+.firstrun h2{font-size:var(--t-read);font-weight:600;margin:0 0 var(--s-3)}
+.firstrun p{margin:0 0 var(--s-6);color:var(--n-600);font-size:var(--t-body);max-width:44ch}
+.firstrun .acts{display:flex;align-items:center;gap:var(--s-5)}
+.firstrun a{color:var(--accent);text-decoration:none;font-size:var(--t-meta)}
+.firstrun a:hover{text-decoration:underline}
+
+.noresults{padding:var(--s-5) var(--s-5) 0;color:var(--n-600)}
+.noresults b{color:var(--n-800);font-weight:500}
+
+.failed{
+  border:1px solid var(--n-200);border-left:3px solid var(--red);
+  border-radius:var(--r-ctl);background:var(--n-0);
+  padding:var(--s-5) var(--s-6);max-width:560px;margin-top:var(--s-4);
+}
+.failed h2{font-size:var(--t-body);font-weight:600;margin:0 0 var(--s-2)}
+.failed p{margin:0 0 var(--s-5);color:var(--n-600)}
+.failed .acts{display:flex;align-items:center;gap:var(--s-5)}
+.failed .stamp{font-size:var(--t-meta);color:var(--n-600)}
+
+.sk{border-radius:var(--r-ctl);background:rgba(17,20,28,.06);animation:pulse 1.6s var(--ease) infinite}
+@keyframes pulse{0%,100%{background:rgba(17,20,28,.06)}50%{background:rgba(17,20,28,.105)}}
+.sk.head{height:20px;width:150px;margin-bottom:var(--s-4)}
+.sk.now{height:40px;margin-bottom:var(--s-1)}
+.sk.row{height:36px;margin-bottom:var(--s-1)}
+
+/* ── Demo scaffolding bar ───────────────────────────────────────────────── */
+.scaffold{
+  position:fixed;left:0;right:0;bottom:0;z-index:1000;
+  display:flex;align-items:center;gap:var(--s-5);flex-wrap:wrap;
+  background:var(--n-900);color:rgba(255,255,255,.62);
+  padding:var(--s-4) var(--s-6);
+  padding-bottom:calc(var(--s-4) + env(safe-area-inset-bottom));
+  font-size:var(--t-meta);
+  border-top:1px solid rgba(255,255,255,.12);
+}
+.scaffold .tag{
+  font-family:var(--f-mono);letter-spacing:0;color:rgba(255,255,255,.62);
+}
+.scaffold .sw{display:flex;gap:var(--s-3);flex-wrap:wrap}
+.scaffold button{
+  height:26px;padding:0 var(--s-4);border-radius:4px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.18);background:transparent;color:rgba(255,255,255,.82);
+  font-size:var(--t-meta);
+}
+.scaffold button:hover{background:rgba(255,255,255,.1)}
+.scaffold button[aria-pressed="true"]{background:#fff;color:var(--n-900);border-color:#fff;font-weight:600}
+.scaffold :focus-visible{outline-color:#fff}
+
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ── Mobile: a reduced product, not a squeeze ───────────────────────────── */
+@media (max-width:900px){
+  .rail{display:none}
+  .app{display:block}
+  .scopes{display:flex;gap:var(--s-3);flex-wrap:wrap;padding:var(--s-4) var(--s-6) 0}
+  .scopes a{
+    display:inline-flex;align-items:center;gap:var(--s-3);height:44px;padding:0 var(--s-5);
+    border-radius:var(--r-ctl);background:var(--n-100);color:var(--n-700);
+    text-decoration:none;font-weight:500;white-space:nowrap;
+  }
+  .scopes a[aria-current="page"]{background:var(--accent);color:#fff}
+  .scopes .count{font-size:var(--t-meta);color:var(--n-600)}
+  .scopes a[aria-current="page"] .count{color:#fff;font-weight:600}
+  .viewhead{padding:var(--s-5) var(--s-6) var(--s-4);align-items:flex-start;gap:var(--s-4)}
+  .lane{margin-bottom:var(--s-6)}
+  .lanehead{height:auto;min-height:32px}
+  .lanehead .role{display:none}
+  .rows{gap:var(--s-2)}
+  .headtools{width:100%}
+  .filter{flex:1}
+  .filter input{width:100%;font-size:16px;height:40px}
+  .btn{height:40px}
+  .btn.sm{height:44px}
+  .more{height:44px}
+  .scaffold button{height:40px}
+  .skip{padding:var(--s-5) var(--s-6)}
+  .chips{padding:0 var(--s-6) var(--s-4)}
+  .board{padding:0 var(--s-6) 120px}
+  .now,.row{height:auto;min-height:48px;padding:var(--s-3) var(--s-4) var(--s-3) var(--s-5);
+    align-items:flex-start;flex-wrap:wrap;row-gap:0}
+  .now .title,.row .title{font-size:var(--t-read);white-space:normal;flex:1 1 100%;order:1;
+    line-height:1.32}
+  .now .id,.row .id{order:2;width:auto}
+  .row .dot{order:2;margin-top:0;align-self:center}
+  .now .bar{display:none}
+  .now .client,.row .client{order:3;width:auto;text-align:left}
+  .now .elapsed{width:auto}
+  .now .elapsed,.row .meta{order:4;margin-left:auto;text-align:right;min-width:0}
+  .now .second,.row .second{order:5;flex:1 1 100%;padding-left:0}
+  .now .second:empty,.row .second:empty{display:none}
+  .now.free{align-items:center}
+  .now.free .title{font-size:var(--t-body)}
+  .filter kbd{display:none}
+  .undo{left:var(--s-6);right:var(--s-6);bottom:92px}
+}
+@media (min-width:901px){ .scopes{display:none} }
+@media (max-width:360px){
+  .board,.viewhead,.chips,.scopes{padding-left:var(--s-5);padding-right:var(--s-5)}
+  .row .client,.now .client{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#board">Skip to the board</a>
+
+<div class="app">
+  <nav class="rail" aria-label="Scopes">
+    <div class="wordmark"><b>Halden</b><span>Payments integration</span></div>
+
+    <div class="railgroup">
+      <h2 class="vh">Views</h2>
+      <ul class="nav">
+        <li><a href="#board" aria-current="page"><span class="label">Who’s on what</span><span class="count" data-c="open">31</span></a></li>
+        <li><a href="#board"><span class="label">Unassigned</span><span class="count" data-c="un">4</span></a></li>
+        <li><a href="#board"><span class="label">Blocked</span><span class="count" data-c="bl">2</span></a></li>
+        <li><a href="#board"><span class="label">Shipped today</span><span class="count" data-c="sh">3</span></a></li>
+      </ul>
+    </div>
+
+    <div class="railgroup">
+      <h2>People</h2>
+      <ul class="nav" id="rail-people"></ul>
+    </div>
+
+    <div class="railgroup">
+      <h2>Clients</h2>
+      <ul class="nav" id="rail-clients"></ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <nav class="scopes" aria-label="Scopes">
+      <a href="#board" aria-current="page">Who’s on what <span class="count" data-c="open">31</span></a>
+      <a href="#board">Unassigned <span class="count" data-c="un">4</span></a>
+      <a href="#board">Blocked <span class="count" data-c="bl">2</span></a>
+      <a href="#board">Shipped today <span class="count" data-c="sh">3</span></a>
+    </nav>
+
+    <header class="viewhead">
+      <div class="titles">
+        <h1>Who’s on what</h1>
+        <p class="viewmeta" id="viewmeta"></p>
+      </div>
+      <div class="headtools">
+        <div class="filter">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <circle cx="6.2" cy="6.2" r="4.2" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M9.4 9.4 12.4 12.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          <label class="vh" for="q">Filter tasks by title, client or ID</label>
+          <input id="q" type="text" placeholder="Filter tasks" autocomplete="off">
+          <kbd aria-hidden="true">/</kbd>
+        </div>
+        <button class="btn primary" id="newtask">New task</button>
+      </div>
+    </header>
+
+    <div class="chips" id="chips" hidden></div>
+
+    <div class="board" id="board" tabindex="-1"></div>
+    <p aria-live="polite" class="vh" id="live"></p>
+  </main>
+</div>
+
+<footer class="scaffold">
+  <span class="tag">demo scaffolding · not part of the product</span>
+  <div class="sw" role="group" aria-label="Render state">
+    <button data-state="populated" aria-pressed="true">Populated</button>
+    <button data-state="firstrun" aria-pressed="false">Empty — first run</button>
+    <button data-state="noresults" aria-pressed="false">Empty — filtered to nothing</button>
+    <button data-state="loading" aria-pressed="false">Loading</button>
+    <button data-state="error" aria-pressed="false">Error</button>
+  </div>
+</footer>
+
+<script>
+"use strict";
+/* ── Domain data ────────────────────────────────────────────────────────────
+   Halden is a six-person payments-integration consultancy. Real-shaped titles,
+   uneven queue depths, one person with eleven queued, one 96-character title,
+   two people idle, one person running two threads at once. */
+const PEOPLE = [
+  {id:"priya",  name:"Priya Raghunathan",       role:"Integrations lead", init:"PR"},
+  {id:"marg",   name:"Marguerite Delacroix-Bell", role:"Solutions engineer", init:"MD"},
+  {id:"sam",    name:"Sam Ng",                  role:"Backend", init:"SN"},
+  {id:"jonas",  name:"Jonas Weber",             role:"Backend", init:"JW"},
+  {id:"dede",   name:"Dede Ayeni",              role:"QA and release", init:"DA"},
+  {id:"ilya",   name:"Ilya Petrov",             role:"Support engineer", init:"IP"}
+];
+const IDLE = {sam:"09:40", ilya:"14:05"};
+
+const T = (id,title,client,who,state,meta,extra) =>
+  ({id,title,client,who,state,meta,extra:extra||""});
+
+let TASKS = [
+  // Unassigned — the queue the lead came here to drain
+  T("HAL-441","Lumen Tutors want monthly invoicing instead of per-session charges","Lumen Tutors",null,"queued","2d est"),
+  T("HAL-442","Chargeback evidence upload times out over 5 MB","Arbor Health Partners",null,"queued","4h est"),
+  T("HAL-443","Rotate the Northwind sandbox credentials before 30 Sep","Northwind Freight",null,"queued","due Fri"),
+  T("HAL-444","Own the “why did this payment fail” doc that support keeps rewriting","Internal",null,"queued","no estimate"),
+
+  // Priya — two threads at once. The lane shows it.
+  T("HAL-418","March Adyen settlement file — 14 rows don’t reconcile","Northwind Freight","priya","now","2h 41m"),
+  T("HAL-427","Kestrel go-live call prep","Kestrel Dental Group","priya","now","18m","second thread"),
+  T("HAL-431","Decide whether the legacy /v1/charges shim survives the Bexley cutover","Bexley Foods","priya","queued","due Thu"),
+  T("HAL-402","Sign off the Q3 PCI scope questionnaire","Internal","priya","queued","due Fri"),
+
+  // Marguerite
+  T("HAL-409","SCA exemption matrix for Bexley Foods","Bexley Foods","marg","now","55m"),
+  T("HAL-433","Rewrite the onboarding runbook so support can hand over an integration without an engineer on the call","Internal","marg","queued","3d est"),
+  T("HAL-415","Map Kestrel appointment IDs onto our payment intents","Kestrel Dental Group","marg","queued","1d est"),
+  T("HAL-396","Northwind refund webhook returns 410 on replay","Northwind Freight","marg","blocked","waiting 3d","Northwind ops haven’t confirmed the replay window"),
+
+  // Sam — free. The empty now-line is the assignment target.
+  T("HAL-424","Idempotency keys on the retry worker","Internal","sam","queued","1d est"),
+  T("HAL-437","Bump the Stripe SDK to 18.2 and re-run the webhook suite","Internal","sam","queued","3h est"),
+  T("HAL-408","Retry worker no longer double-charges on a 409","Internal","sam","shipped","shipped 13:05"),
+
+  // Jonas — eleven queued behind one in-progress
+  T("HAL-421","Duplicate webhook deliveries for Northwind — 4,318 dupes since Tuesday","Northwind Freight","jonas","now","4h 05m"),
+  T("HAL-410","Backfill the settlement_batch table for August","Northwind Freight","jonas","queued","due Mon"),
+  T("HAL-413","Split the payout reconciler out of the cron monolith","Internal","jonas","queued","5d est"),
+  T("HAL-417","Kestrel refunds post twice when the card is declined first","Kestrel Dental Group","jonas","queued","2d est"),
+  T("HAL-420","Retire the /v0 webhook signer","Internal","jonas","queued","1d est"),
+  T("HAL-422","Bexley payout CSV drops the currency column","Bexley Foods","jonas","queued","4h est"),
+  T("HAL-425","Add a dead-letter queue to the webhook consumer","Internal","jonas","queued","2d est"),
+  T("HAL-426","Alert when settlement lag passes 90 minutes","Internal","jonas","queued","1d est"),
+  T("HAL-429","Arbor Health sandbox keys expire in the deploy pipeline","Arbor Health Partners","jonas","queued","3h est"),
+  T("HAL-434","Cache the FX rate lookup per batch, not per row","Internal","jonas","queued","6h est"),
+  T("HAL-436","Lumen Tutors refund flow needs a partial-amount path","Lumen Tutors","jonas","queued","2d est"),
+  T("HAL-439","Drop the unused disputes_v1 table","Internal","jonas","queued","1h est"),
+  T("HAL-411","Settlement lag alert fires on the 90-minute threshold","Internal","jonas","shipped","shipped 09:12"),
+
+  // Dede
+  T("HAL-430","Release 24.9 regression pass","Internal","dede","now","1h 12m"),
+  T("HAL-435","Smoke test for the Lumen Tutors sandbox","Lumen Tutors","dede","queued","3h est"),
+  T("HAL-419","Zero-amount invoice crashed the receipt renderer","Bexley Foods","dede","shipped","shipped 11:20"),
+
+  // Ilya — free, and holding the second blocker
+  T("HAL-428","Arbor Health can’t see their payouts tab","Arbor Health Partners","ilya","blocked","waiting 1d","Arbor Health IT haven’t re-enabled the SSO claim"),
+  T("HAL-440","Write the 3-D Secure FAQ support keeps retyping","Internal","ilya","queued","2h est"),
+  T("HAL-438","Confirm the Kestrel invoice numbering with their accountant","Kestrel Dental Group","ilya","queued","30m est")
+];
+
+const CLIENTS = ["Northwind Freight","Bexley Foods","Kestrel Dental Group","Internal","Lumen Tutors","Arbor Health Partners"];
+
+/* ── State ──────────────────────────────────────────────────────────────── */
+let view = "populated";
+let query = "";
+let expanded = {};          // laneId -> true
+let selected = null;        // task id
+let popover = null;
+let undoTimer = null, lastMove = null;
+
+const $ = (s,r) => (r||document).querySelector(s);
+const board = $("#board");
+const live = $("#live");
+const esc = (s) => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const byPerson = (pid) => TASKS.filter(t => t.who === pid);
+const visible = (list) => {
+  if (!query) return list;
+  const q = query.toLowerCase();
+  return list.filter(t => (t.title + " " + t.client + " " + t.id).toLowerCase().includes(q));
+};
+
+/* ── Rail ───────────────────────────────────────────────────────────────── */
+function renderRail(){
+  const bare = view === "firstrun";                 // a new workspace has no counts to show
+  $("#rail-people").innerHTML = PEOPLE.map(p => {
+    const open = byPerson(p.id).filter(t => t.state !== "shipped").length;
+    return `<li><a href="#board"><span class="av" aria-hidden="true">${p.init}</span>
+      <span class="label">${esc(p.name)}</span><span class="count">${bare ? "" : open}</span></a></li>`;
+  }).join("");
+  const cg = $("#rail-clients").closest(".railgroup");
+  cg.hidden = bare;
+  $("#rail-clients").innerHTML = bare ? "" : CLIENTS.map(c => {
+    const n = TASKS.filter(t => t.client === c && t.state !== "shipped").length;
+    return `<li><a href="#board"><span class="label">${esc(c)}</span><span class="count">${n}</span></a></li>`;
+  }).join("");
+  const counts = bare
+    ? {open:"", un:"", bl:"", sh:""}
+    : {open:TASKS.filter(t=>t.state!=="shipped").length,
+       un:TASKS.filter(t=>t.who===null).length,
+       bl:TASKS.filter(t=>t.state==="blocked").length,
+       sh:TASKS.filter(t=>t.state==="shipped").length};
+  document.querySelectorAll("[data-c]").forEach(el => { el.textContent = counts[el.dataset.c]; });
+}
+
+/* ── Board ──────────────────────────────────────────────────────────────── */
+function rowHTML(t){
+  const cls = ["row", t.state === "blocked" ? "blocked" : "", t.state === "shipped" ? "shipped" : ""].join(" ");
+  const meta = t.state === "blocked" ? t.meta : t.meta;
+  return `<li><button class="${cls} dense" data-id="${t.id}"
+      aria-current="${selected === t.id ? "true" : "false"}">
+    <span class="dot" aria-hidden="true"></span>
+    <span class="id">${t.id}</span>
+    <span class="title">${esc(t.title)}</span>
+    <span class="second">${t.extra ? esc(t.extra) : ""}</span>
+    <span class="client">${esc(t.client)}</span>
+    <span class="meta">${esc(meta)}</span>
+  </button></li>`;
+}
+
+function nowHTML(t){
+  return `<button class="now dense" data-id="${t.id}">
+    <span class="bar" aria-hidden="true"></span>
+    <span class="id">${t.id}</span>
+    <span class="title">${esc(t.title)}</span>
+    <span class="second">${t.extra ? esc(t.extra) : ""}</span>
+    <span class="client">${esc(t.client)}</span>
+    <span class="elapsed">${esc(t.meta)}</span>
+  </button>`;
+}
+
+function freeNowHTML(p){
+  const next = byPerson(p.id).filter(t => t.state === "queued")[0];
+  const since = IDLE[p.id] ? `Free since ${IDLE[p.id]}.` : "Nothing in progress.";
+  const tail = next ? ` Next in their queue is <b>${next.id}</b>.` : " Their queue is empty.";
+  return `<div class="now free">
+    <span class="title">${since}${tail}</span>
+    <button class="btn sm assign" data-assign-person="${p.id}">Start a task</button>
+  </div>`;
+}
+
+function laneHTML(p){
+  const all = byPerson(p.id);
+  const shown = visible(all);
+  if (query && !shown.length) return "";
+  const nows = shown.filter(t => t.state === "now");
+  const rest = shown.filter(t => t.state !== "now");
+  const queued = all.filter(t => t.state === "queued").length;
+  const blocked = all.filter(t => t.state === "blocked").length;
+  const nCount = all.filter(t => t.state === "now").length;
+
+  let tally = [];
+  tally.push(nCount === 0 ? `nothing in progress`
+    : nCount === 1 ? `1 in progress`
+    : `<span class="split">${nCount} in progress</span>`);
+  tally.push(`${queued} queued`);
+  if (blocked) tally.push(`${blocked} blocked`);
+
+  const cap = expanded[p.id] ? rest.length : 4;
+  const head = rest.slice(0, cap), hidden = rest.length - head.length;
+
+  return `<section class="lane" aria-labelledby="lane-${p.id}">
+    <div class="lanehead">
+      <span class="av lg" aria-hidden="true">${p.init}</span>
+      <h2 id="lane-${p.id}">${esc(p.name)}</h2>
+      <span class="role">${esc(p.role)}</span>
+      <span class="spacer"></span>
+      <span class="tally">${tally.join(" · ")}</span>
+    </div>
+    ${nows.length ? nows.map(nowHTML).join("") : (query ? "" : freeNowHTML(p))}
+    <ul class="rows" aria-label="${esc(p.name)} queue">${head.map(rowHTML).join("")}</ul>
+    ${hidden > 0 ? `<button class="more" data-expand="${p.id}">Show ${hidden} more queued</button>` : ""}
+    ${expanded[p.id] && rest.length > 4 ? `<button class="more" data-expand="${p.id}">Collapse</button>` : ""}
+  </section>`;
+}
+
+function unassignedLaneHTML(){
+  const all = TASKS.filter(t => t.who === null);
+  const shown = visible(all);
+  if (query && !shown.length) return "";
+  if (!all.length) return "";
+  return `<section class="lane" aria-labelledby="lane-unassigned">
+    <div class="lanehead">
+      <span class="unassigned-glyph" aria-hidden="true"></span>
+      <h2 id="lane-unassigned">Unassigned</h2>
+      <span class="role">nobody has picked these up</span>
+      <span class="spacer"></span>
+      <span class="tally">${all.length} waiting</span>
+    </div>
+    <ul class="rows" aria-label="Unassigned queue">${shown.map(rowHTML).join("")}</ul>
+  </section>`;
+}
+
+function renderMeta(){
+  if (view === "firstrun"){
+    $("#viewmeta").textContent = `${PEOPLE.length} people · nothing assigned yet`;
+    return;
+  }
+  const open = TASKS.filter(t => t.state !== "shipped").length;
+  const un = TASKS.filter(t => t.who === null).length;
+  const bl = TASKS.filter(t => t.state === "blocked").length;
+  const split = PEOPLE.filter(p => byPerson(p.id).filter(t => t.state === "now").length > 1);
+  let s = `${PEOPLE.length} people · ${open} open · ${un} unassigned · ${bl} blocked`;
+  if (split.length) s += ` · <span class="flag">${split[0].name.split(" ")[0]} is running two threads</span>`;
+  $("#viewmeta").innerHTML = s;
+}
+
+function renderChips(){
+  const c = $("#chips");
+  if (!query){ c.hidden = true; c.innerHTML = ""; return; }
+  c.hidden = false;
+  c.innerHTML = `<span class="chip">Title, client or ID contains <b>${esc(query)}</b>
+    <button type="button" id="clearq" aria-label="Clear the filter">
+      <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button></span>
+    <span style="font-size:var(--t-meta);color:var(--n-600)">Backspace clears it</span>`;
+  $("#clearq").addEventListener("click", () => { $("#q").value = ""; query = ""; render(); $("#q").focus(); });
+}
+
+function render(){
+  renderRail(); renderMeta(); renderChips();
+  board.classList.remove("blurred");
+
+  if (view === "loading"){
+    board.innerHTML = [3,2,4,2].map((n) => `
+      <section class="lane" aria-hidden="true">
+        <div class="sk head"></div>
+        <div class="sk now"></div>
+        ${Array.from({length:n}, (_,i) => `<div class="sk row" style="width:${96 - i*7}%"></div>`).join("")}
+      </section>`).join("");
+    live.textContent = "Loading the board.";
+    return;
+  }
+
+  if (view === "error"){
+    board.innerHTML = `<div class="failed" role="alert">
+      <h2>Couldn’t load the board</h2>
+      <p>The task service didn’t answer within 10 seconds. Nothing was lost — the last assignment
+         you made is saved.</p>
+      <div class="acts">
+        <button class="btn" id="retry">Try again</button>
+        <span class="stamp">Last loaded 14:52, three minutes ago</span>
+      </div>
+    </div>`;
+    $("#retry").addEventListener("click", () => setView("loading", true));
+    return;
+  }
+
+  if (view === "firstrun"){
+    board.innerHTML = `<div class="firstrun">
+      <svg width="240" height="96" viewBox="0 0 240 96" fill="none" aria-hidden="true">
+        <rect x="0" y="6" width="140" height="10" rx="5" fill="currentColor"/>
+        <rect x="0" y="30" width="240" height="14" rx="7" fill="currentColor"/>
+        <rect x="0" y="52" width="204" height="10" rx="5" fill="currentColor"/>
+        <rect x="0" y="70" width="176" height="10" rx="5" fill="currentColor"/>
+      </svg>
+      <h2>Nobody has anything on yet</h2>
+      <p>Each teammate gets a lane here. The bar at the top of a lane is what that person is
+         working on right now; everything under it is their queue.</p>
+      <div class="acts">
+        <button class="btn primary" id="firsttask">Create the first task</button>
+        <a href="#board">Import from a CSV</a>
+      </div>
+    </div>`;
+    $("#firsttask").addEventListener("click", () => setView("populated", true));
+    return;
+  }
+
+  // populated / filtered
+  const lanes = unassignedLaneHTML() + PEOPLE.map(laneHTML).join("");
+  if (!lanes.trim()){
+    board.innerHTML = `<p class="noresults">No task matches <b>${esc(query)}</b>.
+      31 open tasks are hidden by this filter.</p>`;
+  } else {
+    board.innerHTML = lanes;
+  }
+  wire();
+  if (!selected || !board.querySelector(`.row[data-id="${selected}"]`)){
+    const first = board.querySelector(".row");
+    if (first) select(first.dataset.id);
+  } else {
+    select(selected);
+  }
+}
+
+/* ── Interaction ────────────────────────────────────────────────────────── */
+function wire(){
+  board.querySelectorAll("[data-expand]").forEach(b =>
+    b.addEventListener("click", () => { const k = b.dataset.expand; expanded[k] = !expanded[k]; render(); }));
+  board.querySelectorAll(".row").forEach(b =>
+    b.addEventListener("click", () => { select(b.dataset.id); openAssign(b); }));
+  board.querySelectorAll(".now").forEach(b =>
+    b.addEventListener("click", () => select(b.dataset.id)));
+  board.querySelectorAll("[data-assign-person]").forEach(b =>
+    b.addEventListener("click", (e) => { e.stopPropagation(); openAssign(b, b.dataset.assignPerson); }));
+}
+
+function select(id){
+  selected = id;
+  board.querySelectorAll(".row").forEach(r => r.setAttribute("aria-current", r.dataset.id === id ? "true" : "false"));
+}
+
+function rowsInOrder(){ return Array.from(board.querySelectorAll(".row")); }
+
+function move(delta){
+  const rows = rowsInOrder();
+  if (!rows.length) return;
+  let i = rows.findIndex(r => r.dataset.id === selected);
+  i = i === -1 ? 0 : Math.min(rows.length - 1, Math.max(0, i + delta));
+  select(rows[i].dataset.id);
+  rows[i].scrollIntoView({block:"nearest"});
+  rows[i].focus({preventScroll:true});
+}
+
+function taskById(id){ return TASKS.find(t => t.id === id); }
+
+function openAssign(anchor, presetPerson){
+  closePop();
+  const id = presetPerson ? null : anchor.dataset.id;
+  const t = id ? taskById(id) : null;
+  const el = document.createElement("div");
+  el.className = "pop"; el.setAttribute("role","dialog");
+  el.setAttribute("aria-label", t ? `Assign ${t.id}` : "Start a task");
+
+  if (presetPerson){
+    const p = PEOPLE.find(x => x.id === presetPerson);
+    const q = byPerson(presetPerson).filter(x => x.state === "queued");
+    el.innerHTML = `<div class="pophead">Start for <b>${esc(p.name)}</b></div><ul>` +
+      q.map((x,i) => `<li><button data-start="${x.id}" data-person="${presetPerson}" ${i===0?'data-cursor="1"':""}>
+        <span class="name">${esc(x.title)}</span><span class="cap">${x.id}</span></button></li>`).join("") +
+      `</ul>`;
+  } else {
+    el.innerHTML = `<div class="pophead">Assign <b>${t.id}</b> — ${esc(t.title)}</div><ul>` +
+      PEOPLE.map((p,i) => {
+        const load = byPerson(p.id).filter(x => x.state === "queued").length;
+        const nowN = byPerson(p.id).filter(x => x.state === "now").length;
+        const who = nowN > 1 ? `${nowN} in progress` : nowN === 0 ? "free now" : `${load} queued`;
+        return `<li><button data-to="${p.id}" data-task="${t.id}" ${i===0?'data-cursor="1"':""}>
+          <span class="av" aria-hidden="true">${p.init}</span>
+          <span class="name">${esc(p.name)}</span>
+          <span class="who${nowN > 1 ? " warn" : ""}">${who}</span></button></li>`;
+      }).join("") + `</ul>`;
+  }
+
+  document.body.appendChild(el);
+  const r = anchor.getBoundingClientRect();
+  const top = Math.min(r.bottom + 4, window.innerHeight - el.offsetHeight - 56);
+  el.style.top = Math.max(8, top) + "px";
+  el.style.left = Math.min(r.left, window.innerWidth - el.offsetWidth - 12) + "px";
+  board.classList.add("blurred");           // the caret survives, in its unfocused style
+  popover = el;
+
+  el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    if (b.dataset.to) assign(b.dataset.task, b.dataset.to);
+    else start(b.dataset.start, b.dataset.person);
+  }));
+  const first = el.querySelector("button"); if (first) first.focus();
+}
+
+function closePop(){
+  if (popover){ popover.remove(); popover = null; board.classList.remove("blurred"); }
+}
+
+function assign(taskId, personId){
+  const t = taskById(taskId); if (!t) return;
+  lastMove = {taskId, from:t.who};
+  t.who = personId;
+  closePop(); render();
+  const p = PEOPLE.find(x => x.id === personId);
+  showUndo(`${t.id} moved to ${p.name}.`);
+  live.textContent = `${t.id} assigned to ${p.name}.`;
+  const el = board.querySelector(`.row[data-id="${taskId}"]`);
+  if (el){ select(taskId); el.scrollIntoView({block:"nearest"}); }
+}
+
+function start(taskId, personId){
+  const t = taskById(taskId); if (!t) return;
+  lastMove = {taskId, from:t.who, prevState:t.state};
+  t.state = "now"; t.meta = "just now"; t.who = personId;
+  closePop(); render();
+  showUndo(`${t.id} is now in progress.`);
+  live.textContent = `${t.id} started.`;
+}
+
+function showUndo(msg){
+  const old = $(".undo"); if (old) old.remove();
+  clearTimeout(undoTimer);
+  const d = document.createElement("div");
+  d.className = "undo";
+  d.innerHTML = `<span class="msg">${esc(msg)}</span><button type="button">Undo</button><kbd>U</kbd>`;
+  document.body.appendChild(d);
+  d.querySelector("button").addEventListener("click", undo);
+  undoTimer = setTimeout(() => d.remove(), 9000);
+}
+
+function undo(){
+  if (!lastMove) return;
+  const t = taskById(lastMove.taskId);
+  t.who = lastMove.from;
+  if (lastMove.prevState) { t.state = lastMove.prevState; t.meta = "1d est"; }
+  lastMove = null;
+  const d = $(".undo"); if (d) d.remove();
+  render();
+  live.textContent = `${t.id} put back.`;
+}
+
+/* ── Keyboard ───────────────────────────────────────────────────────────── */
+document.addEventListener("keydown", (e) => {
+  const typing = e.target.tagName === "INPUT";
+  if (e.key === "Escape"){ if (popover) { closePop(); } else if (typing){ e.target.blur(); } return; }
+  if (popover && (e.key === "ArrowDown" || e.key === "ArrowUp")){
+    const bs = Array.from(popover.querySelectorAll("button"));
+    let i = bs.indexOf(document.activeElement);
+    i = Math.min(bs.length - 1, Math.max(0, i + (e.key === "ArrowDown" ? 1 : -1)));
+    bs.forEach(b => b.removeAttribute("data-cursor"));
+    bs[i].focus(); e.preventDefault(); return;
+  }
+  if (typing) return;
+  if (e.key === "/"){ e.preventDefault(); $("#q").focus(); return; }
+  if (e.key === "j" || e.key === "ArrowDown"){ e.preventDefault(); move(1); return; }
+  if (e.key === "k" || e.key === "ArrowUp"){ e.preventDefault(); move(-1); return; }
+  if (e.key === "a" && selected){
+    const el = board.querySelector(`.row[data-id="${selected}"]`);
+    if (el){ e.preventDefault(); openAssign(el); } return;
+  }
+  if (e.key === "u"){ undo(); }
+});
+document.addEventListener("mousedown", (e) => {
+  if (popover && !popover.contains(e.target)) closePop();
+});
+
+$("#q").addEventListener("input", (e) => { query = e.target.value.trim(); render(); });
+$("#q").addEventListener("keydown", (e) => {
+  if (e.key === "Backspace" && !e.target.value && query){ query = ""; render(); }
+});
+$("#newtask").addEventListener("click", () => {
+  live.textContent = "New task form would open here.";
+});
+
+/* ── Demo scaffolding ───────────────────────────────────────────────────── */
+function setView(v, fromInside){
+  view = v;
+  document.querySelectorAll(".scaffold [data-state]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.state === v)));
+  if (v === "noresults"){ query = "settlement dispute"; $("#q").value = query; }
+  else if (!fromInside){ query = ""; $("#q").value = ""; }
+  render();
+  if (v === "loading" && fromInside) setTimeout(() => setView("populated", true), 1400);
+}
+document.querySelectorAll(".scaffold [data-state]").forEach(b =>
+  b.addEventListener("click", () => setView(b.dataset.state)));
+
+render();
+</script>
+</body>
+</html>

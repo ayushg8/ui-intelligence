@@ -17,6 +17,7 @@ designed. Load the one the current decision needs — these are long and you sho
 | Button labels, errors, empty states, tone | [`copy-and-voice.md`](copy-and-voice.md) |
 | Breakpoints, mobile, touch, safe areas | [`responsive-and-mobile-web.md`](responsive-and-mobile-web.md) |
 | Photos, illustration, screenshots, logos, icons in place | [`imagery-and-illustration.md`](imagery-and-illustration.md) |
+| Does it feel fast? Loading, CLS, INP, fonts, optimistic UI | [`performance-and-perceived-speed.md`](performance-and-perceived-speed.md) |
 
 Each file opens with **"if you only apply five things"** and closes with a **self-check** you can
 run against your own output. If you are short on context, read those two sections and skip the

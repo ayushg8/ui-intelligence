@@ -1,18 +1,19 @@
 # Navigation and information architecture
 
 Measured September 2026 against live production UI. Every number below was pulled with Playwright
-from computed styles, bounding boxes or sampled screenshot pixels on the real site, or read from the
-CSS custom properties the product ships. Values marked "approx." were eyeballed from a screenshot
-rather than read from the DOM. Products measured: Grafana (the running app at play.grafana.org),
-Discourse (the running forum at meta.discourse.org), Stripe Docs, Vercel Docs, Sentry Docs, Supabase
-Docs, PostHog Docs, shopify.dev/Polaris, Notion Help, MDN, Tailwind Docs, Linear Docs, GitHub,
-shadcn/ui, Excalidraw, VS Code for Web (vscode.dev), Mastodon, Bluesky, Hugging Face, YouTube mobile
-web.
+from computed styles and bounding boxes on the real site, or read from the CSS custom properties the
+product ships. Products measured: Grafana (play.grafana.org), Discourse (meta.discourse.org), Stripe
+Docs, Vercel Docs, Sentry Docs, Supabase Docs, PostHog Docs, shopify.dev/Polaris, Notion Help, MDN,
+Tailwind Docs, Linear Docs, GitHub, shadcn/ui, Excalidraw, VS Code for Web (vscode.dev), Mastodon,
+Bluesky, Hugging Face, YouTube mobile web.
 
-The reason this file exists: navigation is where generated UI reveals that nobody thought about the
-product. Spacing tells you the agent didn't look; navigation tells you the agent didn't *understand*.
-A sidebar reading Dashboard / Analytics / Reports / Users / Settings is a confession that no one
-could name what the software actually does.
+**Re-probed 2026-09** — Grafana rail, Discourse rail, Tailwind rail, PostHog rows, Supabase rows,
+Vercel rows, GitHub tabs and counters, MDN tokens, Hugging Face header, Bluesky column, Stripe
+product tabs. Two numbers were wrong; they are corrected in place and listed in the direction pass at
+the end of this file.
+
+A sidebar reading Dashboard / Analytics / Reports / Users / Settings is a confession that nobody
+could name what the software does. That is what this file is for.
 
 ---
 
@@ -57,12 +58,12 @@ could name what the software actually does.
 | **Vercel Docs** | 300 (nav 288, p-4) | **36** | 37 | inset 12, 264 wide, pad `0 8 0 10` | 6 | 14/21, gap 8 | most rows | — | fill `#f2f2f2`, text `#4d4d4d`→`#171717` |
 | **shopify.dev** | 284 (inner 276 @ x=8) | **28** | 32 | pad `4 4 4 20`, 260 wide | 4 | 14/20 | yes | **white** fill on the `#f6f6f7` rail + weight 600 | — |
 | **Stripe Docs** | **280** | 20 (text box) | **32** | x=12, nested pad-left +16 | **0** | 14/20 | **none** | `#5469d4` + weight **700**, no fill | — |
-| **PostHog Docs** | **250** | **28** | 29 | pad `4 8` | 4 | 14/20 | none | fill `rgba(30,31,35,.15)` + weight 600 | — |
+| **PostHog Docs** | ~250 (rows x=158) | **28** | 29 | pad `4 8`, rows 209–234 wide | 4 | 14/20 | none | fill `rgba(30,31,35,.15)` + weight 600 | — |
 | **Supabase Docs** | 325 | 18.6 | 28.5 | x=40 | 0 | 13/18.6, weight 450–500 | none | text `rgb(10,132,78)` | — |
 | **Notion Help** | **280** (1px `rgba(0,0,0,.08)` rule) | 36 | — | pad 8, x=16 | 0 | 16/24 | none | — | — |
 | **MDN** | 296.5 (nav 264.5); `--layout-sidebar-min: 15rem` | 32 | 40 | pad `4 0` | 0 | 16/24 | none | — | — |
 | **Linear Docs** (dark) | **280** | 36 | 36 | inset 20, 239 wide | 0 | 14/21, **weight 510** | yes | full-opacity `#f7f8f8` vs `#8a8f98` | — |
-| **Tailwind Docs** | **240** | 24 | 32 | pad-left 16 | 0 | 14/24 | none | weight 600 + color | color only |
+| **Tailwind Docs** | **288** column, **240** nav | 24 | 32 | nav x=24, 240 wide | 0 | 14/24; headers 12 upper/500 | none | weight 600 + near-black | color only |
 | **VS Code for Web** (app, dark) | **44 icon rail + 300 panel** | activity item **36×36**, pitch **44** | 44 | rail x=4, panel x=48 | 8 on the rail's outer corners | **13/18.2** | icon-only rail | left edge bar + full-opacity icon | — |
 | **Mastodon** (app) | **285, on the *right*** | **48** | 48 | pad `12 12 12 16`, radius 4 | 4 | **16/18** | yes | `aria-current="page"` + weight | — |
 | **Bluesky** (app) | **245**, pad 16 | 28.5 (logo row) | — | rail ends exactly where the 600px feed column begins | 999 on buttons | 16 | yes | — | — |
@@ -376,6 +377,15 @@ Never use a **border** as the active state. A 1px border added on activation cha
 and shoves its neighbors by a pixel unless you compensate, and it reads as "disabled input" rather
 than "you are here." Not one of the twelve measured products does it.
 
+**One mandatory exception — and it is the case where following the rule literally produces the worst
+interface in this file.** Under Windows High Contrast / `forced-colors: active`, the OS repaints
+backgrounds and text with system colors: your low-contrast fill is gone, your accent text is gone,
+and a weight bump was never enough on its own. Both of your two signals vanish, and the active row
+becomes invisible to exactly the users who cannot afford that. Ship a
+`@media (forced-colors: active)` block that adds the border this section otherwise bans, using
+`Highlight`/`HighlightText`, and reserve its space at rest with `border: 1px solid transparent` so
+nothing shifts when the mode turns on.
+
 ### Hover state
 
 Measured, all three products, all three identical in the thing that matters:
@@ -393,6 +403,14 @@ the fill appears on the same frame as the cursor. This is deliberate: when you s
 **Contradicting the common advice:** "always add a smooth 200ms transition on hover" is wrong for
 dense navigation lists. It is right for a single large button. The dividing line is *how many of
 these will be under the cursor in the next second*. One → animate. Thirty → don't.
+
+**Scope, and it inverts:** this rule covers rows that only change *appearance*. Any hover that
+**opens a surface** — a flyout submenu, a mega-menu, a preview card — needs the opposite treatment.
+Take an e-commerce category bar of eight mega-menus and apply "0ms, instant": a cursor travelling
+from `Women` to `Sale` detonates six full-width panels on the way, and the page strobes. Opening on
+hover requires **120–300ms of open intent, a ~200ms close delay, and a safe triangle** that keeps the
+open panel alive while the cursor moves diagonally into it. Instant is for repaint; delayed is for
+disclosure. A nav that does both must use both.
 
 ### Sections and headers
 
@@ -427,8 +445,10 @@ sections** when the product has more features than the user has vocabulary. `Det
   when the row is itself a destination *and* has children (Grafana, Vercel, Sentry) — clicking the
   label navigates, clicking the chevron expands. Those are two different components; do not use one
   glyph position to mean both things in one product.
-- **Collapse everything except the ancestors of the current page on load.** Then the rail is a map of
-  where you are, not a wall.
+- **Collapse everything except the ancestors of the current page on load — but only when the expanded
+  tree is taller than the rail.** A 14-page docs site whose whole tree fits in 900px should ship it
+  open: collapsing hides ten siblings to save no scrolling at all, and sibling visibility is the only
+  reason the rail exists. Measure the expanded height against the viewport, then decide.
 
 ### Workspace and project switchers
 
@@ -464,10 +484,12 @@ not collapse to icons; the 44px rail is the permanent state and the 300px panel 
 opens and closes. That is a better model than a rail that shape-shifts: the mode switcher never
 moves, so muscle memory survives.
 
-If you do collapse a labeled rail to icons, keep the labels: an icon rail of approx. 52px with a small label under each
-icon (this is what Sentry's actual app ships, read off a product screenshot in their docs — `Issues`, `Explore`, `Dashboards`, `Insights`,
-`Settings`, five items, help pinned at the bottom) is dramatically more usable than 48px of naked
-glyphs with tooltips. Persist the collapsed state per user, not per session.
+If you do collapse a labeled rail to icons, keep the labels. An icon-plus-label rail (Sentry's app
+ships `Issues`, `Explore`, `Dashboards`, `Insights`, `Settings` this way, help pinned at the bottom)
+is far more usable than naked glyphs with tooltips, and the label is what lets you exceed six items.
+Budget ~52–64px of width for it rather than the 44 a glyph-only rail needs — that number is a
+consequence of your longest label at 11–12px, so measure it. Persist the collapsed state per user,
+not per session.
 
 ---
 
@@ -529,9 +551,13 @@ tabs look like tabs and no one has to guess which one destroys their filter.
   matter where you see it.
 - Tabs go **above** the content they control and are **left-aligned**, not centered. Centered tabs
   make the eye re-find the start of the list every time the labels change length.
-- **Never scroll tabs horizontally on desktop.** More than ~7 facets means it is sub-navigation, not
-  tabs. Horizontal scrolling tabs are acceptable on mobile only, and only with a visible cut-off
-  edge so the user knows more exists.
+- **Never scroll tabs horizontally on desktop — unless the user authored the tabs.** More than ~7
+  *product-defined* facets means it is sub-navigation, not tabs. But saved views (Linear, Notion,
+  Airtable) are user-created and unbounded: demoting them into a rail moves the thing the user made
+  out of the place they made it, and capping the count means refusing to save a view. There the
+  shipped answer is a scrolling strip with a pinned `+` and an overflow menu listing every view.
+  **The test is authorship: if you wrote the list, cap it; if the user writes it, let it scroll.**
+  On mobile, scroll either kind, always with a visible cut-off edge.
 - Put the count **in the tab**, as a neutral pill, not as a red dot. GitHub: 12px / weight 500,
   radius 24, pad `0 6`, bg `rgba(129,139,152,.12)`. The accent is reserved for the active indicator.
 - A segmented control needs **2–4 options, all short, all mutually exclusive, all instantly
@@ -616,6 +642,22 @@ Six rules fall straight out of those:
 active filter; the sort; the page or cursor; the selected row when the page has a detail pane; the
 time range; the search query. If your app has a "copy link" button that produces a URL that does not
 restore the screen the user is looking at, the button is lying.
+
+**Two products where following that checklist literally makes the product worse, and the scopes that
+fix it:**
+
+- **A patient chart, a candidate pipeline, a payroll run, a legal matter.**
+  `?patient=MRN-4482913&filter=dx%3Ahiv` restores the screen perfectly and also writes a diagnosis
+  into the load balancer's access log, the shared-workstation history dropdown, the Slack unfurl
+  preview, and the `Referer` header sent to every third-party script on the page. **Scope: the path
+  carries an opaque id and nothing else; no attribute of a person ever appears in a query string.**
+  Filters over sensitive attributes become a server-side saved view (`/views/xk3f`) whose id is
+  meaningless outside an authenticated session, and "copy link" copies the view id.
+- **A multi-step flow — checkout, onboarding, a tax return, a KYC form.** Give step 4 its own URL and
+  a pasted link lands a cold user on a form whose validity depends on steps 1–3; it renders empty and
+  cannot submit. **Scope: steps get `push`ed history entries so Back works, but a step URL loaded
+  cold redirects to the furthest *valid* step.** The URL is a bookmark into a session, not a
+  standalone address.
 
 ---
 
@@ -800,9 +842,8 @@ Two mechanical facts to design around if you do ship one:
 - **57–62px is the measured height**, not 44 and not 80, and the label is **11px** — smaller than any
   other text in the product. A bottom bar with 14px labels and 72px height is a phone-app pastiche.
 
-The thumb-reach argument for bottom placement is real but is usually cited loosely. Steven Hoober's
-2013 observational study of 1,333 people is the source everyone quotes for the ~49% one-handed
-figure; treat it as directional and a decade old, not as a measurement of your users.
+On thumb reach: the ~49% one-handed figure everyone cites traces to Hoober's 2013 observation of
+1,333 people. Directional, and a decade old. Do not size a control from it.
 
 **What to ship on mobile web, with measurements:**
 
@@ -930,6 +971,10 @@ the model ran out of meaningful glyphs.
 **Why it fails:** a list where every row looks identical has no hierarchy, so the eye has nothing to
 land on and the user reads all eight labels every single time.
 
+**The 2026 form of this is not hand-drawn, it is a copied block** — see "The 2026 tells" below. The
+generic-square-icon version still appears; more often the icons are now real Lucide glyphs on a
+homogeneous list, which is the same failure with better art.
+
 **The corrective procedure:**
 
 1. **Delete the icons** unless the rows are genuinely different kinds of objects (Decision 3). Four
@@ -972,8 +1017,6 @@ of horizontal chrome wrapped around 40% of a screen of content. Plus a breadcrum
 
 **The corrective procedure:** apply Decision 1 honestly. Five destinations means top bar only. Two
 levels of hierarchy means no breadcrumb. Take the vertical space back and give it to the content.
-The most confident-looking navigation in this entire measured set — Excalidraw's — is a 36px button,
-a 542×44 floating toolbar and a 36px footer strip.
 
 ---
 
@@ -1011,80 +1054,222 @@ gives no signal about blast radius — the whole point of the page.
 
 ---
 
+## The 2026 tells: what current generators actually emit
+
+Tells 1–5 are shape failures. These are fingerprints — specific, current, and checkable. They are not
+2023's tells. An agent in 2026 rarely emits bad geometry, because the block it copies has good
+geometry. It emits somebody else's product.
+
+**Measured at `ui.shadcn.com/view/new-york-v4/sidebar-07`, 1440×1000, 2026-09** — the sidebar block
+that v0, Lovable, Bolt and Claude reach for by default:
+
+| Element | Measured | Verdict against this file |
+|---|---|---|
+| Rail | **256** wide | fine — inside the 240–320 band |
+| Top-level row | **32** high, x=8, **239** wide, radius **8**, 14px | height and inset fine; radius 8 sits above the measured 4–6 band |
+| Sub-row | **28** high, x=33, 190 wide | fine; constant type, x-offset only |
+| Header row | `Acme Inc` / `Enterprise`, **48** high | the workspace switcher, unrenamed |
+| Footer row | `shadcn` / `m@example.com`, **48** high | fixture identity |
+| Group labels | `Platform`, `Projects` | neither is a noun in anyone's product |
+| Rows | `Playground`, `History`, `Starred`, `Settings`, `Models`, `Documentation`, `Settings` | **`Settings` appears twice**, at two depths |
+| Projects | `Design Engineering`, `Sales & Marketing`, `Travel`, `More` | fixtures |
+| Icons | on **every** top-level row | homogeneous list — violates "when a sidebar icon earns its place" |
+| Breadcrumb | `Build Your Application` / `Data Fetching` | a breadcrumb of the docs that describe the block |
+
+Six tells, each with a check you can run:
+
+1. **Fixture identity in the shell.** `Acme Inc`, `Enterprise`, `shadcn`, `m@example.com`,
+   `Design Engineering`, `Sales & Marketing`, `Travel`.
+   → `grep -rniE "acme inc|m@example\.com|design engineering|sales & marketing" src/`
+2. **The block's own breadcrumb.** `Build Your Application` / `Data Fetching` is copy from shadcn's
+   demo page, not from any product.
+   → `grep -rniE "build your application|data fetching" src/`
+3. **`Settings` twice.** The block ships it as a child of `Playground` *and* as a top-level row — two
+   canonical parents for one destination, which is Tell 3 shipped as a default.
+   → list every nav label; the count of exact duplicates must be zero.
+4. **Icon-collapse on a rail with no reason to collapse.** `collapsible="icon"` on a five-item nav
+   beside a page of cards. Collapsibility is earned by width-hungry content — tables, canvases,
+   diffs, code (Decision 3). The default earns it by nobody deleting a prop.
+   → `grep -rn 'collapsible="icon"' src/`, then look at what the content actually is.
+5. **The sparkle destination.** `✨ AI Assistant` as a top-level nav row that opens a chat drawer.
+   Note the boundary carefully: Grafana ships a real `AI` area in its rail (measured 2026-09,
+   between `Drilldown` and `Alerts & IRM`), and that is legitimate — it is a product area with its
+   own subtree and its own objects. A row that opens a *chat panel* is not a destination; it is an
+   input method, and it belongs in the palette and the top-right cluster beside `?` and the account.
+   → screenshot the rail: is there a row whose only behavior is "opens a text box"?
+6. **Glass over nothing.** `backdrop-blur` on a rail whose background is a flat color, so the blur
+   composites against a solid and buys a paint layer for no visual effect. Blur earns its place over
+   content that scrolls under it — Supabase's 50px header, YouTube's translucent bottom bar.
+   → `grep -rn "backdrop-blur" src/` and check what is behind each hit.
+
+**The generalizable version:** the 2026 tell is not that the geometry is wrong. shadcn's geometry
+falls inside nearly every band in this file. The tell is that **the shell is right and the product is
+missing** — correct rail width, correct row height, correct radius, and not one string that could
+only belong to this software. Grade the strings before the pixels.
+
+---
+
 ## Self-check
 
-Run this against your own output before calling navigation done.
+Every item below is checkable in under a minute by one of three moves: **grep** the source,
+**look** at a screenshot, or **drive** the running app. If you cannot run the check, the item is not
+done.
+**IA** — grep the nav config (the array or object your rail renders from)
 
-**IA**
+- [ ] No exact-duplicate labels in the nav config. → list every `label`/`title`; duplicate count is 0.
+- [ ] `grep -rniE "acme inc|m@example\.com|design engineering|sales & marketing|build your application|data fetching|lorem ipsum|john doe"` over the app returns nothing.
+- [ ] `grep -rniE "\b(dashboard|analytics|overview|reports?|management)\b"` over the nav config: every hit names an artifact the user can create or open. If it names a category of thinking, delete it.
+- [ ] Top-level item count is ≤7, **or** 8–12 with every item carrying a `children`/`items` array. → count the array.
+- [ ] `Settings` and `Help` are not in the top-level array. → grep the nav config; they belong to the corner cluster's config instead.
+- [ ] The nav config's first group has no `label` field and holds 2–4 items. → read the config.
+- [ ] Every item's `href` is unique across the whole config. → sort the hrefs, `uniq -d` is empty.
 
-- [ ] Every top-level item is a noun from this product's domain or a verb from the user's workday. No
-      `Dashboard`, `Analytics`, `Overview` or `Management` survived unless it names a real artifact.
-- [ ] ≤7 top-level items flat, or 8–12 where every one is a collapsible container.
-- [ ] `Settings` and `Help` are in a corner, not competing with product nouns.
-- [ ] Sections exist, and the top 2–4 daily-use rows sit above the first section header.
-- [ ] Nothing is reachable under two different canonical parents.
+**Shell** — one full-page screenshot at 1440×1000, plus computed styles
 
-**Shell**
+- [ ] Count destinations in the nav config. If ≤4 and the DOM contains a persistent `<aside>`/rail, the shell is wrong (Decision 1, Q2).
+- [ ] Measure the rail in the screenshot: 240–320px, or 44–52 if every row is icon-only.
+- [ ] Measure three adjacent rows: height 28–39, and row *pitch* equals row *height* (rows touch).
+- [ ] Row `border-radius` is 0–6, or 999 on every row. → computed style on one row.
+- [ ] Row `font-size` is 14px (16 only if the rail holds fewer than 8 long labels). → computed style.
+- [ ] The clickable box spans the full row width. → hover 4px inside the rail edge, level with a label; the row must highlight.
+- [ ] If the main content is a reading stream, measure its column: ~600px fixed, unchanged at 1440 and 2560.
+- [ ] Icon count in the rail is 0 or equal to the row count. → count `<svg>` inside rail rows. No two rows share a glyph.
+- [ ] **Active row, squint test:** blur the screenshot to 8px; the active row is still findable. Then count the visual differences between the active row and its neighbour: exactly 2, and neither is a border.
+- [ ] `@media (forced-colors: active)` exists for the active row. → `grep -rn "forced-colors" src/`. Load the page with forced colors on; the active row is still identifiable.
+- [ ] Hover CSS on a rail row contains no `transform`, `translate`, `scale`, `box-shadow` or `border`. → `grep -rnE "hover:(translate|scale|shadow|border)" src/` finds nothing in nav components.
+- [ ] Row hover `transition-duration` is ≤120ms or 0s. → computed style.
+- [ ] Any hover that *opens a panel* has ≥120ms of open intent. → sweep the cursor fast across a flyout trigger; nothing opens in passing.
+- [ ] Nested rows: identical computed `height` and `font-size` at depths 1, 2 and 3; only `padding-left`/x differs; no depth 4.
+- [ ] Load a deep page cold: only ancestors of the current page are expanded — **unless** the fully expanded tree is shorter than the rail, in which case everything is open.
+- [ ] The bottom-most rail element is a preference control (theme, collapse, locale), not a destination. → screenshot.
 
-- [ ] The shell choice was made from the product's shape (Decision 1), not from a template.
-- [ ] Rail width 240–320 (default 280), or 44–52 if icon-only; rows 28–39px tall; pitch = height;
-      radius 0–6 (or a consistent pill language); 14px type.
-- [ ] If the main content is a reading stream, its column is fixed (~600px) and the shell does not
-      stretch it on a wide monitor.
-- [ ] Icons are either on every row for a heterogeneous list, or on none. No generic-shape filler
-      glyphs.
-- [ ] Active state = exactly two signals, and neither is a border.
-- [ ] Hover changes fill and/or text color only. No transform, no border, no shadow. Transition ≤120ms
-      or none.
-- [ ] Row hit target spans the full row width, not just the label.
-- [ ] Nested rows keep the same height and font size; depth is x-offset only; ≤3 levels.
-- [ ] Only the ancestors of the current page are expanded on load.
-- [ ] The bottom of the rail carries shell preferences, not navigation.
+**URLs and history** — drive the running app
 
-**URLs and history**
+- [ ] Click every top-level item; each produces one new path segment matching its label. → compare address bar to label.
+- [ ] Open a detail row, apply two filters, sort, go to page 2, copy the URL, open it in a private window. → the screen is identical.
+- [ ] Nothing in that query string names a person or an attribute of one. → read it out loud; if any of it would be a problem in an access log, it is a problem.
+- [ ] Type 10 characters into search, press Back once. → you land on the pre-search screen, not on keystroke 9.
+- [ ] Open a detail pane, press Back. → the pane closes, the list is behind it, scrolled where you left it.
+- [ ] Load a step-4 wizard URL cold. → it redirects to the furthest valid step; it does not render empty.
+- [ ] Load `/`, then press Back from wherever it redirects. → you leave the app; you do not bounce.
+- [ ] Log out, open a deep link, log in. → you land on the deep link. `grep -rn "return_to\|returnTo\|redirect_uri\|[?&]next=" src/` shows it is implemented.
 
-- [ ] Every destination has its own URL; every top-level item is one guessable path segment.
-- [ ] Path = identity (stable id, optional human slug). Query = filters, sort, tab, page, time range,
-      selection.
-- [ ] Reloading any screen restores it exactly. "Copy link" produces a URL that reproduces the view.
-- [ ] Detail panes and step-modals `push`; typing and filter toggles `replace` (search debounced
-      ≥300ms).
-- [ ] Back restores scroll position and list state. No redirect loop at `/`.
-- [ ] Login preserves the intended destination (`?return_to=…`).
+**Components** — screenshot plus grep
 
-**Components**
-
-- [ ] Tabs, sub-nav, segmented controls and filter chips are visually distinct and each is used for
-      exactly one job.
-- [ ] Counts are neutral pills on the destination; red is reserved for something the user must act
-      on; no badge exists that the user cannot clear.
-- [ ] Breadcrumbs appear only at depth ≥3 and only where the sidebar does not already show the path.
-- [ ] If there is a command palette: its shortcut is a visible chip, it works with an empty query, it
-      groups navigation / search / actions separately, selected row is a 4–5% fill, focus returns on
-      close.
+- [ ] Screenshot a screen carrying two of {tabs, sub-nav, segmented control, filter chips} and cover the labels. → you can still tell which is which from shape alone.
+- [ ] Sample the pixel of every count badge: neutral grey. If any is red, the thing it counts must be actionable *now*.
+- [ ] Click through each badge. → the count reaches 0. If it cannot, delete the badge.
+- [ ] Counts above 99 are abbreviated (`1k`, `2.3k`). → grep the formatter.
+- [ ] Screenshot one depth-2 page and one depth-3 page. → the breadcrumb appears only on the second, and only if the rail does not already show the path.
+- [ ] The palette shortcut is a visible chip in the search field before anything is opened. → screenshot.
+- [ ] Press the shortcut and screenshot before typing. → recents plus top destinations, not an empty state.
+- [ ] Palette group headings cover more than one kind (navigation / search / actions). → same screenshot.
+- [ ] Palette selected row is a 4–5% fill, not a border or outline. → computed style.
+- [ ] Press Escape in the palette, then read `document.activeElement`. → it is the trigger, not `<body>`.
 
 **Settings**
 
-- [ ] Top level splits Account / Workspace / Project, and the page states whose settings these are.
-- [ ] `/settings` is a directory with one-line descriptions, not a redirect to the first tab.
-- [ ] Every section is deep-linkable. Destructive actions are last, separated, and confirm by typing.
-- [ ] Save behavior is one consistent model across every settings page.
-- [ ] A search field is the first element of the settings surface, the scope (Account/Workspace) is a
-      visible control on every settings screen, and setting labels are namespaced (`Editor: Font Size`).
-- [ ] Settings whose behavior depends on another setting name it and link to it in their description.
+- [ ] Load `/settings`. → it renders a list of sections with one-line descriptions; it does not 302.
+- [ ] Screenshot the top 100px of three settings pages. → each names its scope (`Organization: …`, or `User`/`Workspace` tabs).
+- [ ] Load the settings surface and press Tab once. → focus is in a search input.
+- [ ] Setting labels are namespaced. → grep the settings config for `:` in labels; the ratio is near 1.
+- [ ] Count setting rows vs. count of description nodes. → they match, and a row measures ≈98–125px, not 40.
+- [ ] Click each section and watch the address bar. → every section has its own URL.
+- [ ] Screenshot the bottom of a destructive page, then press delete with the confirm field empty. → the block is last, separated, and the button stays disabled.
+- [ ] `grep -rn "autoSave\|onBlur.*save\|isDirty" src/settings/`. → one pattern across the directory, not two.
+- [ ] Grep setting descriptions for backticked setting names. → every setting that depends on another names it.
 
-**Mobile at 390**
+**Mobile at 390×844** — screenshot the drawer open and closed
 
-- [ ] Top bar 48–64px. Drawer at ~75% width with the page visible behind, or a full-width takeover
-      for a short flat list.
-- [ ] Search field is above the nav list in the sheet.
-- [ ] Rows 40–44px. Closes via `×`, veil tap, and back button.
-- [ ] Opens with the current section expanded and scrolled into view.
-- [ ] A bottom tab bar exists only if the product is 3–5 peer feeds/modes; if so it is 57–62px with
-      11–12px labels, translucent, `env(safe-area-inset-bottom)` padded, and sized with `dvh`/`svh`.
-      Otherwise there is no fixed bottom bar at all.
+- [ ] Top bar measures 48–64px.
+- [ ] Drawer measures ~290px of 390 with the page visible beside it, or is a full-width takeover for a flat list of ≤8.
+- [ ] The first element inside the sheet is a search field. → screenshot.
+- [ ] Sheet rows measure 40–44px.
+- [ ] Close via `×`, via veil tap, and via the back button. → all three work.
+- [ ] Open the sheet from a deep page. → the current section is expanded and scrolled into view.
+- [ ] If a fixed bottom bar exists: 3–5 items, 57–62px tall, labels 11–12px, and `grep -rn "safe-area-inset-bottom" src/` finds it. If the nav is a hierarchy, there is no bottom bar at all.
+- [ ] `grep -rn "100vh" src/` finds nothing in shell layout; it is `100dvh` or `100svh`.
 
 **Finally**
 
-- [ ] The three-question test passes on the deepest screen in the product, arrived at cold from a
-      pasted link.
+- [ ] Paste a link to the deepest screen in the product into a private window. From that one screenshot, answer: where am I, where can I go, how do I get back. Three answers, no scrolling.
+
+---
+
+## Direction pass (2026-09)
+
+**What was re-measured.** Eleven claims were re-probed live with Playwright at 1440×1000. Nine came
+back exact:
+
+| Claim | Re-probed against | Result |
+|---|---|---|
+| Grafana rail 320, rows 32, pitch 32, x=8 w=280, r6, 14/22, `transition: 0s` | play.grafana.org | exact, including the 0s duration and the depth-2 step to x=40 |
+| Discourse rail 272, rows 36.8, pitch 38.8, x=8 w=255, radius 999, 16px, header 52 | meta.discourse.org | exact |
+| PostHog rows 28, pitch 29, radius 4, 14/20, active `rgba(30,31,35,.15)` + w600, no icons | posthog.com/docs | exact |
+| Supabase rows 18.6, pitch 28.5, x=40, 13/18.57, w500, active `rgb(10,132,78)` | supabase.com/docs | exact |
+| Vercel rows 36, x=12, w=264, radius 6, 14/21 | vercel.com/docs | exact |
+| GitHub 7 repo tabs h30, 14px, pad `0 8`, r6, active w600; counters h20, 12px/500, radius 24, `rgba(129,139,152,.12)` | github.com/vercel/next.js | exact — `Issues 1k`, `Pull requests 2.3k`, `Security and quality 61` all still live |
+| MDN `--breadcrumbs-bar-height: 2rem`, `--sticky-header-height: calc(4.125rem + 2rem)`, `--layout-sidebar-min: 15rem`, bar h32/16px | developer.mozilla.org | exact; the `/Web/CSS/display` → `/Web/CSS/Reference/Properties/display` 301 still resolves |
+| Hugging Face header 65, six 16px destinations at `padding: 2px 8px`, no sidebar | huggingface.co | exact; `Buckets` now carries a `new` flag |
+| Bluesky 600px feed column at x=420 | bsky.app | exact |
+| Stripe product tabs h34, 14px, accent `#5469d4` | docs.stripe.com | exact |
+
+**Two numbers were wrong and are corrected in the tables above:**
+
+1. **Tailwind Docs was listed as a 240px rail with `pad-left 16`.** Measured: a **288px** sticky
+   column at x=0 containing a **240px** nav at **x=24**. Row height 24 and pitch 32 were right;
+   section headers are 12px uppercase weight 500. The rail is wider than claimed and the inset is 24.
+2. **PostHog Docs was listed as a flat 250px rail with `pad 4 8`.** Measured: doc rows are
+   **209–234px wide starting at x=158** — the docs nav is a second column beside a left product
+   strip, not the leftmost element on the page. Row metrics were right; the geometry claim was not.
+
+**Three rules were tested adversarially and now carry scopes.** Each was previously stated without
+limits, which is how an agent follows a rule off a cliff:
+
+1. **"Nothing moves on hover, and hover is instant."** Adversarial product: an e-commerce category
+   bar of eight mega-menus. At 0ms, a cursor travelling from `Women` to `Sale` opens six full-width
+   panels in passing and the page strobes. Scope added under **Hover state**: instant is for
+   *repaint*; anything that *opens a surface* needs 120–300ms of open intent, a ~200ms close delay,
+   and a safe triangle.
+2. **"The active item gets two signals, and never a border."** Adversarial product: any app used
+   under Windows High Contrast. `forced-colors: active` repaints backgrounds and text with system
+   colors, so a low-contrast fill and an accent color both vanish and the active row becomes
+   unfindable for the users least able to absorb it. Scope added under **Active state**: a mandatory
+   `@media (forced-colors: active)` border with its space reserved at rest.
+3. **"Put every piece of view state in the URL."** Adversarial products: a patient chart, and a
+   multi-step application form. The first writes a diagnosis into access logs, shared-workstation
+   history, Slack unfurls and `Referer` headers; the second produces pasted links that render an
+   unsubmittable step 4. Scope added under **Decision 7**: opaque id in the path only, no personal
+   attribute in a query string, saved-view ids for sensitive filters, and cold-loaded step URLs that
+   redirect to the furthest valid step.
+
+Two further limits came out of the same pass: **horizontal tab scrolling is correct when the user
+authored the tabs** — saved views in Linear, Notion and Airtable cannot be demoted into a rail
+without moving the thing the user made out of the place they made it — and **collapse-on-load is
+wrong when the expanded tree already fits the rail**, where it hides siblings to save no scrolling.
+
+**Anti-patterns were brought current.** The old Tell 2 described a 2023 failure: generic square
+icons, no sections, a faint active state. The 2026 failure has better art and worse honesty — a
+copied shadcn `sidebar-07` block whose geometry sits inside nearly every band in this file and whose
+every string belongs to somebody else. A new section, *The 2026 tells*, measures that block (256px
+rail, 32px rows, radius 8, `Acme Inc` / `Enterprise`, groups `Platform` / `Projects`, `Settings`
+shipped twice at two depths, `Build Your Application / Data Fetching` as the breadcrumb) and gives
+six greppable checks: fixture identity, the block's own breadcrumb copy, duplicate labels,
+`collapsible="icon"` on a rail with nothing to collapse, the sparkle row whose only behavior is
+opening a text box, and `backdrop-blur` composited against a flat color. The boundary is drawn
+against a real counter-example rather than a slogan: Grafana ships a genuine `AI` product area in its
+rail — measured this pass, between `Drilldown` and `Alerts & IRM` — so an AI entry in the nav is not
+itself the tell.
+
+**The self-check was rewritten to be runnable.** Every item now resolves to a grep, a screenshot
+measurement, or a scripted interaction. Items that could only be judged by taste — "the shell choice
+was made from the product's shape," "every top-level item is a noun from this product's domain,"
+"nothing is reachable under two different canonical parents" — were replaced by counts and greps that
+produce the same verdict: count destinations and check for an `<aside>`; grep the nav config for the
+five furniture words and require each hit to name a real artifact; sort the hrefs and run `uniq -d`.
+
+**Cut for carrying no decision:** the "spacing tells you the agent didn't look" framing in the
+preamble; the "values marked approx." caveat and the one measurement that depended on it (an
+icon-rail width read off a product screenshot, now stated as a width budget to measure rather than a
+number to copy); the loose thumb-reach paragraph, compressed to the citation and its expiry; and the
+Excalidraw reprise at the end of Tell 4, which restated Decision 1.

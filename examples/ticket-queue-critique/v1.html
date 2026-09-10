@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ticket Queue — Beacon Support</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#F9FAFB;color:#111827;-webkit-font-smoothing:antialiased}
+button,input,select{font-family:inherit;outline:none}
+a{text-decoration:none;color:inherit}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:256px;background:#fff;border-right:1px solid #E5E7EB;padding:24px 16px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:32px;padding:0 8px}
+.brand-mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px}
+.brand-name{font-size:16px;font-weight:600}
+.nav-label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#9CA3AF;padding:0 8px;margin-bottom:8px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;font-size:14px;color:#4B5563;margin-bottom:4px}
+.nav-item.active{background:#EEF2FF;color:#4F46E5;font-weight:500}
+.nav-item .count{margin-left:auto;font-size:12px;color:#9CA3AF}
+.nav-group{margin-bottom:28px}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.5;flex-shrink:0}
+.main{flex:1;padding:32px 40px;min-width:0}
+.page-head{margin-bottom:32px}
+.page-title{font-size:30px;font-weight:600;letter-spacing:-.02em;margin-bottom:8px}
+.page-sub{font-size:16px;color:#6B7280}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:32px}
+.kpi{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.kpi-label{font-size:14px;color:#6B7280;margin-bottom:8px}
+.kpi-value{font-size:30px;font-weight:600;letter-spacing:-.02em;margin-bottom:8px}
+.kpi-delta{font-size:14px;font-weight:500}
+.up{color:#059669}.down{color:#DC2626}
+.toolbar{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px;margin-bottom:24px;display:flex;gap:12px;align-items:center;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.search{flex:1;height:40px;border:1px solid #D1D5DB;border-radius:8px;padding:0 12px;font-size:14px;color:#111827}
+.search::placeholder{color:#9CA3AF}
+select{height:40px;border:1px solid #D1D5DB;border-radius:8px;padding:0 12px;font-size:14px;background:#fff;color:#374151}
+.btn{height:40px;padding:0 16px;border:none;border-radius:8px;background:#4F46E5;color:#fff;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
+.panel{background:#fff;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);overflow:hidden}
+.panel-head{padding:20px 24px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-size:18px;font-weight:600}
+.panel-meta{font-size:14px;color:#6B7280}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;font-weight:500;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;padding:12px 24px;border-bottom:1px solid #E5E7EB}
+td{padding:16px 24px;border-bottom:1px solid #F3F4F6;font-size:14px;color:#374151;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.subject{font-weight:500;color:#111827;margin-bottom:4px}
+.preview{font-size:13px;color:#9CA3AF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px}
+.who{display:flex;align-items:center;gap:10px}
+.av{width:32px;height:32px;border-radius:50%;background:#E0E7FF;color:#4F46E5;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font-size:12px;font-weight:500}
+.p-open{background:#DBEAFE;color:#1D4ED8}
+.p-pending{background:#FEF3C7;color:#B45309}
+.p-esc{background:#FEE2E2;color:#B91C1C}
+.p-solved{background:#D1FAE5;color:#047857}
+.pr-urgent{background:#FEE2E2;color:#B91C1C}
+.pr-high{background:#FFEDD5;color:#C2410C}
+.pr-normal{background:#F3F4F6;color:#4B5563}
+.pr-low{background:#F3F4F6;color:#9CA3AF}
+.pager{padding:16px 24px;display:flex;align-items:center;justify-content:space-between;font-size:14px;color:#6B7280}
+.pbtn{height:32px;padding:0 12px;border:1px solid #D1D5DB;border-radius:8px;background:#fff;font-size:14px;color:#374151;margin-left:8px}
+@media (max-width:900px){.sidebar{display:none}.main{padding:20px 16px}.kpis{grid-template-columns:repeat(2,1fr);gap:16px}.toolbar{flex-wrap:wrap}.search{flex:1 1 100%}.panel{overflow-x:auto}}
+</style></head><body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">B</div><div class="brand-name">Beacon</div></div>
+  <div class="nav-group">
+    <div class="nav-label">Workspace</div>
+    <a class="nav-item active"><span class="dot"></span>All tickets<span class="count">312</span></a>
+    <a class="nav-item"><span class="dot"></span>Assigned to me<span class="count">18</span></a>
+    <a class="nav-item"><span class="dot"></span>Unassigned<span class="count">7</span></a>
+    <a class="nav-item"><span class="dot"></span>Escalated<span class="count">4</span></a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Views</div>
+    <a class="nav-item"><span class="dot"></span>Breaching SLA<span class="count">9</span></a>
+    <a class="nav-item"><span class="dot"></span>Awaiting customer<span class="count">41</span></a>
+    <a class="nav-item"><span class="dot"></span>Solved today<span class="count">63</span></a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Account</div>
+    <a class="nav-item"><span class="dot"></span>Team</a>
+    <a class="nav-item"><span class="dot"></span>Macros</a>
+    <a class="nav-item"><span class="dot"></span>Settings</a>
+  </div>
+</aside>
+<main class="main">
+  <div class="page-head">
+    <h1 class="page-title">Ticket Queue</h1>
+    <p class="page-sub">Manage and resolve customer tickets efficiently.</p>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-label">Open tickets</div><div class="kpi-value">312</div><div class="kpi-delta up">+8.2% vs last week</div></div>
+    <div class="kpi"><div class="kpi-label">First response</div><div class="kpi-value">1h 42m</div><div class="kpi-delta down">+14m vs last week</div></div>
+    <div class="kpi"><div class="kpi-label">Resolution rate</div><div class="kpi-value">87%</div><div class="kpi-delta up">+2.1% vs last week</div></div>
+    <div class="kpi"><div class="kpi-label">CSAT</div><div class="kpi-value">4.6</div><div class="kpi-delta up">+0.2 vs last week</div></div>
+  </div>
+  <div class="toolbar">
+    <input class="search" placeholder="Search tickets...">
+    <select><option>All statuses</option></select>
+    <select><option>All assignees</option></select>
+    <select><option>Newest first</option></select>
+    <button class="btn">+ New ticket</button>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><div class="panel-title">All tickets</div><div class="panel-meta">Showing 8 of 312</div></div>
+    <table>
+      <thead><tr><th>Ticket</th><th>Requester</th><th>Status</th><th>Priority</th><th>Assignee</th><th>Updated</th></tr></thead>
+      <tbody>
+        <tr><td><div class="subject">Webhook retries stop after 3 attempts</div><div class="preview">We're seeing delivery.failed events dropped silently on the 4th retry</div></td><td><div class="who"><div class="av">DM</div>Dana Mireles</div></td><td><span class="pill p-esc">Escalated</span></td><td><span class="pill pr-urgent">Urgent</span></td><td>Priya N.</td><td>4m ago</td></tr>
+        <tr><td><div class="subject">SAML login loops for @northwind.co users</div><div class="preview">After the IdP change on Tuesday, users bounce between the ACS URL and login</div></td><td><div class="who"><div class="av">TK</div>Tomas Keil</div></td><td><span class="pill p-open">Open</span></td><td><span class="pill pr-urgent">Urgent</span></td><td>Marco B.</td><td>22m ago</td></tr>
+        <tr><td><div class="subject">Invoice PDF shows tax at 0% for EU customers</div><div class="preview">VAT line renders but the amount is zero on invoices issued after Sep 1</div></td><td><div class="who"><div class="av">AO</div>Ada Osei</div></td><td><span class="pill p-open">Open</span></td><td><span class="pill pr-high">High</span></td><td>Priya N.</td><td>1h ago</td></tr>
+        <tr><td><div class="subject">Bulk CSV import times out at ~40k rows</div><div class="preview">Job dies at 09:58 every time, no error surfaced in the import log</div></td><td><div class="who"><div class="av">RS</div>Ruth Salgado</div></td><td><span class="pill p-pending">Pending</span></td><td><span class="pill pr-high">High</span></td><td>Unassigned</td><td>2h ago</td></tr>
+        <tr><td><div class="subject">Can we get seat count on the usage API?</div><div class="preview">We bill our own customers per seat and currently scrape the admin page</div></td><td><div class="who"><div class="av">JW</div>Jae Woo</div></td><td><span class="pill p-open">Open</span></td><td><span class="pill pr-normal">Normal</span></td><td>Marco B.</td><td>3h ago</td></tr>
+        <tr><td><div class="subject">Slack notifications duplicated for shared channels</div><div class="preview">Every alert posts twice in #beacon-alerts since the connector update</div></td><td><div class="who"><div class="av">LF</div>Lena Fischer</div></td><td><span class="pill p-pending">Pending</span></td><td><span class="pill pr-normal">Normal</span></td><td>Ines R.</td><td>5h ago</td></tr>
+        <tr><td><div class="subject">Request: export ticket history as JSON</div><div class="preview">CSV loses the threading and we need it for our warehouse load</div></td><td><div class="who"><div class="av">MK</div>Miles Kovač</div></td><td><span class="pill p-open">Open</span></td><td><span class="pill pr-low">Low</span></td><td>Unassigned</td><td>Yesterday</td></tr>
+        <tr><td><div class="subject">Password reset email lands in spam (Outlook)</div><div class="preview">DMARC passes on our side, Outlook still quarantines the reset link</div></td><td><div class="who"><div class="av">SB</div>Sofia Brandt</div></td><td><span class="pill p-solved">Solved</span></td><td><span class="pill pr-normal">Normal</span></td><td>Ines R.</td><td>Yesterday</td></tr>
+      </tbody>
+    </table>
+    <div class="pager"><div>Page 1 of 39</div><div><button class="pbtn">Previous</button><button class="pbtn">Next</button></div></div>
+  </div>
+</main>
+</div>
+</body></html>

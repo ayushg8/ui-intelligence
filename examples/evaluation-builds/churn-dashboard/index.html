@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Renewal risk — Halcyon CS</title>
+<style>
+/* ─────────────────────────────────────────────────────────────────────────
+   Renewal-risk console · archetype: enterprise-dense
+   Density target: WORK — 6 CSMs live in this 4h a day, 412 accounts.
+   30px rows, 13px body, chrome capped at 116px above row one at 1440.
+   Tokens only. Every value below traces to the direction spec.
+   ───────────────────────────────────────────────────────────────────────── */
+:root{
+  /* neutrals — near-achromatic, faint warm-cool cast; commercial product */
+  --bg:        oklch(0.972 0.0025 255);
+  --surface:   #ffffff;
+  --text:      oklch(0.245 0.012 258);   /* ~16:1 on white */
+  --text-2:    oklch(0.500 0.011 258);   /* ~6:1 on white, 5.5:1 on --bg */
+  /* one hairline, expressed as an alpha so it composes on any surface */
+  --line:      oklch(0 0 0 / 0.075);
+  --line-2:    oklch(0 0 0 / 0.145);     /* the one heavier step: header rule */
+  --fill:      oklch(0 0 0 / 0.045);     /* runway track, skeletons */
+  --fill-2:    oklch(0 0 0 / 0.055);     /* row hover */
+  --fill-3:    oklch(0 0 0 / 0.075);     /* row selected */
+  /* accent — primary action, current selection, active nav, focus ring. Nothing else. */
+  --accent:    oklch(0.520 0.160 255);
+  --accent-w:  oklch(0.520 0.160 255 / 0.10);
+  /* record state only. never decoration. */
+  --red:       oklch(0.505 0.185 27);
+  --amber:     oklch(0.520 0.145 66);
+  --neutral-bar: oklch(0 0 0 / 0.30);
+  --r-ctl: 4px;
+  --row: 30px;
+  --rail: 224px;
+  --detail: 296px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:13px; line-height:18px; letter-spacing:-0.01em;
+  color:var(--text); background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+button,input,select{font:inherit;letter-spacing:inherit;color:inherit}
+h1,h2,h3{margin:0;font-size:13px;font-weight:600;line-height:18px}
+.vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-radius:2px}
+
+/* ── shell ─────────────────────────────────────────────────────────────── */
+.app{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+.topbar{
+  display:flex;align-items:center;gap:10px;height:40px;flex:0 0 40px;
+  padding:0 10px 0 12px;background:var(--surface);border-bottom:1px solid var(--line);
+}
+.wordmark{display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px}
+.wordmark .dot{width:8px;height:8px;border-radius:2px;background:var(--accent)}
+.wordmark .slash{color:var(--text-2);font-weight:400}
+.topbar .spacer{flex:1}
+.search{position:relative;width:236px}
+.search input{
+  width:100%;height:26px;padding:0 8px;background:var(--bg);
+  border:1px solid var(--line);border-radius:var(--r-ctl);font-size:12px;
+}
+.search input::placeholder{color:var(--text-2)}
+.search input:focus-visible{outline:2px solid var(--accent);outline-offset:-1px}
+.sync{font-size:12px;color:var(--text-2);white-space:nowrap}
+.sync b{font-weight:500;color:var(--text)}
+.me{
+  width:22px;height:22px;border-radius:9999px;background:var(--fill-3);
+  font-size:12px;font-weight:500;display:grid;place-items:center;border:0;cursor:pointer;
+}
+.body{display:flex;flex:1;min-height:0}
+
+/* ── rail ──────────────────────────────────────────────────────────────── */
+.rail{
+  flex:0 0 var(--rail);width:var(--rail);border-right:1px solid var(--line);
+  padding:8px 6px;overflow-y:auto;background:var(--bg);
+}
+.rail h2{
+  font-size:12px;font-weight:500;color:var(--text-2);letter-spacing:0.05em;
+  text-transform:uppercase;padding:12px 8px 4px;
+}
+.rail h2:first-child{padding-top:2px}
+.navitem{
+  display:flex;align-items:center;gap:8px;width:100%;height:26px;padding:0 8px;
+  border:0;border-radius:var(--r-ctl);background:transparent;cursor:pointer;
+  font-size:13px;text-align:left;transition:background 120ms ease-out;
+}
+.navitem .n{margin-left:auto;font-size:12px;color:var(--text-2);font-weight:400}
+.navitem:hover{background:var(--fill-2)}
+.navitem[aria-current="true"]{background:var(--accent-w);color:var(--accent);font-weight:500}
+.navitem[aria-current="true"] .n{color:var(--accent)}
+
+/* ── main ──────────────────────────────────────────────────────────────── */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface)}
+.bar{display:flex;align-items:center;gap:8px;padding:0 10px;border-bottom:1px solid var(--line);min-width:0}
+.bar-view{height:36px;flex:0 0 36px}
+.bar-filter{height:32px;flex:0 0 32px}
+.viewsw{
+  display:flex;align-items:center;gap:6px;height:24px;padding:0 6px;border:0;border-radius:var(--r-ctl);
+  background:transparent;font-size:13px;font-weight:600;cursor:pointer;transition:background 120ms ease-out;
+}
+.viewsw:hover{background:var(--fill-2)}
+.viewsw .car{color:var(--text-2);font-weight:400;font-size:11px}
+.count{font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.count b{font-weight:500;color:var(--text)}
+.bar .spacer{flex:1;min-width:4px}
+.btn{
+  display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 8px;white-space:nowrap;
+  background:transparent;border:1px solid transparent;border-radius:var(--r-ctl);
+  font-size:12px;cursor:pointer;transition:background 120ms ease-out,border-color 120ms ease-out;
+}
+.btn:hover{background:var(--fill-2)}
+.btn-o{border-color:var(--line)}
+.btn-o:hover{background:var(--fill-2)}
+.btn-p{background:var(--accent);color:#fff;border-color:transparent;font-weight:500}
+.btn-p:hover{background:oklch(0.462 0.160 255)}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn .car{color:var(--text-2);font-size:11px}
+.btn-p .car{color:#fff}
+.chip{
+  display:inline-flex;align-items:center;height:22px;padding:0 2px 0 7px;gap:4px;
+  border:1px solid var(--line);border-radius:9999px;font-size:12px;background:var(--surface);
+  max-width:230px;
+}
+.chip .k{color:var(--text-2)}
+.chip .v{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip .x{
+  width:16px;height:16px;flex:none;border:0;border-radius:9999px;background:transparent;
+  color:var(--text-2);cursor:pointer;line-height:1;font-size:12px;display:grid;place-items:center;
+  transition:background 120ms ease-out;
+}
+.chip .x:hover{background:var(--fill-3);color:var(--text)}
+.default-bar{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.selbar{display:none;align-items:center;gap:8px;width:100%;min-width:0}
+body.has-sel .bar-view .default-bar{display:none}
+body.has-sel .bar-view .selbar{display:flex}
+
+/* ── grid ──────────────────────────────────────────────────────────────── */
+.gridwrap{flex:1;min-height:0;overflow:auto;position:relative}
+.gridwrap:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+table{width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums}
+thead th{
+  position:sticky;top:0;z-index:2;background:var(--surface);
+  height:30px;padding:0;font-size:12px;font-weight:500;color:var(--text-2);
+  text-align:left;box-shadow:inset 0 -2px 0 -1px var(--line-2);
+}
+thead th.num{text-align:right}
+.sortbtn{
+  display:flex;align-items:center;gap:3px;width:100%;height:30px;padding:0 8px;white-space:nowrap;
+  border:0;background:transparent;font-size:12px;font-weight:500;color:var(--text-2);
+  cursor:pointer;transition:color 120ms ease-out;
+}
+.sortbtn:hover{color:var(--text)}
+th.num .sortbtn{justify-content:flex-end;flex-direction:row-reverse}
+.sortbtn .ind{font-size:9px;color:var(--accent);opacity:0}
+th[aria-sort] .ind{opacity:1}
+th[aria-sort] .sortbtn{color:var(--text)}
+th.plain{padding:0 8px;color:var(--text-2)}
+
+tbody tr{height:var(--row);border-bottom:1px solid var(--line)}
+tbody tr:hover{background:var(--fill-2)}
+tbody tr[aria-selected="true"]{background:var(--fill-3)}
+td{padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;vertical-align:middle}
+td.num{text-align:right}
+.c-sel{padding:0 0 0 8px}
+.c-sel input{width:13px;height:13px;margin:0;accent-color:var(--accent);vertical-align:middle;cursor:pointer}
+.acct{
+  display:block;max-width:100%;padding:0;border:0;background:transparent;text-align:left;
+  font-size:13px;font-weight:500;color:var(--text);cursor:pointer;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+}
+.acct:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.arr{font-size:13px;font-weight:500}
+.score{font-size:13px;font-weight:600}
+.band{font-size:12px}
+.b-Critical{color:var(--red)} .b-High{color:var(--amber)} .b-Watch,.b-Healthy{color:var(--text-2)}
+.score.b-Watch,.score.b-Healthy{color:var(--text);font-weight:500}
+.why{font-size:12px;color:var(--text-2)}
+
+/* ── the signature: the renewal runway ─────────────────────────────────── */
+/* Days-to-renewal rendered as literal length in every row, on a shared 365-day
+   scale, with a hairline tick at 90 days that stacks into one vertical
+   reference line down the column. Replaces a "renewals by month" chart and
+   costs one column instead of a panel. */
+.c-run{padding-right:8px}
+.run{display:flex;align-items:center;gap:8px}
+.track{position:relative;flex:1;min-width:0;height:16px}
+.track::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line)}
+.track::after{content:"";position:absolute;left:24.66%;top:0;bottom:0;width:1px;background:var(--line-2)}
+.rmark{position:absolute;top:0;bottom:0;width:3px;border-radius:2px;margin-left:-1px;background:var(--neutral-bar)}
+.rmark.b-Critical{background:var(--red)} .rmark.b-High{background:var(--amber)}
+.rdate{flex:0 0 54px;font-size:12px;color:var(--text-2);text-align:right}
+.rdate.soon{color:var(--text);font-weight:500}
+th.c-run-h{position:relative}
+th.c-run-h .sortbtn{justify-content:flex-end}
+th.c-run-h .tickmark{
+  position:absolute;left:calc(8px + (100% - 78px) * 0.2466);top:0;height:30px;line-height:30px;
+  font-size:12px;color:var(--text-2);pointer-events:none;transform:translateX(-50%);
+}
+.owner,.touch{font-size:12px;color:var(--text-2)}
+.touch.stale{color:var(--text)}
+
+/* aggregation footer — the aggregate lives under the column it describes */
+tfoot td{
+  position:sticky;bottom:0;z-index:2;background:var(--surface);height:32px;
+  box-shadow:inset 0 1px 0 0 var(--line-2);font-size:12px;color:var(--text-2);
+}
+tfoot b{font-weight:500;color:var(--text)}
+.addcalc{
+  border:0;background:transparent;color:var(--text-2);font-size:12px;padding:0;cursor:pointer;
+  transition:color 120ms ease-out;
+}
+.addcalc:hover{color:var(--text)}
+
+/* ── grid states ───────────────────────────────────────────────────────── */
+.pane{display:none;padding:44px 12px 44px 8px;max-width:560px}
+.pane h2{font-size:15px;font-weight:600;margin-bottom:6px}
+.pane p{margin:0 0 14px;font-size:13px;color:var(--text-2);line-height:19px}
+.pane .acts{display:flex;gap:8px;align-items:center}
+.pane .quiet{font-size:12px;color:var(--text-2)}
+.skrow td i{display:block;height:8px;border-radius:2px;background:var(--fill);animation:sk 2s -1s infinite linear}
+.skrow td{padding:0 8px}
+@keyframes sk{0%{opacity:.55}50%{opacity:1}100%{opacity:.55}}
+
+/* ── detail rail ───────────────────────────────────────────────────────── */
+.detail{
+  flex:0 0 var(--detail);width:var(--detail);border-left:1px solid var(--line);
+  background:var(--bg);overflow-y:auto;padding:12px 12px 16px;font-variant-numeric:tabular-nums;
+}
+.detail .dclose{display:none}
+.dname{font-size:15px;font-weight:600;line-height:20px;overflow-wrap:anywhere}
+.dsub{font-size:12px;color:var(--text-2);margin-top:2px}
+.dfacts{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:12px 0 0;font-size:12px}
+.dfacts dt{color:var(--text-2)}
+.dfacts dd{margin:0;text-align:right;font-weight:500}
+.dhr{height:1px;background:var(--line);margin:12px 0}
+.dscore{display:flex;align-items:baseline;gap:6px}
+.dscore .v{font-size:15px;font-weight:600}
+.dlabel{font-size:12px;color:var(--text-2);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px}
+.sig{display:grid;grid-template-columns:1fr auto;gap:0 10px;font-size:12px}
+.sig .l{height:21px;line-height:21px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.sig .p{height:21px;line-height:21px;text-align:right;color:var(--text-2)}
+.sig .p.hot{color:var(--text);font-weight:500}
+.sig .tot{border-top:1px solid var(--line);margin-top:3px;padding-top:3px;font-weight:500}
+.ev{font-size:12px;color:var(--text-2);line-height:18px;margin:0;padding:0;list-style:none}
+.ev li{display:flex;gap:8px;padding:2px 0}
+.ev .d{flex:0 0 52px;color:var(--text-2)}
+.ev .t{flex:1;min-width:0;color:var(--text)}
+.dacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.dempty{font-size:12px;color:var(--text-2);line-height:18px}
+
+/* ── demo scaffolding bar (not part of the design) ─────────────────────── */
+.demobar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;height:36px;
+  display:flex;align-items:center;gap:6px;padding:0 10px;
+  background:oklch(0.245 0.012 258);color:#fff;font-size:12px;
+  box-shadow:0 -1px 0 0 oklch(0 0 0 / 0.18);
+}
+.demobar .lbl{opacity:.72;letter-spacing:0.05em;text-transform:uppercase;margin-right:2px}
+.demobar button{
+  height:24px;padding:0 9px;border:1px solid oklch(1 0 0 / 0.22);border-radius:var(--r-ctl);
+  background:transparent;color:#fff;font-size:12px;cursor:pointer;transition:background 120ms ease-out;
+}
+.demobar button:hover{background:oklch(1 0 0 / 0.12)}
+.demobar button[aria-pressed="true"]{background:#fff;color:oklch(0.245 0.012 258);border-color:#fff;font-weight:500}
+.demobar .hint{margin-left:auto;opacity:.72;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app{padding-bottom:36px}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:0ms!important;animation:none!important}
+}
+
+/* ── below 1180: the detail rail becomes an overlay over the list ──────── */
+@media (max-width:1179px){
+  .detail{
+    position:fixed;top:40px;right:0;bottom:36px;width:320px;flex:none;z-index:30;
+    background:var(--surface);box-shadow:-1px 0 0 0 var(--line),-12px 0 28px -18px oklch(0 0 0 / 0.5);
+    transform:translateX(100%);visibility:hidden;
+    transition:transform 160ms ease-out,visibility 160ms;
+  }
+  body.detail-open .detail{transform:translateX(0);visibility:visible}
+  .detail .dclose{
+    display:inline-flex;position:absolute;right:8px;top:8px;width:26px;height:26px;
+    align-items:center;justify-content:center;border:0;border-radius:var(--r-ctl);
+    background:transparent;cursor:pointer;font-size:14px;color:var(--text-2);
+  }
+  .detail .dclose:hover{background:var(--fill-2)}
+  .dname{padding-right:30px}
+}
+@media (max-width:1059px){ .c-touch{display:none} }
+@media (max-width:939px){ .c-owner{display:none} }
+
+/* ── below 760: a different, smaller product — the triage slice ────────── */
+/* Not the grid squeezed. Three lines per account: who and how much · why and
+   how bad · when. The runway keeps its own line at full width, because on the
+   phone "when does this renew" is the whole reason the CSM opened the app. */
+@media (max-width:759px){
+  body{font-size:14px}
+  .rail{display:none}
+  .topbar{padding:0 8px;gap:8px}
+  .wordmark .slash,.wordmark .app-name{display:none}
+  .search{width:auto;flex:1;min-width:0}
+  .search input{height:40px;font-size:16px}
+  .sync{display:none}
+  .me{width:40px;height:40px;font-size:13px}
+  .bar-view{height:44px;flex:0 0 44px}
+  .bar-filter{height:52px;flex:0 0 52px;overflow-x:auto;scrollbar-width:none}
+  .bar-filter::-webkit-scrollbar{display:none}
+  .viewsw{height:40px;font-size:14px;white-space:nowrap;flex:none}
+  .btn{height:40px}
+  .chip{height:44px;border-radius:9999px;padding:0 2px 0 14px;flex:none}
+  .chip .x{width:40px;height:40px;font-size:15px}
+  .m-hide{display:none}
+  .count{font-size:12px;min-width:0}
+  .gridwrap{overflow-x:hidden}
+  table,thead,tbody,tfoot,tr,td,th,colgroup,col{display:block}
+  colgroup,col,thead{display:none}
+  tbody tr{
+    height:auto;display:grid;grid-template-columns:1fr auto;
+    column-gap:10px;row-gap:0;padding:8px 14px 9px;
+  }
+  td{padding:0;white-space:normal;overflow:visible;min-width:0}
+  .c-sel,.c-owner,.c-touch{display:none}
+  .c-acct{grid-area:1/1;min-width:0}
+  .c-arr{grid-area:1/2;text-align:right}
+  .c-why{grid-area:2/1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .c-risk{grid-area:2/2;text-align:right;white-space:nowrap}
+  .c-run{grid-area:3/1/4/3;padding-top:4px;line-height:14px}
+  .acct{font-size:14px;line-height:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    padding:11px 0;margin:-11px 0}
+  .arr{font-size:14px;line-height:19px}
+  .why,.band,.score{line-height:17px}
+  .track{height:10px}
+  .rdate{flex-basis:auto}
+  tfoot td{position:static;box-shadow:none;height:auto;padding:12px 14px 16px;background:var(--bg);
+    border-top:1px solid var(--line)}
+  .f-hide{display:none}
+  .pane{padding:28px 16px}
+  .demobar{height:44px;overflow-x:auto;gap:5px}
+  .demobar button{height:40px;min-width:44px;flex:none}
+  .demobar .hint{display:none}
+  .app{padding-bottom:44px}
+  .detail{top:40px;bottom:44px;width:100%;left:0}
+}
+@media (max-width:379px){
+  tbody tr{padding:9px 10px 10px}
+  .topbar{gap:6px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <h1 class="vh">Renewal risk — accounts at risk of churning</h1>
+    <span class="wordmark"><span class="dot" aria-hidden="true"></span>Halcyon<span class="slash">/</span><span class="app-name">Renewals</span></span>
+    <div class="spacer"></div>
+    <div class="search">
+      <label class="vh" for="q">Search accounts and owners</label>
+      <input id="q" type="search" placeholder="Search accounts and owners   /" autocomplete="off" spellcheck="false">
+    </div>
+    <span class="sync" id="sync"></span>
+    <button class="me" type="button" title="Rosa Delgado — signed in">RD</button>
+  </header>
+
+  <div class="body">
+
+    <nav class="rail" aria-label="Views and segments">
+      <h2>Views</h2>
+      <button class="navitem" type="button" data-view="mine">My book<span class="n">14</span></button>
+      <button class="navitem" type="button" data-view="risk" aria-current="true">At-risk book<span class="n">82</span></button>
+      <button class="navitem" type="button" data-view="soon">Renews ≤ 90 days<span class="n">27</span></button>
+      <button class="navitem" type="button" data-view="cold">No contact 30d+<span class="n">39</span></button>
+      <button class="navitem" type="button" data-view="unassigned">Critical, no contact 60d+<span class="n">6</span></button>
+      <button class="navitem" type="button" data-view="all">All accounts<span class="n">412</span></button>
+      <h2>Segment</h2>
+      <button class="navitem" type="button" data-seg="Enterprise">Enterprise<span class="n" id="segE">—</span></button>
+      <button class="navitem" type="button" data-seg="Mid-market">Mid-market<span class="n" id="segM">—</span></button>
+      <button class="navitem" type="button" data-seg="Growth">Growth<span class="n" id="segG">—</span></button>
+      <h2>Team</h2>
+      <button class="navitem" type="button" data-page="rules">Coverage &amp; access rules</button>
+      <button class="navitem" type="button" data-page="plays">Save plays</button>
+    </nav>
+
+    <main class="main" aria-label="Accounts">
+
+      <div class="bar bar-view">
+        <div class="default-bar">
+          <button class="viewsw" type="button" id="viewsw">At-risk book <span class="car" aria-hidden="true">▾</span></button>
+          <span class="count" id="count"></span>
+          <span class="spacer"></span>
+          <button class="btn m-hide" type="button" id="sortbtn">Sort: ARR <span class="car" aria-hidden="true">↓</span></button>
+          <button class="btn m-hide" type="button">Columns <span class="car" aria-hidden="true">▾</span></button>
+          <button class="btn m-hide" type="button">Export CSV</button>
+        </div>
+        <div class="selbar">
+          <span id="selcount" style="font-weight:500"></span>
+          <span class="count" id="selarr"></span>
+          <span class="spacer"></span>
+          <button class="btn btn-o" type="button">Assign owner</button>
+          <button class="btn btn-o m-hide" type="button">Log a play</button>
+          <button class="btn btn-o m-hide" type="button">Snooze 30 days</button>
+          <button class="btn" type="button" id="clearsel">Clear</button>
+        </div>
+      </div>
+
+      <div class="bar bar-filter">
+        <span class="chip" data-filter="band"><span class="k">Risk</span><span class="v">Critical or High</span><button class="x" type="button" title="Remove risk filter" aria-label="Remove filter: risk is Critical or High">×</button></span>
+        <span class="chip" data-filter="horizon"><span class="k">Renews</span><span class="v">within 12 months</span><button class="x" type="button" title="Remove renewal-horizon filter" aria-label="Remove filter: renews within 12 months">×</button></span>
+        <button class="btn m-hide" type="button">+ Add filter</button>
+        <span class="spacer"></span>
+        <span class="count m-hide" id="filtercount">2 filters</span>
+      </div>
+
+      <div class="gridwrap" id="gridwrap" tabindex="0" role="group" aria-label="Account list, scrollable">
+        <table id="grid">
+          <caption class="vh">Accounts at risk of churning, sorted by annual recurring revenue, highest first</caption>
+          <colgroup>
+            <col style="width:28px"><col><col style="width:92px"><col style="width:82px">
+            <col><col style="width:150px"><col style="width:76px"><col style="width:86px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="c-sel" scope="col"><span class="vh">Select</span>
+                <input type="checkbox" id="selall" aria-label="Select all 82 accounts in this view"></th>
+              <th scope="col"><button class="sortbtn" type="button" data-sort="name">Account <span class="ind" aria-hidden="true">▲</span></button></th>
+              <th scope="col" class="num" aria-sort="descending"><button class="sortbtn" type="button" data-sort="arr">ARR <span class="ind" aria-hidden="true">▼</span></button></th>
+              <th scope="col"><button class="sortbtn" type="button" data-sort="score">Risk <span class="ind" aria-hidden="true">▼</span></button></th>
+              <th scope="col" class="plain">Top signal</th>
+              <th scope="col" class="c-run-h"><span class="tickmark" aria-hidden="true">90d</span><button class="sortbtn" type="button" data-sort="days">Renews <span class="ind" aria-hidden="true">▲</span></button></th>
+              <th scope="col" class="c-owner plain">Owner</th>
+              <th scope="col" class="c-touch num"><button class="sortbtn" type="button" data-sort="touch">Last touch <span class="ind" aria-hidden="true">▼</span></button></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+          <tfoot id="foot"></tfoot>
+        </table>
+
+        <div class="pane" id="pane-empty">
+          <h2 id="empty-h">No accounts match this search and these 2 filters.</h2>
+          <p id="empty-p">Search covers account name and owner. 82 accounts match the filters on their own.</p>
+          <div class="acts">
+            <button class="btn btn-p" type="button" id="clearsearch">Clear search</button>
+            <button class="btn btn-o" type="button" id="clearfilters">Clear both filters</button>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-error">
+          <h2>Couldn’t load the at-risk book.</h2>
+          <p>The scoring service returned 503 at 10:14 UTC. Renewal dates, owners and ARR are
+             unaffected — this view fills in as soon as scoring responds. Yesterday’s scores
+             (Sep 9, 06:00 UTC) are still available offline.</p>
+          <div class="acts">
+            <button class="btn btn-p" type="button" id="retry">Try again</button>
+            <button class="btn btn-o" type="button">Open yesterday’s scores</button>
+            <span class="quiet">Ref: SCORE-7741</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="detail" id="detail" aria-label="Account detail">
+      <button class="dclose" type="button" id="dclose" aria-label="Close account detail">✕</button>
+      <div id="detail-body"></div>
+    </aside>
+
+  </div>
+</div>
+
+<footer class="demobar" aria-label="Demo scaffolding: switch data state">
+  <span class="lbl">Demo</span>
+  <button type="button" data-state="populated" aria-pressed="true">Populated</button>
+  <button type="button" data-state="loading" aria-pressed="false">Loading</button>
+  <button type="button" data-state="empty" aria-pressed="false">Filtered&nbsp;to&nbsp;nothing</button>
+  <button type="button" data-state="error" aria-pressed="false">Error</button>
+  <span class="hint">Not part of the design — a state switcher so all four are inspectable.</span>
+</footer>
+
+<p class="vh" role="status" aria-live="polite" id="live"></p>
+
+<script>
+/* ══ data ══════════════════════════════════════════════════════════════════
+   412 accounts, generated once from a fixed seed so every derived number on
+   screen — the counts in the rail, the footer sums, the signal breakdown in
+   the detail panel — comes from the same rows and stays consistent. */
+const NAMES=["Ashgrove Dental Group","Bellweather Foods","Cobalt Ridge Mining","Delacroix & Fils","Eastport Marine","Fathom Analytics Ltd","Granite Peak Insurance","Halden Freight","Ingram Tool & Die","Juniper Health Partners","Kestrel Diagnostics","Larkspur Interiors","Mühlenberg Werkzeugbau","Nordvik Seafood","Okonjo & Hale","Pemberton Legal","Quarry Lane Brewing","Redwood Civil","Saltmarsh Logistics","Tidewater Insurance","Umbra Optics","Verdant Agri","Westcott Timber","Yarrow Biotech","Zephyr Air Cargo","Alderman Steel","Brightsea Ferries","Cadence Physio","Draycott Homes","Elmwood Credit Union","Ferrand Établissements","Galloway Plant Hire","Harbourline Shipping","Ilex Pharmaceuticals","Jansen Bouw","Kirby Rail Services","Lumen Municipal","Marchetti Ceramiche","Nakamura Precision","Ortega Citrus","Pinewood Veterinary","Quintal Energia","Rivenhall Packaging","Sable & Rook","Thornbury Academy","Ulster Fabrication","Vandermeer Bulbs","Whitlock Security","Xiang Textiles","Ystad Möbler","Ambrose Claims","Blackthorn Cider","Chandra Exports","Dunmore Aggregates","Ecklund Fasteners","Fenwick Optical","Grimsby Cold Store","Hollis Orthodontics","Iberia Solar","Jarrah Timber Co","Kalmar Kranar","Lindqvist Bygg","Moreau Vignobles","Navarro Hermanos","Oakhurst Surgical","Pallas Robotics","Quintus Legal Tech","Rosewater Spa Group","Stellan Marine","Tanaka Kikai","Underhill Nurseries","Valente Trasporti","Wrenford Museums","Yusuf Trading","Zamora Panadería","Applewood Mortuary","Brenner Kunststoff","Cascade Dairy","Doverton Council","Eastvale Schools","Finchley Optometry","Glenholm Estates","Hartsfield Aviation","Innisfree Distillery","Jubilee Transit","Karlsson Verkstad","Lourdes Clinics","Mistral Wind Services","Northgate Pathology","Olwen Renewables","Prescott Dental Labs","Quayside Cold Chain","Ravensworth Mills","Summerlee Foundry","Tallow & Birch","Ubuntu Freight SA","Vanterpool Rum","Waterhouse Print","Yeong Precision","Zurbarán Museos","Alcott Property","Bergström Partners","Corveau Aerospace","Dellwood Hospice","Eskdale Quarry","Fairholm Catering","Gullane Golf Group","Highfield Poultry","Isandlwana Tours","Jomari Seguros","Kepler Instruments","Lantern Bay Hotels","Meirionnydd Water Authority","Nyström Elektro","Ossory Cheese","Pentland Scaffold","Quilon Spices","Ridgeback Couriers","Selwyn Bindery","Torvald Skibsverft","Ulriksen Fisk","Voss Gartneri","Wexford Turbines","Yandell Cabinetry","Zolotov Metals"];
+const SUFFIX=["(EMEA)","(APAC)","(LatAm)","(DACH)","— Retail","— Wholesale","— North","Holdings","Group Ltd","(Benelux)"];
+const OWNERS=["Imani Cole","Petra Lindqvist","Daniel Achebe","Yuki Tanabe","Rosa Delgado","Tom Ashworth"];
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const W={usage:15,seats:16,support:15,engage:15,sponsor:14,billing:13,survey:12};
+const SIGNAL_ORDER=["usage","seats","support","engage","sponsor","billing","survey"];
+const TODAY=Date.UTC(2026,8,10);
+const nf=new Intl.NumberFormat("en-US");
+const shortName=n=>{const p=n.split(" ");return p[0]+" "+p[1][0]+".";};
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+function build(){
+  const r=mulberry32(20260910);
+  const g=()=>(r()+r()+r()+r()+r()+r()-3)/0.7071;
+  const out=[];
+  for(let i=0;i<412;i++){
+    const base=NAMES[i%NAMES.length];
+    const name=i<NAMES.length?base:base+" "+SUFFIX[(Math.floor(i/NAMES.length)*3+i)%SUFFIX.length];
+    const seats=clamp(Math.round(Math.exp(4.45+1.2*g())),6,2400);
+    const tier=seats>=600?[228,348,468,588]:seats>=120?[468,588,708,1080]:[588,1080,1740,2340];
+    const price=tier[Math.floor(r()*tier.length)];
+    const arr=seats*price;
+    const seg=arr>=260000?"Enterprise":arr>=60000?"Mid-market":"Growth";
+    const since=2016+Math.floor(r()*10);
+
+    // Risk is concentrated, and accounts do not all fail the same way. One latent
+    // decline factor `t`, plus a failure MODE that decides which signal leads.
+    // Severities come first; every number shown on screen is derived from them,
+    // so the row, the footer and the detail breakdown can never disagree.
+    const t=r()<0.38?0.50+0.86*r():0.12*r();
+    const MODES=["usage","seats","support","engage","sponsor","billing"];
+    const mode=t>0.45?MODES[Math.floor(r()*MODES.length)]:null;
+    const hi=Math.min(1,t*0.95), bas=Math.min(0.92,t*0.55);
+    const sv=k=>clamp((mode===k?hi:bas)+0.08*g(),0,1);
+
+    const sev={usage:sv("usage"),seats:sv("seats"),support:sv("support"),engage:sv("engage")};
+    sev.sponsor = r() < 0.06+0.85*(mode==="sponsor"?t:bas) ? clamp(sv("sponsor"),0.30,1) : 0;
+    sev.billing = r() < 0.04+0.75*(mode==="billing"?t:bas) ? clamp(sv("billing"),0.25,1) : 0;
+
+    const usageDelta=Math.round(8-76*sev.usage);
+    const utilPrev=clamp(Math.round(54+16*g()),20,95);
+    const utilNow=clamp(Math.round(utilPrev*(1-0.62*sev.seats)),3,99);
+    const p1=Math.round(sev.support*5.6*(0.55+0.9*r()));
+    const csat=clamp(+(4.7-3.4*sev.support*(0.62+0.76*r())).toFixed(1),1.2,5.0);
+    const touch=Math.max(1,Math.round((2+104*Math.pow(sev.engage,1.7))*(0.5+1.0*r())));
+    const sponsor=sev.sponsor?MON[1+Math.floor(r()*7)]:null;
+    const pastDue=sev.billing?Math.max(3,Math.round(sev.billing*46)):0;
+    const hasNps=r()<0.76;
+    const nps=hasNps?clamp(Math.round(9.5-9*bas-1.4*(mode==="support"?1:0)+1.1*g()),0,10):null;
+    sev.survey=hasNps?clamp((7-nps)/7,0,1):0.30;
+
+    const contrib={};let score=0;
+    for(const k of SIGNAL_ORDER){contrib[k]=Math.round(W[k]*sev[k]);score+=contrib[k];}
+    const band=score>=65?"Critical":score>=52?"High":score>=38?"Watch":"Healthy";
+
+    const u=r();
+    const days=u<0.34?5+Math.round(r()*90):u<0.63?96+Math.round(r()*64):161+Math.round(r()*219);
+    const rd=new Date(TODAY+days*86400000);
+
+    const seatsNow=Math.round(seats*utilNow/100),seatsPrev=Math.round(seats*utilPrev/100);
+    out.push({i,name,seats,seatsNow,seatsPrev,arr,seg,usageDelta,utilPrev,utilNow,p1,csat,touch,
+      sponsor,pastDue,nps,since,contrib,score,band,days,rd,owner:OWNERS[i%OWNERS.length]});
+  }
+  return out;
+}
+const ALL=build();
+
+/* the signal that contributed most, written out in the account's own numbers */
+function signalText(a,k){
+  switch(k){
+    case "usage":  return a.usageDelta<0?`Usage down ${-a.usageDelta}% over 90 days`:`Usage flat over 90 days`;
+    case "seats":  return `Seats ${nf.format(a.seatsPrev)} → ${nf.format(a.seatsNow)} since June`;
+    case "support":return `${a.p1} P${a.p1===1?"1 ticket":"1 tickets"}, CSAT ${a.csat.toFixed(1)}`;
+    case "engage": return a.touch>0?`No CS contact in ${a.touch} days`:`Contacted today`;
+    case "sponsor":return a.sponsor?`Exec sponsor changed in ${a.sponsor}`:`Sponsor stable`;
+    case "billing":return a.pastDue?`Invoice ${a.pastDue} days past due`:`Billing current`;
+    case "survey": return a.nps===null?`No survey response since renewal`:`NPS ${a.nps} in the August survey`;
+  }
+}
+const SIGNAL_LABEL={usage:"Product usage",seats:"Seat utilisation",support:"Support experience",
+  engage:"CS engagement",sponsor:"Exec sponsor",billing:"Billing",survey:"Survey"};
+function topSignal(a){
+  let best=SIGNAL_ORDER[0];
+  for(const k of SIGNAL_ORDER) if(a.contrib[k]>a.contrib[best]) best=k;
+  return best;
+}
+ALL.forEach(a=>{a.top=topSignal(a);a.why=signalText(a,a.top);});
+
+/* ══ formatting ═══════════════════════════════════════════════════════════ */
+const money=v=>"$"+nf.format(v);
+const moneyShort=v=>v>=1e6?"$"+(v/1e6).toFixed(2)+"M":"$"+Math.round(v/1e3)+"K";
+const fmtDate=d=>{
+  const m=MON[d.getUTCMonth()],day=d.getUTCDate(),y=d.getUTCFullYear();
+  return y===2026?`${m} ${day}`:`${m} ${day} ’${String(y).slice(2)}`;
+};
+const fmtFull=d=>`${MON[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+
+/* ══ view state ═══════════════════════════════════════════════════════════ */
+const state={
+  data:"populated", view:"risk", sort:"arr", dir:-1, q:"",
+  filters:{band:true,horizon:true}, selected:new Set(), focus:null
+};
+const $=s=>document.querySelector(s);
+const rowsEl=$("#rows"), footEl=$("#foot"), gridEl=$("#grid");
+
+function viewRows(){
+  let rows=ALL;
+  if(state.filters.band) rows=rows.filter(a=>a.band==="Critical"||a.band==="High");
+  if(state.filters.horizon) rows=rows.filter(a=>a.days<=365);
+  if(state.view==="mine") rows=rows.filter(a=>a.owner==="Rosa Delgado");
+  if(state.view==="soon") rows=rows.filter(a=>a.days<=90);
+  if(state.view==="cold") rows=rows.filter(a=>a.touch>=30);
+  if(state.view==="unassigned") rows=rows.filter(a=>a.band==="Critical"&&a.touch>=60);
+  if(state.q){
+    const q=state.q.toLowerCase();
+    rows=rows.filter(a=>a.name.toLowerCase().includes(q)||a.owner.toLowerCase().includes(q));
+  }
+  const key=state.sort;
+  rows=rows.slice().sort((x,y)=>{
+    let d;
+    if(key==="name") d=x.name.localeCompare(y.name);
+    else d=x[key]-y[key];
+    return d*state.dir;
+  });
+  return rows;
+}
+
+/* ══ render ═══════════════════════════════════════════════════════════════ */
+function runwayCell(a){
+  const pct=Math.min(a.days,365)/365*100;
+  const soon=a.days<=90;
+  return `<div class="run" title="Renews ${fmtFull(a.rd)} — ${a.days} days from today">
+    <span class="track"><i class="rmark b-${a.band}" style="left:${pct.toFixed(1)}%"></i></span>
+    <span class="rdate${soon?" soon":""}">${fmtDate(a.rd)}</span></div>`;
+}
+
+function renderRows(rows){
+  const html=rows.map(a=>{
+    const sel=state.selected.has(a.i);
+    return `<tr data-i="${a.i}"${sel?' aria-selected="true"':''}>
+      <td class="c-sel"><input type="checkbox" ${sel?"checked":""} aria-label="Select ${a.name}"></td>
+      <td class="c-acct"><button class="acct" type="button" title="${a.name}">${a.name}</button></td>
+      <td class="c-arr num"><span class="arr">${money(a.arr)}</span></td>
+      <td class="c-risk"><span class="score b-${a.band}">${a.score}</span> <span class="band b-${a.band}">${a.band}</span></td>
+      <td class="c-why"><span class="why" title="${a.why}">${a.why}</span></td>
+      <td class="c-run">${runwayCell(a)}</td>
+      <td class="c-owner"><span class="owner" title="${a.owner}">${shortName(a.owner)}</span></td>
+      <td class="c-touch num"><span class="touch${a.touch>=30?" stale":""}">${a.touch}d</span></td>
+    </tr>`;
+  }).join("");
+  rowsEl.innerHTML=html;
+}
+
+function renderFoot(rows){
+  const sum=rows.reduce((s,a)=>s+a.arr,0);
+  const avg=rows.length?Math.round(rows.reduce((s,a)=>s+a.score,0)/rows.length):0;
+  const soon=rows.filter(a=>a.days<=90).length;
+  const owners=new Set(rows.map(a=>a.owner)).size;
+  const touches=rows.map(a=>a.touch).sort((x,y)=>x-y);
+  const med=touches.length?touches[Math.floor(touches.length/2)]:0;
+  footEl.innerHTML=`<tr>
+    <td class="c-sel"></td>
+    <td><b>${rows.length}</b> accounts</td>
+    <td class="num"><b>${money(sum)}</b></td>
+    <td>avg <b>${avg}</b></td>
+    <td class="f-hide"><button class="addcalc" type="button">+ Add calculation</button></td>
+    <td><b>${soon}</b> in ≤ 90 days</td>
+    <td class="c-owner f-hide"><b>${owners}</b> owners</td>
+    <td class="c-touch num f-hide">med <b>${med}d</b></td></tr>`;
+}
+
+function renderDetail(a){
+  const el=$("#detail-body");
+  if(!a){
+    el.innerHTML=`<p class="dempty">Select an account to see which signals produced its score, and to log
+      what you did about it. Keyboard: <b>j</b> / <b>k</b> to move, <b>x</b> to select.</p>`;
+    return;
+  }
+  const sigs=SIGNAL_ORDER.map(k=>{
+    const p=a.contrib[k];
+    return `<div class="l" title="${SIGNAL_LABEL[k]} — ${signalText(a,k)}">${signalText(a,k)}</div>
+      <div class="p${p>=8?" hot":""}">${p?"+"+p:"0"}</div>`;
+  }).join("");
+  const events=[];
+  events.push([a.touch, a.touch>=45?`Last contact — QBR email, no reply`:`Last contact — check-in call`]);
+  if(a.p1) events.push([Math.max(2,Math.round(a.touch*0.6)),`P1 ticket #${48200+a.i} closed, CSAT ${a.csat.toFixed(1)}`]);
+  if(a.sponsor) events.push([Math.round((TODAY-Date.UTC(2026,MON.indexOf(a.sponsor),15))/86400000),`Exec sponsor replaced`]);
+  if(a.pastDue) events.push([a.pastDue,`Invoice INV-${9100+a.i} went past due`]);
+  events.sort((x,y)=>x[0]-y[0]);
+  const evRows=events.map(e=>[fmtDate(new Date(TODAY-e[0]*86400000)),e[1]]);
+  el.innerHTML=`
+    <h2 class="dname">${a.name}</h2>
+    <div class="dsub">${a.seg} · ${nf.format(a.seats)} licensed seats · customer since ${a.since}</div>
+    <dl class="dfacts">
+      <dt>ARR</dt><dd>${money(a.arr)}</dd>
+      <dt>Renews</dt><dd>${fmtFull(a.rd)} · ${a.days}d</dd>
+      <dt>Owner</dt><dd>${a.owner}</dd>
+      <dt>Last contact</dt><dd>${a.touch} days ago</dd>
+      <dt>Seats in use</dt><dd>${nf.format(a.seatsNow)} of ${nf.format(a.seats)} (${a.utilNow}%)</dd>
+    </dl>
+    <div class="dhr"></div>
+    <div class="dscore"><span class="v b-${a.band}">${a.score}</span>
+      <span class="band b-${a.band}">${a.band}</span>
+      <span style="margin-left:auto;font-size:12px;color:var(--text-2)">of 100</span></div>
+    <div style="font-size:12px;color:var(--text-2);margin-top:2px">Weighted from 7 signals, recomputed 06:00 UTC daily.</div>
+    <div class="dhr"></div>
+    <div class="dlabel">What is driving it</div>
+    <div class="sig">${sigs}
+      <div class="l tot">Risk score</div><div class="p tot">${a.score}</div></div>
+    <div class="dhr"></div>
+    <div class="dlabel">Recent</div>
+    <ul class="ev">${evRows.map(e=>`<li><span class="d">${e[0]}</span><span class="t">${e[1]}</span></li>`).join("")}</ul>
+    <div class="dacts">
+      <button class="btn btn-p" type="button">Log a save play</button>
+      <button class="btn btn-o" type="button">Reassign</button>
+      <button class="btn" type="button">Snooze 30 days</button>
+    </div>`;
+}
+
+function skeletonRows(n){
+  let out="";
+  for(let k=0;k<n;k++){
+    const j=(k*37)%23;
+    out+=`<tr class="skrow" aria-hidden="true">
+      <td class="c-sel"><i style="width:13px"></i></td>
+      <td><i style="width:${52+j*1.6}%"></i></td>
+      <td class="num"><i style="width:${60+(k%3)*8}px;margin-left:auto"></i></td>
+      <td><i style="width:58px"></i></td>
+      <td><i style="width:${58+j*1.4}%"></i></td>
+      <td><i style="width:100%"></i></td>
+      <td><i style="width:${48+(k%4)*6}px"></i></td>
+      <td class="num"><i style="width:26px;margin-left:auto"></i></td></tr>`;
+  }
+  return out;
+}
+const FOOT_IDLE=`<tr>
+    <td class="c-sel"></td><td>—</td><td class="num">—</td><td>—</td>
+    <td class="f-hide"></td><td>—</td><td class="c-owner f-hide">—</td>
+    <td class="c-touch num f-hide">—</td></tr>`;
+
+function render(){
+  const rows=viewRows();
+  const showGrid=state.data==="populated";
+  // The column headers and the toolbar stay live in every state: they are half
+  // the information, and the user can keep changing what they asked for.
+  $("#pane-empty").style.display=state.data==="empty"?"block":"none";
+  $("#pane-error").style.display=state.data==="error"?"block":"none";
+  if(showGrid){ renderRows(rows); renderFoot(rows); }
+  else if(state.data==="loading"){ rowsEl.innerHTML=skeletonRows(23); footEl.innerHTML=FOOT_IDLE; }
+  else { rowsEl.innerHTML=""; footEl.innerHTML=""; }
+
+  const bookArr=ALL.reduce((s,a)=>s+a.arr,0);
+  const sum=rows.reduce((s,a)=>s+a.arr,0);
+  if(state.data==="populated"){
+    $("#count").innerHTML=`<b>${rows.length}</b> of ${ALL.length} accounts · <b>${moneyShort(sum)}</b> of ${moneyShort(bookArr)} ARR`;
+  }else if(state.data==="loading"){
+    $("#count").innerHTML=`Loading ${rows.length} accounts…`;
+  }else if(state.data==="empty"){
+    $("#count").innerHTML=`<b>0</b> of ${ALL.length} accounts`;
+  }else{
+    $("#count").innerHTML=`Scores unavailable · ${ALL.length} accounts in the book`;
+  }
+
+  const a=state.focus!=null?ALL[state.focus]:null;
+  renderDetail(state.data==="populated"?a:null);
+  if(state.data!=="populated") document.body.classList.remove("detail-open");
+
+  const n=state.selected.size;
+  document.body.classList.toggle("has-sel",n>0&&state.data==="populated");
+  if(n){
+    const selArr=[...state.selected].reduce((s,i)=>s+ALL[i].arr,0);
+    $("#selcount").textContent=`${n} selected`;
+    $("#selarr").innerHTML=`<b>${money(selArr)}</b> ARR · ${[...state.selected].filter(i=>ALL[i].days<=90).length} of ${n} renewing within 90 days`;
+  }
+  $("#sync").innerHTML = state.data==="error"
+    ? `Scores stale — last <b>Sep 9, 06:00 UTC</b>`
+    : state.data==="loading" ? `Refreshing scores…`
+    : `Scores synced <b>4m ago</b>`;
+  $("#live").textContent=state.data==="populated"
+    ?`${rows.length} accounts, ${moneyShort(sum)} of ARR at risk.`
+    :state.data==="empty"?"No accounts match.":state.data==="error"?"Scores failed to load.":"Loading.";
+}
+
+/* rail counts, from the same rows */
+(function railCounts(){
+  const risk=ALL.filter(a=>a.band==="Critical"||a.band==="High");
+  const c=(sel)=>risk.filter(sel).length;
+  const nav=document.querySelectorAll(".navitem[data-view] .n");
+  const map={mine:c(a=>a.owner==="Rosa Delgado"),risk:risk.length,soon:c(a=>a.days<=90),
+    cold:c(a=>a.touch>=30),unassigned:c(a=>a.band==="Critical"&&a.touch>=60),all:ALL.length};
+  document.querySelectorAll(".navitem[data-view]").forEach(b=>{
+    const n=b.querySelector(".n"); if(n) n.textContent=map[b.dataset.view];
+  });
+  $("#segE").textContent=risk.filter(a=>a.seg==="Enterprise").length;
+  $("#segM").textContent=risk.filter(a=>a.seg==="Mid-market").length;
+  $("#segG").textContent=risk.filter(a=>a.seg==="Growth").length;
+  document.querySelector("#selall").setAttribute("aria-label",`Select all ${risk.length} accounts in this view`);
+})();
+
+/* ══ interaction ══════════════════════════════════════════════════════════ */
+function focusRow(i,open){
+  state.focus=i;
+  document.querySelectorAll("#rows tr").forEach(tr=>tr.removeAttribute("data-focus"));
+  const tr=rowsEl.querySelector(`tr[data-i="${i}"]`);
+  if(tr){tr.setAttribute("data-focus","true");tr.scrollIntoView({block:"nearest"});}
+  if(open&&window.matchMedia("(max-width:1179px)").matches) document.body.classList.add("detail-open");
+  render();
+}
+
+rowsEl.addEventListener("click",e=>{
+  const tr=e.target.closest("tr"); if(!tr) return;
+  const i=+tr.dataset.i;
+  if(e.target.matches('input[type="checkbox"]')){
+    if(e.target.checked) state.selected.add(i); else state.selected.delete(i);
+    render(); return;
+  }
+  focusRow(i,true);
+});
+
+$("#selall").addEventListener("change",e=>{
+  const rows=viewRows();
+  if(e.target.checked) rows.forEach(a=>state.selected.add(a.i)); else state.selected.clear();
+  render();
+});
+$("#clearsel").addEventListener("click",()=>{state.selected.clear();$("#selall").checked=false;render();});
+$("#dclose").addEventListener("click",()=>document.body.classList.remove("detail-open"));
+
+document.querySelectorAll(".sortbtn").forEach(b=>{
+  b.addEventListener("click",()=>{
+    const k=b.dataset.sort;
+    if(state.sort===k) state.dir*=-1;
+    else{state.sort=k;state.dir=(k==="name")?1:-1;}
+    document.querySelectorAll("thead th").forEach(o=>o.removeAttribute("aria-sort"));
+    b.closest("th").setAttribute("aria-sort",state.dir===1?"ascending":"descending");
+    b.querySelector(".ind").textContent=state.dir===1?"▲":"▼";
+    const label={name:"Account",arr:"ARR",score:"Risk",days:"Renews",touch:"Touch"}[k];
+    $("#sortbtn").innerHTML=`Sort: ${label} <span class="car" aria-hidden="true">${state.dir===1?"↑":"↓"}</span>`;
+    render();
+  });
+});
+
+document.querySelectorAll(".navitem[data-view]").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".navitem").forEach(o=>o.removeAttribute("aria-current"));
+    b.setAttribute("aria-current","true");
+    state.view=b.dataset.view;
+    if(state.view==="all"){state.filters.band=false;syncChips();}
+    state.selected.clear();$("#selall").checked=false;
+    $("#viewsw").innerHTML=`${b.firstChild.textContent.trim()} <span class="car" aria-hidden="true">▾</span>`;
+    setData("populated");
+  });
+});
+
+function syncChips(){
+  document.querySelectorAll(".chip").forEach(c=>{
+    c.style.display=(c.dataset.filter==="band"&&!state.filters.band)?"none":"";
+  });
+  const n=(state.filters.band?1:0)+(state.filters.horizon?1:0);
+  $("#filtercount").textContent=n===1?"1 filter":`${n} filters`;
+}
+document.querySelectorAll(".chip .x").forEach(x=>{
+  x.addEventListener("click",()=>{
+    const key=x.closest(".chip").dataset.filter;
+    state.filters[key]=false; syncChips(); setData("populated");
+  });
+});
+
+const q=$("#q");
+q.addEventListener("input",()=>{
+  state.q=q.value.trim();
+  if(state.q&&viewRows().length===0){ setData("empty"); }
+  else setData("populated");
+});
+$("#clearsearch").addEventListener("click",()=>{q.value="";state.q="";setData("populated");q.focus();});
+$("#clearfilters").addEventListener("click",()=>{
+  state.filters.band=false;state.filters.horizon=false;syncChips();
+  q.value="";state.q="";setData("populated");
+});
+$("#retry").addEventListener("click",()=>{
+  setData("loading");
+  setTimeout(()=>setData("populated"),1400);
+});
+
+document.addEventListener("keydown",e=>{
+  if(e.target===q){ if(e.key==="Escape"){q.value="";state.q="";setData("populated");q.blur();} return; }
+  if(e.key==="/"){e.preventDefault();q.focus();return;}
+  if(e.key==="Escape"&&document.body.classList.contains("detail-open")){document.body.classList.remove("detail-open");return;}
+  if(state.data!=="populated") return;
+  const rows=viewRows(); if(!rows.length) return;
+  const cur=rows.findIndex(a=>a.i===state.focus);
+  if(e.key==="j"||e.key==="ArrowDown"&&e.target===document.body){e.preventDefault();focusRow(rows[Math.min(rows.length-1,cur+1)].i,false);}
+  else if(e.key==="k"||e.key==="ArrowUp"&&e.target===document.body){e.preventDefault();focusRow(rows[Math.max(0,cur-1)].i,false);}
+  else if(e.key==="x"&&cur>=0){e.preventDefault();
+    if(state.selected.has(state.focus)) state.selected.delete(state.focus); else state.selected.add(state.focus);
+    render();}
+});
+
+/* ── demo state switcher ─────────────────────────────────────────────────── */
+function setData(s){
+  state.data=s;
+  document.querySelectorAll(".demobar button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.state===s)));
+  if(s==="empty"&&!state.q){ q.value="sandberg"; state.q="sandberg"; }
+  if(s!=="empty"&&q.value==="sandberg"){ q.value=""; state.q=""; }
+  if(s==="empty"){
+    const saveQ=state.q; state.q="";
+    const base=viewRows().length; state.q=saveQ;
+    $("#empty-h").textContent=`No accounts match “${state.q}” and these ${(state.filters.band?1:0)+(state.filters.horizon?1:0)} filters.`;
+    $("#empty-p").textContent=`Search covers account name and owner. ${base} accounts match the filters on their own — clearing the search is probably what you want.`;
+  }
+  render();
+}
+document.querySelectorAll(".demobar button").forEach(b=>{
+  b.addEventListener("click",()=>setData(b.dataset.state));
+});
+
+syncChips();
+state.focus=viewRows()[0]?.i ?? null;
+render();
+</script>
+</body>
+</html>

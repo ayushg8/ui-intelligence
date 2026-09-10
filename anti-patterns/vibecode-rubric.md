@@ -3,10 +3,25 @@
 **A 0–10 instrument for "how obviously did a machine make this."** Run it against a screenshot and
 the page's computed CSS. Target **≤2**. Ship gate is **≤3**.
 
-**Evaluated:** 2026-09 · Every number and quoted string below was read out of a live interface with
-Playwright (computed styles, `:root` custom properties, stylesheet rule inspection) or off a
-1440×900 render at 2×. The calibration set is 14 real interfaces, listed with their scores in
-§8. Nothing here is recalled.
+**Evaluated:** 2026-09-09 and 2026-09-10 · Every number and quoted string below was read out of a
+live interface with Playwright (computed styles, `:root` custom properties, raw stylesheet text
+captured off the network) or off a 1440×900 render at 2×. The calibration set is **18** real
+interfaces, listed with their scores in §8, covering three generators — **v0, Lovable and Bolt**,
+which have **different fingerprints** (§6.3). Nothing here is recalled.
+
+**Five things in this file are corrections to advice that sounds right and measures wrong.** Each
+is marked ⚠, and each was falsified by a specific interface in the calibration set:
+
+| Retired check | Falsified by |
+|---|---|
+| High `:root` token count means an authored system (§6.3) | Bolt `weight.coach`: **304** properties, 292 of them Tailwind's stock palette |
+| Missing focus rings prove generation (§6.4, §2) | Lovable output ships **9–15** `:focus-visible` rules nobody designed |
+| Unspaced em dashes are an AI tell (§6.2) | **Stripe: 11.** Linear, Mercury and GOV.UK: 0 |
+| Straight apostrophes are an AI tell (§6.2) | **Resend: 19 straight, 0 curly** — and it scores 2.6 |
+| A verbatim `Acme` floors the score (§7) | Resend renders `Weekly Acme Newsletter` in its own hero |
+
+Retired means *stop running them*, not *weigh them less*. A check that fires on GOV.UK is not a
+weak check, it is a broken one (§11.9).
 
 **The instrument's job is not to detect novelty.** It detects *absence of decisions*. A boring
 interface where every boring choice was made on purpose scores 0. Read §3 before you score
@@ -24,7 +39,7 @@ Score the whole artifact, then check it against these. A scale without anchors g
 | **2** | Conventional components, entirely conventional layout — and every surface carries this product's real content and vocabulary. | **Linear**: pill nav buttons, dark mode, Inter, a card grid — every "tell" — but the hero screenshot reads `DRV-8852 Faster app launch` / "Render UI before `vehicle_state` sync when minimum required state is present" / `Triage Intelligence added the labels Performance and iOS · 2min ago` / `1 / 84`. **Mercury**: an AI-looking surreal hero image, and under it `Mercury is a fintech company, not an FDIC-insured bank. Banking services provided through Choice Financial Group and Column N.A., Members FDIC.` **Basecamp**: `91,733 people are working in Basecamp right now!`, section head "Tell me if this sounds about right." |
 | **4** | Shares most surface traits with generated output, but authorship is demonstrable. Abstract copy, default-adjacent aesthetic, real substance underneath. | **Vercel.com**: headline is two abstract words ("Agentic Infrastructure"), body copy is "For coding agents / To ship apps and agents / Automated by agents", pill CTAs, Geist, black-and-white — *and* 374 `:root` custom properties, a proprietary typeface, verifiable customer logos (Charles Schwab, DoorDash, OpenAI, Polymarket), a real dated event banner ("Ship 26 is coming to SF"). |
 | **6** | A coherent, consistent, competently built system whose content is entirely placeholder and whose values are entirely library defaults. Not a lie, an unfinished product. | **TailAdmin demo**: internally consistent, one indigo, correct hierarchy — and three metrics in one row all read `$20K`, the subtitle "Target you've set for each month" appears under two unrelated cards, and the summary line is "You earn $3287 today, it's higher than last month. Keep up your good work!" **shadcn `dashboard-01`**: `Acme Inc.` / `$1,250.00` / `1,234` / `45,678` / `4.5%`, with `+12.5%` on two of the four tiles. |
-| **8** | Ambitious surface, zero product. The page is a shape where a product should be. Fabricated evidence. Scaffold left in the CSS. | **v0 "Optimus"**: stat strip reads `98% faster deployment STRIPE · 300% throughput increase LINEAR · 6x faster to ship NOTION · 20 days saved on builds NETFLIX · 98% faster deployment STRIPE` — invented numbers, attributed to real companies, and the first pair repeats inside one viewport. Zero `:focus-visible` rules on the entire page. Its `:root` carries seven `--sidebar-*` tokens on a marketing page with no sidebar. **v0 "Compute"**: same skeleton, different image; logo wall reads `Meridian Labs · Flux Systems · Beacon AI · Prism Analytics`. |
+| **8** | Ambitious surface, zero product. The page is a shape where a product should be. Fabricated evidence. Scaffold left in the CSS. | **v0 "Optimus"**: stat strip reads `98% faster deployment STRIPE · 300% throughput increase LINEAR · 6x faster to ship NOTION · 20 days saved on builds NETFLIX · 98% faster deployment STRIPE` — invented numbers, attributed to real companies, and the first pair repeats inside one viewport. Zero `:focus-visible` rules on the entire page. Its `:root` carries seven `--sidebar-*` tokens on a marketing page with no sidebar. **v0 "Compute"**: same skeleton, different image; logo wall reads `Meridian Labs · Flux Systems · Beacon AI · Prism Analytics`. **Bolt `weight.coach`** (hackathon grand-prize winner, 7.5): h1 is `Your Personal Chef. / Your Smart Kitchen. / Your Better Life.`, 27 of 44 headings are Title Case, and the `:root` carries the **entire Tailwind default palette** — 292 ramp tokens across 22 hues — with every semantic alias pointing at a stock 500 step. |
 | **10** | The scaffold, shipped. Every value is a framework default and every string is a fixture. | Measured composite of the untouched shadcn/Tailwind v4 starter: exactly **33** `:root` properties including `--sidebar-ring` and `--chart-1..5` on a page with neither; `--radius: .625rem`, `--destructive: #e40014`, `--background:#fff`, `--foreground:#0a0a0a`, `--border:#e5e5e5`, `--ring:#a1a1a1` all unchanged; every transition on the page `150ms cubic-bezier(0.4, 0, 0.2, 1)` with `transition-property: all`; `Acme Inc.` still in the sidebar. |
 
 **Odd numbers are legal.** 1, 3, 5, 7, 9 mean "between these two, closer to the lower one."
@@ -32,6 +47,11 @@ Score the whole artifact, then check it against these. A scale without anchors g
 **Note on the calibration set:** it tops out at 8. Published v0 templates are curated and
 favourited; nobody features the 10. A 10 is what comes out before anyone looks at it, which is
 exactly the artifact this rubric exists to catch. Do not read "nothing scored 10" as "10s are rare."
+
+**The tool is not the score.** The set contains a page built with Lovable that scores **2.8** —
+below Vercel — and a page that won the grand prize at Bolt's hackathon that scores **7.5**. Both
+were generated. The instrument reads the artifact, never the toolchain, and there is no version of
+"built with X, therefore N" anywhere in it. If you find yourself scoring the provenance, stop.
 
 ---
 
@@ -44,7 +64,7 @@ Score each dimension 0–10 on its own anchors (§6), then take the weighted mea
 | 1 | **Product specificity** | **20** | The single strongest signal and the hardest to fake, because faking it requires knowing the domain. It is also the cheapest to *earn* and the one that moves a human's read the most. Linear and shadcn `dashboard-01` are near-identical as component compositions; `DRV-8852 / vehicle_state` versus `Acme Inc. / $1,250.00` is the entire difference. |
 | 2 | **Copy** | **18** | Second-hardest to fake, and it survives a screenshot. Prose is where a model's priors are least disguised: three unrelated v0 templates by three authors independently produced "Everything you need…", and two of them shipped the string **"Global by default."** verbatim. You cannot restyle your way out of this. |
 | 3 | **Component defaults & fingerprints** | **13** | Nearly free to check and nearly conclusive, because scaffolds leave dead artifacts — tokens for components the page does not contain. Weighted below copy only because a competent author can strip them in ten minutes without changing anything a user sees. |
-| 4 | **States & depth** | **10** | The cure for "looks like a mockup." Generated pages have one state per element. All four v0 pages measured have **zero** `:focus-visible` rules; GOV.UK has 28. |
+| 4 | **States & depth** | **10** | The cure for "looks like a mockup." Generated pages have one state per element. All four v0 pages and Bolt's `weight.coach` measure **zero** `:focus-visible` rules; GOV.UK has 28. Held at 10 rather than raised, because ⚠ the check is one-directional: component-library output ships focus states nobody designed (Lovable measures 9–15), so a healthy count proves nothing. See §6.4. |
 | 5 | **Layout & rhythm** | **10** | Detects "spacing was never decided." Measurable as scale degeneracy: v0 "Agentic" uses `gap: 24px` on 61 elements and applies `padding: 128px 0` to all nine sections; Linear's gaps are 8px×94, 4px×62, 6px×51, 12px×14, 2px×11. |
 | 6 | **Color** | **8** | Real signal (untouched ramps, accent-everywhere) but noisy — many excellent products are also monochrome-plus-one, and the 2023 "purple-blue gradient" tell is mostly extinct. |
 | 7 | **Typography** | **8** | Same: real signal in scale *vocabulary*, but the individual values converged. Tight display tracking is now standard everywhere, good and bad. |
@@ -57,7 +77,7 @@ is what an agent optimises when it is avoiding the real work.
 
 ---
 
-## 3 — The confound: four different diagnoses
+## 3 — The confound: five different diagnoses
 
 Most bad rubrics collapse these. They have different scores and different fixes.
 
@@ -84,6 +104,19 @@ Ambition applied to nothing is still nothing.
 paste (§4). "Feels generic" is a zero-point finding. If your only complaint is "this resembles
 other products in its category," check whether that is a finding or a preference; the answer is
 usually preference.
+
+**The fifth diagnosis, which the four-way table above cannot express: generated, and correct
+anyway.** `liquid-log-glow`
+scores 4.7 almost entirely on one dimension — DEF 9, for scaffold nobody can see. Every dimension a
+user experiences is 2–4. It renders its own empty state, uses real units, and does the one job it
+has. Its honest prescription is "delete some dead tokens and rewrite one button label," not "this is
+a 4.7, redesign it." **A score is not a verdict on whether an interface should exist.** Before you
+act on a number, look at which dimensions produced it: a score concentrated in DEF, MOT and SURF is
+a cleanup; a score concentrated in SPEC and COPY is a rebuild. Report the shape, not just the total.
+
+The mirror of this is the trap: **an artifact can be generated end to end and still be the right
+thing to ship.** The Lovable partner directory scores 2.8. Nothing in this instrument says to stop
+using a generator; it says to finish the work the generator left undone.
 
 ---
 
@@ -126,20 +159,34 @@ high on the full path.
 | **1** | **Could this screenshot belong to any other product in this category with only the logo swapped?** | Yes | +3 |
 | **2** | **Is there a number, name, ID, unit or label on screen that only this product could produce?** | No | +3 |
 | **3** | **Pick the longest sentence. Would a person who works here have written it?** | No | +2 |
-| **4** | `grep -c ':focus-visible'` on the page CSS, and: does any element show a second state (hover/selected/loading/empty/error)? | 0 / none | +1 |
-| **5** | Does any of these appear verbatim: `Acme`, `Lorem`, `$1,250.00`, `1,234`, `45,678`, `+12.5%`, `John Doe`, `example.com`, `99.9% uptime`, `Everything you need`, `Trending up this month`, `Product Name`, `Your Company`? | Yes | +1 |
+| **4** | `grep -c ':focus-visible'` on the page CSS, and: does any element show a second state (hover/selected/loading/empty/**disabled**/error)? | 0 **and** none | +1 |
+| **5** | Two or more of these as **exact** strings in product chrome — `Acme Inc.`, `Lorem ipsum`, `$1,250.00`, `1,234`, `45,678`, `+12.5%`, `Total Revenue`, `Trending up this month`, `John Doe`, `Product Name`, `Your Company` — **or** a generator watermark still on the page (`Edit with Lovable`, `MADE IN BOLT.NEW`, `Built with v0`)? | Yes | +1 |
 
 Sum = fast score, 0–10. Measured against the §8 set, fast score first, full score second:
 
 ```
-GOV.UK 0/0.2   Linear 0/1.4   Basecamp 0/1.4   Mercury 0/1.6   Stripe 0/1.7   Vercel 2/3.5
-shadcn dash-01 9/5.3   Cruip 9/6.1   TailAdmin 8/6.4   Compute 9/8.2   Optimus 10/8.1   Agentic 10/8.5
+GOV.UK 0/0.2   Linear 0/1.4   Basecamp 0/1.4   Mercury 0/1.6   Stripe 0/1.7   Resend 0/2.6
+Lovable-dir 0/2.8   Vercel 2/3.5   blueprintbuddy 1/3.9   liquid-log-glow 6/4.7
+shadcn dash-01 9/5.3   Cruip 9/6.1   TailAdmin 8/6.4   weight.coach 7/7.5
+Compute 9/8.2   Optimus 10/8.1   Agentic 10/8.5
 ```
+
+(v0 "UXBooster" is omitted from this line only: it was scored on the full path in the 2026-09-09 run
+and never run through the fast path, and inventing its fast score would defeat the point of the line.)
 
 **It is accurate at both ends and runs about 2–3 points hot on templates.** That is by design: the
 fast path cannot tell "generated" from "somebody else's finished product", because from the outside
 they look the same and both need the same first fix. Use it as the trigger for the full path, not
 as the score. Anything ≥4 on the fast path gets the full path.
+
+**Two new failure modes, from the Lovable and Bolt rows.** `liquid-log-glow` runs **hot** (6 fast vs
+4.7 full) because a single-purpose utility trips Q1 — any water tracker looks like any other water
+tracker, and that is not a defect. `blueprintbuddy` runs **cold** (1 fast vs 3.9 full): the fast path
+sees real domain nouns and working focus states and clears it, while the full path finds the
+unconverted `--destructive`, the accent-coloured headline and the leftover `--sidebar-*`. So the
+trigger rule needs a second clause: **run the full path when the fast path scores ≥4, *or* whenever
+the artifact is something you are about to ship.** The fast path is a smoke alarm, and a cold reading
+from it is not a clearance.
 
 **Question 1 is the whole rubric compressed.** If the answer is yes, nothing you do to the radius
 scale will help.
@@ -184,13 +231,62 @@ content is now a claim.
 | **8** | The construction set. **Antithesis**: "Your toolkit to stop configuring and start innovating.", "Everything you need. Nothing you don't.", "Autonomous, not uncontrolled." **Tricolon of one-word sentences**: "Define. Deploy. Scale.", "Three steps. Infinite possibilities." **Title Case feature nouns in a 4-grid**: `Instant Deployment · AI-Native Workflows · Real-time Collaboration · Enterprise Security` and `Visual Agent Builder · Real-time Monitoring · Memory & Context · Guardrails & Permissions`. **The aspiration headline**: "Build & orchestrate AI agents while you sleep." |
 | **10** | Cross-template string collisions and chirp. `Global by default.` appears verbatim as an h2 in **both** v0-optimus and v0-compute. Both ship the identical pricing-section CTA set `Start free · Start trial · Contact sales · Compare all features`. TailAdmin: "You earn $3287 today, it's higher than last month. Keep up your good work!" |
 
-**Two mechanical checks worth more than they cost.**
-1. **Case.** Count Title Case headings that are not proper nouns. Linear, Mercury, Stripe and
-   GOV.UK use sentence case throughout; all three v0 templates use Title Case for feature headings.
-   Three or more Title Case noun-phrase headings is a finding.
-2. **Apostrophes.** Cruip's h1 is `The website builder you're looking for` with a straight `'`
-   (U+0027). Basecamp, Linear and GOV.UK all use `’` (U+2019). Straight quotes in display type
-   means nobody read the headline at size.
+**Three mechanical checks, measured across 11 interfaces.** Each is one line of JS against
+`document.body.innerText`. The tables below are the actual counts, so you can see where each check
+separates and where it does not.
+
+**1. Title Case headings.** Count `h1,h2,h3` whose words are >80% capitalised and which are not
+proper nouns.
+
+| | Title Case / total headings |
+|---|---|
+| Bolt `weight.coach` | **27 / 44** |
+| Linear · Basecamp · Mercury · Stripe · GOV.UK · Resend | **0** / 15, 7, 20, 33, 22, 27 |
+| Lovable `blueprintbuddy` | **0 / 20** |
+
+Six designed interfaces produced **zero** between them. Three or more is a finding. Note the miss:
+Lovable writes sentence case, so this check catches Bolt and v0 and not Lovable. No single copy
+check covers all three generators — that is why COPY is scored on the whole body of text, not on a
+grep.
+
+**2. Apostrophe direction — an exculpatory check, not an accusatory one.** ⚠ The obvious version of
+this check is wrong. Counts of `’` (U+2019) versus `'` (U+0027) between letters:
+
+| Interface | curly | straight |
+|---|---|---|
+| Basecamp | **33** | 0 |
+| Stripe | **15** | 1 |
+| Mercury | **8** | 1 |
+| Linear | **6** | 1 |
+| GOV.UK | 4 | 7 |
+| **Resend** | **0** | **19** |
+| Lovable `blueprintbuddy` | 0 | 6 |
+| Bolt `weight.coach` | 0 | 20 |
+
+**Resend is a designed product with zero curly apostrophes**, and GOV.UK is mixed because its copy
+is authored by hundreds of civil servants in a CMS. So straight quotes prove nothing. The
+*inverse* is clean and useful: **≥5 curly apostrophes with ~0 straight ones was typed by a person in
+an editor with smart quotes** — true of 4 of 4 designed products, 0 of 3 generated ones. Use it to
+clear an interface, never to convict one.
+
+**3. ⚠ Do not check em dashes.** The famous tell measures backwards. Unspaced em dashes
+(`word—word`) per page: **Stripe 11**, Resend 3, Bolt `weight.coach` 2, Lovable `blueprintbuddy` 0,
+Linear 0, Mercury 0, GOV.UK 0. Stripe leads the field because American typographic convention sets
+the em dash closed, and Stripe employs editors who know that. Spend the attention on Title Case.
+
+**4. The accent-coloured phrase inside the headline.** Count distinct computed `color` values among
+the h1's text nodes. Two or more means part of the headline is painted in the accent:
+
+- Bolt `weight.coach` — 2 colors: `Chef.` and `Kitchen.` in `rgb(167,139,250)`, `Personal`,
+  `Smart`, `Better` and `Life.` in white. **The coloured words are not the words that carry the
+  sentence.**
+- Lovable `blueprintbuddy` — 2 colors: `in under a minute` in `oklch(0.74 0.13 219)`.
+- Linear, Mercury, Vercel, Basecamp, GOV.UK, Resend, shadcn.com — **1 color each.**
+
+The nuance that keeps this honest: **Stripe also measures 2** (`rgb(129,184,26)` on part of its h1).
+The difference is which words get the color. Stripe colors the noun the sentence is about; the
+generated version colors whichever phrase ends a line. Do not deduct for a two-colour headline —
+deduct when you cannot explain why *those* words are the coloured ones.
 
 **When a high score here is acceptable:** never, on shipped product surfaces. Placeholder copy in a
 component demo is fine and should be labelled as such.
@@ -207,8 +303,96 @@ for (const s of document.styleSheets) { try { for (const r of s.cssRules)
     if (n.startsWith('--')) console.log(n, r.style.getPropertyValue(n).trim()); } catch {} }
 ```
 
-Measured token counts: **Vercel 374 · Resend 275 · Basecamp 91 · shadcn.com 41 · TailAdmin 32 ·
-GOV.UK 24 (all `--govuk-*`) · Linear 0 and Mercury 6 (resolved at build time) · every v0 app 33.**
+Note that a cross-origin stylesheet throws on `cssRules`, and you will silently read zero. When the
+count comes back 0 with a visibly themed page, capture the raw CSS off the network instead —
+`page.on('response', …)` filtered to `text/css` — and regex `:root` blocks out of the text.
+
+Measured token counts: **Vercel 374 · Bolt `weight.coach` 304 · Resend 275 · Basecamp 91 ·
+shadcn.com 41 · Lovable `blueprintbuddy` 39 · Lovable `liquid-log-glow` 39 · TailAdmin 32 · Lovable
+partner directory 31 · GOV.UK 24 (all `--govuk-*`) · Linear 0 and Mercury 6 (resolved at build
+time) · every v0 app 33.**
+
+⚠ **Count is not the signal, and the earlier version of this file was wrong to imply it was.**
+`weight.coach` exposes 304 custom properties and 292 of them are the **Tailwind default color
+palette dumped verbatim** — `--amber-50…950`, `--blue-50…950`, `--cyan-50…950`, across 22 hues, on a
+page that uses three. Vercel's 374 and `weight.coach`'s 304 are the same number and opposite facts.
+What separates them is **shape**:
+
+| Shape | Reading |
+|---|---|
+| Namespaced to the product (`--govuk-focus-colour`, `--s--focus-ring`) | authored |
+| Semantic and *consumed* (`--ink`, `--ink-2`, `--hairline`, `--recess`, `--paper`) | authored |
+| An 11-step ramp for every hue the framework ships | the framework's palette, exported |
+| A semantic name aliasing a stock ramp step | **the giveaway — see below** |
+
+**The single best check in this dimension: resolve the semantic tokens and see if they equal ramp
+steps.** `weight.coach`, self-verified from its own `:root`:
+
+```
+--primary    #6366F1  ==  --indigo-500
+--success    #10B981  ==  --emerald-500
+--warning    #F59E0B  ==  --amber-500
+--error      #EF4444  ==  --red-500
+--background #F8FAFC  ==  --slate-50
+--coral      #FF6B6B  ==  --coral-500
+```
+
+Six for six. A semantic layer whose every value is a stock 500 step is a rename, not a decision — the
+model produced the *vocabulary* of a design system without making any of the choices a design system
+consists of. This is the most common failure in 2026 output and it is invisible in a screenshot.
+Contrast Basecamp's `--color-ink` and `--color-blue`, which are consumed by name inside
+`:focus-visible` rules, or Lovable's partner directory, which rethemes `--destructive` off the stock
+value entirely (below).
+
+### The three generator fingerprints
+
+They are different, and an agent that only knows the shadcn/v0 one will clear Bolt and Lovable
+output by mistake.
+
+| | **v0** | **Lovable** | **Bolt** |
+|---|---|---|---|
+| Token base | shadcn contract, **exactly 33** `:root` props | shadcn contract, rethemed, **31–39** props | **Tailwind palette dumped**, 300+ props |
+| Dead scaffold | `--sidebar-*` ×7, `--chart-1..5` on pages with neither | `--sidebar-*` retained (16–54 occurrences) | no `--sidebar-*`, no `--chart-*` |
+| Semantic layer | none — the contract is the whole system | **a second vocabulary added beside the first** (`--ink`, `--surface`, `--widget`, `--signal`) | present, but every value aliases a stock ramp step |
+| `:focus-visible` rules | **0** | **9–15** (inherited from shadcn's components) | **0** |
+| Radius | `calc(infinity*1px)` and nothing else | `.5rem` base + pills | 16px + pills + 24/12/48/40 |
+| Watermark | — | `Edit with ✱ Lovable` badge, font `CameraPlainVariable` | `MADE IN BOLT.NEW` roundel |
+
+**The Lovable-specific tell: the parallel vocabulary.** When the model cannot bring itself to
+rewrite the contract it inherited, it leaves the contract in place and invents a second one next to
+it. `liquid-log-glow` is the pure case — a dark page (`--background: 222 18% 7%`,
+`--foreground: 30 20% 96%`) in which shadcn's **light-theme defaults survive untouched**:
+
+```
+--card             : 0 0% 100%          /* white card on a 7%-lightness page */
+--card-foreground  : 222.2 84% 4.9%     /* near-black text on it */
+--popover          : 0 0% 100%
+--border           : 214.3 31.8% 91.4%
+--muted            : 210 40% 96.1%
+--secondary        : 210 40% 96.1%
+--primary          : 222.2 47.4% 11.2%
+--_unused_bg       : 0 0% 100%          /* renamed rather than deleted */
+--_unused_fg       : 222.2 84% 4.9%
+```
+
+…and beside them a private set — `--widget`, `--widget-border`, `--widget-foreground`, `--track`,
+`--accent-orange` — doing all the actual work, because the inherited names no longer describe
+anything on the page. **Two token systems for one surface means the model was editing, not
+designing.** `--_unused_` as a literal prefix is the highest-confidence single string in this whole
+file: no human types that.
+
+**`--destructive` is the last token anyone themes.** Across three generators and two shadcn
+generations, every one kept the stock value in whatever notation its generation used:
+
+| Interface | `--destructive` | resolves to |
+|---|---|---|
+| all four v0 apps | `oklch(0.577 0.245 27.325)` | shadcn v4 default |
+| Lovable `blueprintbuddy` | `oklch(57.7% .245 27.325)` | same value, reformatted |
+| Lovable `liquid-log-glow` | `hsl(0 84.2% 60.2%)` / dark `hsl(0 62.8% 30.6%)` | `#ef4444` / `#7f1d1d` — shadcn v3 default |
+| **Lovable partner directory** | **`#ff003b`** | **rethemed — the exception** |
+
+An error colour nobody chose is an error state nobody designed. It is also two seconds to check and
+it survives every reformat, minifier and notation change.
 
 | Score | Anchor |
 |---|---|
@@ -242,9 +426,23 @@ but do not restyle a working admin panel to satisfy this line.
 | **6** | Outlines killed, partially restored. TailAdmin: **13** `outline: none` rules, **26** bare `:focus` rules, **2** `:focus-visible` — a keyboard user gets nothing on most controls. |
 | **9–10** | Zero. All four v0 apps measured `0` rules matching `:focus-visible` and `0` matching `:focus`; so does Cruip's "Simple" template. Nothing on the page has a keyboard state, an empty state, an error state or a loading state. |
 
-Also score, from the screenshot: does any list show what it looks like with **zero** rows? Does any
-number show what it looks like while **loading**? Does any destructive action show its
-**confirmation**? A generated page has exactly one state — the happy one, fully populated.
+⚠ **The zero-focus check has a large blind spot, and it is worth knowing before you rely on it.** It
+catches pages a model wrote from scratch — v0 marketing pages, `weight.coach` (0 `:focus-visible`, 1
+bare `:focus` in 48KB of CSS), Cruip. It **misses everything built on a component library**, because
+the library authored the focus states and they ship whether or not anyone thought about them.
+Lovable output measures **9, 14 and 15** `:focus-visible` rules across the three apps in the set —
+better than Linear's 7 — and none of that is evidence that anyone designed a state.
+
+So: **zero focus rules is strong evidence of generation; nonzero is no evidence of design.** When the
+count is healthy, stop counting and go look instead. Does any list show what it looks like with
+**zero** rows? Does any number show what it looks like while **loading**? Does any destructive action
+show its **confirmation**? Is any control rendered **disabled** in the default view?
+
+Two interfaces in the set pass that look and they are both generated. `liquid-log-glow` renders its
+genuine empty state on load — `0 ml`, `0%`, `2000 ml left`, an unfilled bar — and the Lovable partner
+directory renders `Find my partners` **disabled** until you pick a chip. Meanwhile most of the
+designed set shows one populated happy path. A generated page usually has exactly one state; when it
+has two, credit it, and do not let the rest of the score claw the credit back.
 
 ### 6.5 Layout & rhythm · weight 10
 
@@ -261,7 +459,30 @@ top-level section.
 
 **The tell is uniformity, not size.** Linear also uses `128px` section padding. The difference is
 that Linear varies it and v0 does not: nine sections, one value, means nobody asked which sections
-deserve more air.
+deserve more air. Confirmed on a second generator: `weight.coach` runs `96px/96px` on **9 of its 11**
+sections, while Linear splits `128px/128px ×4` against `0/0 ×4`.
+
+**The centering ratio — the cheapest layout measure in the instrument.** Count text-bearing leaf
+elements, count how many compute to `text-align: center`, take the percentage:
+
+| Interface | centered |
+|---|---|
+| Bolt `weight.coach` | **66.2%** (137 / 207) |
+| Lovable `blueprintbuddy` | 21.6% (19 / 88) |
+| GOV.UK | 9.1% (12 / 132) |
+| Linear | 9.0% (75 / 831) |
+| Mercury | 5.5% (23 / 416) |
+
+Designed interfaces cluster at **5–9%**. This is not an aesthetic preference, it is a decision count:
+a left edge is a commitment about where the eye starts and what aligns to what, and centering is what
+you get when nobody made that commitment. Above ~40% is a finding on its own.
+
+**When centering is right, and it often is.** A single search affordance, an auth screen, an empty
+state, a confirmation dialog, a marketing hero with one CTA and nothing to align to — all correctly
+centered. The Lovable partner directory centers its entire hero and scores 2.8, because the page is
+one search box and there is nothing for a left edge to organise. Deduct for *sustained* centering
+through content that has structure — a feature grid, a pricing table, a stats row, body copy — not
+for a centered hero.
 
 **Do not check line length.** It used to be diagnostic; it is not any more. Measured columns:
 Stripe 503px@14px (~72ch), Linear 505px@15px (~67ch), GOV.UK 630px@19px (~66ch), v0 Optimus
@@ -366,12 +587,32 @@ Then apply, in this order:
 > distinctive-looking generic one.
 
 **Clamp B — the fixture floor.** If either is true, the final score is **at least 6**:
-1. A framework fixture string appears verbatim: `Acme`, `Lorem`, `$1,250.00`, `1,234`, `45,678`,
-   `+12.5%`, `Total Revenue`, `Trending up this month`, `Visitors for the last 6 months`,
-   `John Doe`, `jane@example.com`, `Product Name`, `Your Company`, `example.com`.
+
+1. **Two or more** framework fixture strings appear verbatim **in product chrome or as product
+   data** — a workspace name, an account name, a metric tile, a table cell, a chart label. The list:
+   `Acme Inc.`, `Lorem ipsum`, `$1,250.00`, `1,234`, `45,678`, `+12.5%`, `Total Revenue`,
+   `Trending up this month`, `Visitors for the last 6 months`, `John Doe`, `jane@example.com`,
+   `Product Name`, `Your Company`.
 2. A quantitative claim is attributed to a third party you did not verify — `98% faster
    deployment / STRIPE`, `99.9% uptime`, `50M+ tasks`, a logo wall of companies that are not
    customers.
+
+⚠ **Both qualifiers on clause 1 are corrections, and the calibration set forced them.**
+
+*Why "two or more":* a single hit is noise. `weight.coach` contains the substring
+`Everything you need` — inside `Everything you need to know about Weight Coach`, an ordinary English
+FAQ subtitle, not the shadcn fixture. **Match exact strings, anchored, never substrings**, and
+require the cluster. Fixtures travel in packs because they come from one seed file: shadcn's
+`dashboard-01` ships `$1,250.00`, `1,234`, `45,678` and `+12.5%` in a single row.
+
+*Why "in product chrome or as product data":* **Resend renders `Weekly Acme Newsletter`** in its hero
+mockup, and the old rule floored a 2.6 interface at 6. It should not have. Resend sells email
+infrastructure; the mockup depicts *a customer's* newsletter, and `Acme` is the correct placeholder
+for someone else's content that your product carries. Compare shadcn `dashboard-01`, where
+`Acme Inc.` sits in the **workspace switcher** — the app naming itself. The test is whether the
+fixture is the product's own identity or data, versus a depiction of the third-party content the
+product operates on. Placeholder domains and companies inside code samples, API references and email
+previews are correct content and never trigger this clamp.
 
 > The second is not only a design failure. Publishing an invented metric under a real company's
 > name is a claim about someone else's business.
@@ -386,9 +627,9 @@ demo" is not that exemption; the label has to be on the screen.
 
 ## 8 — Calibration set
 
-14 interfaces, screenshotted at 1440×900 and probed for computed styles on 2026-09-09. Dimension
-codes in weight order: SPEC 20 · COPY 18 · DEF 13 · STATE 10 · RHY 10 · COL 8 · TYPE 8 · SURF 6 ·
-MOT 4 · ORIG 3.
+18 interfaces, screenshotted at 1440×900 and probed for computed styles on 2026-09-09 (rows 1–14)
+and 2026-09-10 (the four **★** rows, which cover Lovable and Bolt). Dimension codes in weight order:
+SPEC 20 · COPY 18 · DEF 13 · STATE 10 · RHY 10 · COL 8 · TYPE 8 · SURF 6 · MOT 4 · ORIG 3.
 
 | Interface | Score | SPEC | COPY | DEF | STATE | RHY | COL | TYPE | SURF | MOT | ORIG |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -398,11 +639,15 @@ MOT 4 · ORIG 3.
 | Mercury `mercury.com` | **1.6** | 0 | 2 | 2 | 3 | 2 | 2 | 1 | 2 | 2 | 2 |
 | Stripe API reference | **1.7** | 0 | 1 | 2 | 2 | 2 | 2 | 4 | 3 | 3 | 3 |
 | Resend `resend.com` | **2.6** | 2 | 4 | 2 | 2 | 3 | 3 | 1 | 3 | 3 | 2 |
+| ★ Lovable partner directory | **2.8** | 2 | 3 | 3 | 2 | 4 | 2 | 3 | 3 | 4 | 3 |
 | Vercel `vercel.com` | **3.5** | 2 | 6 | 1 | 3 | 4 | 4 | 3 | 5 | 4 | 4 |
+| ★ Lovable `blueprintbuddy-b2c` | **3.9** | 3 | 5 | 4 | 3 | 5 | 3 | 4 | 4 | 5 | 4 |
+| ★ Lovable `liquid-log-glow` | **4.7** | 2 | 6 | 9 | 3 | 3 | 5 | 6 | 4 | 5 | 4 |
 | shadcn `dashboard-01` preview | **5.3** | 5 | 7 | 4 | 5 | 5 | 6 | 4 | 4 | 9 | 5 |
 | Cruip "Simple" | **6.1** | 7 | 7 | 4 | 9 | 5 | 5 | 6 | 4 | 7 | 5 |
 | TailAdmin demo | **6.4** | 8 | 8 | 5 | 6 | 5 | 6 | 5 | 5 | 6 | 5 |
 | v0 "UXBooster" dashboard | **7.2** | 7 | 7 | 9 | 10 | 6 | 5 | 6 | 7 | 8 | 4 |
+| ★ Bolt `weight.coach` | **7.5** | 6 | 7 | 9 | 10 | 8 | 8 | 8 | 6 | 8 | 4 |
 | v0 "Optimus" | **8.1** | 9 | 8 | 8 | 10 | 8 | 6 | 7 | 8 | 9 | 4 |
 | v0 "Compute" | **8.2** | 9 | 9 | 8 | 10 | 8 | 5 | 7 | 8 | 9 | 4 |
 | v0 "Agentic" | **8.5** | 9 | 9 | 10 | 10 | 9 | 7 | 6 | 7 | 8 | 4 |
@@ -466,6 +711,71 @@ untouched — `--background:#fff`, `--foreground:#0a0a0a`, `--border:#e5e5e5`, `
 `--sidebar-*` properties on a marketing page with neither chart nor sidebar. The visible surface is
 the most ambitious in the set (iridescent 3D render, glassmorphic floating nav). Ambition and
 scaffolding are independent.
+
+**★ Lovable partner directory — 2.8, the most important row in the table.** A page built with a
+vibecode tool, by the vibecode company, scoring below Vercel. `Browse all 83 partners` is a live
+count off a real database — the class of number no generator invents. The search box offers
+`Guided / Describe / Voice`, three input modes that are a product decision rather than a pattern,
+and the chip taxonomy is what people actually build on Lovable: `Website · Internal tool · AI
+product · Agents · Mobile app · Ecommerce · Migration · Dashboard`. `Find my partners` renders
+**disabled** until you pick one — a second state, on the default view. In the CSS,
+`--destructive: #ff003b` is the only rethemed destructive in the entire set, and the semantic layer
+(`--ink`, `--ink-2`, `--ink-3`, `--hairline`, `--hairline-strong`, `--paper`, `--recess`) *replaces*
+the shadcn contract instead of sitting beside it. It still carries generated traits — 183 elements
+at `calc(infinity*1px)`, a fully centered hero, 16 leftover `--sidebar-*` occurrences, and a
+straight apostrophe in `What's it for?`. Those are worth about 2.8 and no more.
+
+**★ Lovable `liquid-log-glow` — 4.7, and the render is not the problem.** Score it from the
+screenshot alone and you land near 3: a hydration tracker showing `0 ml`, `of 2000 ml goal`,
+`2000 ml left`, `GLASS 250 ml`, a live `Thursday, September 10 / 03:21`, and a genuine empty state on
+first load. Real units, real domain, one honest card. Then read the CSS and DEF is a **9** — the
+page is dark and shadcn's *light* defaults are still in it (`--card: 0 0% 100%`,
+`--card-foreground: 222.2 84% 4.9%`, `--border: 214.3 31.8% 91.4%`), nine `--sidebar-*` tokens at
+light values on a page with no sidebar, `--_unused_bg` and `--_unused_fg` renamed rather than
+deleted, and a whole parallel vocabulary (`--widget`, `--track`, `--accent-orange`) invented to do
+the work the abandoned names used to do. **This row exists to show the two passes disagreeing.** It
+is also the row where the remediation ladder says *do almost nothing*: it is a one-card utility that
+works, its worst dimension is invisible to every user, and the correct fix is twenty minutes of
+token deletion, not a redesign. The copy is the only thing a user sees that is wrong —
+`+ Drunk 250 ml` is a label no human ships, and `Tap Drunk to fill the orange line` explains the
+mechanism instead of naming the action.
+
+**★ Lovable `blueprintbuddy-b2c` — 3.9.** Sentence case throughout (0 of 20 headings Title Case —
+Lovable writes markedly better copy than Bolt), a real three-role type system (DM Sans + Space
+Grotesk + `ui-monospace`), a two-stop shadow hue-matched to the palette
+(`oklch(0.12 0.02 251/.4) 0 1px 2px, oklch(0.1 0.02 251/.7) 0 18px 40px -20px`), and a fully
+converted dark ramp in a single oklch hue family. Real domain nouns: `Google Analytics 4`,
+`Adobe Analytics`, `Mixpanel`, `Segment`, `PNG or JPG, up to 6MB`. What holds it at 3.9 rather than
+2: nav reading `How it works / What it does / Who it's for`, an eyebrow pill above the h1, the
+accent-coloured `in under a minute` closing the headline, zero curly apostrophes against six
+straight, and `--destructive` left at the stock oklch.
+
+**★ Bolt `weight.coach` — 7.5, and it won the grand prize.** The most useful hard case in the set,
+because judges scoring "impact, creativity, technical build, and design polish" gave it first place
+and this instrument gives it a 7.5. Both are right about different things. DEF is a 9 on the
+Tailwind palette dump and the six semantic aliases; STATE is a 10 on **zero** `:focus-visible` rules
+in 48KB of CSS; RHY is an 8 on `96px/96px` across 9 of 11 sections and **66.2%** of text leaves
+centered; COL is an 8 on `--primary` = `--indigo-500` and `--coral: #FF6B6B`; TYPE is an 8 on Inter
+alone at weights 400/500/600/700 across the stock size scale.
+
+Two things stop it going higher, and both deserve credit. **Its stat strip is honest.** In the exact
+slot where v0 fabricates — `98% faster deployment / STRIPE` — this page has `Growing / Community of
+beta testers`, `100% / Feedback response rate`, `Daily / We use our own app`. Somebody refused to
+invent a number. **Clamp B does not fire**, and that is the difference between a 7.5 and a 9. And
+its SPEC is a 6 rather than a 9 because the phone mockup contains real nutrition data — `675 cal of
+2000 cal`, `Protein 42g / 150g`, `Carbs 28g / 200g`, `Fat 42g / 70g`,
+`Honey Garlic Chicken Stir-Fry with Jasmine Rice`, `645 calories · 38g protein`, `LUNCH · 12:30`.
+The give-away is that it is frozen: `Hello, Sergiy! / Monday, June 30, 2025`, a date fourteen months
+stale at time of scoring.
+
+**The copy on this page is bimodal, and that is itself a fingerprint.** The body prose contains
+observed sensory detail no model volunteers unprompted — "Your hands are covered in flour. The
+timer's going off. The sauce needs stirring." — while every heading above it is construction-set:
+`Your Personal Chef. / Your Smart Kitchen. / Your Better Life.`, `Powered by intelligence. Designed
+for humans.`, `Stop guessing. Start saving.`, `Every ingredient. Every expiration date. Every
+possibility.`, `Never Waste Again`. A human wrote the paragraphs and accepted the headings. When you
+see that split — good sentences, generated headings — the fix is small and specific: rewrite the
+headings, keep the prose. It scores COPY 7 rather than 8 for exactly this reason.
 
 ### What the calibration set proves about 2023-era advice
 
@@ -544,6 +854,20 @@ to lower a number.
 
 **0–2 — done.** Re-score after the next content change, not the next style change.
 
+### When one dimension carries the whole score
+
+Before working the band, check the **shape**. Sum the user-visible dimensions (SPEC, COPY, RHY, COL,
+TYPE, SURF) against the invisible ones (DEF, STATE-as-CSS, MOT). Three shapes, three prescriptions:
+
+| Shape | Example | Do this |
+|---|---|---|
+| Invisible dimensions carry it | `liquid-log-glow` 4.7 — DEF 9, everything a user sees 2–4 | **Deletion only.** Strip the unconverted tokens, the `--sidebar-*`, the `--_unused_*`. Twenty minutes. Do not touch the layout. |
+| SPEC and COPY carry it | v0 "Agentic" 8.5 | **Rebuild the content.** The surface is downstream of it and will have to move anyway. |
+| Flat across all ten | `weight.coach` 7.5 — nothing below 4, six dimensions at 8+ | **Content first, then one pass per band.** A flat profile means no single fix moves it; work §9's order and re-score after each. |
+
+The failure this prevents: an agent reads "4.7" and redesigns a working interface, or reads "7.5" and
+spends the day on the token file because that dimension scored highest.
+
 ### The ordering rule, stated plainly
 
 **Structure before surface. Content before structure.** An agent that scores 8, spends an hour on a
@@ -604,6 +928,16 @@ The instrument is being run by the thing it grades. These are the loopholes to c
    the screen.
 7. **Do not score your own work in the same pass that you defend it.** The score and the
    justification are different jobs. Score first, from the render, before re-reading your code.
+8. **Never score the toolchain.** "Built with v0/Lovable/Bolt/Claude" is not evidence and does not
+   appear in any dimension. The set contains a Lovable page at 2.8 and a hand-tuned paid template at
+   6.1. Provenance predicts nothing; observables predict everything. The inverse is equally banned —
+   you may not lower your own score because you know how carefully you worked.
+9. **A check that fails on a known-good interface is retired, not weakened.** Four are retired in
+   this file (⚠). If you invent a new check, run it against GOV.UK, Linear, Basecamp, Mercury,
+   Stripe and Resend first. If it fires on any of them, it is not a check. This is the discipline
+   that keeps the instrument from drifting into a list of things a model finds distasteful.
+10. **Report the shape with the score.** A bare number invites the wrong fix (§9). Always emit the
+    per-dimension line, so the reader can see whether they are looking at a cleanup or a rebuild.
 
 ---
 
@@ -621,20 +955,39 @@ TARGET ≤2       SHIP GATE ≤3                            third-party metric �
 
 CHEAPEST DECISIVE CHECKS
   grep -c ':focus-visible'                     0 on a page with buttons → STATE 10
-  count :root custom properties                exactly 33 → shadcn scaffold untouched
+                                               (nonzero proves NOTHING — see 6.4)
+  resolve --primary/--success/--warning/--error  each == a stock ramp 500 → DEF ≥8
+  grep -c -- '--_unused_'                      >0 → Lovable, tokens renamed not deleted
+  --destructive == stock (any notation)        nobody themed the error colour
   --sidebar-* or --chart-* with neither on page → DEF ≥8
+  count :root props BY SHAPE, not by count     22 hues × 11 steps = palette dumped
+  % of text leaves with text-align:center      >40% → RHY ≥8   (designed: 5-9%)
   tally transition-duration + timing-function  one of each → MOT ≥8
   tally border-radius values                   one value, and it's a pill → SURF ≥8
   tally section padding-top/bottom             one value across all sections → RHY ≥8
-  grep for Acme | $1,250.00 | 1,234 | 45,678 | +12.5% | 99.9% | Everything you need
+  count Title Case h1/h2/h3                    ≥3 → COPY finding (designed set: 0)
+  count curly ’ vs straight '                  many curly, ~0 straight → CLEARS copy
+  distinct colors among h1 text nodes          ≥2 → ask which words, then judge
+  visible watermark                            'Edit with Lovable' / 'MADE IN BOLT.NEW'
+
+DO NOT SPEND DEDUCTIONS ON   purple gradients · shadow-md · reading measure ·
+  unspaced em dashes (Stripe: 11) · straight quotes alone (Resend: 19) ·
+  token COUNT (weight.coach 304 = Tailwind's palette; Vercel 374 = authored) ·
+  a single 'Acme' inside a code sample or an email preview
 
 ORDER OF WORK   content → evidence → states → rhythm → surface → motion
 ```
 
 ---
 
-**Related:** [`vibecode-taxonomy.md`](vibecode-taxonomy.md) for what each tell is and when it is
-fine · [`remedies.md`](remedies.md) for the before/after code ·
-[`visual-critique-method.md`](visual-critique-method.md) for how to look at the render before you
-score it · [`../craft/density-and-hierarchy.md`](../craft/density-and-hierarchy.md) for the density
-targets referenced in §9.
+**Related:** [`remedies.md`](remedies.md) for the before/after code ·
+[`../craft/density-and-hierarchy.md`](../craft/density-and-hierarchy.md) for the density targets
+referenced in §9 · [`../craft/interaction-and-states.md`](../craft/interaction-and-states.md) for
+the states §6.4 asks for · [`../system/8-gates.md`](../system/8-gates.md) for the craft failures §3
+routes away from this instrument.
+
+> **Two files this corpus links to do not exist yet:** `vibecode-taxonomy.md` (referenced from
+> `anti-patterns/README.md` and `remedies.md`) and `visual-critique-method.md` (referenced from
+> `anti-patterns/README.md`, `remedies.md` and `system/7-critique.md`). Until they are written, §3
+> and §6 of this file carry the taxonomy, and "render it and look at it" is the whole method. Do not
+> follow those links expecting content.

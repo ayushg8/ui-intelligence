@@ -387,9 +387,9 @@ things break immediately:
 1. **You need more sizes below the base than above it.** A dense product needs 11, 12, 13 and 14 as
    four distinct, meaningful sizes. A ratio gives you two, one of them fractional.
 2. **Fractional sizes multiply without adding.** Measured on real pages today: Radix's docs render
-   13.3, 12.635, 14.44 and 18.88px on one page; shadcn's render 12.8, 12.75, 12.25; Plaid's render
-   **12.992, 12.906, 12.796 and 13.008 on the same page** — four tokens spanning 0.2px. That is
-   four tokens' worth of complexity and one visual result.
+   13.3, 12.635, 14.44 and 18.88px on one page; Plaid's render **12.992, 12.906, 12.796 and 13.008
+   on the same page** — four tokens spanning 0.2px. That is four tokens' worth of complexity and
+   one visual result.
 
 **What dense products actually use is an explicit list of integers with irregular gaps.** Geist's,
 Atlassian's, Primer's and Radix's published lists are all like this. A good default:
@@ -406,8 +406,8 @@ If you need something between 24 and 32, you don't.
 Geist does exactly this and it is the most copyable idea in their system.
 
 **When a modular scale is right:** a marketing page with four sizes total, where the ratio produces
-audible rhythm. Wise's 89px w900 headline, Sanity's 112px display, Anthropic's 20px serif body —
-those are typographic compositions, not UIs.
+audible rhythm. Wise's 89px w900 headline over 20px body, Intercom's 80px w400 over a 16px serif,
+Plaid's 76px over 16px — those are typographic compositions, not UIs.
 
 **Tailwind's defaults are not the problem.** `--text-sm: .875rem` with line-height `calc(1.25/.875)`
 is 14/20 and `--text-base` is 16/24 — both good pairs, and the reason so much generated UI lands on
@@ -585,9 +585,10 @@ Same caps-heavy string at 100px, kerning on vs off:
 | Every monospace | identical | identical | **0%** |
 
 Kerning is on by default; leave it on. Two ways to destroy it accidentally: `font-kerning: none`
-and `font-feature-settings: "kern" 0` — measured byte-identical, they are the same switch. Note
-also that `font-kerning: auto` disables kerning below ~10px in some engines: one more reason not to
-set UI text below 10px.
+and `font-feature-settings: "kern" 0` — measured byte-identical, they are the same switch. Note the
+second one: if you write a `font-feature-settings` string by hand and forget that it *replaces* the
+whole list rather than adding to it, you can drop kerning without noticing. Monospace faces have no
+kern pairs at all, so a mono-set UI never sees this.
 
 ## Half-leading: your heading is not where you think it is
 
@@ -645,7 +646,8 @@ Every mono → Menlo: size-adjust ≈131.49%   (Söhne Mono, zedMono, DM Mono al
 `next/font`, Fontaine and capsize generate these. Without them, `font-display: swap` costs a visible
 CLS on every cold load. Mercury goes further with `font-display: optional` — the font either arrives
 in ~100ms or the page keeps the fallback for that visit. That is the right call when the brand face
-is not load-bearing for first paint.
+is not load-bearing for first paint. (`optional` gives the font one short block period and then
+gives up for that page view — no swap, no shift.)
 
 ---
 
@@ -723,7 +725,7 @@ importance:
 | This is placeholder text | a 6th grey | a genuinely separate token — Vercel's `#7D7D7D` at 3.9:1 exists only for this |
 | This is a different *kind* of thing | a new grey | a different hue — Radix's code links at `rgba(0,43,183,.773)`, 6.0:1 |
 
-**Alpha or hex.** Notion, Radix and Grafana define the ladder as alpha over one base so it
+**Alpha or hex.** Notion and Radix define the ladder as alpha over one base so it
 composites correctly on coloured callouts and cards. Vercel, GitHub and Atlassian use hex so the
 contrast number is exact and governable. Choose by whether you have coloured surfaces.
 
@@ -1016,7 +1018,7 @@ boundary.
   with the tightening drawn in rather than tracked in. Attio, Mercury and Google all do this with
   two cuts of one design.
 - **Do** pair with a serif rather than another sans: Notion + Lyon, Intercom + Ivory, Zed + Plex
-  Serif, Anthropic Sans + Anthropic Serif. A serif gives contrast a second grotesque cannot.
+  Serif — three of the four measured today. A serif gives contrast a second grotesque cannot.
 - **Do** consider a different free face if personality is the problem: Mona Sans (weight + width
   axes), Manrope (narrow and tall), Instrument Sans (real width axis), General Sans.
 
