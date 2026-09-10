@@ -1,5 +1,7 @@
 # Responsive design and mobile web craft
 
+**Evaluated:** 2026-09
+
 Measured September 2026 against live production UI. Breakpoints were extracted by capturing every
 `text/css` response a page loads, plus its inline `<style>` blocks, and tallying every `@media` and
 `@container` condition in the shipped bytes. Everything else was read from computed styles and

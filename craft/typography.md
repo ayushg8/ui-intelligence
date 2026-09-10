@@ -1,13 +1,13 @@
 # Typography for interfaces
 
-**Measured 2026-09-10** at 1440×900 in Chromium. Every number below came from a live page's
-computed styles, from a DOM measurement of a rendered string, or from a canvas `TextMetrics` probe
-against the real font file that product serves. Nothing here is recalled. Where a claim is an
-observation rather than a measurement, it says so.
+**Evaluated:** 2026-09
 
-Two numbers in the previous revision of this file were wrong because they were measured at 100px,
-where SF Pro and Inter both switch to their display cuts. They are corrected below and marked
-**[corrected]**.
+**Measured 2026-09-10, Chromium 148 headless, 1440×900.** Every number came from a live page's
+computed styles, a DOM measurement of a rendered string, or a canvas `TextMetrics` probe against
+the font file that product serves. Claims marked *Observed* were looked at, not measured.
+
+Values re-probed in the 2026-09 direction pass are marked **[re-probed]**; corrections are listed
+at the end of the file.
 
 ---
 
@@ -23,12 +23,14 @@ where SF Pro and Inter both switch to their display cuts. They are corrected bel
 3. **Never leave `line-height: normal` on anything you control.** Measured per 100px of font-size,
    the natural line box is 121 in Inter, 118 in SF Pro, 115 in Arial/Roboto/Segoe UI, 114 in
    Georgia, 122 in Verdana. Swapping the font silently changes every row height by up to 7%.
-4. **`font-variant-numeric: tabular-nums` on every number that sits above or below another
-   number.** Measured in Inter: ten `1`s are 362.31px where ten `0`s are 613.28px — the `1` is
-   **41% narrower**. Nothing in a right-aligned money column lines up until you say otherwise.
+4. **`font-variant-numeric: tabular-nums` on numbers that stack in a column or update in place.**
+   Measured in Inter: ten `1`s are 362.31px where ten `0`s are 613.28px — the `1` is **41%
+   narrower**, so nothing in a right-aligned money column lines up until you say otherwise, and a
+   counter reflows on every tick. **Not** on a lone display number with no alignment partner and no
+   updates — it costs width for nothing (see the width budget under *Numerals*).
 5. **Three neutral text levels, and the third lands between 4.5:1 and 8:1.** Measured today:
    Vercel 17.2 / 8.1 / 5.5, Atlassian 14.3 / 7.8 / 5.1, Primer 15.8 / 6.1, Radix 16.4 / 5.9,
-   Resend 15.3 / 10.7 / 8.2 / 5.0, Linear (dark) 18.7 / 13.6 / 6.1. Nobody ships a fourth
+   Resend 15.3 / 10.7 / 8.2 / 5.0, Linear (dark) 18.7 / 13.6 / 6.1. No product here ships a fourth
    *content* level. If you want a fourth distinction, change size or weight.
 
 ---
@@ -42,16 +44,16 @@ where SF Pro and Inter both switch to their display cuts. They are corrected bel
 
 | Product / surface | Display / h1 | h2 | h3 | Prose body | Dense UI | Micro | Inline code | Face + features |
 |---|---|---|---|---|---|---|---|---|
-| **Linear** marketing | 64/64 w510 `-0.022` | 48/48 w510 `-0.022` (in secondary grey) | 20/26.6 w590 `-0.012` | 15/24 w400 `-0.011` | 14 · 13/19.5 w400 | 12, 10 | 12/20 Berkeley Mono `-0.015` | Inter Variable, `ffs "cv01","ss03"` |
+| **Linear** marketing **[re-probed]** | 64/64 w510 `-0.022` | 48/48 w510 `-0.022` in `#8A8F98` | 20/26.6 w590 `-0.012` | 15/24 w400 `-0.011` | **12 is the densest layer (187 els)** · 14 (180) · 13 (129) | 10 | 12/20 Berkeley Mono `-0.0152` | Inter Variable, `ffs "cv01","ss03"` |
 | **Linear** docs (dark) † | 32/36 w590 `-0.022` | 24/31.9 w590 | 20/32 w590 | 15/24 w400 `-0.011` | 14/21 w510 | 13/19.5 | — | same |
-| **Vercel** docs | 56/56 w600 `-0.06` balance | 24/32 w600 `-0.04` | 14/20 w600 `-0.02` | 16/27.2 w400 pretty | 14/20 (676 els) · 13 (171 els) | 12, 11 | 14/20 w500 `-0.02` Geist Mono | Geist, `ffs "calt" 0,"rlig","ss11"` |
-| **Stripe** quickstart | 32/**normal** w700 `0` | 21/normal w700 | 16/24 w600 | 16/26 w400 | **13px is the densest layer (1,248 els)** | 12, 11 | 14.4/26 Menlo | `-apple-system` — no UI webfont; `text-wrap: pretty` globally |
+| **Vercel** docs **[re-probed]** | 56/56 w600 `-0.06` balance | 24/32 w600 `-0.04` | **14/20 w500 ls 0** in `#4D4D4D` | 16/27.2 w400 pretty, 809px | 14/20 (668 els) · 13 (71) | 12, 11 | 14/20 w500 `-0.02` Geist Mono | Geist, `ffs "calt" 0,"rlig","ss11"` |
+| **Stripe** quickstart **[re-probed]** | 32/**normal** w700 `0` pretty | 21/normal w700 | 16/24 w600 | 16/26 w400, 486px | **13 is the densest layer (147 els)** · 16 (126) · 14 (68) · 12 (38) | 11 | **14/20 Menlo** | `-apple-system` — no UI webfont; `text-wrap: pretty` globally |
 | **Notion** help | 54/56 w700 `-0.035` balance | 32/40 w700 `-0.023` | — | 16/24 w400 pretty | 15 · 14/20 w400 | 12 | iA Writer Mono | NotionInter (static 400/500/600/700), `ffs "lnum","locl" 0` |
 | **Attio** | 64/60.8 (**lh 0.95**) w600 `-0.02` Inter *Display* | 40/44 w500 `-0.01` Display | 24/27.6 w500 `-0.01` Display | 16/22 **w500** `-0.01` | 14 (256 els) · 12 | 10/15 w500 `-0.016` JetBrains Mono | 13/20 **w300** JetBrains Mono | Inter + Inter Display, `ffs "ss03"` |
-| **Radix Themes** docs | 35/40 w700 `-0.02` | 24/30 w700 `-0.0125` | 18/24 w700 `-0.005` | 16/24 w400 | 14/20 (126 els) | 12 | 14.44/18.05 `-0.007` Söhne Mono | Untitled Sans + Söhne Mono |
+| **Radix Themes** docs **[re-probed]** | 35/40 w700 `-0.02` | 24/30 w700 `-0.0125` | 18/24 w700 `-0.005` | 16/24 w400 | 14/20 (126 els) · **13.3 (287 els)** | 12.635 (35 els) | 14.44/18.05 `-0.007` Söhne Mono | Untitled Sans + Söhne Mono, smoothing `auto` |
 | **Atlassian** design | 48/52 w700 | 24/28 w700 | 16/20 **w653** | 14/20 w400 (site-wide) | 14/20 (205 els) | 12/16 | 12.25/20 Atlassian Mono | Atlassian Sans VF (100–900) |
 | **GitHub Primer** | 40/48 **w460** balance | 24/36 w700 | 12/18 w600 | 16/24 w400 | 14/21 w500–600 | 12 | 13.6/20.4 | Mona Sans VF; UI text falls back to `-apple-system` |
-| **Supabase** docs | 34/37.8 w600 **Manrope** | 22/29.3 w600 Manrope | 18/28 w600 | 15/28 **w500** Inter (~73ch) | 13 (82 els) · 14 | 12 (37 els) | — | Inter body + Manrope headings; buttons **w450** |
+| **Supabase** docs **[re-probed]** | 34/37.8 w600 **Manrope** | 22/29.3 w600 Manrope | 18/28 w600 Manrope | 15/28 **w500** Inter, 706px (~73ch) | 13 · 14 | 12 | — | Inter body + Manrope headings; buttons **w450** |
 | **Resend** docs | 36/40 w600 `-0.025` | — | 14/20 w700 | 16/24 w400 | 14/20 (45 els) | 12 | Paper Mono | Inter, `ffs "cv02","cv03","cv04","cv11"` |
 | **Raycast** | 64/70.4 w600 `0`, `ffs "liga" 0,"ss02","ss08"` | 20/normal w500 **`+0.010`** | 24/38.4 w500 `+0.008` | 18 w400 **`+0.011`** balance | 14 · 13 · table 12/13.8 `+0.008` | 12/19.2 Geist Mono `+0.017` | — | Inter; body `ffs "calt","kern","liga","ss03"` — **display and body use different feature sets** |
 | **Cursor** docs | 33.75/40.5 **w400** `-0.02` balance | 18/18 w700 | — | 15/24.4 w400 **`+0.005`** | 14/20 w400 | th 12/16 w400 | Berkeley Mono | cursorSans, `ffs "calt","case","kern","liga"` |
@@ -70,10 +72,10 @@ where SF Pro and Inter both switch to their display cuts. They are corrected bel
 
 † carried over from the 2026-09 pass; that URL now 404s and I could not re-measure it today.
 
-These are what those pages actually computed on 2026-09-10, including their inconsistencies. Where
-a product's h2 looks wrong (Resend's 16px w700 h2, Vercel's 14px h3) it is because a component
-reused the tag — which is itself the lesson: **heading level and type style are independent in
-every one of these products.**
+Where a product's h2 looks wrong (Resend's 16px w700 h2, Vercel's 14px w500 h3) a component reused
+the tag. That is the lesson: **heading level and type style are independent in every one of these
+products.** Element counts are of visible elements holding a direct text node, at 1440×900 — a
+different counting rule gives different totals, so compare ranks, not absolute counts.
 
 ## 2. Published token scales, from the systems that publish them
 
@@ -126,10 +128,10 @@ line-height  tight 1.25   snug 1.375   normal 1.5   relaxed 1.625   loose 1.75
 weight       light 300   normal 400   medium 500   semibold 600
 ```
 
-Deliberately nothing at 24 or 28 in the token set. Their rendered pages use 24 anyway, from another
-layer — even good systems leak.
+Nothing at 24 or 28 in the token set, yet their rendered pages use 24 from another layer. If you
+publish a scale, grep your own build for sizes it does not contain.
 
-## 3. What each face actually costs you, at real UI size **[corrected]**
+## 3. What each face actually costs you, at real UI size **[re-probed]**
 
 Same string, same DOM, `400 14px`, `font-optical-sizing` at its default. This is the comparison
 that matters; a 100px canvas comparison misleads because SF Pro and Inter both switch optical cuts
@@ -151,15 +153,16 @@ above ~20px.
 
 **What this decides:**
 
-- The previous revision said Geist is 10.8% wider than SF and Inter 5.5% wider. At real UI size
-  that is wrong: **Geist is 1% narrower than SF Pro at 14px**, Inter is 3.3% wider. The 100px
-  measurement was picking up SF's display cut.
+- Measure faces at the size you will ship them. **Geist is 1% narrower than SF Pro at 14px**, Inter
+  is 3.3% wider; a 100px comparison of the same two faces inverts the result, because SF Pro and
+  Inter both switch to a display cut above ~20px.
 - Inter is the widest mainstream UI grotesque *and* has the tallest x-height (7.64 at 14px, 3.7%
   taller than SF). That combination is why Inter "looks big": at a nominal 14px it occupies more
   space in both directions than the system font your mock was drawn against.
-- **Every monospace in the sample has an identical 0.6em advance** — Geist Mono, Berkeley Mono,
-  Söhne Mono and JetBrains Mono all measure exactly 60 units per glyph per 100px. Mono is not "a
-  bit wider": it is a flat 25–26% wider than the sans at the same px, permanently.
+- **Every mono webfont in the sample has an identical 0.6em advance** — Geist Mono, Berkeley Mono,
+  Söhne Mono and JetBrains Mono all measure exactly 60.00 units per glyph per 100px; Menlo, the
+  system mono, is 60.21. Mono is not "a bit wider": it is a flat 25–26% wider than the sans at the
+  same px, permanently. Budget for it before you pick a mono, not after.
 - Mono's x-height matches its sans partner almost exactly (Geist Sans 7.42 / Geist Mono 7.42), so
   mono does **not** look bigger than a good grotesque at the same size — it looks *wider*. Against
   the system stack it does look slightly bigger (Menlo 7.66 vs SF 7.37, +4%).
@@ -186,10 +189,10 @@ govern. Pick by whether you have coloured surfaces.
 
 | Feature | Supported? | Measured behaviour |
 |---|---|---|
-| `text-wrap: balance` | yes | Reflowed a 4-line paragraph from line widths `[385, 409, 378, 284]` to `[365, 354, 350, 387]`. **Zero effect on a 12-line block** — the UA bails out past ~6 lines. |
-| `text-wrap: pretty` | yes | Did **not** change my 4-line paragraph at all. It suppresses a true orphan; it is not a balancer. |
-| `text-box: trim-both cap alphabetic` | yes | 32px/1.2 Inter block: **38.39px → 23.28px**. Removes half-leading plus the cap gap: 7.56px off each end. |
-| `line-clamp: 2` (unprefixed) | **no effect** | Height unchanged (60px). The `-webkit-box` version clamped to 40px. |
+| `text-wrap: balance` **[re-probed]** | yes, ≤6 lines | Balanced every block from 2 to **6** lines (6-line case `[403,416,414,417,405,353]` → `[403,416,386,395,403,404]`). **No effect at 8+ lines.** The cliff sits between 6 and 8, so a 6-line block and an 8-line block behave differently. |
+| `text-wrap: pretty` **[re-probed]** | yes | Did **not** change a 4-line paragraph (`[403,139]` both ways). It *did* fix a 3-line orphan: `[298,235,95]` → `[235,246,147]`. It suppresses orphans; it is not a balancer. |
+| `text-box: trim-both cap alphabetic` **[re-probed]** | yes | 32px/1.2 Inter: **38.39px → 23.28px**. It clips the box to cap-top/baseline; ink outside that band (accents, descenders, emoji, non-Latin) now paints **7.72px above and 8px below** the element box. |
+| `line-clamp: 2` (unprefixed) **[re-probed]** | **still no effect** | `CSS.supports('line-clamp','2')` false in Chromium 148; height unchanged at 80px with or without `overflow:hidden`. The `-webkit-box` version clamped to 40px. |
 | `hanging-punctuation` | **not supported** | `CSS.supports` false. Safari-only; do not rely on it. |
 | `font-optical-sizing: auto` | yes | On Inter Variable: 14px → `opsz 14`, 64px → `opsz 32`, verified by width. |
 | `font-size-adjust` | yes | Available for fallback matching. |
@@ -221,8 +224,8 @@ So the folklore is right that everyone tunes Inter. But I measured what tuning b
 | `"cv11"` (single-storey a) | 381.92 | **+0.5%** |
 | `"ss02"` (disambiguation set) | 386.02 | **+1.6%** |
 
-Read that honestly: character variants swap individual glyph shapes, and only `cv11` and `ss02`
-move enough metal to change the texture of a paragraph. **Adding `"cv02","cv03","cv04"` to Inter
+Character variants swap individual glyph shapes, and only `cv11` and `ss02` move enough metal to
+change the texture of a paragraph. **Adding `"cv02","cv03","cv04"` to Inter
 does not stop your product looking like every other product using Inter.** It changes four glyphs
 most of your strings do not contain. If Inter's neutrality is the problem, the fix is a different
 family, a Display cut for headings, or a serif partner — not a feature string.
@@ -243,7 +246,8 @@ in a screenshot; anywhere a Display cut matters and you cannot load two files.
 Measured where I could load the real file from a site licensing it; observed otherwise.
 
 **Inter** — x-height 7.64 @14px (tallest here), +3.3% wider than SF, real `opsz` axis, 13
-character variants. Invisible in the good sense and the bad sense.
+character variants. It carries no brand signal, which is why it disappears into a dense tool and
+why it dates a marketing page to whoever generated it.
 
 **Geist** (Vercel, OFL, free) — 284.84px @14px, **narrower than SF Pro**, x-height 7.42, ships
 `calt 0` from the vendor. Engineered rather than drawn: flat terminals, closed apertures. Shares
@@ -252,21 +256,20 @@ on the same optical line. Choose it for infrastructure; its closed apertures rea
 consumer.
 
 **Untitled Sans** (Klim, commercial) — 288.63px @14px, x-height 7.18, the lowest in the sample.
-Drawn to look like an unbranded default; the joke is that adopting it is a strong statement. Radix
-Themes runs it at w700 for every heading, which works because its bold is compact. The low x-height
-means it wants 15–16px where Inter is happy at 14.
+Radix Themes runs it at w700 for every heading, which works because its bold is compact. The low
+x-height means it wants 15–16px where Inter is happy at 14; budget one size step up for body.
 
 **Söhne / Söhne Mono** (Klim, commercial) — I could only load the mono (0.6em advance, x-height
 7.32). Söhne is a Neue Haas Grotesk redraw with more stroke contrast than Inter; that contrast
 reads as competence at 16px+ and vanishes at 12px. Do not pay for it for a 12px UI.
 
-**Suisse Int'l** (Swiss Typefaces, commercial) — rationalist, severe, ships an unusual 450 weight.
-Right for developer infrastructure that wants to look like a design object. No warmth to give.
-*Observed.*
+**Suisse Int'l** (Swiss Typefaces, commercial) — rationalist, ships an unusual 450 weight. Right
+for developer infrastructure that wants to look like a design object; wrong anywhere the product
+has to feel friendly. *Observed.*
 
 **Mona Sans** (GitHub, OFL, free) — 289.09px @14px, weight **and** width axes, and the only face I
 measured actually responding to optical sizing at UI size (289.09 with `auto` vs 293.36 with
-`none`). GitHub uses it from 12px table rows to 96px marketing. Underrated and free.
+`none`). GitHub uses it from 12px table rows to 96px marketing, so one file covers the whole range.
 
 **Manrope** (free) — 282.22px @14px with a 7.56 x-height: narrow *and* tall, which is why Supabase
 can set headings in it over an Inter body without the two fighting.
@@ -304,8 +307,7 @@ from 14px to 64px and hand-track it back.
 
 ## System font stacks: when they beat a webfont
 
-Stripe's documentation, the most-imitated developer UI in the world, still ships **no webfont for
-UI text**: `-apple-system, "system-ui", "Segoe UI", Roboto, …`, with Menlo and Source Code Pro for
+Stripe's documentation still ships **no webfont for UI text**: `-apple-system, "system-ui", "Segoe UI", Roboto, …`, with Menlo and Source Code Pro for
 code. Radix Themes ships the same by default. Both are right for their context.
 
 Use the system stack when:
@@ -433,9 +435,16 @@ is 14/20 and `--text-base` is 16/24 — both good pairs, and the reason so much 
 
 **Three decisions this makes:**
 
-1. **Above ~40px, go to 1.0 or below.** A 64px headline at 1.5 has 32px between lines and reads as
-   two unrelated sentences. Attio at 0.95 and Wise at 0.85 work because at that size ascenders and
-   descenders still clear each other in a two-line headline. Check the three-line case.
+1. **Above ~40px, go to 1.0 or below — for a bounded Latin string of one or two lines.** A 64px
+   headline at 1.5 has 32px between lines and reads as two unrelated sentences. Attio at 0.95 and
+   Wise at 0.85 work because their headlines are fixed marketing copy in Latin, at two lines.
+   **Three scopes where sub-1.0 is wrong and an agent will apply it anyway:** a headline slot fed
+   by a CMS, user content or translation, where line count is unknown; any locale with stacked
+   marks — measured, a 48px line at `line-height: 1` gives a 48px box for 59px of ink, so Devanagari
+   matras, Thai upper vowels and Vietnamese double diacritics land outside it and clip against
+   anything above; and any headline that reaches three lines, where descenders of line 1 meet
+   ascenders of line 2. Bounded Latin, ≤2 lines → 0.85–1.0. Anything else → 1.15 floor, 1.25 if
+   the locale set includes Devanagari, Thai or Vietnamese.
 2. **The same 14px gets 18, 20 or 21.45 depending on whether the user reads or scans.** If your
    table rows and your paragraphs share a line-height, one of them is wrong.
 3. **Never `em`, and never `normal`.** Unitless inherits as a ratio, which is what you want; `em`
@@ -460,6 +469,12 @@ is 14/20 and `--text-base` is 16/24 — both good pairs, and the reason so much 
 The textbook 45–75ch is not what shipping documentation does; the real cluster is **73–88ch**, and
 the most comfortable sit at the bottom of it. `max-width: 68ch` at 15–16px is a good default, and
 `ch` self-adjusts when you swap faces.
+
+**Put the cap on the text elements, not the article container.** `article { max-width: 68ch }`
+squeezes every code block, table, image and embed on the page into a reading column they were never
+sized for, and they horizontal-scroll or shrink to illegibility. The measure belongs on `p`, `li`,
+`blockquote` and headings; `pre`, `table`, `figure` and `.full-bleed` stay at the container width.
+On a viewport under ~600px the cap never binds anyway — the viewport is the measure.
 
 **One caveat I measured:** the `ch` unit is the advance of `0` and **ignores letter-spacing**. A
 60ch box measured 603.75px; the same 60 characters at `-0.011em` measured 593.2px (1.7% short of
@@ -504,8 +519,13 @@ is a good gentle one. Do not invent a third.
 
 **Always track out:** all-caps labels and eyebrows, `+0.04` to `+0.10em`. Measured: Attio `+0.06`,
 Cursor `+0.05`, PostHog `+0.025`. My own measurement — `OVERVIEW` at 12px w600 is 63.94px untracked
-and 68.73px at `+0.05em`. Uppercase sidebearings are drawn for mixed-case rhythm; caps without
-tracking read cramped and cheap. Highest-return single rule here.
+and 68.73px at `+0.05em`, a 7.5% difference. Uppercase sidebearings are drawn for mixed-case
+rhythm; caps without tracking read cramped.
+
+**Scope:** this is how to set caps you have already decided to use. It is not a reason to add an
+eyebrow. "Every section opens with an uppercase letter-spaced micro-label" is now one of the named
+tells of generated UI (see the anti-patterns section) — the tracking makes each one look correct
+and the repetition makes the page look machine-written. Two or three per page, or none.
 
 **Sometimes track out at reading size.** Raycast runs `+0.011em` on 18px body, Cursor `+0.005em` on
 15px, Mercury `+0.020em` on 12px legal text. Each is a fraction of a pixel and each was deliberate.
@@ -597,8 +617,8 @@ I measured a box of **38.39px** where the cap-to-baseline ink is **23.28px** —
 space on each end of every heading.**
 
 So a heading with `margin-bottom: 16px` above a paragraph has a *visual* gap of ~23px, 47% more than
-the number in your CSS, and the gap above it is bigger still. This is the single biggest reason
-generated pages feel loose: the spacing tokens are right and the optical result is not.
+the number in your CSS, and the gap above it is bigger still. Correct spacing tokens plus untrimmed
+line boxes is how a page reads loose while every number in the CSS is right.
 
 Chromium supports the fix today:
 
@@ -606,27 +626,47 @@ Chromium supports the fix today:
 h1, h2, h3 { text-box: trim-both cap alphabetic; }   /* 38.39px → 23.28px, measured */
 ```
 
-Then your margins are the gaps you see. Do this on headings and on tightly-boxed UI text (badges,
-chips, table headers). Do **not** do it on body paragraphs — you want half-leading between lines.
-Without support the page simply keeps its old leading, so no `@supports` gate is required, but
-check the design both ways.
+Then your margins are the gaps you see. Do this on headings and tightly-boxed UI text (badges,
+chips, table headers). Without support the page keeps its old leading, so no `@supports` gate is
+needed.
 
-## Cap-centring: text sits low in a box, but by less than you think
+**Three places it makes things worse, measured:**
 
-Measured gaps inside the line box — cap-top to box-top vs baseline to box-bottom:
+1. **Body paragraphs.** You want half-leading between lines. Trim headings and boxed text only.
+2. **Any trimmed box with `overflow: hidden`, on any surface that is not Latin-only.** `cap
+   alphabetic` clips the box to cap-top and baseline; everything outside that band still paints.
+   Measured at 32/1.2: after trimming, ink extends **7.72px above and 8px below** the element box.
+   Latin caps have nothing up there, so it looks clean. Vietnamese stacked diacritics (`Ệ`, `Ổ`),
+   Devanagari matras, Thai upper marks, emoji and every descender do — and an ancestor with
+   `overflow: hidden`, which is what a chip or badge has, will cut them off. Scope the trim to
+   Latin surfaces, or use `text-box-edge: text alphabetic` where content is multi-script.
+3. **Retrofitting an existing product.** Every heading gap tightens by ~15px at 32px, all at once.
+   That is a deliberate one-pass re-tune of your spacing scale, not a drop-in fix. Ship it with the
+   margin change in the same commit, or the page reads cramped instead of tight.
 
-| Face | Size / lh | Above cap | Below baseline | Text sits |
-|---|---|---|---|---|
-| Inter Variable | 14/20 | 5.31px | 4.50px | **0.41px low** |
-| SF Pro | 14/20 | 5.64px | 4.50px | **0.57px low** |
-| Menlo | 13/20 | 5.02px | 5.50px | 0.24px high |
-| Georgia | 16/24 | 6.41px | 6.50px | 0.04px high — balanced |
+## Cap-centring: text sits low in a box, and the offset does not scale **[re-probed]**
 
-At 14px this is invisible; do not nudge it. It becomes visible at display size (a 64px Inter
-headline sits ~1.9px low in its box) and in tight controls — a 20px badge, a 24px chip, an icon
-beside a label. Fixes in order: `text-box: trim-both cap alphabetic` on the control, then flex
-centring, then a 1px `padding-bottom` — never a `position: relative; top: -1px` that breaks at the
-next font size.
+Measured gaps inside the line box — cap-top to box-top vs baseline to box-bottom. *Gap difference*
+is what you see; *nudge* is half of it, because centring splits the difference:
+
+| Face | Size / lh | Above cap | Below baseline | Gap difference | Nudge to centre |
+|---|---|---|---|---|---|
+| Inter Variable | 14/20 | 5.31px | 4.50px | **0.81px low** | 0.41px up |
+| SF Pro | 14/20 | 5.64px | 4.50px | **1.14px low** | 0.57px up |
+| Menlo | 13/20 | 5.02px | 5.50px | 0.48px high | 0.24px down |
+| Georgia | 16/24 | 6.41px | 6.50px | 0.09px high — balanced | — |
+
+**The offset does not grow with font-size in a variable face, and it changes sign.** Measured on
+Inter Variable, cap-to-ascent minus descent: **14px → 0.81px low, 20px → 0.55px _high_, 32px →
+0.28px high, 64px → 0.44px low.** The `opsz` axis redraws the metrics, so a nudge tuned at 14px is
+wrong at 20px and backwards at 32px. SF Pro, which has no CSS-visible `opsz`, does scale: 1.14px
+low at 14px, 2.91px low at 64px.
+
+**So: never write a size-independent nudge.** At 14px the offset is invisible — leave it. Fix it
+only in tight controls where you can see it (a 20px badge, a 24px chip, an icon beside a label),
+per size, in this order: `text-box: trim-both cap alphabetic` on the control, then flex centring,
+then padding. Never `position: relative; top: -1px`; it is wrong at the next font size and, in a
+variable face, at the next `opsz` step.
 
 ## Metric-compatible fallbacks
 
@@ -662,11 +702,21 @@ Two consequences people miss:
 
 - A right-aligned money column jitters, decimals do not stack, and updating values shimmer. This is
   the most common typographic defect in generated dashboards.
-- **Tabular figures are wider than proportional ones** — 64.45 vs 61.33 per glyph, +5% in Inter. A
-  column you switch to tabular gets *wider*. Budget for it.
+- **Tabular figures are wider than proportional ones** — 64.45 vs 61.33 per glyph, +5% in Inter as
+  an average over all ten digits. The column penalty is worse than that average and depends on your
+  digit mix. Measured at 13px Inter: `$1,234,567.89` goes 85.92 → 94.69px (**+10%**), and
+  `$11,111.11` goes 50.61 → 74.34px (**+47%**), because tabular pads every `1` out to zero-width.
+
+**Where it is the wrong call.** Tabular buys two things: vertical alignment down a column, and no
+reflow when a value changes in place. A number with neither — a lone stat in a hero, a count inside
+a sentence, a static invoice total, a badge — pays the width and gets nothing, and at display size
+the padded `1`s read as gaps. On a 390px row where a price sits beside a delta and a sparkline,
++47% is the difference between fitting and truncating; there, right-align and set the column to a
+fixed `ch` width instead.
 
 ```css
-.numeric, td.num, .metric, .price, .timer, .diff { font-variant-numeric: tabular-nums; }
+/* columns and live values only */
+td.num, .metric-cell, .price-column, .timer, .diff { font-variant-numeric: tabular-nums; }
 ```
 
 **The `font-feature-settings` conflict is narrower than folklore says.** All four combinations:
@@ -745,19 +795,20 @@ inaccessible to buy a mood.
 | Stripe | — | **`pretty` on everything, globally** |
 | Linear, Radix, Atlassian, Primer | neither | neither |
 
-What I measured:
+What I measured in Chromium 148, 420px column, 16/24 Inter:
 
-- `balance` reflowed a 4-line paragraph from `[385, 409, 378, 284]` to `[365, 354, 350, 387]` — it
-  works, and it works on paragraphs, not only headings.
-- On a 12-line block it did **nothing**. The UA bails out past ~6 lines, so behaviour flips between
-  a 5-line and a 7-line block. Never rely on it for copy of unknown length.
-- On an already-even 2-line heading it changed nothing, which is the common case — most headings do
-  not need it.
-- `pretty` did **not** change my 4-line paragraph. It suppresses a true one-word orphan; it is not a
-  balancer, and it is cheap, which is why Stripe applies it globally.
+- `balance` works at every line count from 2 through **6**. The 6-line case went
+  `[403,416,414,417,405,353]` → `[403,416,386,395,403,404]`.
+- At **8 lines and above it does nothing at all** — identical line widths with and without. The
+  cliff is between 6 and 8, so a 6-line block and an 8-line block behave differently with the same
+  declaration. Never put it on copy whose length you do not control.
+- On an already-even 2-line heading it changes nothing, which is the common case.
+- `pretty` did **not** change a 4-line paragraph (`[403,139]` both ways). It *did* fix a 3-line
+  orphan: `[298,235,95]` → `[235,246,147]`. It suppresses orphans, it is not a balancer, and it is
+  cheap, which is why Stripe applies it globally.
 
-Rule: `balance` on headings and short blocks you control (card titles, empty-state copy, toasts);
-`pretty` everywhere else.
+Rule: `balance` on headings and short blocks you control (card titles, empty-state copy, toasts),
+never on anything that can exceed 6 lines; `pretty` everywhere else.
 
 ## Clamping and ellipsis
 
@@ -779,20 +830,30 @@ Two rules that get broken constantly:
    ends; `ch_3MmlLrLkdIwHu…` keeps neither. Anything the user compares by eye — IDs, hashes,
    addresses, paths — truncates in the middle.
 
-## The overflow you will actually ship
+## The overflow you will actually ship **[re-probed]**
 
-A 78-character email address in a 180px column, `font: 14px/20px Inter`:
+A 72-character hyphen-free email in a 180px column, `font: 14px/20px Inter`. Its natural width is
+**559.2px**:
 
 | Declaration | Result |
 |---|---|
-| default (`overflow-wrap: normal`) | 2 lines, **overflows its container by 218px** — 121% of the column width, silently |
+| default (`overflow-wrap: normal`) | **1 line, 379px outside the container** — 211% of the column width, no scrollbar, no warning |
 | `overflow-wrap: break-word` | 4 lines, 0 overflow |
 | `overflow-wrap: anywhere` | 4 lines, 0 overflow |
-| `word-break: break-all` | 4 lines, 0 overflow (also breaks normal words — avoid) |
+| `word-break: break-all` | 4 lines, 0 overflow (also breaks ordinary words — avoid) |
 
-Any surface that can receive user-supplied identifiers, emails, URLs or file paths needs
-`overflow-wrap: anywhere` (or `break-word`) in its base styles. The default is not "wrap awkwardly,"
-it is "push 218px of text out of the layout with no scrollbar."
+Break opportunities change this completely: the same address with hyphens in the local part wraps
+to 2 lines and overflows by ~1px under the default. The failure depends on the *data*, not the CSS,
+which is why it survives review — the test fixture had a hyphen and production did not. Any surface
+that can receive user-supplied identifiers, emails, URLs or file paths needs an explicit break rule.
+
+**`anywhere` and `break-word` are not interchangeable, and the difference is a layout bug.**
+`overflow-wrap: anywhere` counts break opportunities when computing intrinsic size; `break-word`
+does not. Measured on `Monthly recurring revenue` at 14px in a `width: min-content` box: normal
+60.63px, `break-word` 60.63px, **`anywhere` 12.66px — a 79% collapse to one character.** Any flex
+item, grid track or box sized by `min-content` / `fit-content` collapses the moment you set
+`anywhere` on it. Use `break-word` as the default base style; reserve `anywhere` for boxes that
+already have an explicit width.
 
 ---
 
@@ -947,11 +1008,22 @@ wrong when column width is scarce, since tabular figures are 5% *wider*.
 **"Three text colours" is wrong for data visualisation**, where axis labels, gridline labels and
 annotations legitimately need more. That is a chart system; scope it separately.
 
-**`text-wrap: balance` is wrong on anything over ~6 lines** — measured, it silently stops working,
-so a 5-line block and a 7-line block behave differently.
+**`text-wrap: balance` is wrong on anything that can exceed 6 lines** — measured, it works through
+6 and does nothing at 8+, so two blocks with the same declaration behave differently.
 
-**`text-box: trim-both` is wrong on body paragraphs.** You want half-leading between lines. Trim
-headings and boxed UI text only.
+**`text-box: trim-both` is wrong on body paragraphs**, on multi-script surfaces inside
+`overflow: hidden`, and as a retrofit without re-tuning the spacing scale in the same commit.
+
+**`overflow-wrap: anywhere` is wrong on anything sized by its content** — measured, it collapses a
+`min-content` box from 60.63px to 12.66px. Use `break-word` unless the box has an explicit width.
+
+**Sub-1.0 display leading is wrong for unbounded or non-Latin headlines.** A 48px line at
+`line-height: 1` gives a 48px box for 59px of ink.
+
+**`max-width: 68ch` is wrong on the article container** — it squeezes code blocks, tables and
+figures into a reading column. Cap the text elements.
+
+**Tracking out all-caps is right; adding an all-caps eyebrow to every section is a 2026 AI tell.**
 
 **`font-optical-sizing: auto` is wrong when the file has no `opsz` axis** — most static Inter
 deployments. It is dead CSS that makes you think a problem is solved.
@@ -961,7 +1033,7 @@ line-height, one weight and a 7:1 floor beat every aesthetic argument here.
 
 ---
 
-# What AI-generated typography looks like, and the five corrections
+# What AI-generated typography looks like, and the corrections
 
 ## 1. Compounding relative units produce fractional sizes
 
@@ -998,19 +1070,28 @@ And remember weight changes cost layout: 1–3px per label at 14px.
 ## 4. Proportional figures in every number column
 
 **The tell:** metric tiles and a transactions table where decimals do not line up and digits shimmer
-on update. Nobody names it; everybody feels it as cheap.
+on update.
 
-**Correction:** `font-variant-numeric: tabular-nums` on every table cell containing a number, every
-metric tile, counter, timer, diff stat and price. `slashed-zero` on IDs and keys, not on money.
-Leave prose proportional. Budget +5% column width.
+**Correction:** `font-variant-numeric: tabular-nums` on every table cell containing a number, and on
+every counter, timer, diff stat and live price — anything that stacks in a column or changes in
+place. Not on a lone hero stat or a number inside a sentence. `slashed-zero` on IDs and keys, not on
+money. Budget +5% average column width, up to +47% on 1-heavy values.
 
-## 5. Untouched Inter, or Inter plus a Google Fonts display face
+## 5. The unchosen face — and in 2026 that is no longer only Inter
 
-**The tell:** `font-family: Inter` with `font-feature-settings: normal`, or Inter body under a
-decorative display face that shares no design DNA with it — the pairing collapses at the h3/body
-boundary.
+**The tell, 2023 edition:** `font-family: Inter` with `font-feature-settings: normal`, or Inter body
+under a decorative display face that shares no design DNA with it — the pairing collapses at the
+h3/body boundary. Still true, still common.
 
-**Correction, and note the order changed based on measurement:**
+**The tell, 2026 edition:** the escape hatch became its own default. Current audits of generated
+frontends name a "tasteful free font" cluster — **Space Grotesk, Sora, Syne, Instrument Serif,
+Fraunces, Geist** — reached for as the single gesture toward design intent, plus **`GeistSans` /
+`GeistMono` pulled from `next/font` and left untouched**, which is now the Next.js signature the way
+raw Inter was the Tailwind one. Note that this file recommends several faces sitting one step from
+that cluster. The test is not the name of the font; it is whether you can say in one sentence what
+this face does for this product that the previous three faces did not.
+
+**Correction:**
 
 - **Do not** expect `"cv02","cv03","cv04"` to fix it. Measured, those change advance width by
   ≤0.01% — they alter four glyphs your strings mostly do not contain.
@@ -1022,6 +1103,46 @@ boundary.
 - **Do** consider a different free face if personality is the problem: Mona Sans (weight + width
   axes), Manrope (narrow and tall), Instrument Sans (real width axis), General Sans.
 
+## 6. Gradient headline text
+
+**The tell:** `bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500` on an
+`h1`. Named a P0 tell in current AI-slop audits, and the typographic equivalent of the em dash in
+AI prose. Variants: an animated gradient sweep, and a gradient applied to one word.
+
+**Correction:** headings render in solid ink or one brand colour. If a word needs emphasis, use
+weight, size or a single accent colour. Gradient fill also destroys the contrast guarantee — you
+cannot compute a ratio against a moving foreground, so the accessibility answer is "unknown."
+
+## 7. The serif-italic accent word
+
+**The tell:** a sans headline with exactly one word in italic serif — "The *modern* way to ship."
+One of the most reliable 2026 tells because it is a decoration borrowed from an editorial system
+the rest of the page does not use.
+
+**Correction:** earn the emphasis inside your own type system — weight, size or colour. Mix serif
+and sans only where the whole design commits to both, the way Notion, Intercom and Zed do.
+
+## 8. shadcn defaults, unedited
+
+**The tell:** `text-muted-foreground` on every non-heading, `tracking-tight` (or `tracking-tighter`)
+on every heading regardless of size, `text-balance` applied globally, and the hero at `text-7xl`
+because that is what the block came with. shadcn is designed to be copy-pasted by agents, so its
+defaults are now the single most common typographic fingerprint on a generated page.
+
+**Correction:** `tracking-tight` is `-0.025em` — correct at 36px, wrong at 14px and actively wrong
+at 12px, where the ramp should be `0` or positive. Ship a tracking ramp keyed to size, not one
+class. Replace the blanket `text-muted-foreground` with the three-level ladder in section 4. And
+`text-balance` past 6 lines is dead CSS (measured above).
+
+## 9. The reflexive all-caps eyebrow
+
+**The tell:** every section opens with a tracked-out uppercase micro-label — `FEATURES`,
+`HOW IT WORKS`, `WHY US`. Individually correct typography; at six per page it is the rhythm of a
+generated template.
+
+**Correction:** two or three per page, or none. Vary the opener: a numeral, a lowercase kicker, a
+short question, or nothing.
+
 ## Bonus tells worth naming
 
 - **`letter-spacing: -0.02em` applied globally**, including to 12px labels. Tracking is a curve.
@@ -1030,71 +1151,237 @@ boundary.
 - **`line-height: normal` left on headings** — font-dependent, 114 to 122 per 100px across common
   faces.
 - **The unprefixed `line-clamp`** — measured, it does nothing in Chromium today.
-- **No `overflow-wrap` anywhere** — one long email overflows a 180px column by 218px, silently.
+- **No `overflow-wrap` anywhere** — a 72-char email pushes 379px outside a 180px column, silently.
 - **`font-family: monospace` bare** — computes to 13px under the document default.
 - **`font-variation-settings: "wght"` alongside `font-weight`** — the `fvs` wins and every
   `<strong>` in that subtree stops bolding.
 - **A 1200px-wide paragraph.** Nothing caps the measure, so at 1440px body copy runs 150ch.
 - **Truncation with no `title`.** The information is simply gone.
+- **`overflow-wrap: anywhere` on a flex item** — collapses its `min-content` width by 79%.
+- **Every heading at the same tracking**, because one utility class was applied at every size.
+- **A number set in a hero at `tabular-nums`** — padded `1`s read as gaps at display size.
 
 ---
 
 # Self-check list
 
-Run this against your own output before calling it done.
+Every item is either a **grep** over source, a **console** one-liner pasted into DevTools on the
+rendered page, or an **eye** check against a screenshot. Nothing here needs judgement about whether
+something "feels" right. Run the console block first; it answers eleven items at once.
+
+```js
+// Paste into DevTools on the rendered page. Returns everything the console checks below need.
+const els = [...document.querySelectorAll('*')].filter(e =>
+  e.offsetParent && [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()));
+const cs = els.map(e => ({ e, s: getComputedStyle(e) }));
+const tally = f => cs.reduce((m, x) => (m[f(x)] = (m[f(x)] || 0) + 1, m), {});
+window.T = {
+  sizes:        tally(x => x.s.fontSize),
+  weights:      tally(x => x.s.fontWeight),
+  lineHeights:  tally(x => x.s.fontSize + '/' + x.s.lineHeight),
+  tracking:     tally(x => x.s.fontSize + ' ' + x.s.letterSpacing),
+  colors:       tally(x => x.s.color),
+  families:     tally(x => x.s.fontFamily.split(',')[0]),
+  fractional:   cs.filter(x => parseFloat(x.s.fontSize) % 1 !== 0).map(x => x.s.fontSize + ' ' + x.e.tagName),
+  lhNormal:     cs.filter(x => x.s.lineHeight === 'normal').map(x => x.e.tagName + '.' + x.e.className),
+  emLineHeight: cs.filter(x => /em$/.test(x.e.style.lineHeight)).map(x => x.e.tagName),
+  fvsWght:      cs.filter(x => /wght/.test(x.s.fontVariationSettings)).map(x => x.e.tagName),
+  capsUntracked: cs.filter(x => x.s.textTransform === 'uppercase'
+                   && (x.s.letterSpacing === 'normal'
+                       || parseFloat(x.s.letterSpacing) / parseFloat(x.s.fontSize) < 0.04))
+                   .map(x => x.e.textContent.trim().slice(0, 20)),
+  overflowing:  cs.filter(x => x.e.scrollWidth > x.e.clientWidth + 1)
+                   .map(x => [x.e.tagName, x.e.scrollWidth - x.e.clientWidth, x.e.textContent.trim().slice(0, 30)]),
+  truncNoTitle: [...document.querySelectorAll('*')].filter(e =>
+                   getComputedStyle(e).textOverflow === 'ellipsis' && !e.title
+                   && !e.getAttribute('aria-label')).map(e => e.textContent.trim().slice(0, 30)),
+  numbersProportional: [...document.querySelectorAll('td, th, .metric, .price, [class*=num]')]
+                   .filter(e => /\d/.test(e.textContent)
+                     && !/tabular/.test(getComputedStyle(e).fontVariantNumeric))
+                   .map(e => e.textContent.trim().slice(0, 20)),
+};
+console.table(T.sizes); T
+```
 
 **Scale**
-- [ ] Every computed `font-size` on the page is an integer px. (`12.8px` means a relative unit
-      compounded.)
-- [ ] ≤ 8 distinct font sizes on any one screen.
-- [ ] Exactly two body sizes exist in the product, and I can name which surfaces use which.
-- [ ] Every type token carries size, line-height, weight and role — not just a size.
+- [ ] `T.fractional` is empty. Any entry means a relative unit compounded — except inline `<code>`
+      at `0.875em`, which is allowed.
+- [ ] `Object.keys(T.sizes).length <= 8` on any one screen.
+- [ ] **grep** `rg -o 'text-(xs|sm|base|lg|xl|[0-9]xl)' src/ | sort | uniq -c | sort -rn` — the top
+      two body-size classes account for most hits, and I can name the surface each one serves.
+- [ ] **grep** each type token in the token file matches `\d+\s*/\s*\d+.*\b[3-7]\d0\b` (size,
+      line-height and weight present). A token that is only a size fails.
 
 **Line-height and vertical rhythm**
-- [ ] No element I control computes `line-height: normal`.
-- [ ] Headings over 40px are at ≤ 1.15; prose is 1.5–1.7; dense rows are 1.3–1.5.
-- [ ] Every `line-height` is unitless or px, never `em`.
-- [ ] Headings and boxed UI text use `text-box: trim-both cap alphabetic`, or I have checked that my
-      heading margins look like the number I typed.
+- [ ] `T.lhNormal` is empty, or contains only elements whose font is the system stack.
+- [ ] `Object.entries(T.lineHeights).filter(([k]) => parseFloat(k) > 40)` — every one computes to a
+      ratio ≤ 1.15, **and** the string in it is bounded Latin at ≤ 2 lines. If the slot takes CMS,
+      user or translated copy, it is ≥ 1.15 instead.
+- [ ] `T.emLineHeight` is empty. **grep** `rg 'line-height:\s*[\d.]+em' src/` returns nothing.
+- [ ] **eye** Screenshot a heading followed by a paragraph, measure the gap in pixels, compare to
+      the margin in CSS. Equal → trimmed or already tuned. ~15px larger at 32px → not trimmed.
+- [ ] **grep** if `text-box` is set anywhere, `rg 'overflow:\s*hidden' ` over the same components
+      returns nothing that holds non-Latin, emoji or accented text.
 
 **Weight**
-- [ ] Three weights or fewer are actually rendered.
-- [ ] Nothing below 16px is at weight 300.
-- [ ] Selection/active state changes colour, not weight — or if it changes weight, the layout does
-      not shift.
-- [ ] `font-variation-settings` does not contain `"wght"` anywhere `font-weight` is also used.
+- [ ] `Object.keys(T.weights).length <= 3`.
+- [ ] `cs.filter(x => +x.s.fontWeight <= 300 && parseFloat(x.s.fontSize) < 16)` is empty.
+- [ ] **eye** Screenshot the sidebar with item A selected, then item B. Diff the two PNGs — nothing
+      below the selected item moves. (Or: the selected item changes colour only.)
+- [ ] `T.fvsWght` is empty wherever `font-weight` is also used.
 
 **Tracking**
-- [ ] Letter-spacing is 0 at 14px and below, unless the text is all-caps.
-- [ ] Every all-caps label has `+0.04em` to `+0.10em`.
-- [ ] No code block has letter-spacing applied.
-- [ ] If I'm on the system stack or a Display cut, headings are at `letter-spacing: normal`.
+- [ ] `Object.entries(T.tracking).filter(([k]) => parseFloat(k) <= 14 && !/normal|0px/.test(k))` is
+      empty, except all-caps runs.
+- [ ] `T.capsUntracked` is empty.
+- [ ] **eye** Count all-caps eyebrows in the full-page screenshot: ≤ 3.
+- [ ] **grep** `rg 'letter-spacing' src/**/code*,src/**/*pre*` returns nothing.
+- [ ] **grep** if the stack starts `-apple-system` or the face is a Display cut, `rg
+      'letter-spacing:\s*-' ` over heading styles returns nothing.
 
 **Numerals**
-- [ ] Every numeric column, metric tile, counter and price has `font-variant-numeric: tabular-nums`.
-- [ ] Decimal points visually align down every numeric column. (Screenshot it and look.)
-- [ ] Cents are the same size and weight as dollars.
-- [ ] IDs and keys use `slashed-zero`; money does not.
+- [ ] `T.numbersProportional` contains only numbers that neither stack in a column nor update in
+      place. Everything else fails.
+- [ ] **eye** Screenshot the widest numeric column and draw a vertical line down the decimal points.
+- [ ] **eye** Cents in the screenshot are the same height as the dollars — no raised, shrunk cents.
+- [ ] **grep** `rg 'slashed-zero'` hits ID/key components and misses money components.
 
 **Colour**
-- [ ] Exactly three neutral text levels exist as tokens.
-- [ ] The tertiary level measures ≥ 4.5:1 against its *actual* background (`node tools/contrast.mjs`).
-- [ ] No colour expresses a distinction that size or weight should express.
+- [ ] `Object.keys(T.colors).length` — exactly 3 neutral values, plus link and danger.
+- [ ] `node tools/contrast.mjs` (or any WCAG calc) on the tertiary token against its **actual**
+      background returns ≥ 4.5.
+- [ ] **eye** For each grey in the screenshot, name the importance difference it expresses. Any that
+      encodes kind, state or disabledness instead is wrong.
 
 **Wrapping and overflow**
-- [ ] Headings use `text-wrap: balance`; body uses `pretty`; nothing over 6 lines relies on
-      `balance`.
-- [ ] Prose is capped in `ch` (~68ch), and if I track the body I have accounted for `ch` ignoring
-      letter-spacing.
-- [ ] `-webkit-line-clamp` is used, not the unprefixed property.
-- [ ] Every surface that can receive an email, URL, path or ID has `overflow-wrap: anywhere`.
-- [ ] Every truncated element carries its full value in `title` or a tooltip; identifiers truncate
-      in the middle.
+- [ ] **grep** `rg 'text-wrap:\s*balance|text-balance'` hits only headings and blocks capped under
+      6 lines. Everything else is `pretty`.
+- [ ] **console** `[...document.querySelectorAll('p')].map(p => p.getBoundingClientRect().width /
+      parseFloat(getComputedStyle(p).fontSize))` — every value under ~40 (≈ 68ch).
+- [ ] **grep** `rg 'max-width.*ch'` is on `p`/`li`/heading rules, not on `article`, `main` or a
+      layout container.
+- [ ] **grep** `rg '(?<!-webkit-)line-clamp'` returns nothing (unprefixed does not work).
+- [ ] **grep** `rg 'overflow-wrap:\s*anywhere'` — every hit is on a box with an explicit width, not
+      a flex item, grid track or `min-content` box.
+- [ ] `T.overflowing` is empty. Then paste a 72-character hyphen-free email into every free-text
+      field and re-run it.
+- [ ] `T.truncNoTitle` is empty.
+- [ ] **eye** Screenshot a truncated identifier: the ellipsis is in the middle, both ends visible.
 
 **Face and loading**
-- [ ] Every webfont has a metric-matched fallback `@font-face`, or `font-display: optional`.
-- [ ] If the file has an `opsz` axis, I verified it by measuring `opsz 14` against `opsz 32`.
-- [ ] Inline `<code>` is `0.875em`; `monospace` never appears bare in a stack.
-- [ ] Non-Latin faces are scoped by `unicode-range`; rows that can hold Devanagari, Japanese, Thai
-      or Arabic are at least 1.6 line-height.
-- [ ] I rendered at 1440 and 390, opened the PNGs, and looked at them.
+- [ ] **grep** every `@font-face` with a real `src` has a sibling `@font-face` carrying
+      `size-adjust`/`ascent-override`, or the page sets `font-display: optional`.
+- [ ] **console** `measure('font-variation-settings:"opsz" 14') !==
+      measure('font-variation-settings:"opsz" 32')` — if equal, delete `font-optical-sizing` and
+      hand-track the display sizes.
+- [ ] **grep** `rg 'font-family:\s*monospace|,\s*monospace\s*;'` — bare `monospace` never appears
+      without an explicit `font-size` in px on the same rule.
+- [ ] **grep** every non-Latin `@font-face` has a `unicode-range`; `rg ':lang\('` sets ≥ 1.6
+      line-height for `hi`, `ja`, `th`, `ar` and resets `letter-spacing` for CJK and Arabic.
+- [ ] **eye** Render at 1440 and 390, open both PNGs, look at them. Then render one screen in German
+      and one in Hindi and look at those.
+
+**The 2026 tells, as greps**
+- [ ] `rg 'bg-clip-text|background-clip:\s*text'` returns nothing on headings.
+- [ ] `rg 'italic' ` returns no single-word serif italic inside a sans headline.
+- [ ] `rg 'tracking-tight'` — not applied at 14px or below.
+- [ ] `rg 'text-muted-foreground' | wc -l` is smaller than the number of components, not larger.
+- [ ] `rg 'GeistSans|Space_Grotesk|Instrument_Serif|Sora|Syne|Fraunces'` — if it hits, I can state
+      in one sentence why this face and not the previous three.
+---
+
+## Direction pass (2026-09)
+
+Re-probed with Playwright against Chromium 148 headless at 1440×900, real font files loaded from
+the sites that license them. Live sites re-measured: **vercel.com/docs/functions**,
+**docs.stripe.com/payments/quickstart**, **linear.app**, **www.radix-ui.com/themes/docs**,
+**supabase.com/docs**. Font metrics re-measured against Inter Variable and Berkeley Mono as served
+by linear.app, and against the local system stack.
+
+### Held exactly
+
+Inter digits 362.31 / 613.28 / 644.53 and all four `tabular-nums` × `font-feature-settings`
+combinations. `opsz` widths 2123.89 / 2061.66 / 1978.66 / 1937.17. Widths at 14px: Inter 297.34,
+`system-ui` 287.97, Berkeley Mono 361.20, Menlo 362.44. x-heights 7.64 / 7.37 / 7.66. Weight ramp
+1888.02 → 2044.98. `line-height: normal` per 100px: Inter 121, SF Pro 118, Verdana 122, Tahoma 121,
+Menlo 117, Georgia 114, Arial/Helvetica/Roboto/Segoe 115. `text-box: trim-both` 38.39 → 23.28.
+`OVERVIEW` 63.94 → 68.73. Label weights 102.56 / 103.66 / 104.75 / 105.83. German growth +108% /
++64% / +59% / +33% / +24% / +8%. 60ch box 603.75px and the letter-spacing deltas. Bare `monospace`
+computing to 13px. Unprefixed `line-clamp` still inert; `hanging-punctuation` still unsupported.
+Linear, Radix and Supabase type scales matched their table rows glyph for glyph.
+
+### Corrected
+
+| Was | Now | Why |
+|---|---|---|
+| Vercel docs h3 `14/20 w600 -0.02` | `14/20 w500 ls 0`, `#4D4D4D` | re-probed |
+| Vercel dense counts 676 / 171 | 668 / 71 | re-probed |
+| Stripe "13px densest (1,248 els)" | 147 els at 13, 126 at 16 | 1,248 was not a text-element count |
+| Stripe inline code `14.4/26 Menlo` | `14/20 Menlo` | re-probed |
+| Cap-centring "0.41px low / 0.57px low / 0.24px high" | 0.81 / 1.14 / 0.48 | the file reported the *nudge* (half the gap) in a column labelled as the gap |
+| "a 64px Inter headline sits ~1.9px low" | 0.44px low at 64px, and 0.55px **high** at 20px | `opsz` redraws the metrics, so the offset is non-monotonic and changes sign |
+| overflow "2 lines, 218px, 121%" | 1 line, 379px, 211% (72-char hyphen-free email) | the old string had a break opportunity; result depends on the data |
+| "`overflow-wrap: anywhere` (or `break-word`)" | not interchangeable | `anywhere` collapses a `min-content` box 60.63 → 12.66px |
+| "balance: zero effect on 12 lines, bails past ~6" | works through 6, dead at 8+ | cliff located |
+| "every monospace measures exactly 60 units" | webfonts 60.00, Menlo 60.21 | re-probed |
+| Linear marketing dense layer "14 · 13" | 12 is densest (187 els) | re-probed |
+
+### Scopes added
+
+Six rules were stated without limits and would have been followed off a cliff:
+
+1. **tabular-nums** — was "every number above or below another number", enforced in the self-check
+   as "every metric tile, counter and price". Now scoped to columns and in-place updates. The width
+   cost is worse than the +5% average: `$11,111.11` at 13px Inter goes 50.61 → 74.34px, **+47%**. On
+   a 390px trading row that truncates the price.
+2. **`text-box: trim-both cap alphabetic`** — now excluded from multi-script surfaces inside
+   `overflow: hidden` (trimming leaves 7.72px of ink above and 8px below the box, which is fine for
+   Latin caps and clips `Ệ`, Devanagari matras and emoji), and flagged as a one-pass spacing re-tune
+   rather than a drop-in.
+3. **Display leading 0.85–1.10** — now scoped to bounded Latin strings of ≤ 2 lines. A 48px line at
+   `line-height: 1` gives a 48px box for 59px of ink; a CMS-fed or Hindi headline clips.
+4. **`max-width: 68ch`** — now explicitly on text elements, never the article container, which
+   otherwise squeezes every code block and table on the page.
+5. **`overflow-wrap: anywhere`** — now `break-word` by default, `anywhere` only on explicitly-sized
+   boxes.
+6. **All-caps tracking** — still the right way to set caps, now marked as not a licence to open
+   every section with an eyebrow, which is itself a current tell.
+
+### Anti-patterns refreshed
+
+The five corrections were 2023-era and all still true, but the file named none of the 2026 tells.
+Added as sections 6–9: **gradient headline text** (`bg-clip-text text-transparent
+bg-gradient-to-r`, the loudest current tell and a hard stop for contrast measurement), the
+**serif-italic accent word**, **unedited shadcn defaults** (`text-muted-foreground` on every
+non-heading, one `tracking-tight` at every size, global `text-balance`, `text-7xl` hero), and the
+**reflexive all-caps eyebrow**. Section 5 was rewritten: the unchosen face is no longer only Inter —
+current audits name a "tasteful free font" cluster (Space Grotesk, Sora, Syne, Instrument Serif,
+Fraunces, Geist) and untouched `next/font` Geist, and this file recommends faces one step from it,
+which is now noted in place.
+
+Sources for the current tells: [Developers Digest — AI Design Slop: 16 Patterns That Out Your App
+as Vibe-Coded](https://www.developersdigest.tech/blog/ai-design-slop-and-how-to-spot-it),
+[avoid-ai-design tells catalog](https://github.com/funboy322/avoid-ai-design),
+[925 Studios — AI Slop Fonts and Gradients](https://www.925studios.co/blog/ai-slop-design-tells).
+
+### Cut
+
+The changelog paragraph about the previous revision's two wrong numbers; "even good systems leak";
+"Invisible in the good sense and the bad sense"; "the joke is that adopting it is a strong
+statement"; "Underrated and free"; "No warmth to give"; "the most-imitated developer UI in the
+world"; "Nobody names it; everybody feels it as cheap"; "Highest-return single rule here"; "Read
+that honestly"; "and note the order changed based on measurement". Each was a sentence that changed
+no decision.
+
+### Self-check rewritten
+
+Every item is now a grep, a DevTools console expression, or a named screenshot check. The list opens
+with one console block that answers eleven items at once and leaves its result on `window.T`. Items
+that previously required judgement — "nothing reads as important because nothing is quiet", "I can
+name which surfaces use which" — are now counts, filters and diffs. A final section greps for the
+2026 tells directly.
+
+### Known gap
+
+attio.com timed out during this pass; its table row is carried from the 2026-09 measurement and is
+unverified. The Linear docs row was already carried from a dead URL and remains so.

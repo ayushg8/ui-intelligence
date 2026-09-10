@@ -1,5 +1,7 @@
 # Space, layout, grid and rhythm
 
+**Evaluated:** 2026-09
+
 **Measured against live production UI with Playwright** — computed styles, bounding boxes, and the CSS
 custom properties each product ships. Baseline pass 2026-09-09/10; re-probed 2026-09-10 (see
 *Direction pass* at the end for what moved). Values marked "approx." are inferred, not read.

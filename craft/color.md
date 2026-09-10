@@ -1,11 +1,20 @@
 # Color systems for interfaces
 
+**Evaluated:** 2026-09
+
 **Measured 2026-09.** Every hex, ratio, OKLCH triple and ΔE below was read from a live product
 with Playwright (CSS Typed OM on `document.documentElement`, so runtime-injected theme variables
 are captured, not just what's in the stylesheet), or computed from those values with the scripts in
 the last section. Contrast is computed with WCAG 2 and with APCA 0.1.9 (validated: `#fff` on `#000`
 = 21.00:1 / Lc −107.9). Forced-colors behavior was tested in Chromium 148.0.7778.96. Nothing here
 is recalled from memory. Where I could not measure something, it says so.
+
+**Re-probed 2026-09-10:** shadcn, Primer (light + dark), Geist (light + dark), Radix, Tailwind v4 and
+Linear were read again from live pages. All Primer, Geist, Radix and Tailwind values below survived
+unchanged. Two things moved and are corrected in place — Linear's accent (`#7070ff` → `#7170ff`) and
+white-on-`blue-500` contrast (3.42 → 3.76:1). One caveat: **`linear.app` now serves dark to
+logged-out visitors regardless of `prefers-color-scheme`,** so Linear's light-theme rows date from
+the 2026-08 pass and could not be re-verified.
 
 The one number that should reframe everything else. Chromatic pixel share (fraction of pixels with
 OKLCH chroma > 0.04), measured at 1440px:
@@ -17,8 +26,7 @@ OKLCH chroma > 0.04), measured at 1440px:
 | A typical AI-generated dashboard (built below, four stat cards, five-color bar chart) | **11.60%** | 4.38% |
 | The same dashboard, same information, fixed (also below) | **0.30%** | 0.25% |
 
-Product interfaces made by good designers are 99% neutral. Not "mostly neutral." Ninety-nine
-percent. In the Linear screenshot the *only* chromatic pixels in a 1440×1250 viewport are one
+Product interfaces made by good designers are ~99% neutral. In the Linear screenshot the *only* chromatic pixels in a 1440×1250 viewport are one
 yellow favorite star, one amber issue-status ring, and one violet branch icon — and the in-product
 AI agent panel visible in that screenshot is a plain `#0f1011` surface with a `#ffffff14` hairline.
 No gradient, no glow, no purple.
@@ -35,15 +43,25 @@ No gradient, no glow, no purple.
    L 27.9 · Linear `#282a2f` L 28.5). Dark mode text at L 0.94–0.97 (Linear `#f7f8f8` L 97.8 ·
    Primer `#f0f6fc` L 97.0 · Geist `#ededed` L 94.7 · Radix `slate-12` `#edeef0` L 94.9).
    Nobody ships `#000`. shadcn's default theme does — that is the tell.
+   *Scope:* this is a rule about **emissive displays rendering antialiased type.** Pure black is
+   correct on e-ink and any 1-bit or few-shade panel (L 0.26 gray dithers into mush on a reMarkable
+   or a Kobo), in print, and under `prefers-contrast: more` / `forced-colors: active`, where
+   `CanvasText` is the point. Ship the off-black as the default and let those media override it.
 3. **Choose semantic colors by target lightness, not by hue name.** Every foreground status color
    in GitHub Primer's light theme lands in **L 49.5–56.5** and chroma falls wherever the sRGB gamut
    allows (0.117 for amber, 0.207 for purple). Mercury goes further: *seven* hue families share one
    lightness ladder to within 0.2 L. Naive `#f00 / #ff0 / #0f0` sit at L 62.8 / 96.8 / 86.6 — which
    is why traffic-light palettes look broken.
-4. **One accent, and it needs exactly two values.** A *fill* value at L 0.54–0.58 (so white text
-   passes on it) and a *text* value that changes per theme. Measured: Primer's fill moves +2.9 L
+4. **One accent, split into at least two roles.** A *fill* value at L 0.54–0.58 (so white text
+   passes on it) and a *text* value that changes per theme (plus `fill-hover` and a `wash` — four
+   tokens in a finished system; see §4). Measured: Primer's fill moves +2.9 L
    from light to dark while its foreground moves +12.3 L. Allowed uses of the accent, exhaustively:
    primary action, current selection, focus ring, link, one live indicator.
+   *Scope:* one accent **per context**, not per product. Identity color is a separate budget:
+   per-workspace theming (which Slack is), multiplayer cursors and avatars, per-tenant white-label
+   surfaces, and a paid-tier CTA that must not read as the same action as the primary button are
+   all legitimate second chromatic channels. What is never legitimate is a second accent that
+   encodes nothing.
 5. **Dark mode is not an inversion.** Elevation is lightness (+3 to +5 L per step, roughly 2× the
    light-mode step size). Borders carry the structural load — Linear's dark borders sit +12.6 to
    +22.7 L above the page while its light borders sit only −6.8 to −10.7 L below it. Text-role
@@ -78,7 +96,7 @@ Values as shipped; `L` is OKLCH lightness ×100.
 Its divider equivalent is `--border-subdued: #c3c3cc` (L 82.0). *Check what a token is used on
 before copying its value;* "border" means different things in different systems.
 
-Read the last row. Six of seven ramps top out under chroma 0.026 — about a tenth of a saturated
+Six of seven ramps top out under chroma 0.026 — about a tenth of a saturated
 brand color. Vercel's gray is literally `hsla(0, 0%, X%)`: chroma exactly zero, no tint at all.
 Stripe at 0.046 is the outlier and it is the one whose grays visibly read navy (`#3c4257`), which
 works because Stripe's entire identity is blue.
@@ -97,8 +115,13 @@ works because Stripe's entire identity is blue.
 | Border default | `#34343a` 32.7 | `α 13–15%` white | `#3d444d` 38.4 | `7 #43484e` 39.9 |
 | Border strong | `#3e3e44` 36.6 | `α 24%` white | `#656c76` 52.9 | `8 #5a6169` 48.9 |
 | Text disabled | `#62666d` 50.9 | `α 51%` white | `#656c76` 52.9 | `9 #696e77` 53.7 |
-| Text secondary | `#8a8f98` 64.9 | `900 #a1a1a1` 70.8 | `#9198a1` 67.7 | `11 #b0b4ba` 76.9 |
+| Text tertiary | `#8a8f98` 64.9 | `α 51%` white | `#9198a1` 67.7 | `10` — |
+| Text secondary | `#d0d6e0` 87.4 ¹ | `900 #a1a1a1` 70.8 | `#9198a1` 67.7 | `11 #b0b4ba` 76.9 |
 | Text primary | `#f7f8f8` 97.8 | `1000 #ededed` 94.7 | `#f0f6fc` 97.0 | `12 #edeef0` 94.9 |
+
+¹ Linear's own token names matter here: `--color-text-tertiary` is `#8a8f98`,
+`--color-text-secondary` is `#d0d6e0` (L 87.4). Published "Linear dark palette" reproductions
+routinely label `#8a8f98` as secondary; it isn't. Copy the role, not the swatch.
 
 Vercel is the only measured product with a pure `#000` page ground — and every piece of content
 sits on `--ds-background-100` = `#0a0a0a` (L 14.6) *above* that black, with body text at `#ededed`,
@@ -170,8 +193,8 @@ The fill (`-emphasis`) tokens behave completely differently:
 | `bgColor-danger-emphasis` | `#cf222e` | `#da3633` | +3.5 | 5.36:1 | 4.61:1 |
 | `bgColor-done-emphasis` | `#8250df` | `#8957e5` | +2.1 | 5.05:1 | 4.61:1 |
 
-**In dark mode all five fills land within 0.04 of each other at 4.61–4.65:1.** Somebody tuned every
-fill to sit just above the AA floor with white text. That is what a system looks like.
+**In dark mode all five fills land within 0.04 of each other at 4.61–4.65:1** — every fill tuned to
+sit just above the AA floor with white text.
 
 Vercel Geist independently landed in the same place:
 
@@ -249,7 +272,7 @@ not.
 | Linear **dark** tertiary `#8a8f98` on `#08090a` | 6.13:1 | −41.8 |
 | Radix `slate-11` on `slate-2`, light | 5.65:1 | 76.2 |
 | Radix `slate-11` on `slate-2`, **dark** | **8.45:1** | **−60.3** |
-| white on Tailwind v4 `blue-500` `#2b7fff` | 3.42:1 | −64.8 |
+| white on Tailwind v4 `blue-500` `#2b7fff` | 3.76:1 | −70.0 |
 | white on Tailwind v4 `violet-500` `#8e51ff` | **4.40:1 — fails AA** | −75.3 |
 | `#fff` on `#000` | 21.00:1 | −107.9 |
 
@@ -280,8 +303,8 @@ experience. Light secondary at 5:1 → dark secondary at ~7:1.
 
 | Product | Light | Dark | white-on light | white-on dark | Note |
 |---|---|---|---|---|---|
-| Linear brand fill | `#7070ff` L 62.2 C 0.207 | `#5e6ad2` L 56.7 C 0.159 | **3.85 — fails** | 4.70 | goes *darker* in dark |
-| Linear link | `#7070ff` | `#828fff` | 3.85:1 on white | 6.95:1 on page | |
+| Linear brand fill | `#7170ff` L 62.3 C 0.207 | `#5e6ad2` L 56.7 C 0.159 | **3.84 — fails** | 4.70 | goes *darker* in dark |
+| Linear link | `#7170ff` | `#828fff` | 3.84:1 on white | 6.95:1 on page | |
 | Linear focus ring | `#5e69d1` | `#5e69d1` | — | — | same both themes |
 | Linear accent tint | `#f1f1ff` L 96.2 C 0.019 | `#18182f` L 22.2 C 0.044 | — | — | wash flips, accent doesn't |
 | Primer | `#0969da` L 54.0 | fill `#1f6feb` / text `#4493f8` | 5.19 | 4.63 | split roles |
@@ -291,12 +314,11 @@ experience. Light secondary at 5:1 → dark secondary at ~7:1.
 | Notion | `#097fe8` L 59.7 C 0.183 | — | 4.03 | — | |
 | Tailwind v4 `violet-500` | `#8e51ff` L 60.0 C 0.242 | — | **4.40 — fails** | — | the AI default |
 
-**Linear's light-mode link and primary button both fail WCAG AA at 3.85:1.** Great products ship
-brand-colored links that fail. If yours does, know it, and don't also make that color the only cue
-that something is interactive.
+**Linear's light-mode link and primary button both fail WCAG AA at 3.84:1.** If yours does too,
+know it — and don't also make that color the only cue that something is interactive.
 
 Note Linear's direction of travel: the brand goes *darker and less saturated* in dark mode
-(L 62.2 → 56.7). That's not "desaturate for dark" — it's that in dark mode the token's job is a
+(L 62.3 → 56.7). That's not "desaturate for dark" — it's that in dark mode the token's job is a
 fill carrying white text, and 3.85:1 → 4.70:1 is the fix.
 
 ---
@@ -332,7 +354,7 @@ over, you colored something that should have been neutral. In order of frequency
 backgrounds, icon chips, non-status badges, chart fills, section dividers, "featured" treatments,
 and the hero gradient.
 
-**Two boundaries on this metric.** It measures *chrome*, not content. Mercury's homepage reads
+**Three boundaries on this metric.** It measures *chrome*, not content. Mercury's homepage reads
 6.60% because it is a full-bleed photograph — the only interface elements on it are one `#5266eb`
 button and two frosted-glass pills. Exclude photography and data. And GitHub's 0.92% is *mostly*
 user-authored label pills (`Turbopack` magenta, `Error Overlay` magenta, `Form (next/form)` brown,
@@ -340,6 +362,15 @@ user-authored label pills (`Turbopack` magenta, `Error Overlay` magenta, `Form (
 so that user-chosen label colors would be the loudest thing in the row — because the labels are the
 data. **Your design system's color budget and your users' color budget are separate; spend yours so
 theirs can be seen.**
+
+**And it is invalid wherever color is the data.** A calendar where every event carries its
+category's color, a Kanban board of user-colored labels, a code editor with syntax highlighting, a
+map with layer fills, a spreadsheet under conditional formatting, a video timeline of clips — all
+of these blow past 3% by design, and an agent that "fixes" them has deleted the primary information
+channel. **Before quoting the number, mask the data region and measure only the chrome:** nav, page
+ground, toolbars, panel surfaces, borders, buttons, empty states. If you cannot separate chrome
+from data in the screenshot, this metric does not apply to that screen — say so instead of
+desaturating.
 
 ## 2. Building the neutral ramp
 
@@ -457,7 +488,7 @@ There is a fourth option nobody mentions: **tint your neutral with your brand hu
 ramp sits at hue 122–146 — *green* — at chroma 0.004–0.006: `content-primary #0e0f0c` (19.23:1),
 `content-secondary #454745` (9.37:1), `content-tertiary #6a6c6a` (5.30:1). Nobody perceives those
 as green. They perceive the product as coherent, because the near-blacks share a hue with the brand.
-It costs nothing and it is the cheapest way off `slate`.
+It is the cheapest way off `slate`.
 
 **When warm is wrong:** monitoring dashboards, code editors, anything where a warm cast fights
 syntax highlighting or amber status. **When cool is wrong:** anything selling comfort, wellness,
@@ -501,7 +532,7 @@ migration isn't.
 would break that.
 
 **Error hue is chosen to match the accent's lightness and chroma.** `#d03275` is L 58.0 C 0.199
-H 0.2; `#5266eb` is L 57.0 C 0.200 H 272. Only hue differs. Somebody did the math.
+H 0.2; `#5266eb` is L 57.0 C 0.200 H 272. Only hue differs.
 
 ### How many of each you actually need
 
@@ -525,8 +556,8 @@ Wise's rule, measured live:
 | warning | `#9a6500` | 55.0 / 0.117 / 73 | 4.96:1 | **74.0** | `#ffac00` at 10% (H 74) |
 | accent | `#0097c7` | 63.3 / 0.126 / 230 | 3.36:1 | 60.4 | `#38c8ff` at 10% (H 229) |
 
-**The three status foregrounds land within 0.5 Lc of each other** — 74.5 / 74.3 / 74.0. That is the
-tightest tuning in this entire file, and it was done in APCA, not WCAG (whose spread is 0.29).
+**The three status foregrounds land within 0.5 Lc of each other** — 74.5 / 74.3 / 74.0 — tuned in
+APCA, not WCAG (whose spread across the same three is 0.29).
 
 Every wash is a *brighter, different* color, not the text color faded: positive shifts 20° of hue,
 negative shifts 6°, and all three jump 20–25 L. Fading `#008026` to 10% gives a muddy gray-green;
@@ -556,9 +587,7 @@ border-base = black 10%
 ```
 
 Alpha composes: one `border-base` works on a white page, an `#f6f5f4` card, and a colored callout
-with no new tokens. **The costs are real and measurable.**
-
-Compositing math, measured:
+with no new tokens. Two costs, measured:
 
 | Over | 5% | 8% | 10% | 15% | 20% | 25% |
 |---|---|---|---|---|---|---|
@@ -596,7 +625,7 @@ vanishes. Use a real `border` for anything structural.
 
 ### Scrims are not black
 
-Two independent products, and this surprised me:
+Two independent products:
 
 - Linear: `--color-overlay-primary` is **white at 65%** in light mode, `#000000d9` (85% black) in
   dark.
@@ -623,8 +652,7 @@ From Linear's shipped dark theme:
 ```
 
 Text selection defaults to a **neutral 20% gray** and only becomes brand-colored in the focused
-region. That is the opposite of the usual instinct, and it's right: selection appears in bulk, and
-bulk brand color is noise.
+region. Selection appears in bulk, and bulk brand color is noise.
 
 ## 4. The accent
 
@@ -639,7 +667,7 @@ bulk brand color is noise.
 **Not:** headings, icons generally, section borders, card backgrounds, "featured" badges, avatar
 backgrounds, chart series 1, hero gradients, illustrations, hover states of neutral things.
 
-An accent is a *pointer*. Its whole job is "look here." Used twelve times it points nowhere.
+An accent is a pointer. Used twelve times, it points nowhere.
 
 ### Split it into two roles
 
@@ -720,12 +748,27 @@ independently do.
 Amber always has to climb furthest in dark mode (Primer +16.5, Geist +24.4) because it started with
 the least chroma to work with.
 
+**Scope: lightness-locking is exactly what makes these colors indistinguishable in grayscale.**
+Three foregrounds at L 0.55 are, by construction, the same gray on a monochrome laser printer, a
+fax, an e-ink reader or a photocopy. If your statuses appear on an artifact that gets printed —
+invoices, lab results, shipping manifests, boarding passes, medical charts — either offset the
+lightnesses by ≥8 L (accepting a slightly less coherent screen palette) or make the glyph, not the
+color, the thing that survives the print stylesheet. Verify by desaturating the screenshot, not by
+reasoning about it.
+
 ### Never encode state in hue alone
 
 Every status needs a second channel: a glyph, a shape, a label, a position, or a weight. GitHub's
 issue rows pass — open is a green *circle-dot*, closed a purple *check-in-circle*, draft a gray
 *outline*. Strip the color and the icons still say it. Given the ΔE 2.2 measurement above, the
 icons are not decoration; they are the actual state indicator, and the color is decoration.
+
+**The second channel does not have to be an icon, and in dense surfaces it must not be.** A 500-row
+blotter, a spreadsheet under conditional formatting, or a heatmap cell has no room for a 16px glyph
+per cell, and adding one destroys the density that is the product. There the second channel is the
+value itself: a sign (`−1.4%`), an arrow glyph inside the existing number, right-alignment, a
+column position, or a bar length. Reach for a per-row icon only where a row is at least 32px tall
+and the state is not already legible from the data.
 
 ### Contrarian: you probably need more than four, and they aren't success/warning/danger
 
@@ -756,6 +799,15 @@ Geist                       0.0 → 14.6 → 21.6 → 23.8 → 28.0 (+14.6 +7.0 
 apart because the eye discriminates finely near white; dark mode needs 3–5. Inverting a light ramp
 gives you a page and a card two points apart, which is invisible.
 
+**Scope: lightness elevation only works when you own every layer beneath the panel.** In a canvas
+product — Figma, a map, a photo or video editor, a whiteboard, a document with user-embedded images
+— the ground is whatever the user put there, so "+4 L above the surface" is meaningless: the panel
+can land darker than what it floats over and disappear. Same for a bottom sheet dragged over
+scrolling content, and for anything behind a `backdrop-filter`. Over user content, elevation needs
+an **opaque** panel plus a real shadow (or a scrim), and the shadow is load-bearing rather than
+decorative. Apply the lightness ladder to app chrome; apply shadows to things that float over
+content you did not author.
+
 ### Borders carry the structure
 
 Linear's opaque borders, measured as ΔL from the page ground:
@@ -765,7 +817,7 @@ light theme (page #ffffff):   border-primary −6.8   secondary  −8.5   tertia
 dark  theme (page #08090a):   border-primary +12.6  secondary +18.8   tertiary +22.7
 ```
 
-**Dark-mode borders are 1.8–2.1× stronger in lightness delta than the light-mode equivalents.** The
+**Dark-mode borders are 1.9–2.2× stronger in lightness delta than the light-mode equivalents.** The
 same pattern in alpha terms:
 
 | System | Light | Dark | Multiplier |
@@ -877,7 +929,7 @@ The dark counterpart is not those numbers reversed — steps near the ground are
 }
 ```
 
-Read the APCA column on the dark ramp. `--text-tertiary` is 6.27:1 — comfortably AA — but Lc −43,
+On the dark ramp `--text-tertiary` is 6.27:1 — comfortably AA — but Lc −43,
 *below* the Lc 60 floor for even large or secondary text. That is correct and intentional: tertiary is for metadata and column
 labels, never a paragraph. Linear's dark tertiary sits at Lc −41.8, Primer's at −45.8. If you need
 dark-mode body text at Lc 60+, you need `--text-secondary` at 10:1.
@@ -991,7 +1043,7 @@ Minimum pairwise ΔE(OKLab)×100 under Machado 2009 severity-1.0 simulation (hig
 men. **Okabe–Ito 7 has the best worst case** (7.6, the green/pink pair). IBM's set is close behind,
 limited by magenta-vs-orange under tritanopia.
 
-Honest caveat: **the ranking is model-dependent.** Under the older Viénot 1999 dichromat projection
+Caveat: **the ranking is model-dependent.** Under the older Viénot 1999 dichromat projection
 the same palettes score much lower across the board (Okabe–Ito 1.2, IBM 2.1, Tol muted 3.7) and
 produce out-of-gamut artifacts. What is stable across both models is the *ordering*: mono-blue and
 the Tailwind rainbow are worst; Okabe–Ito, IBM and Tol muted are best. Don't quote a single ΔE as
@@ -1065,7 +1117,7 @@ screenshot through deuteranopia and protanopia and check every pair that must be
 
 `forced-colors: active` — Windows High Contrast, and increasingly a general OS accessibility mode.
 I tested this in Chromium 148 with a real page. The results are more aggressive than most people
-assume, and one of them is a surprise:
+assume:
 
 | Property | Under `forced-colors: active` |
 |---|---|
@@ -1127,11 +1179,11 @@ what you are accidentally saying.
 | Brand-free / engineered | chroma exactly 0, pure grayscale plus one focus blue | Geist: `hsla(0,0%,X%)` throughout |
 | Calm / document / long-session | warm neutral, alpha-based tokens, almost no saturated color | Notion: `tatami` hue 62–107, text as black-at-alpha |
 | Premium / editorial | high-contrast near-black on off-white, one restrained accent | Radix `sand` |
-| Consumer-friendly | brighter accent (L 0.62+), higher chroma, more of it | Linear light brand `#7070ff` L 62.2 vs dark `#5e6ad2` L 56.7 |
-| AI slop | violet→blue gradient, `#8b5cf6`, glow, oversaturated dark | see below |
+| Consumer-friendly | brighter accent (L 0.62+), higher chroma, more of it | Linear light brand `#7170ff` L 62.3 vs dark `#5e6ad2` L 56.7 |
+| AI slop (2026) | translucent `white/10` cards over a blob-gradient dark ground, an emerald→teal or violet→blue two-stop gradient, a colored 4px card edge, one `oklch()`-authored palette that is still Tailwind's | see below |
 
 These are gradients, not categories, and **the role you put a color in changes the color** — Linear
-ships the same brand identity at L 62.2 C 0.207 in light and L 56.7 C 0.159 in dark because the
+ships the same brand identity at L 62.3 C 0.207 in light and L 56.7 C 0.159 in dark because the
 token's job changed.
 
 ---
@@ -1153,6 +1205,13 @@ token's job changed.
   chromatic-pixel budget entirely.
 - **Content platforms where users choose colors.** GitHub's neutrality is a *service* to
   user-authored label colors. If your users color things, your chrome must be quieter than theirs.
+- **Canvas products, and anything floating over user content.** Lightness elevation assumes you
+  own every layer beneath the panel. Over a Figma canvas, a map, a photo or a dragged-up sheet you
+  do not, so the panel must be opaque and the shadow is structural rather than decorative.
+- **Artifacts that get printed.** Lightness-locked status colors are, by construction, the same
+  gray in grayscale. Offset by ≥ 8 L or put the signal in the glyph.
+- **Dense grids.** "Every status needs a glyph" is right at 32px+ row heights and wrong in a
+  500-row blotter. There the second channel is the sign, the column or the bar length.
 - **You already have a design system.** Read it and use it. Two color languages in one product is
   worse than one imperfect language. Extend it with the missing steps rather than importing a ramp.
 - **Very small surfaces.** A three-screen internal tool does not need 12 steps and a semantic layer.
@@ -1182,6 +1241,28 @@ element on the screen, an amber pill competing with four saturated stat cards, a
 chart and a violet gradient button. In the corrected version there is exactly one red thing on the
 page and you find it in under a second.
 
+### What is still true in 2026, and what has moved
+
+Re-checked 2026-09 against current v0 / Lovable / Bolt output and the public critique threads. The
+violet gradient is no longer the *most* common tell — agents have been told about it enough that
+they now dodge it, and the dodges are the new tells. Ranked by how reliably each one identifies
+generated UI today:
+
+| Rank | Tell | Status since the 2023 list |
+|---|---|---|
+| 1 | Translucent card (`bg-white/10` + `backdrop-blur-xl` + `border-white/20`) on a dark blob gradient | **new / dominant** — the "liquid glass" revival |
+| 2 | A 4px colored top or left edge on every card | **new** |
+| 3 | Emerald→teal or cyan two-stop gradient | **new** — the anti-violet dodge |
+| 4 | Full-page animated mesh / blob gradient behind the content | **new** |
+| 5 | Palette authored in `oklch()` but numerically identical to Tailwind | **new** |
+| 6 | Violet→blue gradient, `#8b5cf6` accent, colored glow | still present, less dominant |
+| 7 | shadcn defaults untouched (`#000` text, `#a1a1a1` ring) | unchanged and still the highest-yield grep |
+| 8 | Four pastel stat cards with four colored icon chips | unchanged |
+| 9 | Gradient-clipped heading text | fading — now rare enough to read as deliberate |
+
+Numbers 1–5 are covered in §10–§13 below. Everything the 2023 list flagged is still worth fixing;
+none of it is sufficient any more.
+
 ### 1. The violet→blue gradient
 
 `linear-gradient(to right, #8B5CF6, #3B82F6)` on the hero, the primary button, the icon container,
@@ -1196,6 +1277,8 @@ leaving an unstyled box.
 **Instead:** one flat accent at L 0.54–0.58 on the primary button only. If you genuinely need a
 gradient, put it behind content as a very low-chroma wash (`oklch(0.97 0.02 280)` →
 `oklch(0.98 0.01 250)`) where nothing sits on it, or on one decorative element carrying no text.
+The rule is about **two-stop brand gradients under text**, not about violet — see §12 for the
+emerald version of the same mistake.
 
 **The counterexample, measured:** Linear ships an in-product AI agent panel. In the homepage
 screenshot it is a `#0f1011` surface with a `#ffffff14` hairline and a monochrome logo. Mercury's
@@ -1291,57 +1374,468 @@ glyph), it is unselectable-looking, it disappears in forced-colors, and it is th
 visual tell in the list. **Instead:** `--text-primary` at 20–24px, weight 600, letter-spacing
 −0.01em. Hierarchy from size and weight, not from hue.
 
+### 10. The translucent card — "liquid glass"
+
+`bg-white/10` + `backdrop-blur-xl` + `border-white/20` + `rounded-2xl`, on every card, over a dark
+gradient page. This is now the single most reliable tell in generated UI.
+
+**Why it's wrong, with the numbers.** The card has no lightness of its own — it inherits whatever
+is behind it. Measured on the canonical `slate-950 → purple-950` page: the same 10%-white card
+computes to `#1b1f2e` (L 24.3) at one end of the viewport and `#432874` (L 35.4) at the other, an
+**11.2-point swing**. Your dark elevation step is +3 to +5 L, so the card's ground noise is two to
+four elevation steps wide: a card can read as raised on the left of the screen and sunken on the
+right. Text contrast becomes a range, not a value — `slate-400` secondary text on that card runs
+**6.39:1 / Lc −49.7** to **4.56:1 / Lc −44.0**, and the whole range sits under the Lc 60 floor for
+secondary text. Stack two glass cards and the inner one is +8.9 L above the outer, larger than a
+real elevation step, so nesting invents surfaces. In light mode over imagery it is worse: `white/30`
+over a black photo region is `#4c4c4c`, where your `#1f2328` body text is **1.84:1**; over a white
+region it is `#ffffff`, where white text is **1.00:1**. And `backdrop-filter` is dropped under
+`forced-colors: active` and under `prefers-reduced-transparency: reduce`, so the blur that was
+supposed to separate the card from the page is the first thing to go.
+
+**Instead:** opaque surfaces from the ramp, `+3 to +5 L` per level, with a real border. Glass is
+legitimate in exactly two places, both of which Linear and Primer ship: a **header or toolbar
+pinned over scrolling content of your own** (Linear's `--header-bg: #0b0b0bcc` under a
+`backdrop-filter`), and a **control floating over user media** — a video scrubber, a map control.
+In both cases the element is small, transient and carries no body text. A card that holds a
+paragraph is never glass.
+
+### 11. The colored card edge
+
+`border-left: 4px solid` (or `border-top`) in the accent or a per-category hue, on every card in a
+list. The 2026 replacement for the pastel stat-card background, and it fails the same way: with N
+cards you have used the accent N times, so it points at nothing. It also creates a second border
+language — one colored edge and three neutral ones on the same rectangle — and it is the only place
+chroma above 0.10 appears in your chrome, which is exactly the budget you were saving for the one
+card that is actually in trouble.
+
+**Instead:** a neutral border on all of them, and a colored edge on the one card whose state
+changed. If the edge is genuinely encoding a category, it needs a label too — a 4px stripe is the
+purest possible case of hue-only encoding and it collapses under deuteranopia.
+
+### 12. The emerald→teal gradient
+
+`linear-gradient(to right, #10b981, #14b8a6)` — the "not-violet" dodge, now the default for
+anything fintech, health or sustainability shaped.
+
+**Why it's wrong:** it is the violet mistake with worse numbers. White on `#10b981` is **2.54:1**;
+white on `#14b8a6` is **2.49:1**. The violet it replaced (`#8b5cf6`) was 4.23:1 — already failing,
+and this is **41% worse**. Dropping to the 600s barely helps: `#059669` is 3.77:1, `#0d9488` is
+3.74:1. This is not a Tailwind defect, it is the gamut: to carry white text a fill has to reach
+L ≈ 0.55, and at L 0.55 the sRGB chroma ceiling is 0.173 for green and **0.094 for teal** (see the
+gamut table) — the vivid teal you picked and a teal that carries white text are not the same color
+and cannot be.
+
+**Instead:** pick the polarity deliberately. Either keep the vivid green/teal as a fill and put
+**dark** text on it — Wise's `#9fe870` with `#163300` at 9.45:1 is the worked example — or take the
+hue to L 0.55, accept the drop in chroma, and stop calling it a gradient.
+
+### 13. The blob-gradient page ground
+
+An animated `slate-950 → purple-950` mesh or two blurred radial blobs behind the whole page.
+
+**Why it's wrong, with the numbers:** `#020617` is L 12.9 **chroma 0.041** and `#2e1065` is
+L 28.3 **chroma 0.135**. The dark-mode ground rule in §6 is L 0.14–0.18 at chroma ≤ 0.015; these
+stops are **2.7× and 9× that chroma ceiling**, and the ground's own lightness varies by 15.4 points
+across the viewport. Every surface, border and text token you defined against "the page" is now
+defined against a moving target, and every hue placed on top reads as a variant of the local tint.
+Measured real dark grounds for comparison: Linear `#08090a` C 0.003, Radix `#111113` C 0.004,
+Primer `#0d1117` C 0.014.
+
+**Instead:** a flat ground at L 0.14–0.18 and chroma ≤ 0.015. If the marketing page wants
+atmosphere, keep it on the marketing page, cap it at chroma 0.03, and put nothing on top of it that
+has to be read.
+
+### 14. An `oklch()` palette that is still Tailwind's
+
+Now that the ecosystem defaults are authored in `oklch()`, generated themes are too — and the
+values are unchanged. `oklch(0.601 0.242 293.9)` **is** `#8e51ff`. The syntax is not the decision.
+
+**The grep:** convert every `oklch()` in your token file back to hex and diff it against the
+Tailwind palette. If more than two or three survive the diff, you have a Tailwind theme in OKLCH
+notation, not a color system. What OKLCH is actually for is the two things Tailwind's palette does
+not give you — a lightness-locked ladder across hue families, and the missing 250/350 neutral steps.
+If neither is present in your file, you gained nothing by switching notation.
+
 ---
 
 ## Self-check
 
+Every item is a shell command, a script call, or a single yes/no question about one screenshot.
+Nothing here says "check that it feels right." Two prerequisites:
+
+```bash
+# 1. one screenshot per theme, at the width you actually ship
+node shot.mjs https://localhost:3000/app 1440 light > light.png
+node shot.mjs https://localhost:3000/app 1440 dark  > dark.png
+# 2. the token audit script from the last section
+python3 audit.py tokens.css          # prints PASS/FAIL per check below
+```
+
 **Measure**
-- [ ] Screenshot at 1440 and run the chroma script. Product screen **< 1%**, hard ceiling 3%. Marketing < 6%.
-- [ ] Count distinct hues in the palette. Neutral + one accent + three status = **five**. More needs a written reason.
-- [ ] Grep for hex literals outside the token file. Should be zero.
+
+| # | Check | How |
+|---|---|---|
+| M1 | Chromatic pixel share < 1% (hard ceiling 3%; marketing < 6%) | `python3 chroma.py light.png`. **Crop out data regions first** — calendar grid, chart plot area, code pane, map, thumbnails — and say in the result which region you cropped. |
+| M2 | ≤ 5 distinct hue families in the token file | `grep -oE 'oklch\([0-9.]+ [0-9.]+ ([0-9.]+)' tokens.css \| awk '{print int($3/30)}' \| sort -u \| wc -l` — bucket hues by 30°; more than 5 buckets needs a written reason in the file. |
+| M3 | Zero color literals outside the token file | `grep -rnE '#[0-9a-fA-F]{3,8}\b\|rgba?\(\|hsla?\(\|oklch\(' src/ --include='*.{ts,tsx,js,jsx,css,scss,vue,svelte}' \| grep -v tokens.css` → must be empty. |
 
 **Neutral ramp**
-- [ ] 10–12 steps, authored in OKLCH, chroma ≤ 0.02 unless the tint is deliberate.
-- [ ] Surface steps 0.9–2.7 L apart in light, 3–5 in dark. Not the same numbers reversed.
-- [ ] Three usable border weights exist, not one. (If you're on Tailwind you had to add them.)
-- [ ] Chroma arcs (peaks mid-ramp) and hue drifts. Constant hue reads as generated.
-- [ ] Text is not `#000`. Dark-mode body text is not `#fff`.
+
+| # | Check | How |
+|---|---|---|
+| N1 | 10–12 neutral steps, authored in `oklch()` | `grep -cE '^\s*--n-[0-9]+:\s*oklch' tokens.css` → 10–12. |
+| N2 | Neutral chroma ≤ 0.02 at every step | `audit.py` check `neutral-chroma`. Over 0.02 must be a stated brand decision, not a default. |
+| N3 | Surface steps (ramp 1→5, everything above `border-subtle`) 0.9–3.0 L apart in light, 2.5–5.5 in dark; border steps then widen to 3–6 | `audit.py` check `surface-deltas`. Prints every delta; the dark ramp must not be the light one reversed. |
+| N4 | Three distinct border values exist and all three are used | `grep -cE '^\s*--border-[a-z]+:' tokens.css` → ≥3, **and** `grep -rc 'var(--border-strong)' src/` → > 0 for each of the three. A defined-but-unused border weight is not three weights. |
+| N5 | Chroma peaks mid-ramp; hue is not constant | `audit.py` check `chroma-arc` — fails if chroma is monotonic across the ramp or if all steps share one hue to within 1°. |
+| N6 | Text is not `#000`; dark body text is not `#fff` | `grep -nE '\-\-(text\|foreground)[a-z-]*:\s*(#000000?\|#fff(fff)?\|oklch\(\s*[01](\.0+)?\s)' tokens.css` → must be empty. |
 
 **Semantic layer**
-- [ ] No component references a ramp step directly.
-- [ ] Exactly 3 surfaces, 3 borders, 4 text levels. A fifth of anything gets deleted.
-- [ ] Every status role has three values (text / fill / wash); the wash is a brighter sibling at ~10–15% alpha, not the text color faded.
-- [ ] All status foregrounds within ±0.03 OKLCH L of each other. All status fills too.
-- [ ] Semantic names describe your domain's states where your domain has real states.
+
+| # | Check | How |
+|---|---|---|
+| S1 | No component references a ramp step | `grep -rnE 'var\(--(n|gray|slate|zinc|neutral)-[0-9]' src/` → empty. |
+| S2 | 3 surfaces, 3 borders, 4 text levels — no fifth | `for k in surface border text; do echo -n "$k "; grep -cE "^\s*--$k-[a-z]+:" tokens.css; done` → 3 / 3 / 4. |
+| S3 | Every status role has `text`, `fill` and `wash` | `for st in success warning danger info; do for r in text fill wash; do grep -q -- "--status-$st-$r:" tokens.css \|\| echo "missing $st-$r"; done; done` → prints nothing. |
+| S4 | Every wash is a *brighter* sibling, not the text color faded | `audit.py` check `wash-lightness` — the wash's base hue must be ≥ 8 L above the matching `-text` token. |
+| S5 | All status foregrounds within ±0.03 L of each other; all fills too | `audit.py` check `status-lightness-lock`. |
+| S6 | Every state your backend can emit has a token | `comm -13 <(grep -oE -- '--status-[a-z]+-text' tokens.css \| cut -d- -f4 \| sort -u) <(your API's status enum \| sort -u)` → empty. Generic `info/warning/success/danger` against a domain enum of `queued/building/live/rolled-back` fails this. |
 
 **Accent**
-- [ ] One accent. List every element type it appears on; if the list exceeds five, cut.
-- [ ] Fill and text are separate tokens. So is the wash.
-- [ ] White on the fill passes 4.5:1 — or you know it doesn't and it isn't the only interactivity cue.
-- [ ] If your accent hue is outside 260–320°, you've decided whether the fill takes dark text.
 
-**Dark mode**
-- [ ] Page L 0.14–0.18 with a sunken step below it.
-- [ ] Elevation is lightness, not shadow.
-- [ ] Every panel has a visible edge: opaque border +12 to +20 L, or alpha at 1.5–2× the light value.
-- [ ] Accent/status text +10 to +20 L; fills unchanged; chroma unchanged in both.
-- [ ] Status washes are alpha over hue.
+| # | Check | How |
+|---|---|---|
+| A1 | The accent appears on ≤ 5 element types | `grep -rlE 'var\(--accent-(fill\|text)\)' src/ \| sed 's#.*/##' \| sort -u` → list the files and name the element type each one is. More than five entries, cut. Identity color (per-workspace, multiplayer, tenant) is a separate token family and does not count — see the scope note in "If you only apply five things". |
+| A2 | `fill`, `fill-hover`, `text` and `wash` are four separate tokens | `grep -cE '^\s*--accent-(fill\|fill-hover\|text\|wash):' tokens.css` → 4. |
+| A3 | White on the fill ≥ 4.5:1, or you know it doesn't | `audit.py` check `accent-fill-contrast`. If it fails, `grep -rn 'var(--accent-fill)' src/` and confirm every hit has a non-color affordance too. |
+| A4 | If white fails on the fill, `--accent-fill-on` is declared and passes | `audit.py` check `accent-fill-polarity`. Hue is not the test — Primer's `#0969da` at hue 258° carries white fine. Contrast is the test. |
+
+**Dark mode** (read from `dark.png` and the audit)
+
+| # | Check | How |
+|---|---|---|
+| D1 | Page L 0.14–0.18, chroma ≤ 0.015; a sunken step exists below it | `audit.py` check `dark-ground`. |
+| D2 | Elevation is lightness, not shadow | Screenshot: sample the page pixel and a card pixel. If the two RGB values are equal, elevation is doing nothing but shadow. |
+| D3 | Every panel has a visible edge | Screenshot: sample one pixel on each side of a card's boundary. ΔL must be ≥ 12. |
+| D4 | Accent/status text +10 to +20 L vs light; fills unchanged; chroma unchanged | `audit.py` check `theme-delta` — diffs the light and dark token blocks. |
+| D5 | Status washes are alpha over the hue, not opaque tints | `grep -A200 'data-theme="dark"' tokens.css \| grep -- '--status-.*-wash'` → every value carries an alpha component. |
 
 **Contrast**
-- [ ] Body text ≥ 4.5:1 **and** ≥ Lc 75 against its *real* background.
-- [ ] Dark-mode text carries ~2 more points of WCAG than its light-mode equivalent.
-- [ ] Focus ring ≥ 3:1 against both component and page. Two-layer ring with the inner layer in the page color if in doubt.
-- [ ] Placeholders ≥ 4.5:1. Disabled text still readable.
+
+| # | Check | How |
+|---|---|---|
+| C1 | Body text ≥ 4.5:1 **and** ≥ Lc 75 against its *real* background | `npx axe --load-delay 2000 <url>` for WCAG, plus `audit.py` check `apca-pairs` on the pairs axe reports. Run it once with the row-hover class forced on. |
+| C2 | Dark-mode body text carries ~2 more WCAG points than light | `audit.py` check `theme-delta` prints both. |
+| C3 | Focus ring ≥ 3:1 against both the component and the page | `audit.py` check `focus-ring` (needs `--focus-ring`, `--accent-fill`, `--bg`). |
+| C4 | Placeholders ≥ 4.5:1; disabled text still legible | `grep -- '--text-placeholder\|--text-disabled' tokens.css` then `audit.py` check `text-roles`. |
 
 **Robustness**
-- [ ] Simulate deuteranopia and protanopia. Every must-distinguish pair still distinguishes.
-- [ ] Nothing communicates state by hue alone.
-- [ ] Test `forced-colors: active`. Every button has a (possibly transparent) border; every focus ring is an `outline`; nothing structural relies on `box-shadow`.
-- [ ] Chart palette checked against the ΔE table, and series are direct-labeled or mark-varied.
 
----
+| # | Check | How |
+|---|---|---|
+| R1 | Every must-distinguish pair survives deuteranopia and protanopia | `python3 cvd.py light.png deuteranopia > d.png` (matrices in the last section), then look at `d.png` and answer: can you still tell the success row from the danger row? |
+| R2 | Nothing communicates state by hue alone | `python3 cvd.py light.png grayscale > g.png`. Every status in `g.png` must still be identifiable. In dense grids the second channel may be the sign or the column, not an icon. |
+| R3 | Statuses survive print | Same `g.png`. If two statuses are the same gray and the artifact gets printed, offset by ≥ 8 L or move the signal into the glyph. |
+| R4 | `forced-colors: active` — buttons keep an edge, focus rings are `outline`, nothing structural is `box-shadow` | `newContext({ forcedColors: 'active' })`, screenshot, then: `grep -rn 'box-shadow' src/ \| grep -iE 'border\|ring\|outline\|card\|panel'` → every hit needs a matching real `border` or `outline`. |
+| R5 | Chart palette min pairwise ΔE ≥ 7 under the worst CVD model, and series are direct-labeled | `audit.py` check `chart-palette`; then screenshot the chart and confirm each series has a label touching it, not only a legend swatch. |
 
 ## Reproducing any of this
+
+### `audit.py` — the token checks the Self-check table calls
+
+Point it at your CSS custom-property file. It parses hex, `rgb()` and `oklch()`, splits light from
+dark on `:root` / `[data-theme="dark"]` / `prefers-color-scheme: dark`, and exits non-zero on any
+failure, so it drops into CI. Run all checks or name them: `python3 audit.py tokens.css focus-ring`.
+
+```python
+#!/usr/bin/env python3
+"""audit.py tokens.css [check ...]   — PASS/FAIL for the Self-check table.
+Reads --tokens from a CSS file. Understands hex, rgb(a), and oklch(). Blocks are
+split on `:root` / `[data-theme="dark"]` / `prefers-color-scheme: dark`."""
+import sys, re, math
+
+def _f(u): return u/12.92 if u <= 0.04045 else ((u+0.055)/1.055)**2.4
+def _g(u): return u*12.92 if u <= 0.0031308 else 1.055*u**(1/2.4)-0.055
+M1=[[0.4122214708,0.5363325363,0.0514459929],[0.2119034982,0.6806995451,0.1073969566],[0.0883024619,0.2817188376,0.6299787005]]
+M2=[[0.2104542553,0.7936177850,-0.0040720468],[1.9779984951,-2.4285922050,0.4505937099],[0.0259040371,0.7827717662,-0.8086757660]]
+def mul(M,v): return [sum(M[i][j]*v[j] for j in range(3)) for i in range(3)]
+def oklch(rgb):
+    lin=[_f(c/255) for c in rgb]
+    lms=[math.copysign(abs(x)**(1/3),x) for x in mul(M1,lin)]
+    L,a,b=mul(M2,lms)
+    return L, math.hypot(a,b), math.degrees(math.atan2(b,a)) % 360
+def oklch2rgb(L,C,H):
+    a,b=C*math.cos(math.radians(H)),C*math.sin(math.radians(H))
+    import numpy as np
+    lms=[x**3 for x in np.linalg.solve(np.array(M2),[L,a,b])]
+    lin=np.linalg.solve(np.array(M1),lms)
+    return [255*_g(max(0,min(1,c))) for c in lin]
+def lum(rgb):
+    r,g,b=[_f(c/255) for c in rgb]; return .2126*r+.7152*g+.0722*b
+def wcag(a,b):
+    x,y=sorted((lum(a),lum(b)),reverse=True); return (x+.05)/(y+.05)
+def _Y(rgb): 
+    r,g,b=[c/255 for c in rgb]; return .2126729*r**2.4+.7151522*g**2.4+.0721750*b**2.4
+def apca(txt,bg):
+    Yt,Yb=_Y(txt),_Y(bg)
+    f=lambda Y: Y if Y>=.022 else Y+(.022-Y)**1.414
+    Yt,Yb=f(Yt),f(Yb)
+    if abs(Yb-Yt)<.0005: return 0.0
+    S=(Yb**.56-Yt**.57)*1.14 if Yb>Yt else (Yb**.65-Yt**.62)*1.14
+    C=0 if abs(S)<.1 else (S-.027 if Yb>Yt else S+.027)
+    return round(C*100,1)
+
+HEX=re.compile(r'#([0-9a-fA-F]{3,8})')
+OKL=re.compile(r'oklch\(\s*([\d.]+%?)\s+([\d.]+)\s+([\d.]+)')
+RGB=re.compile(r'rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)')
+def parse(v):
+    """-> (rgb, has_alpha) or None"""
+    v=v.strip()
+    m=OKL.search(v)
+    if m:
+        L=float(m.group(1).rstrip('%')); L=L/100 if '%' in m.group(1) or L>1.5 else L
+        return tuple(oklch2rgb(L,float(m.group(2)),float(m.group(3)))), ('/' in v)
+    m=HEX.search(v)
+    if m:
+        h=m.group(1)
+        if len(h)==3: h=''.join(c*2 for c in h)
+        return tuple(int(h[i:i+2],16) for i in (0,2,4)), len(h) in (4,8)
+    m=RGB.search(v)
+    if m: return tuple(float(m.group(i)) for i in (1,2,3)), 'rgba' in v
+    return None
+
+def blocks(css):
+    out={'light':{}, 'dark':{}}
+    cur='light'
+    for line in css.splitlines():
+        if re.search(r'data-theme=[\'"]dark|prefers-color-scheme:\s*dark|\.dark\b', line): cur='dark'
+        elif re.match(r'\s*:root\s*\{', line) or re.match(r'\s*html\s*\{', line): cur='light'
+        m=re.match(r'\s*(--[\w-]+)\s*:\s*([^;]+);', line)
+        if m: out[cur][m.group(1)]=m.group(2).strip()
+    return out
+
+CHECKS={}
+def check(name):
+    def d(fn): CHECKS[name]=fn; return fn
+    return d
+def pick(t,pat): return {k:v for k,v in t.items() if re.search(pat,k)}
+
+@check('neutral-chroma')
+def c(T):
+    bad=[]
+    for k,v in pick(T['light'],r'^--n-\d+$|^--(gray|neutral)-\d+$').items():
+        p=parse(v)
+        if p and p[0] and oklch(p[0])[1]>0.02: bad.append(f"{k} C={oklch(p[0])[1]:.3f}")
+    return (not bad, "; ".join(bad) or "all neutral steps ≤ 0.02")
+
+@check('surface-deltas')
+def c(T):
+    # surface steps only: the first 6 rungs of the ramp, page-ward end first.
+    msg=[]; ok=True
+    for th,(lo,hi) in (('light',(0.9,3.0)),('dark',(2.5,5.5))):
+        ks=sorted(pick(T[th],r'^--n-\d+$').items(), key=lambda kv:int(re.search(r'\d+',kv[0]).group()))
+        Ls=[(k,oklch(parse(v)[0])[0]*100) for k,v in ks if parse(v)]
+        if len(Ls)<3: msg.append(f"{th}: <3 steps parsed"); continue
+        d=[(Ls[i][0],round(abs(Ls[i+1][1]-Ls[i][1]),1)) for i in range(min(4,len(Ls)-1))]
+        msg.append(f"{th}: "+" ".join(f"{k}Δ{x}" for k,x in d))
+        if any(x<lo or x>hi for _,x in d): ok=False
+    return ok, " | ".join(msg)
+
+@check('chroma-arc')
+def c(T):
+    ks=sorted(pick(T['light'],r'^--n-\d+$').items(), key=lambda kv:int(re.search(r'\d+',kv[0]).group()))
+    v=[oklch(parse(x[1])[0]) for x in ks if parse(x[1])]
+    if len(v)<5: return False,"fewer than 5 neutral steps parsed"
+    C=[x[1] for x in v]; H=[x[2] for x in v]
+    arcs = max(C) > C[0] and max(C) > C[-1]
+    drifts = (max(H)-min(H)) > 1.0
+    return (arcs and drifts), f"chroma {'arcs' if arcs else 'is monotonic'}, hue span {max(H)-min(H):.1f}°"
+
+@check('status-lightness-lock')
+def c(T):
+    out=[]; ok=True
+    for role in ('text','fill'):
+        Ls=[(k,oklch(parse(v)[0])[0]) for k,v in pick(T['light'],rf'--status-\w+-{role}$').items() if parse(v)]
+        if len(Ls)<2: continue
+        sp=max(x[1] for x in Ls)-min(x[1] for x in Ls)
+        out.append(f"{role} spread {sp*100:.1f} L"); ok &= sp<=0.03
+    return ok, "; ".join(out) or "no status tokens found"
+
+@check('wash-lightness')
+def c(T):
+    bad=[]
+    for k,v in pick(T['light'],r'--status-\w+-wash$').items():
+        t=T['light'].get(k.replace('-wash','-text'))
+        if not (t and parse(v) and parse(t)): continue
+        d=(oklch(parse(v)[0])[0]-oklch(parse(t)[0])[0])*100
+        if d<8: bad.append(f"{k} only +{d:.1f} L over its -text")
+    return (not bad), "; ".join(bad) or "every wash ≥ +8 L over its text sibling"
+
+@check('accent-fill-contrast')
+def c(T):
+    v=T['light'].get('--accent-fill');  p=parse(v) if v else None
+    if not p: return False,"no --accent-fill"
+    r=wcag((255,255,255),p[0]); return r>=4.5, f"white on fill {r:.2f}:1 (Lc {apca((255,255,255),p[0])})"
+
+@check('accent-fill-polarity')
+def c(T):
+    # the decision is contrast, not hue: if white fails on the fill, the dark-text
+    # choice has to be explicit rather than inherited.
+    v=T['light'].get('--accent-fill'); p=parse(v) if v else None
+    if not p: return False,"no --accent-fill"
+    L,C,H=oklch(p[0]); on=T['light'].get('--accent-fill-on')
+    w=wcag((255,255,255),p[0])
+    if w>=4.5: return True, f"hue {H:.0f}° L {L*100:.0f} — white passes at {w:.2f}:1"
+    if not on: return False, f"hue {H:.0f}° L {L*100:.0f} — white is {w:.2f}:1 and --accent-fill-on is MISSING"
+    d=parse(on)
+    return (bool(d) and wcag(d[0],p[0])>=4.5), f"white {w:.2f}:1; declared --accent-fill-on {on} at {wcag(d[0],p[0]):.2f}:1" if d else "unparseable --accent-fill-on"
+
+@check('dark-ground')
+def c(T):
+    v=T['dark'].get('--bg') or T['dark'].get('--n-50'); p=parse(v) if v else None
+    if not p: return False,"no dark --bg"
+    L,C,_=oklch(p[0]); sunken=any(k for k in T['dark'] if 'sunken' in k or 'inset' in k)
+    return (0.14<=L<=0.18 and C<=0.015 and sunken), f"L {L*100:.1f} C {C:.3f} sunken={'yes' if sunken else 'NO'}"
+
+@check('theme-delta')
+def c(T):
+    out=[]; ok=True
+    for k in T['light']:
+        if k not in T['dark']: continue
+        a,b=parse(T['light'][k]),parse(T['dark'][k])
+        if not (a and b): continue
+        (La,Ca,_),(Lb,Cb,_)=oklch(a[0]),oklch(b[0])
+        if re.search(r'-(text|fg)$',k) and 'status' in k or '--accent-text'==k:
+            good=10<=(Lb-La)*100<=20 and abs(Cb-Ca)<=0.05
+            out.append(f"{k} ΔL{(Lb-La)*100:+.1f} ΔC{Cb-Ca:+.3f}{'' if good else ' ←'}"); ok&=good
+        if re.search(r'-fill$',k):
+            good=abs(Lb-La)*100<=5
+            out.append(f"{k} ΔL{(Lb-La)*100:+.1f}{'' if good else ' ←'}"); ok&=good
+    return ok, " | ".join(out) or "no comparable pairs"
+
+@check('focus-ring')
+def c(T):
+    ring=parse(T['light'].get('--focus-ring','')) ; bg=parse(T['light'].get('--bg','#fff'))
+    fill=parse(T['light'].get('--accent-fill',''))
+    if not ring: return False,"no --focus-ring"
+    r1=wcag(ring[0],bg[0]); r2=wcag(ring[0],fill[0]) if fill else 99
+    return (r1>=3 and r2>=3), f"vs page {r1:.2f}:1, vs accent fill {r2:.2f}:1"
+
+@check('text-roles')
+def c(T):
+    out=[]; ok=True
+    bg=parse(T['light'].get('--bg','#ffffff'))[0]
+    for k,v in pick(T['light'],r'--text-(primary|secondary|tertiary|placeholder|disabled)$').items():
+        p=parse(v)
+        if not p: continue
+        r,lc=wcag(p[0],bg),apca(p[0],bg)
+        floor={'primary':(7,90),'secondary':(4.5,75),'tertiary':(3,60),'placeholder':(4.5,75),'disabled':(0,0)}[k.split('-')[-1]]
+        good=r>=floor[0] and abs(lc)>=floor[1]
+        out.append(f"{k} {r:.2f}:1/Lc{lc}{'' if good else ' ←'}"); ok&=good
+    return ok," | ".join(out)
+
+@check('apca-pairs')
+def c(T):
+    bgs={k:parse(v)[0] for k,v in pick(T['light'],r'--(bg|surface)').items() if parse(v)}
+    out=[]; ok=True
+    for tk,tv in pick(T['light'],r'--text-(primary|secondary)$').items():
+        tp=parse(tv)
+        if not tp: continue
+        for bk,bv in bgs.items():
+            lc=abs(apca(tp[0],bv)); floor=90 if 'primary' in tk else 75
+            if lc<floor: out.append(f"{tk} on {bk} Lc {lc}"); ok=False
+    return ok, "; ".join(out) or "every text/surface pair clears its APCA floor"
+
+@check('chart-palette')
+def c(T):
+    ks=sorted(pick(T['light'],r'--chart-\d+$').items())
+    cols=[parse(v)[0] for k,v in ks if parse(v)]
+    if len(cols)<2: return False,"fewer than 2 chart tokens"
+    if len(cols)>6: return False, f"{len(cols)} series — past 5–6 no palette separates; group the tail"
+    def ok_lab(c):
+        lin=[_f(x/255) for x in c]
+        lms=[math.copysign(abs(x)**(1/3),x) for x in mul(M1,lin)]
+        return mul(M2,lms)
+    mats={'normal':None,
+     'deuter':[[0.367322,0.860646,-0.227968],[0.280085,0.672501,0.047413],[-0.011820,0.042940,0.968881]],
+     'protan':[[0.152286,1.052583,-0.204868],[0.114503,0.786281,0.099216],[-0.003882,-0.048116,1.051998]],
+     'tritan':[[1.255528,-0.076749,-0.178779],[-0.078411,0.930809,0.147602],[0.004733,0.691367,0.303900]]}
+    worst=999; where=''
+    for nm,M in mats.items():
+        sim=[c if M is None else [255*_g(max(0,min(1,x))) for x in mul(M,[_f(y/255) for y in c])] for c in cols]
+        labs=[ok_lab(c) for c in sim]
+        for i in range(len(labs)):
+            for j in range(i+1,len(labs)):
+                d=100*math.dist(labs[i],labs[j])
+                if d<worst: worst,where=d,f"{nm} {ks[i][0]}/{ks[j][0]}"
+    return worst>=7, f"worst pairwise ΔE {worst:.1f} ({where}); target ≥ 7"
+
+if __name__=='__main__':
+    T=blocks(open(sys.argv[1]).read())
+    want=sys.argv[2:] or list(CHECKS)
+    fail=0
+    for n in want:
+        try: ok,msg=CHECKS[n](T)
+        except Exception as e: ok,msg=False,f"error: {e}"
+        print(f"{'PASS' if ok else 'FAIL'}  {n:24s} {msg}")
+        fail += not ok
+    sys.exit(1 if fail else 0)
+```
+
+Expected shape of the output — this is the reference ramp from §7 plus a deliberately broken focus
+ring, and the `focus-ring` failure is the point: a ring token equal to the accent fill is 1.00:1
+against the button it is supposed to outline.
+
+```
+PASS  neutral-chroma           all neutral steps ≤ 0.02
+PASS  surface-deltas           light: --n-50Δ1.5 --n-100Δ2.0 --n-150Δ2.5 --n-200Δ3.0 | dark: ...
+PASS  chroma-arc               chroma arcs, hue span 26.0°
+PASS  status-lightness-lock    text spread 0.0 L
+PASS  accent-fill-contrast     white on fill 4.98:1 (Lc -79.2)
+FAIL  focus-ring               vs page 4.98:1, vs accent fill 1.00:1
+PASS  text-roles               --text-primary 15.80:1/Lc102.8 | --text-secondary 6.11:1/Lc80.5
+PASS  chart-palette            worst pairwise ΔE 8.6 (tritan --chart-3/--chart-4); target ≥ 7
+```
+
+### `shot.mjs` — the screenshots the Self-check table reads
+
+```js
+// node shot.mjs <url> <width> <light|dark|forced> > out.png
+import { execSync } from 'node:child_process'; import { createRequire } from 'node:module';
+const req = createRequire(execSync('npm root -g').toString().trim() + '/');
+const { chromium } = req('playwright');
+const [url, w = '1440', mode = 'light'] = process.argv.slice(2);
+const b = await chromium.launch();
+const ctx = await b.newContext({
+  viewport: { width: +w, height: 1250 },
+  colorScheme: mode === 'dark' ? 'dark' : 'light',
+  forcedColors: mode === 'forced' ? 'active' : 'none',
+});
+const p = await ctx.newPage();
+await p.goto(url, { waitUntil: 'networkidle' });
+await p.waitForTimeout(2000);
+process.stdout.write(await p.screenshot({ fullPage: false }));
+await b.close();
+```
+
+### `cvd.py` — the simulations R1–R3 read
+
+```python
+# python3 cvd.py in.png deuteranopia|protanopia|tritanopia|grayscale > out.png
+from PIL import Image; import sys, numpy as np
+M = {'deuteranopia':[[0.367322,0.860646,-0.227968],[0.280085,0.672501,0.047413],[-0.011820,0.042940,0.968881]],
+     'protanopia':  [[0.152286,1.052583,-0.204868],[0.114503,0.786281,0.099216],[-0.003882,-0.048116,1.051998]],
+     'tritanopia':  [[1.255528,-0.076749,-0.178779],[-0.078411,0.930809,0.147602],[0.004733,0.691367,0.303900]],
+     'grayscale':   [[0.2126,0.7152,0.0722]]*3}
+a = np.asarray(Image.open(sys.argv[1]).convert('RGB'), float) / 255
+lin = np.where(a <= 0.04045, a/12.92, ((a+0.055)/1.055)**2.4)
+out = np.clip(lin @ np.array(M[sys.argv[2]]).T, 0, 1)
+srgb = np.where(out <= 0.0031308, out*12.92, 1.055*out**(1/2.4)-0.055)
+Image.fromarray((srgb*255).round().astype('uint8')).save(sys.stdout.buffer, 'PNG')
+```
+
+### Extracting a live product's tokens
 
 Extract a live product's real tokens (Typed OM catches runtime-injected variables that parsing the
 stylesheet misses, and sidesteps the CORS error you get from `sheet.cssRules`):
@@ -1392,3 +1886,93 @@ conversion leaves [0, 1]. Swap the matrix for Display-P3's to get the P3 column.
 Products probed for this file: `linear.app` (light and dark), `vercel.com/geist/colors` (light and
 dark), `github.com` (light and dark), `radix-ui.com/colors` (light and dark), `mercury.com`,
 `notion.com`, `docs.stripe.com`, `tailwindcss.com/docs/colors`, `ui.shadcn.com`, `wise.com`.
+
+---
+
+## Direction pass (2026-09)
+
+What changed in this revision, and why. Read this if you have the previous version cached.
+
+**Numbers corrected (re-probed live, 2026-09-10).** Six products were read again with Playwright
+and CSS Typed OM. Primer's eight semantic pairs, five emphasis fills, borders, shadows and scrims;
+Geist's full gray ramp, four `-900` chromatics, focus ring and shadow-border stack; Radix's step 9 /
+11 / 12 across eight scales; Tailwind v4's `neutral` and `violet`/`blue` ramps; and shadcn's
+`--foreground` / `--ring` / `--chart-1..5` **all came back byte-identical to what this file already
+claimed.** Two did not:
+
+| Was | Is | Where |
+|---|---|---|
+| white on `blue-500` `#2b7fff` = 3.42:1 / Lc −64.8 | **3.76:1 / Lc −70.0** | WCAG-vs-APCA table |
+| Linear accent `#7070ff`, 3.85:1 | **`#7170ff`, 3.84:1** | accent table, signals table, §"Accents" |
+
+Also corrected: dark borders are **1.9–2.2×** the light-mode lightness delta, not 1.8–2.1×
+(12.6/6.8, 18.8/8.5, 22.7/10.7 from the file's own Linear numbers). And the dark neutral table
+mislabelled Linear's `#8a8f98` as *secondary* — Linear's own token calls it `--color-text-tertiary`;
+secondary is `#d0d6e0` (L 87.4). That mislabel is inherited from several public "Linear palette"
+reproductions, so it is worth knowing about.
+
+**One measurement can no longer be reproduced.** `linear.app` now serves dark to logged-out
+visitors regardless of `prefers-color-scheme`. Linear's light-theme rows — including the
+"zero tokens between L 61.8 and L 87.1" finding — date from the 2026-08 pass and are now marked as
+such rather than presented as re-verifiable.
+
+**Five rules were followed off a cliff on purpose, and now carry scope.** Each of these produces a
+worse interface in a realistic product if an agent applies it literally:
+
+| Rule | The product that breaks it | Scope added |
+|---|---|---|
+| Chromatic pixels < 1% | A calendar, Kanban board, code editor, map or conditionally-formatted spreadsheet — color *is* the data, and every one of them is past 10% by design | Mask the data region and measure chrome only; if you can't separate them, the metric doesn't apply to that screen |
+| One accent, five uses | Slack — per-workspace theming is the entire orientation cue; also multiplayer cursors, white-label tenants, a paid-tier CTA that must not read as the primary action | One accent *per context*. Identity color is a separate budget |
+| Never `#000` text | An e-reader, a 1-bit panel, print, `prefers-contrast: more`, `forced-colors: active` — L 0.26 gray dithers into mush | It's a rule about emissive displays rendering antialiased type; let those media override |
+| Elevation is lightness, not shadow | Figma, a map, a photo editor, a bottom sheet over scrolling content — the ground is the user's, so "+4 L above the surface" can land *darker* than what's behind it | Lightness ladder for chrome you own; opaque panel + real shadow over user content |
+| Every status needs a glyph | A 500-row trading blotter or a heatmap — a 16px icon per cell destroys the density that is the product | The second channel can be the sign, the column, the alignment or the bar length; icons need 32px+ rows |
+
+A sixth, added to §5: **lightness-locking status colors is exactly what makes them identical in
+grayscale.** Anything that gets printed, faxed or read on e-ink needs ≥ 8 L of separation or a
+glyph that survives the print stylesheet.
+
+**The anti-pattern list was 2023's.** It named violet→blue gradients, `#8b5cf6`, glow, gradient
+text. All still true; none still sufficient. Agents have been told about violet enough that they
+now dodge it, and the dodges are the current tells. Five new entries (§10–§14), ranked in a table
+at the top of that section, each with the measurement that makes it a decision:
+
+- **Liquid glass** (`bg-white/10` + `backdrop-blur-xl` over a dark gradient) — now the single most
+  reliable tell. The card has no lightness of its own: the same token computes to L 24.3 at one end
+  of a `slate-950 → purple-950` page and L 35.4 at the other, an **11.2-point swing** against a
+  +3-to-+5 elevation step. Secondary text on it runs 6.39:1 / Lc −49.7 down to 4.56:1 / Lc −44.0 —
+  a range, and all of it under the Lc 60 floor.
+- **The 4px colored card edge** — the pastel stat card in cheaper clothing; N cards means the accent
+  is used N times.
+- **The emerald→teal gradient** — the anti-violet dodge, and **41% worse**: white on `#10b981` is
+  2.54:1 and on `#14b8a6` is 2.49:1, against violet's already-failing 4.23:1. Not a Tailwind
+  defect; at L 0.55 the sRGB chroma ceiling is 0.094 for teal.
+- **The blob-gradient page ground** — `#020617` is chroma 0.041 and `#2e1065` is chroma 0.135,
+  **2.7× and 9×** the file's own dark-ground ceiling, with the ground's own lightness varying 15.4
+  points across the viewport.
+- **OKLCH-washing** — `oklch(0.601 0.242 293.9)` *is* `#8e51ff`. Notation is not a decision. Convert
+  your tokens back to hex and diff against Tailwind; if fewer than three survive, nothing changed.
+
+**The self-check is now executable.** Every item was either a shell command already or is one now.
+Twenty-eight checks across seven groups, each one a command, a script call, or a single yes/no
+question about one named screenshot. "Count distinct hues" became a `grep | awk | sort -u | wc -l`
+that buckets hue by 30°. "Chroma arcs and hue drifts" became `audit.py chroma-arc`, which fails on a
+monotonic chroma curve or a ramp whose steps share one hue to within 1°. "Semantic names describe
+your domain" became a `comm -13` of your status token names against your API's status enum. Three
+scripts are now in the file — `audit.py` (13 token checks, exits non-zero, drops into CI),
+`shot.mjs` (light / dark / forced-colors screenshots) and `cvd.py` (the three Machado matrices plus
+grayscale).
+
+**Two of the file's own numbers failed its own checklist,** which is how the audit script earned its
+keep. The reference ramp in §7 has Δ3.0 and Δ4.0 steps, above the "0.9–2.7 L" band the old
+checklist demanded — because those two steps are *border* rungs, not surface rungs. The band is now
+stated as surface steps 1→5 at 0.9–3.0, borders widening to 3–6, which is what Radix and the
+reference ramp both actually do. And the old A4 tested accent **hue** against a 260–320° band;
+Primer's `#0969da` sits at 258° and carries white text at 5.19:1. The check now tests contrast and
+requires an explicit `--accent-fill-on` only when white actually fails.
+
+**Cut for saying nothing:** "Not 'mostly neutral.' Ninety-nine percent." · "Read the last row." ·
+"Read the APCA column." · "Somebody did the math." · "That is what a system looks like." · "and this
+surprised me" · "one of them is a surprise" · "**The costs are real and measurable.**" · "That is
+the tightest tuning in this entire file" · "It costs nothing and" · "Its whole job is 'look here.'" ·
+"That is the opposite of the usual instinct, and it's right" · "Great products ship brand-colored
+links that fail." Every one of them was a sentence that did not change what you would type next.

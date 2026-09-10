@@ -39,8 +39,10 @@ let errors = 0, warnings = 0;
 const broken = [];
 for (const file of files) {
   const md = readFileSync(file, 'utf8');
-  // strip fenced code so example paths in snippets are not treated as links
-  const body = md.replace(/```[\s\S]*?```/g, '');
+  // Strip fenced AND inline code before looking for links. A regex in a table cell
+  // like `[01](\.0+)?` is a character class followed by a group, not a markdown link,
+  // and reporting it as a broken link trains you to ignore the checker.
+  const body = md.replace(/```[\s\S]*?```/g, '').replace(/`[^`\n]*`/g, '');
   for (const m of body.matchAll(/\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
     const href = m[1];
     if (/^(https?:|mailto:|#)/.test(href)) continue;

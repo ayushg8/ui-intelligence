@@ -7,7 +7,7 @@ and enumerable, and that makes it a fixable engineering problem rather than a li
 |---|---|
 | [`vibecode-taxonomy.md`](vibecode-taxonomy.md) | The catalogue. Every tell, why AI generates it, why a designer clocks it instantly, **when it's actually fine**, what excellent designers do instead, and how to detect it in code and in a screenshot. |
 | [`vibecode-rubric.md`](vibecode-rubric.md) | The 0–10 scoring instrument, with anchored levels, weighted dimensions, a calibration set of real interfaces, and a remediation ladder. Target 0–2. |
-| [`remedies.md`](remedies.md) | The correction playbook. Before/after code for the ~30 highest-frequency tells, plus a 10-minute polish pass ordered by perceived-quality-per-unit-effort. |
+| [`remedies.md`](remedies.md) | The correction playbook. A tell → remedy index, before/after code for the 34 highest-frequency tells (16 families, forms and mobile included), and a 10-minute polish pass ordered by perceived-quality-per-unit-effort. |
 | [`visual-critique-method.md`](visual-critique-method.md) | How to actually look at a rendered interface — the capture matrix, nine looking tests (squint, grayscale, upside-down, left-edge, optical centering, comparison), a 14-dimension anchored craft rubric, and the rules for turning what you see into a ranked fix list. Worked end-to-end on a real build in [`../examples/ticket-queue-critique/`](../examples/ticket-queue-critique/). |
 
 ## Two failure modes, not one

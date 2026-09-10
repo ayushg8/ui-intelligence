@@ -1,5 +1,7 @@
 # Navigation and information architecture
 
+**Evaluated:** 2026-09
+
 Measured September 2026 against live production UI. Every number below was pulled with Playwright
 from computed styles and bounding boxes on the real site, or read from the CSS custom properties the
 product ships. Products measured: Grafana (play.grafana.org), Discourse (meta.discourse.org), Stripe

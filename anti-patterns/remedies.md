@@ -6,10 +6,16 @@ extracted from source. Sources:
 
 - **Source files:** `tailwindcss` `theme.css` and the shadcn `new-york-v4` registry, both fetched
   from their repositories; the shadcn `Button` and `globals.css` quoted here are verbatim.
-- **Live probes:** linear.app, vercel.com, github.com, notion.com, docs.stripe.com, attio.com,
-  raycast.com, railway.com, mercury.com, apple.com, radix-ui.com (themes *and* icons),
-  ui.shadcn.com (dashboard, blocks, charts), lucide.dev, mantine.dev, daisyui.com, heroui.com,
-  chakra-ui.com, mui.com, v0.app, lovable.dev, bolt.new.
+- **Source files:** the shadcn `Input`, `Label`, `Form`, `Textarea` and `Select` registry entries and
+  Tailwind v4's `preflight.css` (v4.3.3), fetched from their repositories and quoted verbatim.
+- **Live probes:** linear.app, vercel.com, github.com, notion.com, docs.stripe.com,
+  dashboard.stripe.com, attio.com, raycast.com, railway.com, mercury.com, apple.com, radix-ui.com
+  (themes *and* icons), ui.shadcn.com (dashboard, blocks, charts), lucide.dev, mantine.dev,
+  daisyui.com, heroui.com, chakra-ui.com, mui.com, v0.app, lovable.dev, bolt.new — including the
+  **sign-in forms** of GitHub, Stripe, Linear, Vercel and Notion, and every page re-probed at
+  **390px** as well as 1440px.
+- **State probes:** rest / hover / focus computed-style diffs taken by driving the real control, so
+  every hover and focus number in §14 is a measured delta rather than a reading of one state.
 
 OKLCH values were computed from measured hex. Nothing here is recalled. Where a number is
 approximate it says *approx*.
@@ -47,8 +53,63 @@ most.
 
 If you have 60 seconds and not 10 minutes, do 1, 2, 4, 5.
 
+If what you just built is a **form**, do [§14.2](#142-correction-1--four-roles-need-four-treatments)
+and [§14.3](#143-correction-2--the-ring-not-the-border) before anything in that table — they beat
+every general fix on that one surface. If it is a **phone layout**, do
+[§16.1](#161-the-display-type-ratios-measured-at-both-ends) first.
+
 **Verify by rendering.** `node $UI_LIBRARY/tools/shot.mjs <url> --widths 1440,390` and open the
 PNGs. You cannot see any of this in JSX.
+
+---
+
+## Tell → remedy index
+
+Thirty-four tells, in the order you can grep for them. Column 2 is the fix you can apply without
+reading anything; column 3 is where the reasoning and the measured values live. If you are mid-build
+and something feels off, find the row, apply the fix, move on.
+
+| # | The tell, as it appears in your code | The fix | § |
+|---|---|---|---|
+| 1 | `<Card>` around a single number, ×4, in a `grid-cols-4` | One bordered strip with `divide-x`; 200px → 84px | [1.3](#13-three-layouts-for-the-same-content) |
+| 2 | `rounded-lg border` nested inside `rounded-xl border` | Outer is a section, inner are rows. Delete the inner box | [1.2](#12-the-decision-rule) |
+| 3 | `<Card>` wrapping a settings form | `<section>` + `<h2>` + whitespace | [1.3 D](#13-three-layouts-for-the-same-content) |
+| 4 | `rounded-xl` / `rounded-2xl` on everything | Five radii, stated not derived; 6px for controls | [2.2](#22-build-the-system) |
+| 5 | Same radius on a 20px badge and a 600px panel | Radius scales with element size; table in §2.4 | [2.4](#24-radius-by-element-size--the-correction-that-fixes-toy-like) |
+| 6 | `rounded-*` on cells inside a table or a tiling grid | 0 on the children, radius on the frame + `overflow-hidden` | [2.5](#25-when-0-is-right) |
+| 7 | `shadow-sm` on a resting card | Delete it. Border, or nothing | [4.3](#43-when-a-border-beats-a-shadow--the-decision-rule) |
+| 8 | `shadow-md` / `shadow-lg` straight from Tailwind | Three-level ring-first elevation system | [4.2](#42-the-elevation-system--three-levels-no-more) |
+| 9 | Dark mode with the same shadows as light | Elevation by lightness, ~2–3 OKLCH points per level | [4.4](#44-dark-mode-elevation-lightness-not-shadow) |
+| 10 | `bg-white/10 backdrop-blur-md` | Alpha ≥ 0.6 on any glass carrying text, + `supports-` fallback | [4.7](#47-glass--the-alpha-does-the-work-the-blur-does-the-polish) |
+| 11 | `bg-gradient-to-r from-blue-500 to-purple-600` | Flat `--accent` | [5.1](#51-kill-the-gradient) |
+| 12 | `text-gray-400` next to `bg-slate-100` next to `border-zinc-200` | One neutral family, 10 steps, semantic aliases only | [5.2](#52-build-a-real-neutral-ramp) |
+| 13 | `oklch(L 0 0)` neutrals — a pure grey ramp | Chroma 0.002 → 0.04 rising as L falls, one hue | [5.2](#the-chroma-rule--the-non-obvious-one) |
+| 14 | Accent colour on the icon, the heading, the badge, the border *and* the button | One filled element + links. Status = neutral chip + coloured dot | [5.3](#53-restrict-accent-usage) |
+| 15 | `text-green-500` / `text-red-500` for status text | Status set tuned to equal L ≈ 53–56 and ≥ 4.5:1 | [5.4](#54-semantic-colour-only) |
+| 16 | Five series in five steps of the same blue | Categorical ≠ sequential; separate in hue *and* L | [5.6](#56-chart-colour--the-palette-that-ships-wrong) |
+| 17 | `text-5xl font-bold tracking-tight` hero | 0.95–1.05 line-height, weight 450–600, track by face | [6.2](#62-display-type--the-four-things-to-change) |
+| 18 | `tracking-tight` on 13px UI text | Tracking is a function of size *and* typeface; table in §6.3 | [6.3](#63-track-by-size--the-table) |
+| 19 | Weights only ever 400/500/600/700 | Variable weights: 510, 590, 480, 425 | [6.4](#64-weight-and-contrast-levels) |
+| 20 | `tabular-nums` on a marketing price | Tabular only when digits stack and change | [6.6](#66-numerals--the-rule-that-is-usually-stated-wrong) |
+| 21 | `p-6` cards, `py-4` rows, 16px body in a control panel | Per-archetype multipliers; 74px row → 36px | [7.1](#71-the-multipliers) |
+| 22 | `min-h-screen bg-gray-50` + `max-w-7xl mx-auto` | Delete, name your widths, set the measure first | [8.8](#88-the-three-tell-line-min-h-screen-bg-gray-50-max-w-7xl) |
+| 23 | Eight consecutive `py-24 text-center` sections | Rhythm proportional to relatedness; vary width; one full-bleed | [8.4](#84-move-3--break-the-uniform-vertical-rhythm) |
+| 24 | `grid-cols-3` of equal feature cards | One item is more important, so it is bigger | [8.5](#85-move-4--asymmetric-grids) |
+| 25 | "Submit" / "Learn more" / "Something went wrong" | Verb the button, state the consequence, give an error code | [9.2](#92-fifteen-rewrites) |
+| 26 | `Item 1…Item 5`, all `$1,000.00`, all `2024-01-01` | Ten hand-written rows with real variance | [11.1](#lever-1--real-content-varied) |
+| 27 | One `No results found` for both empty cases | Empty ≠ empty-after-filter. Two branches, different copy | [10.2](#102-the-two-empty-states) |
+| 28 | `{pending ? "Saving..." : "Save"}` | Keep the label in the DOM, overlay the spinner | [10.3](#103-the-button-that-does-not-move-when-it-loads) |
+| 29 | `animate-pulse` grey rectangles | Real geometry, varied widths, 150ms delay, or nothing | [10.4](#104-skeletons-that-are-not-the-default-shimmer) |
+| 30 | `transition-all`, `hover:scale-105`, `hover:-translate-y-1` | Name the properties. Nothing moves on hover | [12.1](#121-delete-first-in-this-order) |
+| 31 | `animate-in fade-in slide-in-from-bottom-8` per section on scroll | Delete all of it | [12.1](#121-delete-first-in-this-order) |
+| 32 | `<Search className="size-5" />` next to `text-sm`, lucide at default weight | `stroke-width: 1.5`, icon ≈ 1.0–1.15× the label size | [13.2](#132-the-fix-in-one-css-rule) |
+| 33 | 🚀 in a heading, ✨ next to an AI button | Emoji are not icons — unless the emoji is the user's data | [13.4](#134-one-family--and-emoji-are-not-icons) |
+| 34 | `<Label>` 14px, input 14px, help 14px, error 14px, all `gap-2` | Four roles need four treatments; ring not border; recessed not raised | [14](#14-form-correction) |
+
+Three more that are structural rather than greppable, and matter more than most of the list:
+**no primary object** ([11.3](#113-the-test)), **one density for every surface**
+([14.5](#145-correction-4--control-size-is-a-property-of-the-surface-not-of-the-app)), and
+**a mobile layout that is the desktop layout with smaller text** ([16](#16-mobile-correction)).
 
 ---
 
@@ -1065,6 +1126,54 @@ Rules:
   labels. (Charts are different; see the `dataviz` skill.)
 - **Green for money is a US convention** and inverted in parts of East Asia (red = up). If the
   product has a global audience, make direction available as a token.
+
+### The measured correction: pick status colours by lightness, not by palette step
+
+GitHub's four status foregrounds, measured and converted:
+
+```
+--fgColor-danger     #d1242f   oklch(55.7% 0.206  24.6)   contrast on white 5.24
+--fgColor-danger-bd  #cf222e   oklch(55.2% 0.205  24.5)   contrast on white 5.36
+--fgColor-success    #1a7f37   oklch(52.4% 0.140 148.0)   contrast on white 5.08
+--fgColor-attention  #9a6700   oklch(55.4% 0.117  75.0)   contrast on white 4.87
+--fgColor-accent     #0969da   oklch(54.0% 0.191 257.5)   contrast on white 5.19
+```
+
+**All four land inside L 52.4–55.7 and contrast 4.87–5.36.** The hue changes; the perceived
+lightness does not. That is what makes a status set read as a set rather than as four unrelated
+colours, and it is why the amber is `#9a6700` — a dark ochre — rather than a yellow: a yellow at
+that chroma cannot reach L 55 and 4.5:1 at the same time.
+
+Compare the same "step" of the Tailwind palette used raw as status text on white:
+
+```
+red-500    #ef4444   oklch(63.7%)   contrast 3.76   ← fails AA for text
+green-500  #22c55e   oklch(72.3%)   contrast 2.28   ← fails badly
+red-600    #dc2626   oklch(57.7%)   contrast 4.83   ← passes
+```
+`text-green-500` for a success message is a real accessibility failure and it is what generated
+code writes, because 500 is the "default" step in every example. **Green is the trap: at any given
+numeric step, green is 8–15 points lighter than red or blue**, because the palette is built on
+chroma-and-hue evenness, not on lightness evenness.
+
+The fix is one line of discipline: **choose your semantic set at a fixed L, then check contrast.**
+
+```css
+@theme {
+  /* one lightness, four hues — the set reads as a set */
+  --color-danger:  oklch(55% 0.20  25);
+  --color-success: oklch(55% 0.14 150);
+  --color-warning: oklch(55% 0.12  75);   /* NOT a yellow. A yellow cannot live at L55. */
+  --color-info:    oklch(55% 0.19 258);
+
+  /* surfaces are the same hue at L 95–96 with chroma cut ~85% */
+  --color-danger-surface:  oklch(96% 0.03 25);
+  --color-success-surface: oklch(96% 0.03 150);
+}
+```
+On dark, re-pick at **L 70–75** rather than reusing these — same rule as
+[§5.5](#55-the-dark-mode-conversion-that-is-not-a-conversion).
+
 
 ## 5.5 The dark-mode conversion that is not a conversion
 
@@ -2378,6 +2487,739 @@ shipping the default one is the visual equivalent of shipping `font-family: sans
 
 ---
 
+# 14. Form correction
+
+Forms are where generated UI is most obviously generated, because a form is almost entirely
+library default: the input is the library's input, the label is the library's label, and the four
+pieces of text in a field all end up the same size. Everything in this section was measured
+2026-09 on live sign-in and in-app surfaces, plus the shadcn registry source.
+
+## 14.1 The measurement
+
+The generated default, verbatim from the shadcn `new-york-v4` registry:
+
+```tsx
+// Input
+"h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs
+ transition-[color,box-shadow] outline-none placeholder:text-muted-foreground
+ disabled:opacity-50 md:text-sm dark:bg-input/30"
+"focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+"aria-invalid:border-destructive aria-invalid:ring-destructive/20"
+
+// Label
+"flex items-center gap-2 text-sm leading-none font-medium select-none"
+
+// FormItem       → "grid gap-2"
+// FormDescription→ "text-sm text-muted-foreground"
+// FormMessage    → "text-sm text-destructive"
+// FormLabel      → "data-[error=true]:text-destructive"
+```
+
+So the default field is: **36px input, four text elements all at 14px, all 8px apart, a 1px border
+plus a drop shadow, a grey 3px focus halo, and a label that turns red on error.**
+
+Here is what five shipped forms actually do:
+
+| | Surface | Input | Label | Label→input | Field boundary | Focus |
+|---|---|---|---|---|---|---|
+| **GitHub** | sign-in | **40px**, 16px/20 w400, r6, pad 5/12 | 14px/21 **w600** `#1f2328` | **4px** | `1px #d1d9e0` **+ `inset 0 1px 0 rgba(31,35,40,.04)`** | border → `#0969da` **+ `inset 0 0 0 1px #0969da`**, 80ms |
+| **Stripe** | dashboard sign-in | **44px**, 16px/24 w400, r6, pad 8/12 | 14px **w300** `#414552` | **12px** | **no border at all** — `box-shadow: 0 0 0 1px #d4dee9` | `0 0 0 1px #a497fc, 0 0 0 4px #e0d9fb`, 240ms |
+| **Notion** | sign-in | 15px/26 w400 in a wrapper box (the `<input>` itself is unstyled) | **12px/16 w500** `#7d7a75` | 8px (label `margin-bottom`) | on the wrapper | — |
+| **GitHub** | in-app (repo page) | **32px** (`--control-medium-size: 2rem`), 14px | — | — | same tokens, one size down | same |
+| **shadcn** | default | **36px** (`h-9`), 16→14px | 14px w500 | 8px | `1px` + `shadow-xs` (a **drop** shadow) | `ring-[3px] ring-ring/50` — grey |
+
+Five corrections fall out, and they are independent of each other.
+
+## 14.2 Correction 1 — four roles need four treatments
+
+A field has four pieces of text and they do four different jobs: **name** it, **hold** the value,
+**explain** it, **complain** about it. shadcn renders all four at `text-sm`, separated by a uniform
+8px. The result is a stack of four identical grey-black lines where nothing is subordinate to
+anything, which is exactly the "wall of form" read.
+
+The two patterns that ship, measured, are opposites — and both work:
+
+```
+heavy label, tight gap  →  GitHub: 14px w600, 4px below, input text 16px w400
+light label, loose gap  →  Stripe: 14px w300, 12px below, input text 16px w400
+                           Notion: 12px w500 muted, 8px below, input text 15px
+```
+
+What they share: **the label is differentiated from the value by weight or size or colour — never
+by nothing.** Pick one and hold it across the product.
+
+```tsx
+// before — the generated field
+<FormItem>                              {/* grid gap-2  → 8px everywhere */}
+  <FormLabel>Email address</FormLabel>  {/* 14px w500 */}
+  <FormControl><Input /></FormControl>  {/* 36px, 14px */}
+  <FormDescription>We'll never share your email.</FormDescription>  {/* 14px muted */}
+  <FormMessage />                       {/* 14px red */}
+</FormItem>
+```
+```tsx
+// after — four roles, four treatments, three different gaps
+<div className="grid gap-1.5">
+  <label htmlFor={id} className="text-[13px] font-[560] leading-5 text-[--color-fg]">
+    Email address
+  </label>
+  <input id={id} aria-describedby={`${id}-hint ${id}-err`} aria-invalid={!!error}
+         className="h-8 rounded-[6px] px-2.5 text-[14px] …" />
+  {/* hint is one step DOWN, and sits closer to the input than the label does */}
+  <p id={`${id}-hint`} className="text-[12px] leading-4 text-[--color-fg-muted]">
+    Used for sign-in and receipts.
+  </p>
+  {error && (
+    <p id={`${id}-err`} className="flex items-start gap-1.5 text-[12px] leading-4 text-[--color-danger]">
+      <AlertGlyph className="mt-px size-3 shrink-0" />
+      {error}
+    </p>
+  )}
+</div>
+```
+Three rules in that diff: the hint is **smaller** than the label, the error is the **same size as
+the hint** (it replaces it in the reading order, it is not a fifth level), and the error carries an
+icon so colour is not the only channel ([§5.4](#54-semantic-colour-only)).
+
+**Delete the hint entirely if it says nothing.** "We'll never share your email" is the form
+equivalent of "Manage your account settings and preferences"
+([§9.2](#92-fifteen-rewrites), rewrite 12).
+
+## 14.3 Correction 2 — the ring, not the border
+
+Stripe's sign-in input has **no CSS border**. The hairline is a box-shadow:
+
+```
+rest:    box-shadow: 0 0 0 1px #d4dee9;
+focus:   box-shadow: 0 0 0 1px #a497fc, 0 0 0 4px #e0d9fb;
+         transition: box-shadow .24s;
+```
+
+Three things that buys you, all of which generated code fights instead:
+
+1. **Zero layout shift, ever.** A border participates in the box; a 1px → 2px border on focus moves
+   every character in the field by half a pixel. A ring does not exist to layout.
+2. **The rest state and the focus state are the same property**, so they interpolate. You cannot
+   smoothly animate `border-color` *into* `border-color + ring` without the ring popping.
+3. **The focus treatment is two rings, not a halo.** `0 0 0 1px` in a mid-tone plus `0 0 0 4px` in
+   a very pale tint of the same hue (`#a497fc` L 72.9 → `#e0d9fb` L 90.1). shadcn's default is a
+   single `3px` ring at 50% opacity of a **grey** — which reads as a blur, not a focus.
+
+```css
+/* the field primitive, as a class you apply everywhere */
+.field {
+  border: 0;
+  box-shadow: 0 0 0 1px var(--color-border);
+  transition: box-shadow 120ms var(--ease-standard);
+}
+.field:hover        { box-shadow: 0 0 0 1px var(--color-border-strong); }
+.field:focus-visible{ outline: none;
+                      box-shadow: 0 0 0 1px var(--color-accent),
+                                  0 0 0 4px color-mix(in oklab, var(--color-accent) 18%, transparent); }
+.field[aria-invalid="true"] { box-shadow: 0 0 0 1px var(--color-danger); }
+.field[aria-invalid="true"]:focus-visible {
+  box-shadow: 0 0 0 1px var(--color-danger),
+              0 0 0 4px color-mix(in oklab, var(--color-danger) 18%, transparent);
+}
+```
+
+**When a real border is right instead:** when the control sits inside a container that clips
+(`overflow-hidden`) — a ring gets cut off and a border does not; and on a segmented control or a
+table cell where adjacent elements must share an edge. And for **focus on list rows**, prefer
+`outline: 2px solid` with a negative `outline-offset` over both, because `outline` is not clipped
+by an ancestor's overflow — which is exactly what happens to the first and last row of a scroll
+container ([§3.1](#31-shadcnui--the-seven-overrides-in-order), override 5).
+
+## 14.4 Correction 3 — inputs are recessed, buttons are raised
+
+GitHub ships two tokens that state this explicitly:
+
+```
+--shadow-inset:         inset 0 1px 0 0 #1f23280a     /* 4% of the FG colour, cast downward inside */
+--shadow-resting-small:  0 1px 1px 0 #1f23280a, 0 1px 2px 0 #1f232808
+```
+
+The sign-in input carries `inset 0 1px 0 0 rgba(31,35,40,.04)` — a hairline of shade along the
+**inside top edge**, which is what a recess looks like under overhead light. shadcn's Input carries
+`shadow-xs` — `0 1px 2px 0 rgb(0 0 0 / 0.05)`, a **drop** shadow, i.e. the field is floating above
+the page it is supposed to be cut into. It is a 5%-alpha mistake and nobody consciously sees it,
+but the whole form reads slightly inflated.
+
+```tsx
+// before
+<Input className="shadow-xs" />
+// after
+<input className="shadow-[inset_0_1px_0_0_rgb(0_0_0/0.04)]" />
+// or globally:
+```
+```css
+[data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"] {
+  box-shadow: inset 0 1px 0 0 color-mix(in oklab, var(--color-fg) 4%, transparent);
+}
+```
+Note the `color-mix` with `--color-fg`: **the shade is tinted with your dark neutral, not with
+black** ([§15.2](#152-tint-the-hairline-and-the-shade-or-decide-not-to)).
+
+**When to skip it:** on a dark theme. An inset dark line on a dark field is invisible; use
+`inset 0 1px 0 0 rgb(255 255 255 / .04)` — a *highlight* on the top edge — or nothing at all.
+
+## 14.5 Correction 4 — control size is a property of the surface, not of the app
+
+Primer ships three and picks per context:
+
+```
+--control-small-size:  1.75rem   28px
+--control-medium-size: 2rem      32px      ← everything in-app
+--control-large-size:  2.5rem    40px      ← sign-in, checkout, mobile
+```
+
+Measured, same company, same week: GitHub's repo-page controls are **32px with 14px text**; its
+sign-in inputs are **40px with 16px text**. Stripe's sign-in is **44px with 16px**. Linear's sign-in
+buttons are **44px tall but keep 13px type** — it grows the target, not the text, because 13px is
+part of its identity.
+
+shadcn gives you one 36px default, so generated apps run 36px everywhere: too big for a filter bar,
+too small for a checkout.
+
+```ts
+// the size map to ship
+const control = {
+  sm: "h-7  text-[13px] px-2.5 gap-1.5 [&_svg]:size-3.5",  // 28 — toolbars, table filters, chips
+  md: "h-8  text-[13px] px-3   gap-1.5 [&_svg]:size-4",    // 32 — the in-app default
+  lg: "h-10 text-[16px] px-4   gap-2   [&_svg]:size-4",    // 40 — auth, checkout, mobile, empty-state CTA
+};
+```
+
+**The 16px rule, stated correctly.** iOS Safari zooms the viewport when a focused input's font-size
+is below 16px. That is a *mobile* constraint, so it belongs on the *large* control, which is the one
+you use on mobile and on auth — not on every input in a desktop-only admin panel. shadcn encodes it
+as `text-base md:text-sm`, which is right for its own defaults and wrong the moment you build a
+dense desktop tool. (See [§3.1](#31-shadcnui--the-seven-overrides-in-order), override 3.)
+
+## 14.6 Correction 5 — the filled button carries its own darker edge
+
+Two independent products, same move:
+
+```
+GitHub  primary  bg #1f883d  +  border: 1px solid rgba(31,35,40,0.15)
+Notion  primary  bg #2383e2  +  box-shadow: inset 0 0 0 1px rgba(15,15,15,0.1), 0 1px 2px rgba(15,15,15,0.1)
+Stripe  primary  bg #675dff  +  box-shadow: 0 0 0 1px #675dff        (ring in its own colour)
+Linear  primary  bg #6d78d5  +  box-shadow: 0 3px 6px -2px rgb(0 0 0/.02), 0 1px 1px rgb(0 0 0/.04)
+```
+
+A saturated fill against white has a soft optical edge — the eye reads the boundary as slightly
+fuzzy because there is no luminance step at the very edge of the shape. A 10–15% black rim (or a
+same-colour ring, which just makes the shape 1px bigger without a colour break) fixes it, and it is
+the difference between a button that looks *placed* and one that looks *printed*.
+
+```tsx
+// before
+<button className="h-9 rounded-md bg-blue-600 px-4 text-sm font-medium text-white
+                   hover:bg-blue-700">Save</button>
+// after
+<button className="h-8 rounded-[6px] bg-[--color-accent] px-3 text-[13px] font-[510] text-white
+                   shadow-[inset_0_0_0_1px_rgb(0_0_0/0.12)]
+                   hover:bg-[--color-accent-hover]
+                   active:bg-[--color-accent-active]
+                   disabled:opacity-50 disabled:pointer-events-none
+                   focus-visible:outline-2 focus-visible:outline-offset-2
+                   focus-visible:outline-[--color-ring]">Save</button>
+```
+
+**When to skip it:** on a black or near-black button (Vercel's `#171717` has no rim — there is no
+"darker" available), and on a ghost/outline button, which already has an edge.
+
+## 14.7 Correction 6 — the hover delta is 3× too big
+
+Measured hover transitions on filled primaries:
+
+| | Rest → hover | ΔL (OKLCH) |
+|---|---|---|
+| **GitHub** primary green | `#1f883d` → `#1c8139` | **−2.1** |
+| **Vercel** primary black | `#171717` → `#383838` | **+13.6** |
+| Tailwind `bg-blue-600 hover:bg-blue-700` | `#2563eb` → `#1d4ed8` | −5.8 |
+| Tailwind `bg-blue-500 hover:bg-blue-600` | `#3b82f6` → `#2563eb` | −7.7 |
+| **Linear** secondary | `#e5e5e6` → `#ffffff` | +7.8 |
+
+**The rule the measurements give you:**
+
+- **Mid-lightness fill (L 40–70): move 2–4 points, and darken.** One Tailwind palette step is
+  6–8 points, which is why `hover:bg-blue-700` feels like the button changed colour rather than
+  responded. Use `color-mix(in oklab, var(--color-accent) 92%, black)`.
+- **Near-black or near-white fill: move 8–14 points, and reverse direction.** At L 20 there is no
+  perceptible "darker", so Vercel goes 13.6 points *lighter*; at L 92 Linear goes 8 points lighter
+  to pure white. The eye's sensitivity to a lightness step collapses at both ends of the range, so
+  the step has to grow.
+- **Ghost / row hover is an overlay, not a colour.** GitHub's nav item:
+  `transparent → rgba(129,139,152,0.1)` — a **neutral-tinted** overlay, composited to `#f2f3f5`,
+  **ΔL −3.6**. Linear's, on dark: `rgba(255,255,255,0.08)` over `#08090a`, composited to `#1c1d1e`,
+  **ΔL +9.1**. Same intent, wildly different numbers, which is the point of
+  [§15.3](#153-overlay-alpha-does-not-mirror-between-themes).
+
+```css
+@theme {
+  --overlay-hover:    color-mix(in oklab, var(--color-fg) 5%, transparent);
+  --overlay-active:   color-mix(in oklab, var(--color-fg) 8%, transparent);
+  --color-accent-hover:  color-mix(in oklab, var(--color-accent) 92%, black);
+  --color-accent-active: color-mix(in oklab, var(--color-accent) 86%, black);
+}
+```
+
+And the transition list, measured: GitHub `color, background-color, box-shadow, border-color 80ms`;
+Stripe `box-shadow .24s` on inputs, `background-color, box-shadow .15s` on buttons; Notion
+`background 20ms`. All four name their properties. None of them is `transition-all`.
+
+## 14.8 Correction 7 — the error state
+
+shadcn's error state does three things: red border, red 20%-alpha ring, and
+`data-[error=true]:text-destructive` **on the label**. The first two are right. The third is not:
+the label is the field's *name*, and a form with four errors becomes four red names and four red
+messages, so the eye cannot separate "which field" from "what is wrong."
+
+```tsx
+// before
+<FormLabel data-error={!!error}   // → text-destructive
+   className="data-[error=true]:text-destructive">Card number</FormLabel>
+```
+```tsx
+// after — the boundary and the message carry the error; the name stays a name
+<label htmlFor={id} className="text-[13px] font-[560] text-[--color-fg]">Card number</label>
+<input id={id} aria-invalid={!!error} aria-describedby={error ? `${id}-err` : `${id}-hint`}
+       className="field" />
+{error && (
+  <p id={`${id}-err`} role="alert" className="flex items-start gap-1.5 text-[12px] text-[--color-danger]">
+    <AlertGlyph className="mt-px size-3 shrink-0" />
+    {error}
+  </p>
+)}
+```
+
+The rest of the anatomy, none of which is visual:
+
+- **Do not validate before the first blur.** Validating on keystroke turns typing an email address
+  into four seconds of red. Validate on blur, then re-validate on every keystroke *after* the field
+  has errored once — so the error clears as soon as it is fixed.
+- **The message says what to do, not what is wrong.** "Invalid" → "Use the 16 digits on the front of
+  the card, no spaces." Same move as [§9.2](#92-fifteen-rewrites), rewrite 10.
+- **Errors summarised at the top of a long form, each one a link** to its field. Otherwise a
+  submit-time failure scrolls the user past three screens hunting for red.
+- **`aria-invalid` + `aria-describedby` + `role="alert"`.** shadcn's `<Form>` wires the first two
+  correctly; keep that part.
+- **Never remove the submit button's `disabled` reason.** A greyed submit with no explanation is the
+  single most common dead end in generated forms.
+
+## 14.9 The whole field, paste-able
+
+```tsx
+type FieldProps = {
+  label: string; hint?: string; error?: string;
+  size?: "md" | "lg"; children: (p: { id: string; className: string; invalid: boolean }) => React.ReactNode;
+};
+
+export function Field({ label, hint, error, size = "md", children }: FieldProps) {
+  const id = React.useId();
+  const box = size === "lg" ? "h-10 text-[16px] px-3" : "h-8 text-[13px] px-2.5";
+  return (
+    <div className="grid gap-1.5">
+      <label htmlFor={id} className="text-[13px] font-[560] leading-5 text-[--color-fg]">
+        {label}
+      </label>
+      {children({
+        id,
+        invalid: !!error,
+        className: `field w-full rounded-[6px] bg-[--color-bg] ${box} text-[--color-fg]
+                    placeholder:text-[--color-fg-subtle]
+                    disabled:cursor-not-allowed disabled:opacity-50`,
+      })}
+      {hint && !error && (
+        <p id={`${id}-hint`} className="text-[12px] leading-4 text-[--color-fg-muted]">{hint}</p>
+      )}
+      {error && (
+        <p id={`${id}-err`} role="alert"
+           className="flex items-start gap-1.5 text-[12px] leading-4 text-[--color-danger]">
+          <AlertGlyph className="mt-px size-3 shrink-0" />{error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// usage
+<Field label="Card number" hint="16 digits, no spaces" error={errors.card}>
+  {(p) => <input {...p} inputMode="numeric" autoComplete="cc-number" placeholder="4242 4242 4242 4242" />}
+</Field>
+```
+
+Two details in there that generated forms miss and that cost nothing: `autoComplete` with the real
+token (`cc-number`, `email`, `new-password`, `one-time-code`), and `inputMode` so the mobile keyboard
+is the right keyboard. A card field that opens a QWERTY keyboard is a worse defect than any radius.
+
+## 14.10 When the "before" is right
+
+- **A one-field form** — a search box, a subscribe input — does not need a label above it, and a
+  placeholder-only field is acceptable *if* the field's purpose is obvious from context and the
+  placeholder is not carrying the label's job. (For a two-field form it is never acceptable: the
+  label vanishes the moment the user types.)
+- **Government, medical and financial intake forms** are deliberately verbose and roomy. 44px
+  controls, 16px type, generous hints, explicit legends. The density rules in
+  [§7](#7-density-correction) invert here, and the "delete the hint" advice in 14.2 does not apply
+  to a field with a legal definition.
+- **Long labels beside short fields** justify a two-column (label-left) layout — the classic
+  settings-form shape. It is not old-fashioned; it is correct when the labels are long and the
+  values are short, and it is wrong on mobile.
+
+## 14.11 What the generic version was optimizing for
+
+`<FormItem className="grid gap-2">` with four `text-sm` children is a *uniformity* decision. It
+guarantees nothing collides and nothing needs a judgment call — which is exactly why it produces a
+field where the name, the value, the hint and the failure all shout at the same volume. Every fix in
+this section is the same move: give the four roles four different weights of voice.
+
+---
+
+# 15. Hairlines, overlays and the spacing scale
+
+The three systems that are invisible individually and account for most of the difference at squint
+distance. All numbers measured 2026-09.
+
+## 15.1 The hairline band — and the contrarian finding
+
+Every 1px divider and control border measured, converted to OKLCH and to contrast ratio against the
+white it sits on:
+
+| | Colour | OKLCH L | Contrast vs `#fff` |
+|---|---|---|---|
+| Notion (warm ring) | `rgba(42,28,0,.07)` → `#f0efed` | 95.2 | **1.15** |
+| Vercel `--ds-shadow-border-small` ring | `#00000014` → `#ebebeb` | 94.0 | 1.19 |
+| Tailwind `slate-200` | `#e2e8f0` | 92.9 | 1.23 |
+| Tailwind `gray-200` | `#e5e7eb` | 92.8 | 1.24 |
+| shadcn `--border` | `≈#e5e5e5` | 92.2 | 1.26 |
+| GitHub `--borderColor-muted` | `#d1d9e0b3` → `#dfe4e9` | 91.6 | **1.28** |
+| Linear (light) | `#e2e2e2` | 91.3 | 1.30 |
+| Stripe input ring | `#d4dee9` | 89.6 | 1.36 |
+| Radix `gray-6` | `#d9d9d9` | 88.5 | 1.41 |
+| GitHub `--borderColor-default` | `#d1d9e0` | 88.1 | **1.43** |
+| Tailwind `gray-300` | `#d1d5db` | 87.2 | 1.47 |
+
+**Every shipped hairline on the planet is between 1.15:1 and 1.47:1, i.e. OKLCH L 87–95.** And
+Tailwind's `gray-200` and `gray-300` are *inside* the band.
+
+So — contrarian, and worth saying plainly — **hairline colour is one of the few places the library
+default is already correct.** If your reviewer says "the borders look generic," the colour is
+almost never the problem. Two things are:
+
+**One: you only have one tier.** GitHub ships `--borderColor-default: #d1d9e0` (1.43) *and*
+`--borderColor-muted: #d1d9e0b3` (1.28) — the same colour at 70% alpha. The strong one bounds an
+object; the muted one divides *inside* one. Generated code uses `border-gray-200` for both, so a
+divider between two rows of a list shouts as loudly as the edge of the list.
+
+```css
+@theme {
+  --color-border:        oklch(89% 0.006 250);              /* ~1.4:1 — object boundary   */
+  --color-border-subtle: color-mix(in oklab, var(--color-border) 65%, var(--color-bg));
+                                                            /* ~1.25:1 — divider inside   */
+  --color-border-strong: oklch(78% 0.010 250);              /* ~1.9:1 — inputs on tinted bg,
+                                                               table header rules          */
+}
+```
+```tsx
+<ul className="divide-y divide-[--color-border-subtle] rounded-[10px] border border-[--color-border]">
+```
+That one substitution — subtle inside, standard outside — is most of what makes a list read as one
+object rather than a stack of edges.
+
+**Two: you have a border where you should have nothing.** A hairline is a *statement of separation*.
+If the two things it separates are already separated by 32px of space or by a background shift, the
+line is noise. The most common generated defect is a bordered card **on** a tinted page background:
+two separation devices doing one job.
+
+## 15.2 Tint the hairline and the shade, or decide not to
+
+```
+GitHub   shadow  0 1px 1px 0 #1f23280a, 0 1px 2px 0 #1f232808   ← 4%/3% of the FG colour #1f2328
+GitHub   inset   inset 0 1px 0 0 #1f23280a
+Stripe   shadow  0 7px 14px 0 rgba(50,50,93,.1), 0 3px 6px 0 rgba(0,0,0,.02)
+Notion   ring    0 0 0 1px rgba(42,28,0,.07)                    ← warm brown, on a warm palette
+Vercel   shadow  0 0 0 1px #00000014, 0 2px 2px #0000000a       ← pure black, on a chroma-0 palette
+```
+
+Three of the five tint their shade with the palette's own dark end; the two that do not (Vercel,
+and Radix's `#0000330f` which is barely tinted) run a deliberately achromatic neutral ramp
+([§5.2](#the-chroma-rule--the-non-obvious-one)). **The rule is consistency, not warmth:** a warm
+neutral ramp with pure-black shadows produces a faint colour disagreement in exactly the places the
+eye is most sensitive to it — the edges.
+
+```css
+@theme {
+  --shade: color-mix(in oklab, var(--color-fg) 100%, transparent);  /* your darkest neutral */
+  --shadow-e1: 0 0 0 1px var(--color-border),
+               0 1px 2px 0 color-mix(in oklab, var(--shade) 4%, transparent);
+}
+```
+
+## 15.3 Overlay alpha does not mirror between themes
+
+The same `4%` reads completely differently depending on which end of the range it is applied at:
+
+```
+light:  rgb(0 0 0 / .04)      over #ffffff  → #f5f5f5    ΔL  −3.0
+light:  rgba(129,139,152,.10) over #ffffff  → #f2f3f5    ΔL  −3.6   (GitHub nav hover)
+dark:   rgb(255 255 255/.08)  over #08090a  → #1c1d1e    ΔL  +9.1   (Linear nav hover)
+```
+
+Linear's dark hover moves **three times as far in lightness** as GitHub's light hover, at double the
+alpha. That is not an inconsistency — it is what it takes for the step to be *perceptible* at the
+dark end, where OKLCH lightness compresses hard. Which means:
+
+- **Do not write `dark:bg-white/5` as the mirror of `bg-black/5`.** Check the composited ΔL. The
+  targets that match practice are **−3 to −4 points in light, +7 to +10 in dark.**
+- **`:active` is ×1.5 to ×2 the hover alpha**, not a different colour.
+- **Selection needs a second channel.** An 8–10% accent tint plus a 2px inset leading bar, because a
+  list where the cursor sweeps across several rows cannot distinguish "hovered" from "selected" by
+  background alone ([§10.5](#105-the-four-hoverfocusactiveselected-states-distinguished)).
+
+## 15.4 The spacing histogram — nobody ships an 8px grid
+
+Method: for each page, `getComputedStyle` over the first 4000 elements, collecting every non-zero
+`row-gap`, `column-gap`, `padding-top`, `padding-left` and `margin-bottom` under 128px, then ranked
+by frequency. It is a rough census of what a page actually renders, not of design intent — but the
+shape is unambiguous.
+
+| Product | Top six values (share of all spacing declarations) |
+|---|---|
+| **GitHub** (repo page) | 16px 33% · 4px 19% · **10px 14%** · 8px 12% · 12px 4% · 24px 3% |
+| **Linear** (home) | 8px 25% · 4px 17% · **6px 17%** · 32px 9% · 12px 8% · 24px 3% |
+| **Vercel** (home) | **2px 29% · 6px 27% · 4px 21%** · 12px 9% · 8px 5% · 20px 2% |
+| **Stripe** (API ref) | 8px 22% · 4px 21% · 16px 18% · **6px 13%** · 12px 5% · **10px 4%** |
+| **Notion** (home) | 8px 49% · **3px 11%** · 24px 7% · 16px 7% · 12px 7% · 4px 5% |
+| **shadcn.com** (blocks) | 8px 38% · 4px 12% · 6px 8% · 16px 6% · 10px 3% · 12px 2% |
+
+**Not one of the six is on an 8px grid.** Five of the six have a 6px or a 10px or a 3px in their top
+six. Vercel's single most common spacing value is **2px**, and its second is 6px — its micro-scale is
+2-based and its 8px appears less than a fifth as often.
+
+The reason is structural, not stylistic: **the 8px grid is a macro-layout tool and the inside of a
+control is not macro-layout.** A 28px chip with 8px of internal padding leaves 12px for a 13px glyph.
+The gap between an icon and its label is 6px because 4 is too tight and 8 is a visible separation.
+The offset that optically centres a chevron is 1px. None of that is negotiable by grid.
+
+```css
+/* the scale to ship — two regimes, one file */
+@theme {
+  /* micro: inside a control. Every value here is legitimate and you will use all of them. */
+  --space-0-5: 2px;  --space-1: 4px;   --space-1-5: 6px;  --space-2: 8px;
+  --space-2-5: 10px; --space-3: 12px;
+
+  /* macro: between components and sections. Here the 8-grid is real. */
+  --space-4: 16px; --space-6: 24px; --space-8: 32px; --space-12: 48px;
+  --space-16: 64px; --space-24: 96px; --space-32: 128px;
+}
+```
+Tailwind already gives you every one of these (`gap-0.5`, `gap-1.5`, `gap-2.5`). The failure is not
+the scale — it is that generated code reaches only for `gap-2 / gap-4 / gap-6 / p-4 / p-6`, which is
+8/16/24 and nothing between, so every interior distance in the app is one of three values.
+
+**Where the grid actually earns its keep:** vertical rhythm between sections, the page gutter, and
+the column gap of a card grid. Keep those on 8. Stop applying it inside a 28px control.
+
+**When a strict grid *is* right:** design systems shipped to many teams (Material's 8dp, Primer's
+4-base) trade optical precision for enforceability, and that is the correct trade when hundreds of
+engineers write the CSS. It is the wrong trade when one person is building one product.
+
+## 15.5 Two Tailwind v4 gotchas that produce visible defects
+
+**`border` with no colour is `currentColor`.** v4's preflight is:
+
+```css
+*, ::after, ::before, ::backdrop, ::file-selector-button {
+  box-sizing: border-box; margin: 0; padding: 0;
+  border: 0 solid;              /* ← no colour → currentColor */
+}
+```
+v3 set `border-color: theme(colors.gray.200)` here. So in v4, `className="border"` on a red error
+message renders a **red** border, and on a muted paragraph a **grey-brown** one. This is the single
+most common "why is that line the wrong colour" in v4 code.
+
+```css
+/* fix once, at the top of app.css */
+@layer base {
+  *, ::before, ::after { border-color: var(--color-border); }
+}
+```
+
+**Border width in `rem`, not `px`, if you respect root font-size.** Primer defines
+`--borderWidth-thin: .0625rem` — 1px at the default root, 1.25px for a user who set 20px. A
+hairline hard-coded at `1px` visually thins out as everything around it scales. This is a small
+thing that separates a system from a stylesheet; it matters most in institutional and accessibility
+contexts and can be ignored in a consumer app that ships its own root size.
+
+## 15.6 Alignment: the three optical corrections that are not bugs
+
+Mathematically-centred is not optically centred, and every one of these is a place where a designer
+will type a value that looks "wrong" in code review:
+
+- **A glyph whose ink sits high in its box** — chevrons, arrows, carets — needs `translate-y-px`
+  against text. `items-center` centres the 16px box, not the ink.
+- **A play triangle in a circular button** sits ~1px right of centre, because the shape's visual
+  mass is left of its bounding box centre.
+- **Text against a container edge**: cap-height alignment beats box alignment. A 13px label in a
+  32px row is optically centred about half a pixel above the mathematical centre, because the
+  descender space at the bottom of the line box is empty. If a row looks bottom-heavy, this is why —
+  and `line-height` on the label, not `padding` on the row, is the lever.
+
+**When to leave it alone:** anything the user can re-order or re-flow, and any icon set you did not
+draw. Check optical offsets once per icon set at 400% zoom, apply them at the primitive, and never
+per-instance.
+
+---
+
+# 16. Mobile correction
+
+The generated mobile layout is the desktop layout with `grid-cols-1` and smaller text. Measured
+against real products, three specific things are wrong with that, and one of them is arithmetic.
+
+## 16.1 The display-type ratios, measured at both ends
+
+Same pages, same day, 1440px and 390px:
+
+| | Desktop `h1` | Mobile `h1` | Size ratio | Line-height | Tracking |
+|---|---|---|---|---|---|
+| **Linear** | 64px/64 w510, −0.022em | **38px**/41.8 w510, −0.022em | **0.59×** | 1.00 → **1.10** | held |
+| **Notion** | 96px/100 w600, −0.048em | **42px**/48 w600, −0.036em | **0.44×** | 1.04 → **1.14** | −0.048 → **−0.036em** |
+| **Vercel** | 64px/64 w400, −0.060em | **48px**/56 w400, −0.060em | 0.75× | 1.00 → **1.17** | held |
+
+Three rules, and the second one is the one nobody does:
+
+1. **Display type scales down 0.45–0.6×**, not 0.75×. Notion runs 96 → 42. The generated
+   `text-4xl md:text-7xl` (36 → 72) is a 0.5× ratio and is actually fine; the problem is what
+   happens to the other two properties.
+2. **Line-height loosens as size shrinks — every time.** All three products go from ~1.00 desktop
+   to 1.10–1.17 mobile. `leading-[0.95]` is correct at 64px and cramped at 38px, because at 38px
+   the headline is now three or four lines instead of two and the reader is scanning lines, not
+   shapes. A fixed `leading-none md:leading-tight` gets this exactly backwards.
+3. **Tracking stays constant in em, or gets *less* negative.** Notion relaxes from −0.048em to
+   −0.036em. Nobody tightens on mobile. Since Tailwind's `tracking-*` are already in `em`, holding
+   is free — the failure is writing `tracking-[-3px]` in px, which becomes −0.079em at 38px and
+   closes the counters.
+
+```tsx
+// before
+<h1 className="text-4xl leading-none tracking-tight md:text-7xl">…</h1>
+
+// after — one declaration, both ends, correct interpolation
+<h1 className="text-[clamp(2.375rem,1.2rem+5vw,4rem)]
+               leading-[1.08] md:leading-[1.0]
+               font-[510] tracking-[-0.022em] text-balance">…</h1>
+```
+`clamp()` beats a breakpoint jump here because a headline that steps from 38px to 64px at exactly
+768px looks broken on an iPad in portrait, which is the width nobody tests.
+
+## 16.2 Body text does not shrink
+
+Measured: Linear's body copy is **15px/24 at both 1440 and 390**. Vercel's is **16px/24 at both**.
+Notion's lead paragraph drops 20/28 → 16/24; the 20px was a lead, not body.
+
+So: **the mobile type ramp is not the desktop ramp × 0.875.** Display shrinks hard, body does not
+shrink at all, and UI text shrinks not at all (a 13px table label at 390px is still 13px; what
+changes is how many columns you show). If you find yourself writing `text-sm md:text-base` on body
+copy, you have it inverted — you are making the *harder* reading environment smaller.
+
+## 16.3 The gutter, and the edge-to-edge exception
+
+Measured page gutters at 390px: **Linear 24px, Vercel 24px, Notion 16px.** Not the
+`px-4 sm:px-6 lg:px-8` cascade, which starts at 16 and reaches 32 — a range nobody needs. Pick 16
+or 20 or 24 and hold it to the first real breakpoint.
+
+The one thing that should break the gutter is content that is genuinely wider than the phone:
+
+```tsx
+{/* a wide table or a card rail: full-bleed scroller, gutter restored as padding */}
+<div className="-mx-5 overflow-x-auto px-5 [scrollbar-width:none] snap-x snap-mandatory">
+  <div className="flex w-max gap-3">
+    {items.map(i => <article key={i.id} className="w-[78vw] max-w-[320px] snap-start">…</article>)}
+  </div>
+</div>
+```
+`w-[78vw]` rather than `w-full` is deliberate: the next card peeking at the right edge is the only
+affordance that says "this scrolls." A rail whose first card fills the viewport reads as a broken
+single-item layout.
+
+Linear does the same thing with its hero product shot at 390px: rather than shrink the app UI to
+fit the phone — which would render a 13px issue row at about 5px — it lets the screenshot run off
+the right edge at full scale, cropped. **Cropping a wide artefact preserves its density; scaling it
+destroys it.** That is the correct move for any screenshot, table, timeline or canvas on a phone,
+and it is the opposite of `w-full object-contain`.
+
+## 16.4 The four mobile states desktop code never has
+
+- **`:hover` sticks on touch.** After a tap, the hover style persists until the next tap elsewhere,
+  so a `hover:bg-*` row stays highlighted and looks selected. Guard it:
+  ```css
+  @media (hover: hover) and (pointer: fine) { .row:hover { background: var(--overlay-hover) } }
+  ```
+  Generated code applies `hover:` unconditionally and this is why mobile lists look sticky.
+- **The keyboard covers the submit button.** A fixed bottom action bar needs
+  `padding-bottom: max(12px, env(safe-area-inset-bottom))` and the form needs to scroll the focused
+  field into view. Test with a real keyboard open, not with devtools' device toolbar.
+- **`100vh` is wrong.** Use `dvh`. `min-h-screen` overflows by the height of Safari's collapsing
+  toolbar ([§8.8](#88-the-three-tell-line-min-h-screen-bg-gray-50-max-w-7xl)).
+- **Tap targets are 44×44 regardless of archetype**, but the *visual* element can stay small — put
+  the size in padding or a pseudo-element, not in the glyph:
+  ```tsx
+  <button className="relative size-6 before:absolute before:-inset-2.5 before:content-['']">
+  ```
+
+## 16.5 What to do with a table
+
+The generated answer is "turn every row into a card," which reproduces card soup
+([§1](#1-de-carding)) at the worst possible width. Three better answers, in order of preference:
+
+1. **Keep the table, drop columns.** Choose two: the identifier and the one number the user came
+   for. Everything else moves to the detail view. This is what a native mail client does with a
+   message list.
+2. **Two-line row.** Line one: the object's name at 14px/510 plus the primary value, right-aligned.
+   Line two: two or three metadata fields at 12px muted, separated by `·`. 56–64px rows,
+   `divide-y`, no card.
+3. **Horizontal scroll with a sticky first column** — only when the user genuinely needs to compare
+   across columns (a financial table, a schedule). `position: sticky; left: 0` on the first cell,
+   and give the sticky column a right border so the scroll boundary is visible.
+
+```tsx
+{/* option 2, the one you want most of the time */}
+<ul className="divide-y divide-[--color-border-subtle]">
+  {rows.map(r => (
+    <li key={r.id}>
+      <a href={r.href} className="block px-5 py-3 active:bg-[--overlay-active]">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="truncate text-[15px] font-[510]">{r.name}</span>
+          <span className="shrink-0 text-[15px] tabular-nums">{fmt(r.amount)}</span>
+        </div>
+        <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-[--color-fg-muted]">
+          <StatusDot status={r.status} /><span>{r.status}</span>
+          <span aria-hidden>·</span><time dateTime={r.iso}>{rel(r.iso)}</time>
+        </div>
+      </a>
+    </li>
+  ))}
+</ul>
+```
+Note `active:` rather than `hover:` — on touch, the pressed state is the only feedback that exists.
+
+## 16.6 When the "before" is right
+
+- **A marketing page can legitimately be one column of centred sections on mobile.** The asymmetry
+  advice in [§8](#8-layout-de-genericization) is a desktop tool; at 390px there is one column and
+  the job is rhythm, not composition.
+- **Dense operator tools should refuse the phone rather than fake it.** A freight load board or a
+  trading blotter at 390px is not a smaller load board; it is a different product. Shipping a
+  read-only mobile view plus "open on desktop to edit" is a better answer than a responsive grid
+  that nobody can use one-handed on a truck seat.
+- **Card layouts are correct on mobile when the card is genuinely the object** — a photo, a
+  product, a message thread with an avatar. The rule from [§1.2](#12-the-decision-rule) does not
+  change at 390px; it just gets invoked more often, because a phone shows one object at a time.
+
+---
+
 # Appendix A — Framework-agnostic equivalents
 
 Everything above is CSS custom properties plus class strings. The translation is mechanical.
@@ -2396,8 +3238,19 @@ Everything above is CSS custom properties plus class strings. The translation is
 | `-mx-6 px-6` full-bleed band | `margin-inline: -24px; padding-inline: 24px` | same | full-width `ZStack` background |
 | `text-balance` | `text-wrap: balance` | same | manual line break |
 
-The three sections that are genuinely Tailwind-specific are §3.1 (shadcn overrides), §3.2
-(Tailwind's own defaults) and §3.3 (MUI). Everything else is CSS.
+The only genuinely framework-specific sections are §3.1 (shadcn overrides), §3.2 (Tailwind's own
+defaults), §3.3 (MUI) and §15.5 (Tailwind v4's preflight). Everything else is CSS — including the
+two primitives §14 leans on:
+
+| Idiom | Plain CSS |
+|---|---|
+| `.field` ring instead of a border | `border: 0; box-shadow: 0 0 0 1px var(--color-border)` — and the focus state is the same property, so it interpolates |
+| recessed input | `box-shadow: inset 0 1px 0 0 color-mix(in oklab, var(--color-fg) 4%, transparent)` |
+| hover delta | `background: color-mix(in oklab, var(--color-accent) 92%, black)` |
+| overlay hover | `background: color-mix(in oklab, var(--color-fg) 5%, transparent)` |
+
+`color-mix()` is supported everywhere the rest of this file's syntax is; if you need to support
+older engines, resolve the mixes to hex at build time and keep the token names.
 
 ---
 
@@ -2420,6 +3273,71 @@ copy wholesale.
 | **shadcn** button (default) | 36px | 14px/20 w500 | 8px | `0 16px` | `bg-primary/90` |
 | **shadcn** sidebar item | 32px | 14px/20 w400 | 8px | `8px` | `bg-accent` |
 | **shadcn** badge | 22px | 12px/16 w500 | 9999px | `2px 8px` | — |
+
+## Form controls, by surface
+
+| | Surface | Input | Label | Gap | Boundary | Focus |
+|---|---|---|---|---|---|---|
+| **GitHub** | sign-in | 40px, 16px/20 w400, r6 | 14px/21 w600 | 4px | `1px #d1d9e0` + `inset 0 1px 0 #1f23280a` | `border #0969da` + `inset 0 0 0 1px #0969da`, 80ms |
+| **Stripe** | sign-in | 44px, 16px/24 w400, r6 | 14px w300 `#414552` | 12px | ring only: `0 0 0 1px #d4dee9` | `0 0 0 1px #a497fc, 0 0 0 4px #e0d9fb`, 240ms |
+| **Notion** | sign-in | 15px/26 in a wrapper box | 12px/16 w500 `#7d7a75` | 8px | on the wrapper | — |
+| **Linear** | sign-in | 44px buttons, **13px** type, r9999 | — | — | — | — |
+| **GitHub** | in-app | 32px (`--control-medium-size`) | — | — | same tokens | same |
+| **shadcn** | default | 36px (`h-9`), 16→14px | 14px w500 | 8px | `1px` + `shadow-xs` (drop) | `ring-[3px] ring-ring/50` grey |
+
+Primer control sizes: `small 28 · medium 32 · large 40`. Filled-primary edges:
+GitHub `border 1px rgba(31,35,40,.15)` · Notion `inset 0 0 0 1px rgba(15,15,15,.1)` ·
+Stripe `0 0 0 1px #675dff`.
+
+## Hover deltas (OKLCH lightness)
+
+```
+GitHub  primary green  #1f883d → #1c8139     ΔL  −2.1
+Vercel  primary black  #171717 → #383838     ΔL +13.6
+Linear  secondary      #e5e5e6 → #ffffff     ΔL  +7.8
+Tailwind blue-600→700  #2563eb → #1d4ed8     ΔL  −5.8   ← ~3× the real move
+GitHub  nav overlay    rgba(129,139,152,.10) on #fff  → #f2f3f5   ΔL −3.6
+Linear  nav overlay    rgba(255,255,255,.08) on #08090a → #1c1d1e ΔL +9.1
+```
+
+## Hairlines (contrast vs the white they sit on)
+
+```
+Notion ring rgba(42,28,0,.07) 1.15 · Vercel #ebebeb 1.19 · TW slate-200 1.23 · TW gray-200 1.24
+shadcn --border 1.26 · GitHub muted #d1d9e0b3 1.28 · Linear #e2e2e2 1.30 · Stripe #d4dee9 1.36
+Radix gray-6 1.41 · GitHub default #d1d9e0 1.43 · TW gray-300 1.47
+→ the whole shipped band is 1.15–1.47 (OKLCH L 87–95). Two tiers, not one.
+```
+
+## Status colours
+
+```
+GitHub  danger #d1242f L55.7 5.24:1 · success #1a7f37 L52.4 5.08:1
+        attention #9a6700 L55.4 4.87:1 · accent #0969da L54.0 5.19:1   ← one L, four hues
+Tailwind red-500 3.76:1 (fails) · green-500 2.28:1 (fails) · red-600 4.83:1
+```
+
+## Spacing frequency (share of all rendered gap/padding/margin values)
+
+```
+GitHub   16:33% 4:19% 10:14% 8:12% 12:4% 24:3%
+Linear    8:25% 4:17%  6:17% 32:9% 12:8% 24:3%
+Vercel    2:29% 6:27%  4:21% 12:9%  8:5% 20:2%
+Stripe    8:22% 4:21% 16:18%  6:13% 12:5% 10:4%
+Notion    8:49% 3:11% 24:7%  16:7% 12:7%  4:5%
+shadcn    8:38% 4:12%  6:8%  16:6% 10:3% 12:2%
+→ nobody is on an 8px grid inside a control.
+```
+
+## Mobile (390px) vs desktop (1440px)
+
+```
+Linear h1  64/64 w510 −0.022em  →  38/41.8 w510 −0.022em   0.59×   lh 1.00 → 1.10
+Notion h1  96/100 w600 −0.048em →  42/48   w600 −0.036em   0.44×   lh 1.04 → 1.14
+Vercel h1  64/64 w400 −0.060em  →  48/56   w400 −0.060em   0.75×   lh 1.00 → 1.17
+body       Linear 15/24 both · Vercel 16/24 both · Notion lead 20→16
+gutter     Linear 24 · Vercel 24 · Notion 16
+```
 
 ## Type
 
@@ -2491,6 +3409,7 @@ Linear page   --page-max-width 1024 · --page-inset 32 · --header-height 72
 
 # Where to go next
 
+- You know the symptom but not the section → the [tell → remedy index](#tell--remedy-index) above
 - The tell you are trying to fix is not in here → [`vibecode-taxonomy.md`](vibecode-taxonomy.md)
 - You need to score the result → [`vibecode-rubric.md`](vibecode-rubric.md), target ≤2
 - You are not sure what you are looking at → [`visual-critique-method.md`](visual-critique-method.md)

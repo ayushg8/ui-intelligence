@@ -1,5 +1,7 @@
 # Interaction, states and feedback
 
+**Evaluated:** 2026-09
+
 Every number here was read off a live product with a scripted browser — computed styles, CSS
 custom properties, timed probes. Re-verified 2026-09 (see *Direction pass* at the end); values that
 moved were corrected, values that no longer resolve were cut rather than kept on faith.

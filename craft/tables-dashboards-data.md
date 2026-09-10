@@ -1,5 +1,7 @@
 # Tables, dashboards and data presentation
 
+**Evaluated:** 2026-09
+
 **Measured September 2026.** Every px, hex, alpha and contrast ratio below was pulled with
 Playwright from a live production interface — computed styles, bounding boxes, SVG attributes — or
 computed from those values. Contrast ratios are WCAG relative-luminance ratios against the page
@@ -9,18 +11,20 @@ is inferred it says "approx."
 Three numbers to anchor everything that follows.
 
 > **Border weight.** Across nine production tables, every horizontal rule between rows measured
-> between **1.19:1 and 1.36:1** against white. Vercel docs `rgba(0,0,0,0.08)` = 1.19. Radix Themes
-> `rgba(0,9,50,0.12)` = 1.31. Yahoo Finance `#dde0e4` = 1.32. AG Grid `#181d1f` @15% = 1.36. Not one
-> of them is as dark as `#ddd` (1.44). The rule you'd write by instinct is roughly twice too dark.
+> between **1.19:1 and 1.36:1** against white. Vercel docs `#eaeaea` = 1.20. Radix Themes
+> `rgba(0,9,50,0.12)` = 1.31. Yahoo Finance `#dde0e4` = 1.32. AG Grid `#181d1f` @15% = 1.36.
+> The band is 0.17 wide, and `#ddd` (**1.36**) sits exactly on its dark edge — `#ddd` is the ceiling,
+> not the error. The error is one step further: `#ccc` = **1.61**, Tailwind `border-gray-300`
+> `#d1d5db` = **1.47**, both above every rule measured. **Target 1.25:1** and you land mid-band.
 >
 > **Tabular figures.** On Yahoo Finance's most-active table, **1,125 of 4,611 elements** (24.4%)
-> carry `font-variant-numeric: tabular-nums`. On the shadcn/ui `tasks` example — the single most
-> copied table in AI-generated UI — the count is **1 of 1,200**. That one difference is most of why
-> generated tables of numbers look wrong and nobody can say why.
+> carry `font-variant-numeric: tabular-nums`. On the shadcn/ui `tasks` example — the most-copied
+> table in generated UI — the count is **1 of 1,200**, re-measured unchanged on 2026-09-10. Radix
+> Themes' `Table`: **0 of 2,511**.
 >
 > **How much that costs, measured.** Loading each font as a real `woff2` and measuring the rendered
 > advance width of every digit 0–9: in **Inter**, digit widths span **0.2392em** and in **Geist**
-> **0.2791em**. At 14px across an 8-digit column that is **26.8px** and **31.3px** of drift — a
+> **0.2870em**. At 14px across an 8-digit column that is **26.8px** and **32.1px** of drift — a
 > ragged right edge two to three characters wide. `tabular-nums` collapses both to exactly 0.
 > In `system-ui` (SF on macOS) the spread is 0.1737em → **19.5px**. The narrowest digit is `1` in
 > every proportional font measured; the widest is `4`, `6`, `8` or `0` depending on the face.
@@ -39,8 +43,9 @@ Three numbers to anchor everything that follows.
    regardless. In those three, the only fix is a different font for numeric cells.
 2. **One horizontal 1px rule at ~8–12% black, no vertical rules, no zebra, no outer box.** Measured
    band: 1.19–1.36:1 contrast. Vertical column borders appeared in exactly **zero** of the nine tables
-   measured. Zebra appeared in exactly one (MDN reference tables, at `#f7f7f8` vs `#fff` — a 1.07:1
-   difference you can barely see).
+   measured. Zebra appeared in exactly one — MDN, at `#f7f7f8` vs `#fff` (1.07:1) — and MDN runs it
+   **on top of** a `#c3c7cb` cell rule at **1.70:1**, darker than any rule in the band above. That is
+   the documented exception, not a contradiction: see *Zebra striping* for when two systems are correct.
 3. **Pick the row height from the reading task, not from a token.** Measured: 22.8px
    (Baseball-Reference, 11px Verdana — the density ceiling), 32px (Plausible's scannable ranked list),
    40px (Yahoo Finance, Linear issue rows), 42px (AG Grid at 100k rows), 44px (Radix), 48px (Vercel
@@ -55,8 +60,10 @@ Three numbers to anchor everything that follows.
    darker than the gridlines, and no default library palette survives.** Observable Plot ships
    `rgb(60,60,67)` at `stroke-opacity: 0.1` (1.18:1), horizontal only. Recharts ships `#d6d3d1` dashed in *both* directions plus an axis line
    and tick marks at `#52525b` — **7.73:1**, as dark as body text. That single default is the loudest
-   tell in an AI-generated chart. And measure your series colors: Nivo's five defaults are **all five**
-   below 3:1 against white; Our World in Data's six run 4.54:1 to 10.79:1.
+   tell in an AI-generated chart. And replace the series palette: shadcn's `--chart-1..5` — the one
+   you inherit in 2026 — is a **single-hue blue ramp** whose adjacent series sit 1.30–1.37:1 apart;
+   Nivo's five defaults are **all five** below 3:1 against white. Our World in Data's six run 4.54:1
+   to 10.79:1 against the background, which is the floor to aim at.
 
 ---
 
@@ -70,13 +77,13 @@ Three numbers to anchor everything that follows.
 | **Linear** issue row (home) | **40** | — | `0 28px` / `0 36px` | 16/24 Inter | **none** | — | yes¹ | — | no |
 | **Yahoo Finance** most-active | **40** | **34.5** | `0 8px` | 14/21 | `#dde0e4` → 1.32 | **12px w400** | **yes (root)** | none | no |
 | **AG Grid** 100k demo | **42** | 48 | `0 16px` | 14 IBM Plex | `#181d1f @15%` → 1.36 | 14px w500 | no | — | no |
-| **Radix Themes** `Table` | **44** | 44 | `12px` | 14/20 | `inset 0 -1px rgba(0,9,50,.12)` → 1.31 | 14px **w700** | no | **none** | no |
-| **Vercel** docs table | **48** | 48 | `8px 12px` | 14/21 Geist | `rgba(0,0,0,.08)` → 1.19 | 14px **w400 gray-600 on #fafafa** | **yes (root)** | none | no |
+| **Radix Themes** `Table` | **44** | 44 | `12px` | 14/20 | `inset 0 -1px rgba(0,9,50,.12)` → 1.31 | 14px **w700 on `rgba(0,0,85,.024)`** (1.05) | no | **none** | no |
+| **Vercel** docs table | **48**³ | 44 | `12px 10px` | 14/22 GeistSans | `#eaeaea` → **1.20** | 14px **w400 `#666` on `#fafafa`** | **yes (root)** | none | no |
 | **shadcn/ui** `tasks` | **49** | 40 | `8px` | 14/20 Geist | `#e5e5e5` on **every** row → 1.26 | 14px w500 **black** | **1 element** | `#fafafa` → 1.04 | no |
 | **MUI** DataGrid | **52** | 56 | `0 10px` | 14/20 Roboto | (cell top border reserved for focus) | 14px w500 | no | — | no |
 | **GitHub** PR list | **63.3** | — | `0` | 14/21 | border-**top** `#d1d9e0 @70%` → 1.28 | — | no | **none** | no |
 | **GitHub** Actions runs | **79** | — | `16px` | 14/21 | border-top, same | — | no | none | no |
-| **MDN** reference tables | ~40 | — | — | — | — | — | no | — | **`#f7f7f8` → 1.07** |
+| **MDN** reference tables | **45–46** | 46 | `8px 12px` | **16/28** Inter | `#c3c7cb` → **1.70** (rule **and** stripe) | 16px w600 | no | — | **`#f7f7f8` → 1.07** |
 | **Baseball-Reference** standings | **22.8** | **22.8** | `4px 3px` | **11/13.75 Verdana** | `#dddddd` → 1.36 | 11px **w700 `#990000`** on `#eee` | no² | — | no |
 | **shadcn/ui** `tasks`, **dark** | 49 | 40 | `8px` | 14/20 Geist | **`#fff` @10%** → 1.24 on `#0a0a0a` | 14px w500 | 1 element | `muted @50%` | no |
 
@@ -87,9 +94,13 @@ on issue IDs and counters — 78 elements on the homepage.
 0.6358em for every digit). Choosing a font with tabular digits is an alternative to setting the
 property — and it's what the densest table on the public web actually does.
 
-**Baseball-Reference is the density ceiling and worth studying**, because it is a real table that
-real people read for hours. **22.8px rows** at **11px/13.75 Verdana** with `4px 3px` padding — half
-the height of a shadcn row. It survives that density because of four specific choices: numeric cells
+³ Vercel docs re-measured 2026-09-10 on `/docs/functions/runtimes`: rows **69px** there because the
+cells wrap, header 44px, separator `#eaeaea` (1.20). The 48px figure is a non-wrapping docs table from
+the original pass. Both are the same design; the row height is content, the separator is the decision —
+and the separator held its value across six months and two pages.
+
+**Baseball-Reference is the density ceiling:** **22.8px rows** at **11px/13.75 Verdana** with
+`4px 3px` padding — half the height of a shadcn row. It survives that density because of four specific choices: numeric cells
 carry `text-align: right` and `white-space: nowrap`; the team-name column is `position: sticky; left: 0;
 z-index: 1` with an opaque white fill and a **`#747678` (4.56:1) right border** as the seam — the one
 place in the table where a heavy rule is correct, because it separates frozen from scrolling content,
@@ -108,7 +119,7 @@ Measured by loading each `woff2` and rendering every digit at 100px. "Spread" is
 |---|---|---|---|---|
 | **DM Sans** | **0.3720** | **41.7px** | **NO — no `tnum` feature** | 0.6841 → 0.6841 |
 | **Poppins** | **0.3150** | **35.3px** | **NO** | 0.6281 → 0.6281 |
-| **Geist** | 0.2791 | 31.3px | yes | 0.6631 → **0.6000** (column gets 9.5% narrower) |
+| **Geist** 1.3.1 | 0.2870 | 32.1px | yes | 0.6711 → **0.6000** (column gets **10.6%** narrower) |
 | **Public Sans** | 0.2405 | 26.9px | yes | 0.6120 → **0.7000** (column gets 14% wider) |
 | **Inter** | 0.2392 | 26.8px | yes | 0.6309 → 0.6484 |
 | **Space Grotesk** | 0.2230 | 25.0px | yes | 0.6411 → 0.6200 |
@@ -124,7 +135,7 @@ Measured by loading each `woff2` and rendering every digit at 100px. "Spread" is
 | Source Sans 3 | **0** | 0 | n/a | 0.4970 |
 | Helvetica / Arial | **0** | 0 | n/a | 0.5563 |
 | Verdana | **0** | 0 | n/a | 0.6358 |
-| JetBrains Mono | **0** | 0 | n/a | 0.6000 |
+| JetBrains Mono | **0** | 0 | n/a | 0.5000 |
 
 Three decisions fall out of this table:
 
@@ -133,12 +144,18 @@ Three decisions fall out of this table:
   at all. 41.7px of drift in DM Sans is wider than the `$` and three digits it's supposed to align.
   If the brand demands one of them, scope a second family to `td.numeric` and accept the mismatch.
 - **`tabular-nums` changes column width, so set it before you size columns.** Geist's numerals get
-  **9.5% narrower** with `tnum`; Public Sans' get **14% wider**. Sizing a fixed numeric column from a
+  **10.6% narrower** with `tnum`; Public Sans' get **14% wider**. Sizing a fixed numeric column from a
   measurement taken without the property set produces either a wrapping column or a gap.
 - **Setting it costs nothing where it's a no-op**, so still set it on the table root. The point of the
   table is to tell you when it is *not* enough.
+  **Scope: root, not `<body>`, and not on a table whose cells are sentences.** `font-variant-numeric`
+  inherits, so setting it at the root of a docs or reference table also applies it to prose — MDN's
+  cells are 16/28 running text, and tabular digits inside a sentence (`CSS Level 3`, `1.5rem`,
+  `Chrome 121`) space out mechanically for no gain, because nothing is stacked underneath them to
+  align to. **The test is whether digits stack in a column.** Mostly-numeric table: set it on the
+  table. Mostly-prose table with two numeric columns: set it on those `<td>`/`<th>` only.
 
-**Read the header column.** Three of the six products that style a header at all use **weight 400**.
+**Read the header column.** Three of the nine products that style a header at all use **weight 400**.
 Yahoo drops the header to **12px while the body stays 14px**, and makes the header row **5.5px
 shorter than a data row**. Vercel gets header separation from a `#fafafa` fill and gray-600 text, not
 from bold. The instinct — bold, same size as body, same height as a row — is the least common
@@ -176,29 +193,52 @@ Recharts, Observable Plot and Our World in Data. This is what you ship if you wr
 | **ECharts 5.5.1** | `#E0E6F1` → **1.25** | **horizontal only** ✓ (`xAxis.splitLine.show:false`) | **`#6E7079` → 4.93** | **yes, 5px** | 12px | 2px | **yes, `emptyCircle` size 4** | off by default | on |
 | **Highcharts 11.4.8** | `#e6e6e6` → **1.25** | horizontal only (`yAxis` 1px, `xAxis` 0) ✓ | **`#333333` → 12.63** on x | **yes, 10px, `#333`** | 0.8em `#333` (12.63) | 2px | yes | **on, bottom center** | on + **`credits: true`** watermark |
 | **Nivo** (line demo) | `#dddddd` → **1.36** | **both** (24 + 24 lines) | `#889eae` → 2.78 | yes | 11px `#6a7c89` (4.32) | 2px | **yes, ring marker ×65** | **right side, vertical** | on |
-| **Recharts** | `#d6d3d1` dashed 5,5 → **1.49** | **both** | **`#52525b` → 7.73** | yes (13 elements) | **14px** | 2px | **yes** | on | on |
+| **Recharts** | `#d6d3d1` dashed 5,5 → **1.49** | **both** | **`#52525b` → 7.73** | yes (13 elements) | **14px** | **1px** | **yes** | on | on |
+| **shadcn `ChartContainer`** (dashboard-01, measured 2026-09-10) | `#e5e5e5` @50% → **1.12** | horizontal only, **5 lines** ✓ | `lab(0 0 0)`, 2 elements | none ✓ | 12px `#666` (5.74) | gradient area fill | no ✓ | custom | on |
 | **Tremor** | `#e5e7eb` → **1.24** | horizontal only, **5 lines** ✓ | none ✓ | none ✓ | 12px gray-500 (4.83) | 2px | no ✓ | configurable | on |
 | **Observable Plot** | ink @ `stroke-opacity .1` → **1.18** ✓ | horizontal only ✓ | none ✓ | none ✓ | **10px** system-ui | 1.5px | no ✓ | off ✓ | none ✓ |
 | **Our World in Data** | `#dddddd` **dashed 4,4** → 1.36 ✓ | horizontal only ✓ | none ✓ | none ✓ | 12px `#5b5b5b` (**6.79**) Lato | **1.5px** | small dots | **none — direct labels** ✓ | none ✓ |
 
-**The default categorical palettes, scored against the plot background.** Series color needs ≥3:1
-against the background to be a *legible mark*, not a tint (WCAG 1.4.11, non-text contrast). Count of
-colors that fail:
+**The default categorical palettes, scored on two axes.** A palette has two independent jobs, and
+almost every published critique only checks the first:
 
-| Palette | Colors | Below 3:1 vs white | Worst |
-|---|---|---|---|
-| **Nivo** `#61cdbb #e8a838 #f1e15b #f47560 #e8c1a0` | 5 | **5 of 5** | `#f1e15b` at **1.34:1** |
-| **Highcharts** `#2caffe #544fc5 #00e272 #fe6a35 #6b8abc #d568fb #2ee0ca #fa4b42 #feb56a #91e8e1` | 10 | **7 of 10** | `#91e8e1` at **1.42:1** |
-| **ECharts** `#5470c6 #91cc75 #fac858 #ee6666 #73c0de #3ba272 #fc8452 #9a60b4 #ea7ccc` | 9 | **5 of 9** | `#fac858` at **1.56:1** |
-| **Recharts** `#8884d8 #82ca9d` | 2 | 1 of 2 | `#82ca9d` at **1.93:1** |
-| **Tremor** `#3b82f6 #10b981` | 2 | 1 of 2 | `#10b981` at 2.54:1 |
-| **Our World in Data** `#9a5129 #00847e #a2559c #4c6a9c #c4523e #18470f` | 6 | **0 of 6** | worst is `#c4523e` at **4.54:1** |
+1. **Mark vs. background** — ≥3:1, or the line is a tint rather than a mark (WCAG 1.4.11, non-text).
+2. **Series vs. series** — can the reader tell two lines apart *without* the legend? Two colors of
+   equal luminance are perfectly distinct in color and identical in grayscale, in a B&W print, and to
+   a monochromat. The column below is the **minimum pairwise contrast** inside the palette; anything
+   near 1.00 means two series collapse to the same gray.
 
-That last row is the whole lesson. The one organization whose entire product is charts read by
-strangers ships six series colors between **4.54:1 and 10.79:1** — dark, desaturated, distinguishable
-in grayscale. Every JS charting library ships a pastel ramp that fails at half its entries. **Build
-the series palette to a contrast floor (≥3:1, ≥4.5:1 if the color also appears as a text label), not
-from a hue wheel.**
+| Palette | n | <3:1 vs white | <3:1 vs `#0a0a0a` | Min pairwise | Worst vs white |
+|---|---|---|---|---|---|
+| **shadcn `--chart-1..5`** `#7ec6ff #0083ff #0062fb #004de5 #0040b8` | 5 | 1 of 5 | 1 of 5 | **1.30** | `#7ec6ff` at 1.84:1 |
+| **Nivo** `#61cdbb #e8a838 #f1e15b #f47560 #e8c1a0` | 5 | **5 of 5** | 0 of 5 | 1.09 | `#f1e15b` at **1.34:1** |
+| **Highcharts** `#2caffe #544fc5 #00e272 #fe6a35 #6b8abc #d568fb #2ee0ca #fa4b42 #feb56a #91e8e1` | 10 | **7 of 10** | — | 1.18 (first 5) | `#91e8e1` at **1.42:1** |
+| **ECharts** `#5470c6 #91cc75 #fac858 #ee6666 #73c0de #3ba272 #fc8452 #9a60b4 #ea7ccc` | 9 | **5 of 9** | — | 1.08 (first 5) | `#fac858` at **1.56:1** |
+| **Recharts** `#8884d8 #82ca9d` | 2 | 1 of 2 | 0 of 2 | 1.72 | `#82ca9d` at **1.93:1** |
+| **Tremor** `#3b82f6 #10b981` | 2 | 1 of 2 | 0 of 2 | 1.45 | `#10b981` at 2.54:1 |
+| **Our World in Data** `#9a5129 #00847e #a2559c #4c6a9c #c4523e #18470f` | 6 | **0 of 6** | 1 of 6 | **1.00** | `#c4523e` at **4.54:1** |
+
+Three things fall out, and two of them contradict the advice this file used to give:
+
+- **OWID passes axis 1 perfectly and fails axis 2.** `#00847e` (luminance 0.1801) and `#c4523e`
+  (0.1812) are 0.6% apart — the same gray. So "dark and desaturated" does **not** buy grayscale
+  safety, and OWID does not need it: **every line is labeled at its own right end in its own color**,
+  so the palette never has to carry identity by itself. **The rule is conditional. If you direct-label
+  every series, a contrast floor against the background is enough. If you ship a legend, you also owe
+  a luminance floor between series** — roughly 1.3:1 between adjacent entries — because a legend makes
+  the reader match colors from memory across the plot.
+- **shadcn's `--chart-1..5` is a sequential ramp used as a categorical palette** and fails both axes:
+  one hue, five lightness steps, adjacent pairs 1.30–1.37:1 apart. Series 2–5 are four blues nobody
+  can tell apart in a legend, and `--chart-1` is a 1.84:1 tint. This is the palette in every
+  shadcn/v0-generated chart shipped in 2026, and it is a harder problem than the 2023 pastel ramps,
+  because it *looks* deliberate.
+- **The old library ramps are tuned for white and accidentally fine on black.** Nivo fails 5 of 5
+  against white and **0 of 5** against `#0a0a0a`. Scoring a palette once, against the wrong ground,
+  is how a chart passes review in light mode and disappears in dark.
+
+**Build the palette to a floor against the plot background (≥3:1, ≥4.5:1 if the color also prints as
+a text label), score it against both grounds you ship, and add the pairwise luminance floor only if
+you use a legend.**
 
 ### Dashboard chrome
 
@@ -215,8 +255,8 @@ from a hue wheel.**
 | Empty state | spinner centered in a card that **keeps its final height** | — | "No data" centered, **panel keeps full height** |
 | Missing value | — | **`—`** (em dash), never `N/A`, never `0` | — |
 
-Note the delta coloring, because it is the opposite of the common instinct: **the arrow carries the
-color, the number stays gray.** Plausible's `+2%` is `text-gray-500 font-medium` at 12px; only the
+**The arrow carries the color; the number stays gray** — the opposite of the instinct.
+Plausible's `+2%` is `text-gray-500 font-medium` at 12px; only the
 8×8px triangle beside it is `green-500`. You get the direction at a glance without six colored
 numbers fighting the six values above them.
 
@@ -243,7 +283,7 @@ The generic default is 48–56px everywhere, justified by "44px touch targets." 
 about fingers. Applying it to a 200-row pointer-driven table costs you half the visible rows and makes
 the product feel like a phone app on a monitor. **When you do not know, use 40.**
 
-Two follow-on rules the measurements make obvious:
+Two follow-ons:
 
 - **Padding is not height.** shadcn's rows are 49px because `p-2` (8px) + 20px line-height + a 1px
   border, computed. AG Grid's are 42px because the row height is *declared* and the cell is
@@ -259,6 +299,13 @@ Two follow-on rules the measurements make obvious:
   vertical rules to be legible, your column gaps are too small — fix the gaps.
 - **One rule per row boundary, at 8–12% black.** Target contrast **1.2–1.35:1**. In practice:
   `rgba(0,0,0,0.08)` on white, `rgba(255,255,255,0.10)` on a dark ground.
+  **Scope: that band assumes a self-lit sRGB display, indoors, one reader.** It is calibrated on nine
+  products that only ever render to a laptop. Hold it to 1.20:1 on a table that gets printed, exported
+  to PDF, projected in a standup, or read on a warehouse tablet in daylight, and the rules are simply
+  not there — sub-pixel light grays are the first thing a printer's dither and a projector's gamma
+  throw away. **If you do not control the display, floor the separator at ~1.6:1** (`#ccc` measures
+  1.61) and accept that it looks heavy on a monitor. MDN, which is printed and screenshotted more than
+  any product in the sample, ships **1.70:1** — the darkest rule measured — and it is not a mistake.
 - **Put it on the cell, not the row, if you want it to respect the table's rounded corners.** Radix
   ships `box-shadow: inset 0 -1px rgba(0,9,50,0.12)` on `td`, because `border-collapse` plus
   `border-radius: 7px` on the table root fight each other. That's a real implementation constraint,
@@ -294,10 +341,17 @@ Everything else — 49px rows, 40px header, 8px padding, alignment, tabular figu
 across themes, as it should be. **Density, alignment and rhythm are theme-independent; only color
 crosses the boundary.**
 
-### Zebra striping: almost never
+### Zebra striping: almost never, and the exception is instructive
 
-One of nine measured tables uses it, and it's MDN's reference tables — many narrow columns, wrapped
-prose in cells, no other structure — at `#f7f7f8` vs `#fff`, a **1.07:1** difference.
+One of nine measured tables uses it: MDN's reference tables, `#f7f7f8` vs `#fff`, a **1.07:1**
+difference. Re-measured 2026-09-10, MDN also carries a `#c3c7cb` bottom rule on every cell at
+**1.70:1** — so the one product in the sample that stripes runs **both** systems at once, and runs the
+darkest rule in the sample.
+
+That falsifies the tidy version of this rule ("if you stripe, drop the rules"), so here is the real one.
+The two systems do different jobs: **the stripe tracks a row across a wide table; the rule terminates a
+cell whose text wraps to four lines.** MDN's rows are 45–46px tall at 16/28 type and wrap freely, so a
+1.07:1 stripe alone cannot tell you where one entry ends. Run both only when both jobs exist:
 
 Use zebra when **all** of these hold:
 - more than ~6 columns, so the eye can lose its row on the way across;
@@ -305,9 +359,10 @@ Use zebra when **all** of these hold:
 - rows are not selectable or hoverable (a hover tint on top of zebra produces four states, two of
   which are indistinguishable).
 
-Otherwise a 1px rule at 1.2:1 does the same job with less noise. And if you do stripe: **use a
-1.05–1.10:1 tint, and drop the row rules.** Stripes plus rules plus a hover tint is three
-row-delimiting systems doing one job.
+Add a rule **on top of** the stripe only when rows wrap to unequal heights *and* the document is
+printed or screenshotted — MDN's exact situation. In every other case a 1px rule at 1.2:1 does the
+whole job with less noise. **Never run stripes + rules + a hover tint**: three row-delimiting systems
+for one job, and the hover-over-stripe state is indistinguishable from the plain-stripe state.
 
 ### Alignment, and the three exceptions
 
@@ -341,9 +396,9 @@ remembered ones.
 | 1,250,000 | **`1.3M`** | `1.25M` | `$1,250,000` | — | — | — |
 | 1,500,000,000 | `1.5B` | `1.5B` | — | — | — | — |
 | −2,400 | `-2.4K` | — | `-$2,400` | `-$2,400.00` | — | `-2,400` |
-| 0.425 | — | — | — | — | `42.5%` | `+0.4` |
+| 0.425 | `0.4` | `0.425` | `$0` | `$0.43` | `42.5%` | `+0.425` |
 
-Rules that follow from those exact strings:
+From those exact strings:
 
 - **Compact notation rounds, and the rounding is visible.** 1,250,000 renders `1.3M` at 1 fraction
   digit. If the reader is going to reconcile that number against a report, compact is wrong — put the
@@ -406,11 +461,17 @@ Measured hover states, at rest → hovered:
 | Radix Themes table | **none** | — | — |
 | Vercel docs table | **none** | — | — |
 
-Two findings worth internalizing:
+Two findings:
 
 1. **Three of five real tables have no row hover at all**, because their rows are not clickable as a
-   whole. A hover tint is a *promise that the row is a target.* If clicking the row does nothing,
-   the tint is a lie and the table feels twitchy for no reason.
+   whole. A hover tint is normally a *promise that the row is a target.* If clicking the row does
+   nothing, the tint is a lie and the table feels twitchy for no reason.
+   **Scope: it is also a legitimate row-tracking aid on a table wider than the viewport.** On a
+   40-column stat matrix or a pricing comparison grid, the reader's problem is not "is this
+   clickable," it is "am I still on the same row 1,800px to the right" — which is the same problem
+   zebra solves, solved dynamically. Ship the tint there even with no click target, but make the
+   distinction legible: **keep `cursor: default`, and do not also give the row a focus ring or a
+   pointer.** The tell that separates an aid from a lie is the cursor, not the color.
 2. **When there is a hover, it is a 1.04–1.06:1 background tint and nothing else.** No border
    appearing (which shifts every subsequent row by 1px unless you reserve it), no shadow, no
    translate, no scale. Sweeping the cursor down 30 rows should produce zero motion.
@@ -476,6 +537,11 @@ The rules that fall out:
 Whichever you pick:
 - **The total count is not optional.** "1–25 of 1,240" tells the reader whether to filter first.
   A `Next` button with no count is a maze.
+  **Scope: an exact count is optional; a magnitude is not.** On an unbounded log search or a
+  full-text query over hundreds of millions of rows, `COUNT(*)` under the same filters can cost more
+  than the page it labels, and forcing one turns a 200ms table into a 30s table. The failure mode to
+  avoid is *no information*, not *no exact number*. Ship a bounded estimate — "1–25 of 10,000+",
+  "about 4,300" — and make it obviously approximate. Never ship a bare `Next`.
 - **Virtual scroll breaks Ctrl+F, deep links to a row, and print.** If any of those matter — an
   audit log a compliance reviewer needs to search, an invoice table someone prints — paginate.
 - **Never mix them.** A virtualized list inside a paginated shell has two scroll positions and
@@ -488,8 +554,8 @@ Whichever you pick:
 Every table ships four states beyond "has data." The measured examples:
 
 - **Loading.** Plausible's not-yet-loaded panels render a centered spinner **inside a card that already
-  occupies its final height** — the dashboard does not reflow when data lands. That is the whole
-  trick. If you use skeleton rows instead, render **the same number of rows at the same height** as
+  occupies its final height** — the dashboard does not reflow when data lands. If you use skeleton
+  rows instead, render **the same number of rows at the same height** as
   a typical result, not three.
 - **Empty (no data yet).** Explain the state and offer the action that ends it: "No invoices yet —
   create your first invoice." A shrug illustration and the word "Empty" is not a state, it's a
@@ -547,7 +613,7 @@ one that matters most physically larger.
 
 ### What goes above the fold
 
-Ranked, and this is a real ranking, not a list:
+In this order:
 
 1. **The one number the page exists to report,** with its comparison.
 2. **The trend behind it** — one chart, wide, so the shape is readable.
@@ -560,7 +626,7 @@ Nothing else. A "recent activity" feed above the fold on a metrics dashboard is 
 
 ### Comparison and context
 
-**A number without a comparison is nearly useless.** Pick at least one:
+**A number with no comparison cannot be acted on.** Pick at least one:
 
 - **vs. previous period** — the default. Plausible: `↗ 2%` beside every tile. Cloudflare Radar draws
   the previous 7 days as a **dashed line in the same hue as the current series** — no second color, no
@@ -573,7 +639,7 @@ Two failure modes to avoid: comparing to a period of a different length (28 days
 and comparing to a period that isn't complete yet (today's partial data vs a full day). Radar solves
 the second visibly: the trailing incomplete bucket is filled with a **diagonal hatch pattern**
 (`fill: url(#xy-incomplete-data-…)`) so the dip at the right edge reads as "not finished" instead of
-"traffic collapsed." That is a five-line fix for the most common misread on every live chart.
+"traffic collapsed."
 
 ### Time range, filters and persistence
 
@@ -588,6 +654,13 @@ the second visibly: the trailing incomplete bucket is filled with a **diagonal h
   query params. If a user cannot paste a link to what they're looking at, the dashboard cannot be
   used in an incident, a standup, or a ticket. This is the highest-value, lowest-effort thing on this
   page.
+  **Scope: every filter except an identifier the reader had to be authorized to see.** Query strings
+  are not private — they land in server access logs, CDN logs, `Referer` headers on every outbound
+  link, browser history, and Slack link previews. `?patient_id=…`, `?email=…`, `?ssn_last4=…` or a
+  raw customer ID in a URL is a disclosure, and "the page checks permissions" does not help, because
+  the leak is the string, not the page. For those, persist an **opaque, short-lived, server-side view
+  id** (`?v=8f21c0`) that resolves to the filter set for authorized readers, and keep the shareable
+  behavior. Non-identifying filters — date range, status, region, sort, page — go in the URL as-is.
 - **Filters persist across navigation within the dashboard,** and reset explicitly. Show active
   filters as removable chips; never hide an active filter behind a collapsed panel.
 
@@ -596,7 +669,7 @@ the second visibly: the trailing incomplete bucket is filled with a **diagonal h
 Every aggregate should have a path to its rows. Plausible's ranked list rows are links that add a
 filter to the whole dashboard rather than navigating away — the page stays, the scope narrows, and
 the filter appears as a removable chip. Radar's panels each carry an "open" arrow to a dedicated
-page with the full breakdown. Both are better than a chart that is only a picture.
+page with the full breakdown.
 
 The minimum viable drill-down: clicking a bar/slice/row **applies it as a filter** and the filter is
 visible and removable. Do not open a modal.
@@ -634,8 +707,7 @@ user can be mid-selection. If new data arrives while they're reading, offer it (
 
 **Radar's split bars are the pattern worth copying for parts-of-a-whole:** a single horizontal bar
 of 2–4 segments, with the labels *above the bar* as `● Bot 57.6%` `● Human 42.4%`, name at ~13px and
-value at ~24px bold. No legend, no pie, and the numbers — which are what the reader actually
-came for — are the largest thing in the panel.
+value at ~24px bold. No legend, no pie, and the numbers are the largest thing in the panel.
 
 ### Killing chart junk
 
@@ -645,8 +717,7 @@ axis lines heavier than the gridlines, data-point dots on a line with more than 
 legend when there are ≤2 series, and decimal places nobody reads (`43%`, not `43.28%`).
 
 Plausible's chart, measured, contains exactly: 7 horizontal gridlines, 8 y labels, 6 x labels, one
-2px line, one gradient area fill. That's it. No axis lines, no tick marks, no legend, no dots, no
-plot border.
+2px line, one gradient area fill. No axis lines, no tick marks, no legend, no dots, no plot border.
 
 ### Axis and gridline treatment
 
@@ -689,7 +760,7 @@ Africa) on one 957×409 chart, and every decision in it is copyable:
   lookups.
 - **Labels sit on a 2.5px white stroke halo** (measured: `stroke: rgb(255,255,255); stroke-width: 2.5px`
   ×6, painted under the text). That is how you put a direct label over a gridline without a box behind
-  it. Copy this: it's the detail that makes direct labeling work at all in a dense chart.
+  it. Without the halo, a label crossing a gridline is unreadable and direct labeling fails.
 - **The unit is repeated on every y tick — `80 years`, `70 years`, `0 years` — instead of an axis
   title.** No rotated text, no separate label, no ambiguity when the chart is screenshotted. Compare
   Nivo's demo, which rotates the word "count" 90° up the y axis.
@@ -711,13 +782,12 @@ Africa) on one 957×409 chart, and every decision in it is copyable:
 
 The generic version of this chart is: a legend on the right, "Years" rotated up the y axis, solid
 gridlines in both directions, five pastel series at 2px, no way to see the underlying numbers, and no
-statement of what "life expectancy" means. Every one of those is a decision OWID made differently.
+statement of what "life expectancy" means.
 
 ### Tooltips
 
 - Trigger on the **nearest x value**, not on hovering the exact 2px line. A vertical crosshair plus a
-  tooltip listing every series at that x is the standard for time series, and it's what makes a
-  multi-series chart readable at all.
+  tooltip listing every series at that x is the standard for time series.
 - **Show all series at that x, sorted by value descending**, with the hovered one emphasized. Not one
   value.
 - **Header = the full timestamp with units and zone.** The axis says "Sep 4"; the tooltip says
@@ -871,8 +941,21 @@ has never been designed.
 - **"Right-align numbers" and everything else about columns is wrong for a card list on mobile.**
   Below ~600px a table should usually stop being a table: one card per row, label-above-value, and the
   numeric alignment argument evaporates because there's no column to align to.
+- **"Loading occupies the final height" is wrong when the result count is unknown.** Reserving 20
+  skeleton rows for a search that returns 2 leaves a hole the size of the fold; reserving 2 for one
+  that returns 500 reflows anyway. Reserve the *container's* height, not a row count — or reserve the
+  median result size and let the outliers move. The rule holds exactly where the shape is known in
+  advance: a fixed dashboard panel, a paginated page of 25.
+- **"Score the palette for grayscale separation" is wrong if every series is direct-labeled.** OWID
+  ships two colors 0.6% apart in luminance and it costs them nothing, because the label sits at the
+  end of the line in the line's own color. The luminance floor is a tax you pay for using a legend.
 - **All of this is wrong if the product already has a design system.** A table that matches the
   existing one imperfectly beats a better table that doesn't match.
+
+Five more rules are scoped inline where they are stated, because the scope is the rule: the
+separator band (display-dependent), zebra-plus-rules (MDN's case), hover without a click target
+(wide matrices), the total row count (expensive `COUNT(*)`), filters in the URL (identifiers), and
+`tabular-nums` at the root (prose tables).
 
 ---
 
@@ -952,12 +1035,20 @@ and that demo is what gets copied. A line asserts continuity between adjacent po
 → **Correction:** categories get a **horizontal bar chart sorted by value**. Lines are for time and
 other continuous axes only. If the x axis has no natural order, there is no line to draw.
 
-**16. The library's pastel palette, shipped as-is.**
-Measured against white: Nivo fails 3:1 on **5 of 5** default colors (`#f1e15b` = 1.34:1), Highcharts on
-**7 of 10** (`#91e8e1` = 1.42:1), ECharts on **5 of 9**. These are marks the reader is supposed to
-*distinguish*, printed in colors barely separable from the page.
-→ **Correction:** define 4–6 series colors yourself with a ≥3:1 floor against the plot background —
-and check them in grayscale. OWID's six, at 4.54–10.79:1, are the shape to aim for.
+**16. The library palette, shipped as-is — and in 2026 it is not the pastel ramp.**
+The 2023 version of this tell was the pastel wheel: Nivo fails 3:1 on **5 of 5** default colors
+(`#f1e15b` = 1.34:1), Highcharts on **7 of 10** (`#91e8e1` = 1.42:1), ECharts on **5 of 9**. Those are
+still true and still shipping, but they are no longer what a generated chart looks like.
+**The 2026 default is shadcn's `--chart-1..5`**, measured live on `ui.shadcn.com` 2026-09-10:
+`#7ec6ff #0083ff #0062fb #004de5 #0040b8` — **one hue, five lightness steps**. Adjacent series are
+**1.30–1.37:1** apart, `--chart-1` is a **1.84:1** tint against white, and `--chart-5` drops to
+**2.29:1** against `#0a0a0a` in dark mode. It is a *sequential* scale wired into a *categorical* slot,
+which is why it looks tasteful and still cannot be read: four of the five series are blue.
+→ **Correction:** replace `--chart-1..5` — never inherit them. Define 4–6 colors with a ≥3:1 floor
+against **both** grounds you ship. Then pick one: direct-label every series and stop (OWID's answer, and
+the reason OWID gets away with two colors of identical luminance), or keep a legend and also enforce
+~1.3:1 of luminance separation between adjacent entries. A single-hue ramp is correct only when the
+series are genuinely ordered — buckets, deciles, severity.
 
 **17. DM Sans or Poppins on a data-heavy product.**
 Both are common "modern SaaS font" picks and **neither supports `tnum`**: digit spread 0.372em and
@@ -993,87 +1084,192 @@ combined with `timeZoneName`.
 
 ---
 
+**The tells below were re-checked against live 2026 output.** All numbers come from
+`ui.shadcn.com/view/new-york-v4/dashboard-01` — the canonical block behind most generated
+dashboards — probed 2026-09-10.
+
+**22. The `dashboard-01` fixture set, shipped verbatim.**
+Measured, in order down the page: `Acme Inc.` · `shadcn` / `m@example.com` · four equal tiles reading
+`Total Revenue $1,250.00 +12.5%`, `New Customers 1,234 −20%`, `Active Accounts 45,678 +12.5%`,
+`Growth Rate 4.5% +4.5%`. **`+12.5%` appears on two of the four tiles.** The subcopy ships a grammar
+error — `Engagement exceed targets` — which is the single most greppable proof that nobody read the
+page. Reviewer names are `Eddie Lake` and `Jamik Tashpulatov`.
+→ **Correction:** these strings are a checklist, not a style. Grep your own output for every one of
+them before shipping. A `+12.5%` that appears twice is not a delta, it is a placeholder.
+
+**23. Dead scaffold in `:root`.**
+`dashboard-01` declares `--chart-1..5`, `--sidebar`, `--sidebar-ring` and `--radius: .625rem`. That is
+correct *there*. It is a tell when the same 41 properties appear on a page with no chart and no
+sidebar — the token block was copied, not authored.
+→ **Correction:** delete tokens for components the page does not contain. Greppable in one line.
+
+**24. Four equal tiles, and the biggest number on the page is the fixture.**
+Measured: the largest type on `dashboard-01` is **30px**, and it renders `$1,250.00`. The hierarchy is
+technically correct — the primary metric *is* the largest thing — and completely hollow, because the
+metric is invented and the other three tiles are the same size.
+→ **Correction:** the size check passes trivially; it is not the check. Ask instead whether the three
+smaller tiles earn their place, and whether any tile changes the chart.
+
+**25. A dashboard with no tabular figures on a page whose headline is currency.**
+Measured on `dashboard-01`: **4 of 1,033 elements** carry `tabular-nums`, and the 30px `$1,250.00` is
+not one of them. This is the same defect as the `tasks` table (1 of 1,200), scaled up.
+→ **Correction:** `font-variant-numeric: tabular-nums` on the tile value, the table root, and every
+tooltip. Especially on a value that updates in place.
+
+**26. Fifteen x-axis labels.**
+`dashboard-01`'s area chart is 1046×250 and prints **15 date labels** (`Apr 1 … Jun 29`) for a
+3-month range. Its gridlines and axis are actually fine — `#e5e5e5` at 50% (**1.12:1**), horizontal
+only, five lines — so the chart passes every check in this file except density of labels.
+→ **Correction:** 4–8 x labels for any range. This one wants 6.
+
+**A note on which tells still work.** Surface tells — purple gradients, `rounded-2xl`, glassmorphism,
+`shadow-lg` — are close to dead as diagnostics in 2026 and are not in this list; see
+`anti-patterns/vibecode-rubric.md` §6.3, which retires them with measurements. Data tells are the
+opposite: they have gotten *more* reliable, because the surface of generated dashboards improved and
+the numbers underneath did not. A page can be genuinely well-styled and still ship `+12.5%` twice.
+
+---
+
 ## Self-check list
 
-Run this against your own output before you call a data surface done.
+Run this against your own output before you call a data surface done. **Every item is checkable by
+looking at one screenshot or running one command** — nothing here asks you to introspect. Items are
+tagged `[shot]` (visible in a still at 1440), `[grep]` (a pattern in your source), or `[console]`
+(paste into DevTools on the rendered page).
+
+**Paste this first.** It backs every `[console]` check below:
+
+```js
+// contrast.js — paste once into the DevTools console of the rendered page
+const _s=c=>(c/=255)<=0.03928?c/12.92:((c+0.055)/1.055)**2.4;
+const _L=([r,g,b])=>0.2126*_s(r)+0.7152*_s(g)+0.0722*_s(b);
+window.toRGB=x=>x.match(/[\d.]+/g).slice(0,3).map(Number);         // 'rgb(229, 229, 229)' -> [229,229,229]
+window.over=(fg,a,bg)=>fg.map((c,i)=>Math.round(c*a+bg[i]*(1-a))); // composite an alpha color first
+window.cr=(a,b)=>{const[x,y]=[_L(a),_L(b)];return +(((Math.max(x,y)+.05)/(Math.min(x,y)+.05))).toFixed(2)};
+// census: every distinct value of a computed property, with counts
+window.census=(prop,sel='*')=>Object.entries([...document.querySelectorAll(sel)]
+  .reduce((m,e)=>{const v=getComputedStyle(e)[prop];m[v]=(m[v]||0)+1;return m},{}))
+  .sort((a,b)=>b[1]-a[1]).slice(0,12);
+```
 
 **Table structure**
-- [ ] Row height is a deliberate number tied to the reading task (32 / 40 / 48 / 64+), not a default.
-- [ ] Exactly one horizontal separator system: rules **or** stripes **or** neither. Never two.
-- [ ] Separator contrast against the row background is between 1.2:1 and 1.4:1. (Compute it.)
-- [ ] There are no vertical column borders.
-- [ ] There is no box around the table unless the table sits on a colored ground.
+- [ ] `[console]` Row height is one deliberate number. `census('height','tbody tr')` returns **one**
+      dominant value, and it is one of 32 / 40 / 48 / 64+ chosen for the reading task — not a
+      by-product of padding. If the top two values differ by 1–2px, your rows are growing on content.
+- [ ] `[console]` Exactly one horizontal separator system. Run `census('borderBottomColor','tbody tr')`
+      **and** `census('backgroundColor','tbody tr')`. One of them must be uniform. Two non-uniform
+      results = rules and stripes both firing.
+- [ ] `[console]` Separator contrast is 1.2–1.4:1 on a screen-only table, ≥1.6:1 if it prints or
+      projects: `cr(toRGB(getComputedStyle($('tbody tr')).borderBottomColor), [255,255,255])`.
+- [ ] `[grep]` No vertical column borders: `rg 'border-(left|right|x)' <table component>` returns
+      nothing, or only the frozen-column seam.
+- [ ] `[grep]` No box around the table: `rg 'border(?!-b)' <table root>` — a full border is only legal
+      when the table has its own `background`.
 
 **Numbers**
-- [ ] `font-variant-numeric: tabular-nums` is set on the table root — **and the font honors it.**
-      (Render `111111` directly above `000000` in the real font and check both edges align. DM Sans,
-      Poppins and Georgia will fail this and cannot be fixed with CSS.)
-- [ ] Column widths were measured *after* `tabular-nums` was applied, not before.
-- [ ] One of `maximumFractionDigits` / `maximumSignificantDigits` is used consistently per column.
-- [ ] Percent values are passed as fractions to `style:"percent"` (0.425, not 42.5).
-- [ ] Deltas use `signDisplay:"exceptZero"` so gains show `+`.
-- [ ] Compact notation appears on axes and tiles only — never in a cell someone reconciles.
-- [ ] Every numeric column is right-aligned, **and so is its header**.
-- [ ] Identifiers (IDs, codes, regions) are left-aligned, not right.
-- [ ] Currency/percent units appear once — in the header or on each value — not both.
-- [ ] Missing values render `—`.
+- [ ] `[console]` `census('fontVariantNumeric','table *')` — the dominant value is `tabular-nums`.
+      A result of `normal` at the top means the property never applied. (Reference: shadcn `tasks`
+      returns 1 of 1,200; `dashboard-01` returns 4 of 1,033.)
+- [ ] `[shot]` **The font honors it.** Render `111111` directly above `000000` at your real font and
+      size, screenshot, and check both edges align. DM Sans, Poppins and Georgia fail this and cannot
+      be fixed with CSS — the `[grep]` version is `rg 'DM Sans|Poppins' <font config>`.
+- [ ] `[console]` Widths were measured *after* `tabular-nums`: toggle
+      `document.querySelector('table').style.fontVariantNumeric='normal'` and confirm no numeric
+      column changes width. Geist narrows 10.6%, Public Sans widens 14%.
+- [ ] `[grep]` One of `maximumFractionDigits` / `maximumSignificantDigits` per column:
+      `rg 'maximum(Fraction|Significant)Digits' -A0` and confirm no column uses both.
+- [ ] `[grep]` Percent values are fractions: `rg "style:\s*['\"]percent" -B3` — the value feeding it
+      must be ≤1 for a 100% case. A rendered `4,250%` in the screenshot is the same bug.
+- [ ] `[grep]` `rg "signDisplay" ` returns `exceptZero` wherever a delta is formatted.
+- [ ] `[grep]` `rg "notation:\s*['\"]compact"` — every hit is an axis or a tile, never a table cell.
+- [ ] `[console]` `census('textAlign','td')` and `census('textAlign','th')` return the **same**
+      distribution. A `right` in the first and none in the second is the header-alignment bug.
+- [ ] `[shot]` Identifiers (IDs, codes, regions) are flush left; magnitudes are flush right.
+- [ ] `[shot]` The currency or percent unit appears once — in the header or on each value, not both.
+- [ ] `[grep]` `rg "N/A|'null'|undefined" <cell renderers>` returns nothing; missing renders `—`.
 
 **Columns**
-- [ ] Exactly one column flexes; the rest are fixed-width.
-- [ ] Every `white-space: nowrap` is paired with `text-overflow: ellipsis` and `overflow: hidden`.
-- [ ] Truncated values are reachable via `title` or a tooltip; IDs truncate in the middle.
+- [ ] `[console]` Exactly one column flexes: resize to 1100px and re-read
+      `[...document.querySelectorAll('thead th')].map(e=>e.getBoundingClientRect().width)`. One value
+      changed; the rest are identical to the 1440 reading.
+- [ ] `[console]` `[...document.querySelectorAll('td')].filter(e=>{const c=getComputedStyle(e);return
+      c.whiteSpace==='nowrap'&&c.textOverflow!=='ellipsis'}).length` is **0**. (shadcn `tasks`
+      returns non-zero — `text-overflow: clip` is the shipped default.)
+- [ ] `[grep]` Truncated cells carry `title=` or a tooltip; ID columns truncate in the middle.
 
 **Interaction**
-- [ ] Rows have a hover tint **only** if the whole row is clickable.
-- [ ] Nothing moves on hover — no shadow, no border appearing, no transform. (Sweep the cursor down
-      30 rows and watch.)
-- [ ] Row actions are visible at rest, and their column width is reserved either way.
-- [ ] The sort indicator appears only on the active column, and shows direction.
-- [ ] Sticky cells have an opaque background, an explicit `z-index`, and a 1px seam (not a shadow).
-- [ ] The total row count is displayed.
-- [ ] Filters, sort, page and time range are all in the URL.
+- [ ] `[console]` A hover tint implies a target: for every row with a non-transparent `:hover`
+      background, `getComputedStyle(row).cursor === 'pointer'` — or the table is wider than the
+      viewport and the tint is a declared tracking aid, in which case cursor must be `default`.
+- [ ] `[grep]` Nothing moves on hover: `rg 'hover:(scale|translate|shadow|-?rotate)|hover:border'`
+      over the row component returns nothing. `[shot]` version: screenshot rows 3 and 4 at rest and
+      with the cursor on row 3, and diff the PNGs — only channel values inside row 3 may change.
+- [ ] `[console]` Row actions are visible at rest: `getComputedStyle(actionCell).opacity === '1'`
+      without hovering, and the action column's width is identical on a row with and without actions.
+- [ ] `[shot]` The sort indicator appears on exactly one column and points a direction.
+- [ ] `[console]` For each sticky cell: `getComputedStyle(el).backgroundColor` is fully opaque
+      (alpha 1), `zIndex` is not `auto`, and the seam is a `border`, not a `box-shadow`.
+- [ ] `[shot]` A total or bounded estimate is on screen ("1–25 of 1,240", "of 10,000+").
+- [ ] `[shot]` Change a filter, a sort, the page and the time range; the address bar changes each
+      time. Reload — the view is identical. No customer identifier is visible in the URL.
 
 **Dashboard**
-- [ ] I can state the question this page answers, and who asks it, in one sentence.
-- [ ] Every metric has a comparison, and I can name where the comparison number comes from.
-- [ ] The largest thing on the page is the thing that matters most.
-- [ ] The tiles and the chart are wired to each other, or the tiles are gone.
-- [ ] There is a time-range control, and changing it changes everything on the page.
-- [ ] There is a visible data timestamp with a timezone.
-- [ ] Every aggregate has a drill-down that applies a visible, removable filter.
+- [ ] `[shot]` One sentence under the page title names the subject and the period; one sentence under
+      each panel title defines its metric. `[grep]`: every panel component receives a `description`.
+- [ ] `[shot]` Every metric shows a comparison. `[grep]` Every delta traces to a query, not a
+      literal: `rg '\+[0-9]+(\.[0-9]+)?%' <dashboard>` returns **no hardcoded percentages**.
+      Two tiles showing the same delta is the `dashboard-01` signature.
+- [ ] `[console]` The largest type carries the primary metric:
+      `[...document.querySelectorAll('*')].filter(e=>!e.childElementCount&&e.textContent.trim())
+      .sort((a,b)=>parseFloat(getComputedStyle(b).fontSize)-parseFloat(getComputedStyle(a).fontSize))[0]`
+      — and the three next-largest are not all the same size as each other.
+- [ ] `[shot]` Click a tile. Either the chart below it changes, or the tile should not exist.
+- [ ] `[shot]` Change the time range. Every panel's numbers change.
+- [ ] `[shot]` A data timestamp with a timezone is visible without scrolling.
+- [ ] `[shot]` Click a bar, slice or row. A removable filter chip appears; no modal opens.
 
 **Charts**
-- [ ] Chart type was chosen from the question, and I can name the question.
-- [ ] Gridlines are the text color at ~10% opacity, in one direction only.
-- [ ] The axis line is not darker than the gridlines, or doesn't exist.
-- [ ] Tick labels are 10–12px at 55–70% ink; 4–8 ticks per axis; values abbreviated.
-- [ ] ≤3 series are direct-labeled; the legend, if any, is above the plot and uses the mark's shape.
-- [ ] Bar charts start at zero. Truncated line axes are labeled as such.
-- [ ] Null renders as a gap, not as zero.
-- [ ] Incomplete trailing periods are visually marked.
-- [ ] Series colors are assigned by meaning and consistent across every panel.
-- [ ] No default library palette survives. Every series color is ≥3:1 against the plot background —
-      computed, not eyeballed — and the set is still distinguishable in grayscale.
-- [ ] The x axis is continuous. (If the categories have no natural order, this is a bar chart.)
-- [ ] Point markers are off above ~30 points; hover targets are widened separately
-      (Chart.js `hitRadius`/`interaction.mode`, or Tremor's transparent 12px stroke trick).
-- [ ] Entrance animation is 0ms on anything that auto-refreshes.
-- [ ] `credits`/watermarks from the charting library are disabled.
-- [ ] If direct labels sit over gridlines, they have a ~2.5px background-colored halo stroke.
-- [ ] The reader can get the exact numbers — a table view, a tooltip, or a download.
+- [ ] `[shot]` You can name the question the chart answers from the title alone.
+- [ ] `[console]` `census('stroke','svg line, svg path')` — gridlines are one color at ~10% of the ink,
+      and the count matches one direction only (5–8 lines, not 11–24).
+- [ ] `[console]` The axis line is not darker than the gridlines: compare their `cr()` values. Recharts
+      default returns 7.73 vs 1.49 and fails.
+- [ ] `[console]` `census('fontSize','svg text')` returns 10–12px, and the label count per axis is
+      4–8. (`dashboard-01` returns 15 x labels and fails.)
+- [ ] `[shot]` ≤3 series are labeled at the line's right end; any legend sits above the plot and uses
+      the mark's own shape.
+- [ ] `[shot]` Bar charts start at zero. A truncated line axis prints its range.
+- [ ] `[shot]` A null period is a gap in the line, not a dip to the baseline.
+- [ ] `[shot]` The trailing incomplete bucket is hatched, faded or otherwise marked.
+- [ ] `[grep]` Series colors are keyed by name, not index: `rg 'colors\[i\]|COLORS\[index'` returns
+      nothing.
+- [ ] `[console]` Score the palette on both axes, and against **both** grounds you ship:
+      every series ≥3:1 vs the plot background, and — only if you ship a legend — ≥1.3:1 between
+      adjacent series. `[grep]` `rg '\-\-chart\-[1-5]|#8884d8|#82ca9d|#61cdbb|#5470c6'` returns
+      nothing: no default palette survives.
+- [ ] `[shot]` The x axis is continuous. Unordered categories = a sorted horizontal bar chart.
+- [ ] `[grep]` `rg 'dot=\{true\}|pointRadius|\.radius\s*=\s*[1-9]'` — markers off above ~30 points,
+      with hover widened separately (`hitRadius`, `interaction.mode:'index'`).
+- [ ] `[grep]` `rg 'animation|duration'` — entrance animation is 0ms on anything that auto-refreshes.
+- [ ] `[grep]` `rg 'credits'` returns `enabled:false` (Highcharts watermarks by default).
+- [ ] `[shot]` Direct labels crossing a gridline have a ~2.5px background-colored halo stroke.
+- [ ] `[shot]` A table view, a tooltip or a download gets the reader the exact number.
 
 **Dark mode**
-- [ ] Separators and gridlines are alphas on the foreground color, not hard-coded grays, so they hold
-      1.2–1.4:1 on every surface elevation.
-- [ ] Body text in dark tables is ~90% white, not `#fff`.
-- [ ] Row height, padding and alignment are identical to light mode.
+- [ ] `[grep]` Separators and gridlines are alphas on the foreground: `rg 'border.*#[0-9a-f]{3,6}'`
+      returns no hard-coded gray in the dark theme block.
+- [ ] `[console]` In dark mode, `cr()` the separator against **two** surfaces — the page ground and a
+      lifted card. Both land 1.2–1.4:1. (`#fff` @10% returns 1.24 on `#0a0a0a`, 1.33 on `#18181b`.)
+- [ ] `[console]` `census('color','tbody td')` in dark mode — the dominant value is **not**
+      `rgb(255, 255, 255)`. Target ~90% (`#e4e4e7`, 15.6:1).
+- [ ] `[console]` Row height, padding and `textAlign` censuses are byte-identical to light mode.
 
 **States**
-- [ ] Loading occupies the final height — data landing causes no reflow.
-- [ ] Empty-with-no-data and empty-because-filtered are two different states, and the second names
-      the filters and offers to clear them.
-- [ ] The error state keeps the table chrome and offers retry.
-- [ ] I rendered it at 1440 and 390, opened the PNGs, and looked at them.
+- [ ] `[shot]` Screenshot mid-load and after data lands. Diff the two PNGs: no element's `y` moved.
+- [ ] `[shot]` Two distinct empty screens exist. The filtered one names the active filters and offers
+      to clear them.
+- [ ] `[shot]` Force the error. The header, filters and time range are still on screen, with a retry.
+- [ ] `[shot]` Rendered at 1440 and 390, PNGs opened and looked at.
 
 ---
 
@@ -1118,6 +1314,108 @@ Sites measured: Plausible live demo, Cloudflare Radar, Grafana Play, GitHub (pul
 Status), Yahoo Finance, Vercel docs, Linear, Radix Themes docs, shadcn/ui `tasks` example (light and
 dark), MUI DataGrid docs, AG Grid 100k-row demo, MDN, Observable Plot docs, Recharts examples,
 Baseball-Reference standings, Nivo line demo, Tremor area-chart docs, and Our World in Data's
-life-expectancy grapher. Screenshots of the OWID grapher and the Nivo demo were rendered at 1440 and
+life-expectancy grapher. **Re-probed 2026-09-10** (see the direction pass below): Vercel docs,
+shadcn/ui `tasks`, Radix Themes `Table`, MDN, Recharts `SimpleLineChart`, Observable Plot docs,
+Plausible live demo, `ui.shadcn.com/charts`, and `ui.shadcn.com/view/new-york-v4/dashboard-01`. Screenshots of the OWID grapher and the Nivo demo were rendered at 1440 and
 inspected; the numbers for Baseball-Reference come from a successful computed-style pass, though a
 later screenshot attempt was intercepted by a bot check.
+
+---
+
+## Direction pass (2026-09)
+
+Every claim below was re-probed with Playwright at 1440×1100 on **2026-09-10**, or recomputed from
+measured sRGB values. This section is the audit trail; the corrections are already applied above.
+
+### Numbers that were wrong, and are now fixed
+
+| Claim as written | Measured | Where |
+|---|---|---|
+| `#ddd` = **1.44:1** vs white, "roughly twice too dark" | **1.36:1** — the exact top of the 1.19–1.36 band. AG Grid and Baseball-Reference both ship it. | Opening anchor |
+| MDN reference tables: ~40px rows, **no separator** | **45–46px** rows at 16/28, and a `#c3c7cb` cell rule at **1.70:1** *underneath* the stripe | Reference table, Zebra |
+| Vercel docs separator `rgba(0,0,0,.08)` → 1.19 | `#eaeaea` → **1.20** on `/docs/functions/runtimes`; rows **69px** there, header 44px, padding `12px 10px` | Reference table |
+| Recharts default line width **2px** | **1px** (`SimpleLineChart`, computed `stroke-width`) | Library defaults |
+| Geist digit spread 0.2791em → 31.3px drift; `tnum` narrows 9.5% | **0.2870em → 32.1px**; narrows **10.6%** (Geist 1.3.1) | Font table, anchor |
+| JetBrains Mono digit advance 0.6000em | **0.5000em** | Font table |
+| `signDisplay:"exceptZero"` on 0.425 → `+0.4` | `+0.425` | Formatting table |
+| OWID's six colors are "distinguishable in grayscale" | **False.** `#00847e` (luminance 0.1801) and `#c4523e` (0.1812) are the same gray. Min pairwise contrast in that palette is **1.00**. | Palette section |
+
+Everything else held. Spot-confirmed unchanged: shadcn `tasks` at **49px** rows / 40px header /
+`text-overflow: clip` / **1 of 1,200** tabular elements; Radix `Table` at 44px with
+`inset 0 -1px rgba(0,9,50,.12)` and **0 of 2,511**; Observable Plot's `rgb(60,60,67)` at
+`stroke-opacity: 0.1`, 14 horizontal lines, 10px labels; Plausible's `#ececee` gridlines ×7,
+`oklch(0.585 0.233 277)` 2px series, 8 y labels and 6 x labels; Recharts' `#d6d3d1` dashed 5,5 ×11 and
+`#52525b` axis ×13 at 7.73:1; every `Intl` string in the formatting tables, including the
+`TypeError: Invalid option : option` from combining `dateStyle` with `timeZoneName`, and the U+202F
+group separator in `fr-FR`.
+
+### What changed structurally
+
+**The palette rule was one-dimensional and is now two.** Scoring a series color against the plot
+background says whether it is a mark; it says nothing about whether two series are distinguishable
+from each other. Adding the second axis is what exposed OWID's luminance collision — and it reframes
+that collision correctly: OWID direct-labels every line, so it never needs the color to carry
+identity. **The luminance floor is a cost of using a legend, not a universal.**
+
+**The anti-pattern list was aimed at 2023.** Its palette entry described the pastel wheel
+(Nivo, Highcharts, ECharts). Those still ship, but the palette in a chart generated in 2026 is
+shadcn's `--chart-1..5` — measured live as `#7ec6ff #0083ff #0062fb #004de5 #0040b8`, a single-hue
+sequential ramp in a categorical slot, with adjacent series **1.30–1.37:1** apart. It is a harder
+failure than a pastel wheel because it looks considered. Five new entries (22–26) come from
+`ui.shadcn.com/view/new-york-v4/dashboard-01`, including the fixture strings (`Acme Inc.`,
+`$1,250.00`, `1,234`, `45,678`, `4.5%`, `+12.5%` **on two of four tiles**, and the shipped grammar
+error `Engagement exceed targets`), **4 of 1,033** tabular elements on a page whose largest type is
+a currency value, and **15 x-axis labels** on a 3-month range. Surface tells were deliberately left
+out — `anti-patterns/vibecode-rubric.md` §6.3 retires them with measurements, and repeating a dead
+tell here would cost an agent real deductions.
+
+**Six rules were followed off a cliff, then scoped.** Each was stated as an absolute and each has a
+realistic product where the absolute makes the interface worse:
+
+| Rule | Where it breaks | Scope added |
+|---|---|---|
+| Separator at 1.2–1.35:1 | A pick list on a warehouse tablet in daylight; a table exported to PDF for an auditor; a chart projected in a standup. Sub-pixel grays are the first thing a printer's dither and a projector's gamma discard. MDN, the most-printed product in the sample, ships **1.70:1**. | Band assumes a self-lit sRGB display. Floor at ~1.6:1 when you don't control the display. |
+| "If you stripe, drop the rules" | MDN runs both, because they do different jobs — the stripe tracks a row across, the rule terminates a cell whose text wraps to four lines at 45px row height. | Both are correct when rows wrap to unequal heights *and* the page is printed. Never three systems. |
+| Hover tint only if the row is clickable | A 40-column stat matrix or pricing grid wider than the viewport: the reader's question is "am I still on the same row 1,800px right," not "is this clickable." | Legal as a tracking aid on tables wider than the viewport — but `cursor: default`, no focus ring. |
+| "The total count is not optional" | Unbounded log search over 500M rows: `COUNT(*)` under the same filters costs more than the page, turning a 200ms table into a 30s one. | An exact count is optional; a magnitude is not. Ship "of 10,000+". Never a bare `Next`. |
+| "Every filter goes in the URL" | A clinical or HR dashboard filtered to `?patient_id=…`. Query strings land in access logs, `Referer` headers, browser history and Slack unfurls — permission checks don't help, because the leak is the string. | Everything except identifiers the reader had to be authorized to see; those get an opaque server-side view id. |
+| `tabular-nums` on the table root | A docs table whose cells are 16/28 running prose. The property inherits, so `CSS Level 3` and `Chrome 121` get mechanically spaced digits with nothing stacked beneath them to align to. | Set it where digits stack in a column: the table root if mostly numeric, the numeric `td`/`th` if mostly prose. |
+
+Two further scopes went into *When this advice is wrong*: reserving the final height during load is
+wrong when the result count is unknown, and the grayscale check is unnecessary when every series is
+direct-labeled.
+
+**The self-check is now executable.** Every item carries a `[shot]`, `[grep]` or `[console]` tag, and
+the section opens with a paste-once console helper (`cr()` for contrast, `census()` for
+computed-property distributions) that the `[console]` items call. Items that asked the reader to
+introspect were rewritten into probes: "I can state the question this page answers" became "one
+sentence under the title, one under each panel title, and every panel component receives a
+`description`"; "the largest thing is the thing that matters most" became a sort over computed
+`fontSize` plus a check that the next three are not all equal; "nothing moves on hover" became a grep
+for `hover:scale|translate|shadow|border` plus a two-PNG diff. Several items now carry the measured
+value a failing implementation returns, so the check has a known-bad reference: shadcn `tasks`
+returns non-zero for the `nowrap`-without-`ellipsis` probe, `dashboard-01` returns 15 for the x-label
+count and 4 of 1,033 for the `tabular-nums` census.
+
+**Roughly 20 sentences were cut** for asserting without deciding — "worth internalizing", "that is
+the whole trick", "that's it", "both are better than a chart that is only a picture", "every one of
+those is a decision OWID made differently", "the most common misread on every live chart", "and
+nobody can say why". Where a cut sentence carried a real claim, the claim was made falsifiable
+instead: "the detail that makes direct labeling work" became "without the halo, a label crossing a
+gridline is unreadable."
+
+### Known limits of this pass
+
+- Yahoo Finance, Linear, AG Grid, Cloudflare Radar, Grafana Play, GitHub and Baseball-Reference were
+  **not** re-probed; their values carry the original September 2026 date. Baseball-Reference in
+  particular was bot-blocked on the first pass and remains screenshot-unverified.
+- Highcharts and ECharts palette failure counts (7 of 10, 5 of 9) are carried forward from the
+  original pass; only the worst entry in each was recomputed. Min-pairwise figures for those two are
+  over their first five colors only.
+- Geist's digit metrics are version-dependent. This pass measured **1.3.1** from jsDelivr; the
+  original measured `vercel/geist-font` at an unrecorded version. The 0.008em difference does not
+  change any decision, but pin the version if you re-derive column widths.
+- `--chart-1..5` was read from `ui.shadcn.com`'s own theme, which is what the docs and every block
+  preview render with. A project that ran `npx shadcn init` with a different base color gets a
+  different ramp — the failure mode (single-hue sequential in a categorical slot) is the finding, not
+  those five specific hexes.

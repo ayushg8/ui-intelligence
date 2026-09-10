@@ -1,5 +1,7 @@
 # Information density and hierarchy
 
+**Evaluated:** 2026-09
+
 **Measured 2026-09, re-verified 2026-09 (see Direction pass at the end).** Every number was read
 out of a live product with Playwright at 1440×900 unless stated — `getComputedStyle`,
 `getBoundingClientRect`, and shipped CSS custom properties. Contrast from `tools/contrast.mjs`.
