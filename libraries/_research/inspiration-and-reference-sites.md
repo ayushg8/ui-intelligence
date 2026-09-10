@@ -1,6 +1,6 @@
 # Visual reference, teardown and inspiration resources
 
-**Evaluated:** 2026-09 · **Researcher note:** The category split in two and then consolidated. One half (Mobbin, Refero, Nicelydone, Page Flows, ScreensDesign, Built for Mars) turned into paid, searchable archives of *real shipped product screens* and every one of them shipped an MCP server in the last cycle — an agent can now query proven UI instead of guessing. The other half (Awwwards, Dribbble, FWA, Behance, Savee, Cosmos) is still an aesthetics feed and has drifted further from product work, not closer. Meanwhile four names on most people's list are gone: UI Sources, Design Vault, Scrnshts and Screenlane all 301 into competitors, and Typewolf hasn't posted since Dec 2025.
+**Evaluated:** 2026-09 · **Challenged and corrected:** 2026-09-09 (see [Challenge pass](#challenge-pass-2026-09) at the end) · **Researcher note:** The category split in two and then consolidated. One half (Mobbin, Refero, Nicelydone, Page Flows, ScreensDesign, Built for Mars) turned into paid, searchable archives of *real shipped product screens* and every one of them shipped an MCP server in the last cycle — an agent can now query proven UI instead of guessing. The other half (Awwwards, Dribbble, FWA, Behance, Savee, Cosmos) is still an aesthetics feed and has drifted further from product work, not closer. Meanwhile four names on most people's list are gone: UI Sources, Design Vault, Scrnshts and Screenlane all 301 into competitors, and Typewolf hasn't posted since Dec 2025.
 
 ## Verdict at a glance
 | Library | Tier | One-line verdict | Vibecode risk |
@@ -18,7 +18,7 @@
 | Minimal Gallery | `situational` | Dark, well-tagged, updated today; SAAS/Startup/Tools tags surface real product marketing pages. | medium |
 | Godly (now recent.design) | `situational` | A taste feed that also quietly runs a design-agent-skills directory. Mostly graphic design, not UI. | medium |
 | SaaS Landing Page | `situational` | 960 SaaS landing pages, one narrow job done well. Marketing pages only — no app surfaces. | **high** |
-| Savee / Cosmos | `situational` | Art direction and mood. Cosmos flags AI-generated images; Savee has an MCP over 6M refs. Zero product UI. | medium |
+| Savee / Cosmos | `situational` | Art direction and mood. Cosmos flags AI-generated images; Savee has an MCP over 6M refs. Zero product UI. | medium → **high w/ MCP** |
 | Land-book | `situational` | Solid landing-page gallery, but hard-blocks headless browsers — an agent cannot read it. | medium |
 | One Page Love | `situational` | 3,870 portfolios vs 153 SaaS. The ratio tells you what it's for — but it ships an API *and* an MCP. | medium |
 | Brand New | `reference-only` | Best writing on identity work anywhere, but paywalled and about logos, not interfaces. | low |
@@ -153,46 +153,6 @@
 - **Vibecode risk:** low.
 - **Link:** https://growth.design
 
-### Deceptive Patterns — `reference-only` *(added 2026-09 challenge pass)*
-- **What:** Harry Brignull's taxonomy of manipulative interface patterns (formerly darkpatterns.org) — named types, a hall of shame, the relevant laws and live enforcement actions.
-- **Verdict:** The only *negative* reference in the category and the file was poorer for missing it. Every other entry answers "what do good products do here"; this one answers "what will get you sued, and what is the name for the thing you just built by accident". That second half matters more than it sounds for agent-built UI: confirmshaming, comparison prevention, hard-to-cancel and nagging are all patterns an agent will produce innocently while optimising a funnel, because the training data is full of them and they demonstrably convert. Having the named taxonomy in the corpus means the failure is nameable at review time instead of shipping. It has also grown teeth — it now tracks enforcement, so this is compliance reference, not just ethics reading. Filed reference-only because you check work against it rather than draw from it.
-- **Use when:** reviewing any flow that involves cancellation, consent, pricing, subscription or a funnel target. · **Don't use when:** you want design reference of any kind — it is prose and annotated examples.
-- **Scores /5:** visual 3 · interaction 2 · a11y 4 · engineering 2 · maintenance 4 · docs 5 · customization 1 · perf 4 · stability 5 · originality 5
-- **Evidence (2026-09-09):** nav is Types / Hall of shame / Laws / Enforcement / Reading list / Books / About · named types include Addictive Design, Comparison Prevention, Confirmshaming, Currency Confusion, and the rest of the standard taxonomy · self-describes as "spreading awareness since 2010" and now covers AI systems explicitly ("features of apps, websites **and AI systems**") · free, no paywall, no signup
-- **Looked at:** rendered the live index. Plain, typographic, near-zero decoration; it reads like a reference work, which is correct for what it is.
-- **Vibecode risk:** low.
-- **Link:** https://www.deceptive.design
-
-### SaaSFrame — `situational` *(added 2026-09 challenge pass)*
-- **What:** A SaaS design library split into Websites and Interfaces, indexed by page type with live counts and — unusually — by *section* type as well.
-- **Verdict:** Strictly better structured than SaaS Landing Page, which the last pass covered while missing this. Where SaaS Landing Page gives you 960 undifferentiated pages, SaaSFrame gives you ~40 typed page categories with counts (Landing Page 286, Pricing Page 211, About Page 127, Blog Feed 97, Careers Page 93, Features Page 72, Customer Stories 72, Comparison Page 54, Changelog 15, GDPR Compliance 5) plus a section-level index (Features 90 sections, Call To Action 44, Bento Grid 43, Pricing 42, Footer 34, Integrations 28, Clients Logo 27) and coverage of in-app interfaces, not just marketing pages. The section index is the genuinely useful part: it lets you ask "what does a changelog page contain" rather than "show me nice SaaS sites". It carries the same fatal flaw as its sibling, only sharper, so read the vibecode line before using it.
-- **Use when:** you need the conventional contents of a specific SaaS page or section type and want counts rather than vibes. · **Don't use when:** you want the page to be distinctive. See below.
-- **Scores /5:** visual 3 · interaction 3 · a11y 3 · engineering 3 · maintenance 4 · docs 3 · customization 2 · perf 3 · stability 3 · originality 3
-- **Evidence (2026-09-09):** page-type counts as listed above, read live off the homepage · Sections taxonomy with per-section counts · covers Websites *and* Interfaces (in-app screens) · pricing not inspected
-- **Looked at:** fetched and parsed the live index; did not screenshot — the taxonomy is the reason to use it and the grid is a grid.
-- **Vibecode risk:** **high**, for the same reason as SaaS Landing Page and more so. A "Bento Grid — 43 sections" category is a list of the single most recognisable AI-era layout tell, sorted for convenience. Use the counts to decide *what sections exist*; never open the examples for *how they should look*.
-- **Link:** https://www.saasframe.io
-
-### Really Good Emails — `situational` *(added 2026-09 challenge pass)*
-- **What:** A large curated archive of marketing and transactional email design, categorised by job (Abandoned Cart, Welcome, Re-engagement, Unsubscribe, Post Purchase, Feedback/Survey…). Now part of Beefree.
-- **Verdict:** Email is a real product surface — Page Flows already indexes it, and the confirmation email is the last screen of half the flows in this corpus — and no other entry in the file covers it. This does, deeply, and its taxonomy is behavioural (what the email is *for*) rather than aesthetic, which is the right axis. Two caveats keep it out of the top tier. It has been absorbed into Beefree and the site now funnels toward RGE Studio, a paid builder, so the archive is increasingly a lead magnet. And its "MCP" is a nav item under RGE Studio at `/features/ai/mcp` — the studio product's integration, not an open MCP over the archive; `/mcp` itself is just a tag page. Do not repeat the claim that RGE ships a design-reference MCP.
-- **Use when:** designing lifecycle, transactional or onboarding email, or checking what a category of email conventionally contains. · **Don't use when:** you need in-app UI.
-- **Scores /5:** visual 4 · interaction 2 · a11y 3 · engineering 3 · maintenance 4 · docs 3 · customization 3 · perf 3 · stability 4 · originality 3
-- **Evidence (2026-09-09):** behavioural taxonomy verified live (Abandoned Cart, Comment Notification, Curated Content, Customer Appreciation, Discovery, Engagement, Feedback and Survey and Poll, Follow-Up, Loyalty / Rewards, Post Purchase, Product Recommendations, Referral, Retention / Re-engagement, Review and Testimonial, Summary, Thank You, Unsubscribe) plus Promotional / Seasonal / Punctual / Industry / Inaugural groupings · footer: "Really Good Emails is part of Beefree. It started as a volunteer project in 2014. © 2026 BEE Content Design, Inc." · MCP is under `/features/ai/mcp` as an RGE Studio integration — **not** an MCP over the inspiration archive
-- **Looked at:** fetched and parsed the live index and the MCP path directly to settle what the MCP actually is.
-- **Vibecode risk:** medium — email design is more template-driven than any other surface here, and the archive skews promotional. It will teach you conventions and will not stop you shipping the same gradient-header e-commerce blast as everyone else.
-- **Link:** https://reallygoodemails.com
-
-### Navbar Gallery — `situational` *(added 2026-09 challenge pass)*
-- **What:** A gallery of one component — website navigation — typed by pattern: Static/Sticky, Dropdown/Flyout, Mega Menu, Side Bar, Search Bar, Announcement Bar, Full Screen Menu, Breadcrumbs.
-- **Verdict:** Narrow to the point of being a novelty, and it earns a line anyway because navigation is the component most often got wrong at the structural level rather than the visual one, and because its taxonomy is *behavioural* — it sorts by what the nav does, not what it looks like. If you need to decide between a mega menu and a flyout for a 40-item information architecture, this is a faster survey of real implementations than any general gallery. Nothing else here is a substitute; the general galleries index whole sites and you cannot filter them by navigation pattern. Low ceiling, but it is honest about what it is, which is more than most of the `avoid` list manages.
-- **Use when:** choosing a navigation pattern for a real IA, or checking how a mega menu is conventionally structured. · **Don't use when:** anything else. It is one component.
-- **Scores /5:** visual 3 · interaction 4 · a11y 3 · engineering 3 · maintenance 3 · docs 3 · customization 2 · perf 3 · stability 3 · originality 4
-- **Evidence (2026-09-09):** eight typed categories with definitions, verified live · free to browse; Submit and About only · library size not stated first-party — **unverified**
-- **Looked at:** fetched and parsed the live index; did not screenshot.
-- **Vibecode risk:** medium — these are marketing-site navs, so the sample skews toward full-screen menus and animated mega menus that belong on an agency site and not on an app shell.
-- **Link:** https://www.navbar.gallery
-
 ### Sidebar — `strong`
 - **What:** Five hand-picked design links per weekday, tagged, since 2012.
 - **Verdict:** Highest signal-per-minute in the category and it costs nothing. Checked on 2026-09-09, the front page carried that day's and the next day's editions — genuinely current, which is more than Typewolf, Httpster or Collect UI can say. The link mix is substantive rather than decorative: a design-systems semantic-layer essay, an "Anatomy of an AI input" breakdown, a craft note on limiting detail, an MIT-licensed React component library. This is where you find the *other* things in this corpus before anyone else does.
@@ -263,6 +223,16 @@
 - **Vibecode risk:** **high.** Rated medium in the last pass's table and medium-high in its own scorecard — the two disagreed, and the higher one was right. A corpus of 960 pages that all run logo bar → three feature cards → testimonial row → pricing table is not a reference, it is a template with 960 worked examples. This is the single most likely source in the category to make output read as AI-generated, precisely *because* nothing in it looks broken. Use it as a checklist for what sections to include, never for what the page should look like.
 - **Link:** https://saaslandingpage.com
 
+### SaaSFrame — `situational` *(added 2026-09 challenge pass)*
+- **What:** A SaaS design library split into Websites and Interfaces, indexed by page type with live counts and — unusually — by *section* type as well.
+- **Verdict:** Strictly better structured than SaaS Landing Page, which the last pass covered while missing this. Where SaaS Landing Page gives you 960 undifferentiated pages, SaaSFrame gives you ~40 typed page categories with counts (Landing Page 286, Pricing Page 211, About Page 127, Blog Feed 97, Careers Page 93, Features Page 72, Customer Stories 72, Comparison Page 54, Changelog 15, GDPR Compliance 5) plus a section-level index (Features 90 sections, Call To Action 44, Bento Grid 43, Pricing 42, Footer 34, Integrations 28, Clients Logo 27) and coverage of in-app interfaces, not just marketing pages. The section index is the genuinely useful part: it lets you ask "what does a changelog page contain" rather than "show me nice SaaS sites". It carries the same fatal flaw as its sibling, only sharper, so read the vibecode line before using it.
+- **Use when:** you need the conventional contents of a specific SaaS page or section type and want counts rather than vibes. · **Don't use when:** you want the page to be distinctive. See below.
+- **Scores /5:** visual 3 · interaction 3 · a11y 3 · engineering 3 · maintenance 4 · docs 3 · customization 2 · perf 3 · stability 3 · originality 3
+- **Evidence (2026-09-09):** page-type counts as listed above, read live off the homepage · Sections taxonomy with per-section counts · covers Websites *and* Interfaces (in-app screens) · pricing not inspected
+- **Looked at:** fetched and parsed the live index; did not screenshot — the taxonomy is the reason to use it and the grid is a grid.
+- **Vibecode risk:** **high**, for the same reason as SaaS Landing Page and more so. A "Bento Grid — 43 sections" category is a list of the single most recognisable AI-era layout tell, sorted for convenience. Use the counts to decide *what sections exist*; never open the examples for *how they should look*.
+- **Link:** https://www.saasframe.io
+
 ### Savee & Cosmos — `situational` (art direction only)
 - **What:** Two visual-bookmarking platforms. Savee indexes 6M+ curated design references and ships an MCP server; Cosmos is a searchable personal-collection tool with reverse-image, colour and visual-similarity search.
 - **Verdict:** Both are excellent at what they do and neither should be used as product reference — there is essentially no interface work in either, and no states, no flows, no edge cases. Where they earn a place is art direction: if you need to establish a palette, a photographic treatment or a typographic mood before you build, these beat Pinterest. Savee's MCP is a real capability — an agent can be pointed at a board and build to that reference instead of defaulting — but note that search is metered and MCP requires a paid plan. Cosmos deserves specific credit for shipping an AI-content detector with Show/Blur/Hide controls; in 2026 that is a meaningful signal-to-noise feature and nobody else in this list has it.
@@ -292,6 +262,36 @@
 - **Looked at:** rendered the live gallery in a real browser and read the full taxonomy directly; did not screenshot the grid.
 - **Vibecode risk:** medium — heavy on scroll-effect (1,323) and illustrative (1,655) styles that age badly, and the Gradients/Glassmorphism/Futuristic tags are a tidy index of exactly the tells this corpus exists to catch.
 - **Link:** https://onepagelove.com
+
+### Really Good Emails — `situational` *(added 2026-09 challenge pass)*
+- **What:** A large curated archive of marketing and transactional email design, categorised by job (Abandoned Cart, Welcome, Re-engagement, Unsubscribe, Post Purchase, Feedback/Survey…). Now part of Beefree.
+- **Verdict:** Email is a real product surface — Page Flows already indexes it, and the confirmation email is the last screen of half the flows in this corpus — and no other entry in the file covers it. This does, deeply, and its taxonomy is behavioural (what the email is *for*) rather than aesthetic, which is the right axis. Two caveats keep it out of the top tier. It has been absorbed into Beefree and the site now funnels toward RGE Studio, a paid builder, so the archive is increasingly a lead magnet. And its "MCP" is a nav item under RGE Studio at `/features/ai/mcp` — the studio product's integration, not an open MCP over the archive; `/mcp` itself is just a tag page. Do not repeat the claim that RGE ships a design-reference MCP.
+- **Use when:** designing lifecycle, transactional or onboarding email, or checking what a category of email conventionally contains. · **Don't use when:** you need in-app UI.
+- **Scores /5:** visual 4 · interaction 2 · a11y 3 · engineering 3 · maintenance 4 · docs 3 · customization 3 · perf 3 · stability 4 · originality 3
+- **Evidence (2026-09-09):** behavioural taxonomy verified live (Abandoned Cart, Comment Notification, Curated Content, Customer Appreciation, Discovery, Engagement, Feedback and Survey and Poll, Follow-Up, Loyalty / Rewards, Post Purchase, Product Recommendations, Referral, Retention / Re-engagement, Review and Testimonial, Summary, Thank You, Unsubscribe) plus Promotional / Seasonal / Punctual / Industry / Inaugural groupings · footer: "Really Good Emails is part of Beefree. It started as a volunteer project in 2014. © 2026 BEE Content Design, Inc." · MCP is under `/features/ai/mcp` as an RGE Studio integration — **not** an MCP over the inspiration archive
+- **Looked at:** fetched and parsed the live index and the MCP path directly to settle what the MCP actually is.
+- **Vibecode risk:** medium — email design is more template-driven than any other surface here, and the archive skews promotional. It will teach you conventions and will not stop you shipping the same gradient-header e-commerce blast as everyone else.
+- **Link:** https://reallygoodemails.com
+
+### Navbar Gallery — `situational` *(added 2026-09 challenge pass)*
+- **What:** A gallery of one component — website navigation — typed by pattern: Static/Sticky, Dropdown/Flyout, Mega Menu, Side Bar, Search Bar, Announcement Bar, Full Screen Menu, Breadcrumbs.
+- **Verdict:** Narrow to the point of being a novelty, and it earns a line anyway because navigation is the component most often got wrong at the structural level rather than the visual one, and because its taxonomy is *behavioural* — it sorts by what the nav does, not what it looks like. If you need to decide between a mega menu and a flyout for a 40-item information architecture, this is a faster survey of real implementations than any general gallery. Nothing else here is a substitute; the general galleries index whole sites and you cannot filter them by navigation pattern. Low ceiling, but it is honest about what it is, which is more than most of the `avoid` list manages.
+- **Use when:** choosing a navigation pattern for a real IA, or checking how a mega menu is conventionally structured. · **Don't use when:** anything else. It is one component.
+- **Scores /5:** visual 3 · interaction 4 · a11y 3 · engineering 3 · maintenance 3 · docs 3 · customization 2 · perf 3 · stability 3 · originality 4
+- **Evidence (2026-09-09):** eight typed categories with definitions, verified live · free to browse; Submit and About only · library size not stated first-party — **unverified**
+- **Looked at:** fetched and parsed the live index; did not screenshot.
+- **Vibecode risk:** medium — these are marketing-site navs, so the sample skews toward full-screen menus and animated mega menus that belong on an agency site and not on an app shell.
+- **Link:** https://www.navbar.gallery
+
+### Deceptive Patterns — `reference-only` *(added 2026-09 challenge pass)*
+- **What:** Harry Brignull's taxonomy of manipulative interface patterns (formerly darkpatterns.org) — named types, a hall of shame, the relevant laws and live enforcement actions.
+- **Verdict:** The only *negative* reference in the category and the file was poorer for missing it. Every other entry answers "what do good products do here"; this one answers "what will get you sued, and what is the name for the thing you just built by accident". That second half matters more than it sounds for agent-built UI: confirmshaming, comparison prevention, hard-to-cancel and nagging are all patterns an agent will produce innocently while optimising a funnel, because the training data is full of them and they demonstrably convert. Having the named taxonomy in the corpus means the failure is nameable at review time instead of shipping. It has also grown teeth — it now tracks enforcement, so this is compliance reference, not just ethics reading. Filed reference-only because you check work against it rather than draw from it.
+- **Use when:** reviewing any flow that involves cancellation, consent, pricing, subscription or a funnel target. · **Don't use when:** you want design reference of any kind — it is prose and annotated examples.
+- **Scores /5:** visual 3 · interaction 2 · a11y 4 · engineering 2 · maintenance 4 · docs 5 · customization 1 · perf 4 · stability 5 · originality 5
+- **Evidence (2026-09-09):** nav is Types / Hall of shame / Laws / Enforcement / Reading list / Books / About · named types include Addictive Design, Comparison Prevention, Confirmshaming, Currency Confusion, and the rest of the standard taxonomy · self-describes as "spreading awareness since 2010" and now covers AI systems explicitly ("features of apps, websites **and AI systems**") · free, no paywall, no signup
+- **Looked at:** rendered the live index. Plain, typographic, near-zero decoration; it reads like a reference work, which is correct for what it is.
+- **Vibecode risk:** low.
+- **Link:** https://www.deceptive.design
 
 ### Brand New — `reference-only`
 - **What:** UnderConsideration's long-running critical review of corporate and brand identity work.
@@ -337,17 +337,24 @@
 - **Interfaces.pro** — Serves an anti-adblock detection/redirect script instead of any content. Do not send anyone here.
 - **Mobile Patterns** (mobile-patterns.com) — **Correction to the last pass:** the domain *does* resolve (Cloudflare, 104.21.6.26 / 172.67.154.152) and the connection succeeds; it serves HTTP 404 on `/` and on `www`. Still dead as a product, but "does not resolve" was wrong and would have failed a spot-check. Remove it from any list you maintain.
 - **Pttrns** — Technically alive and now "completely free", but the navigation is Blog / Technologies / Troubleshoot / How To / Canva. It has been repurposed into an SEO content property with a design gallery attached. Historic value only.
+- **Appshots** (appshots.design) — Claims "over 1,000 top-notch design flows from more than 400 apps showcasing 120,000+ screens" and "100K+ product designers", and then renders its own stat block as `0+ Apps / 0K+ Flows / 0K+ Screens` because the count-up animation is broken. The testimonial wall includes one from its own co-founder, sitting unmarked among the customer quotes. Whatever the library is actually worth, nothing on the marketing surface can be trusted, and Refero covers the same job for $10/mo with numbers that survive checking.
+- **Uiland** (uiland.design) — Same category, thinner. Its homepage stat block also renders `0 + apps / 0 + screens`; there is no first-party figure for library size anywhere on the page. Skip.
+- **UIDatabase** (uidatabase.com) — Self-titled "#1 UI Design Inspiration Site", "Trusted by 1000+ developers", "Saved 5+ Hours", and its actual product is "production-ready AI prompts you can copy and paste". A site that sells you prompts to regenerate someone else's layout is the mechanism this corpus exists to interrupt. It surfaces high in 2026 listicles, which is the only reason it is named here.
+- **Design Systems Repo** (designsystemsrepo.com) — Frequently recommended and effectively frozen: the newest article on the front page is dated **August 23, 2020**, with the two below it from 2018. The design-system index itself still resolves, but design-systems-reference material belongs in that file and this one is an archive presented as a live collection.
 - **UI Sources, Design Vault, Scrnshts, Screenlane** — All four are gone as independent products. uisources.com, designvault.io and scrnshts.club 301 to screensdesign.com; screenlane.com 301s to pageflows.com. If a list still recommends these, the list is stale.
 
 ## What surprised me
 
-- **Every serious product-reference site shipped an MCP server, and they did it in the same cycle.** Mobbin (600k+ screens), Refero, Nicelydone, ScreensDesign, Savee (6M+ refs) and Built for Mars all expose their libraries to agents now. The correct 2026 answer to "where should an agent get design reference" is no longer "a website" — it is a $10/mo MCP connection. Savee even publishes its full tool surface and gates writes behind explicit consent. This is the single biggest change in the category and most published lists haven't noticed.
+- **Every serious product-reference site shipped an MCP server, and they did it in the same cycle.** Mobbin (621.5k+ screens), Refero, Nicelydone, ScreensDesign, Savee (6M+ refs) and Built for Mars all expose their libraries to agents now — and so, it turns out, does **One Page Love**, a free portfolio gallery the last pass filed `situational` without noticing the API and MCP links in its own footer. The wave is wider than "the serious paid ones", which weakens the tidy version of this story: an MCP is now table stakes, not a quality signal, and should not be read as one. Savee's endpoint was probed directly and returns `401 invalid_token` — real server, auth-gated, as claimed. The correct 2026 answer to "where should an agent get design reference" is no longer "a website" — it is a $10/mo MCP connection. Savee even publishes its full tool surface and gates writes behind explicit consent. This is the single biggest change in the category and most published lists haven't noticed.
 - **Four sites people still recommend do not exist any more.** uisources.com, designvault.io and scrnshts.club all 301 to ScreensDesign; screenlane.com 301s to Page Flows. The mobile-UI-reference segment quietly consolidated into two owners.
 - **Typewolf has stopped.** Last Site of the Day is 14 Dec 2025 — nine months of silence, with a three-month gap before that. It is still the most-cited web typography resource in the world and it is now an archive. Fonts In Use has quietly become the live one.
 - **Godly renamed itself to recent.design and started a design-agent-skills directory** with public install counts (anthropics/canvas-design at 161.4K, vercel-labs/web-design-guidelines at 29.1K). An inspiration gallery is now indirectly distributing agent tooling — and it's the most useful part of the site.
 - **The best-designed thing in this entire research set is a free, unmonetized component reference.** The Component Gallery — off-white ground, real graph-paper grid, Didone display serif, hairline rules, isometric line-art glyphs, no shadows used as decoration — outclasses every VC-funded product in the category on pure craft. 60 components, 95 design systems, 2,671 examples, no signup.
 - **Cosmos ships an AI-content detector with Show/Blur/Hide.** A moodboard tool treating "was this generated" as a first-class filter is a sharper read on 2026 than anything the award sites are doing.
-- **The best-curated galleries are the ones with no engagement metrics.** SiteInspire shows a name and a relative date and nothing else — no likes, no view counts, no author badges. Dribbble sorts by likes. That single design decision explains most of the quality gap between them.
+- **The best-curated galleries are the ones with no engagement metrics.** SiteInspire shows a name and a relative date and nothing else — no likes, no view counts, no author badges. Design Spells shows a number and the product name. Dribbble sorts by likes. That single design decision explains most of the quality gap between them.
+- **Mobbin is buying the whole category.** It sponsors recent.design *and* Design Spells *and* appears as a featured entry on SaaS Landing Page, and in every case the creative is the MCP page, not the library. A screenshot archive is spending its marketing budget telling agents to connect to it. That is a clearer read on where this category is going than anything in the category's own copy.
+- **The negative reference was missing entirely.** Nine entries answer "what do good products do here" and none answered "what is the name for the thing you just built by accident". Deceptive Patterns now tracks enforcement actions and explicitly covers AI systems — an agent optimising a cancellation flow will produce confirmshaming and hard-to-cancel without being asked to.
+- **The most agent-ready thing found on this pass is free and has no library at all.** Checklist Design ships 129 completeness checklists as an agent skill and a Figma skill, with no screenshots, no paywall and no MCP negotiation. It solves the failure mode the screenshot libraries do not touch: an agent's output looks right and is missing the failed-payment state.
 
 ## Open questions
 
@@ -357,4 +364,54 @@
 - **Land-book and Uiverse corpus quality** — both hard-block headless browsers, so their libraries were not inspected. A human session would settle it.
 - **Httpster's current cadence** — the tag taxonomy is live and large but /2025/ and /2026/ both 404. Unverified whether it's still curating or coasting on an archive.
 - **Page Flows' library size** — the widely-repeated "2,000+ user flows" figure appears on their pricing page only inside a customer testimonial, not as a first-party claim. Unverified.
-- **Nicelydone's bus factor** — support routes to one named individual and the site has run since 2016. Whether there's a team behind it is unverified, and it's the main risk in depending on it.
+- **Nicelydone's bus factor** — support routes to one named individual and the site has run since 2016. Whether there's a team behind it is unverified, and it's the main risk in depending on it. **Checklist Design has the same shape** (created by one named person) and the same risk.
+- **Settled on the challenge pass:** Savee's MCP is real and auth-gated (`401 invalid_token` on a direct probe). Really Good Emails' "MCP" is an RGE Studio integration, not an MCP over the archive. Awwwards' "10,336 winning websites" could not be reproduced and is now marked unverified. mobile-patterns.com resolves and 404s rather than failing to resolve.
+- **Still open after the challenge pass:** whether Mobbin's, Refero's or Nicelydone's MCPs return image data or metadata — unchanged, still needs a paid account and one live call each.
+- **Design Spells' cadence and durability** — 332 entries, two operators, no stated schedule, and it sits behind a Vercel security checkpoint so it cannot be polled cheaply. Whether it is still being added to weekly is unverified.
+- **SaaSFrame pricing and library size** — the taxonomy counts were read live; the commercial terms were not checked.
+- **Growth.Design's paid tier** — the free archive is 53 case studies; what the masterclasses add, and whether the archive stays free, is unverified.
+
+## Challenge pass (2026-09)
+
+Adversarial re-verification of this file on **2026-09-09**. Every `essential` and `strong` claim was re-fetched from source; four interfaces were screenshotted independently at 1440 and 390 (Refero, Uiverse, Design Spells, The Component Gallery) and judged before the file's own notes were re-read.
+
+**Numbers corrected**
+- **Mobbin** — "600,000+ screens / ~1,000 apps" was quoting the MCP page and the hero line while the site's own library counter said more. Live counter: **1,428 apps · 621,500+ screens · 323,900 flows**. Corrected, and the file now says to quote the counter.
+- **Nicelydone** — 202,200+ → **202,400+**, and three first-party counters the last pass missed entirely (12,800+ flows, 31,000+ UI components, 500+ SaaS apps) added.
+- **One Page Love** — *every* category count was stale low, and SaaS/Startup were transposed. Corrected against the rendered gallery (Portfolio 3,870 · Landing Page 2,170 · Startup 155 · SaaS 153).
+- **Awwwards** — "10,336 winning websites" could not be reproduced in a real browser; the directory's own counter rendered `0`. Now marked **unverified**. The qualitative verdict was independently re-checked and stands.
+- **recent.design** — the "13,639 members / 273 signed up yesterday" line is no longer on the page. Marked stale. The Skills directory install counts all re-verified exactly.
+- **Mobile Patterns** — "domain does not resolve" was **wrong**. It resolves (Cloudflare) and serves HTTP 404. Corrected; the `avoid` verdict is unaffected but the evidence would have failed a spot-check.
+- **MCP launch dates** for Refero (2026-03-10) and Mobbin (2026-05-11) added, explicitly flagged as third-party reports rather than first-party claims.
+
+**A visual claim that was wrong**
+- **Refero** — the previous "Looked at" note described "a purple gradient on the last word" and quoted three suggested queries. Screenshotted at 1440: the H1 is "Make the next decision with context" set entirely in near-black, the promo card is a **warm orange gradient**, and two of the three quoted queries do not exist on the page. Rewritten from the screenshot. The rest of that note (left rail, editorial serif, no cards, greyscale logo row) was accurate.
+
+**Claims that survived and were not changed**
+Typewolf's death (Site of the Day archive re-read: Dec 14, 2025 newest, with the Dec 8 → Sep 28 gap, exactly as stated) · The Component Gallery's 60 / 95 / 2,671 and the aesthetic verdict — screenshotted, and the "best-designed thing in the set" call holds on inspection · Sidebar's currency (front page carried 09/10 and 09/09 editions on the day) · ScreensDesign's 2,634 apps · Page Flows' "from $8.25/mo" · Built for Mars' page title, MCP, Figma plugin and company number · Fonts In Use's topic counts, all seven verified digit-for-digit · all four consolidation 301s (uisources / designvault / scrnshts → screensdesign, screenlane → pageflows) · SiteInspire's 429 to automation · Uiverse's Cloudflare block, confirmed by screenshotting the block page itself · Savee's MCP, probed directly.
+
+**Vibecode column hardened**
+The file was soft in three places and internally inconsistent in one.
+- **SaaS Landing Page** — table said `medium`, its own scorecard said "medium-high". Promoted to **high** in both. 960 pages running the identical section order is a template, not a reference, and it is the most likely source here to make output read as generated precisely because nothing in it looks broken.
+- **SaaSFrame** (new) — filed **high** on arrival for the same reason, sharpened: a "Bento Grid — 43 sections" category is an index of the era's most recognisable layout tell.
+- **Savee / Cosmos** — was a flat `medium`. Now medium for a human, **high the moment the MCP is connected**, with the reason stated: the MCP removes the human step where somebody decides how much of the moodboard belongs in a product.
+- **Mobbin / Refero** — kept at `low`, which is correct relative to the alternatives, but a caveat was added rather than left implied: a library of real shipped screens immunises against gradient-glow slop and does nothing about *sameness*. Averaging 1,428 real products still yields an average. Refero's own marketing argues this, which is at least an admission the risk exists.
+- **One Page Love** — its PLATFORM and TECH filters (shadcn/ui 41, Framer 317, Tailwind 388) were added as the cheapest vibecode-detection exercise in the corpus: filter to the default stack and look at what the default stack ships.
+
+**Added — seven entries that belonged and were missing**
+- **Checklist Design** `strong` — 129 completeness checklists, free, shipping as an agent skill and a Figma skill. Covers the failure mode no screenshot library touches: output that looks right and is missing the failed-payment state. The clearest omission on the page.
+- **Design Spells** `strong` — 332 credited micro-interactions from shipped apps. The counterweight to every "median of what shipped" library here, and the level at which *designed* and *generated* actually diverge.
+- **Growth.Design** `strong` — 53 free psychology-first case studies. The file named Built for Mars "best reasoning" and omitted its closest peer; that was a gap, not a judgment.
+- **Deceptive Patterns** `reference-only` — the negative reference. Now tracks enforcement and explicitly covers AI systems.
+- **SaaSFrame** `situational` — strictly better structured than the SaaS Landing Page entry it sits beside (40 typed page categories with counts, plus a section-level index), with a higher vibecode risk.
+- **Really Good Emails** `situational` — the only coverage of the email surface, which Page Flows already treats as a first-class flow endpoint. Its "MCP" was checked and is an RGE Studio integration, not an archive MCP; the file says so to stop that claim propagating.
+- **Navbar Gallery** `situational` — one component, typed behaviourally. Narrow, honest, and nothing else here can be filtered by navigation pattern.
+
+**Added — four rejections, so nobody re-researches them**
+Appshots and Uiland (both render their own stat blocks as `0`; Appshots' testimonial wall includes its own co-founder unmarked), UIDatabase (SEO-shaped, and its actual product is copy-paste AI prompts — the mechanism this corpus exists to interrupt), Design Systems Repo (newest front-page article dated August 23, 2020).
+
+**One thesis weakened**
+The "every serious product-reference site shipped an MCP" finding was the file's headline. It survives as a fact and is weaker as a *signal* than written: One Page Love, a free portfolio gallery filed `situational`, ships an API and an MCP too — noted in its own footer, missed on the first pass. An MCP is table stakes in 2026, not a quality mark, and the file now says so.
+
+**Not manufactured**
+No disagreement was invented. The `avoid` list was re-checked and every verdict on it held. The Component Gallery praise, which read like it might be inherited enthusiasm, was tested by screenshotting the page before re-reading the note — it is earned. Typewolf's demotion, Land-book's and Uiverse's agent-inaccessibility, and the four consolidation 301s all reproduced exactly.

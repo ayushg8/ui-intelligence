@@ -1718,10 +1718,11 @@ most-repeated thing on screen, and everything else must get out of its way.
   <Avatar className="size-5" />
 </a>
 ```
-The title is the only thing at full foreground contrast and the only thing at weight 510. Measured
-on linear.app: issue ID and issue title are both **13px** — separated only by weight (400 vs 510)
-and colour (`#8a8f98` vs `#f7f8f8`). Size does nothing in a dense row; weight and colour do
-everything.
+The title is the only thing at full foreground contrast and the only thing at weight 510. In
+Linear's own issue rows, issue ID and issue title are both **13px** — separated only by weight
+(400 vs 510) and colour (`#8a8f98` vs `#f7f8f8`); see
+[`../craft/density-and-hierarchy.md`](../craft/density-and-hierarchy.md). Size does nothing in a
+dense row; weight and colour do everything.
 
 ### Lever 4 — one signature decision
 
