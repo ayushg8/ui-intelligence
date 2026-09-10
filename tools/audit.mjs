@@ -87,13 +87,42 @@ for (const width of widths) {
       const pageScrolls = document.documentElement.scrollWidth > docW + 1;
 
       // text: size + effective contrast against nearest painted background
-      const toRgb = (s) => { const m = s.match(/[\d.]+/g); return m ? m.slice(0, 3).map(Number) : null; };
+      // Parse rgb()/rgba()/color()/oklch() into 0-255 sRGB. Chromium returns modern
+      // color functions verbatim from getComputedStyle, so a naive number-grab reads
+      // oklch(0.22 0.005 90) as rgb(0.22, 0.005, 90) and reports every token-driven
+      // page as 1:1. Handle oklch explicitly.
+      const oklchToRgb = (L, C, H) => {
+        const h = (H * Math.PI) / 180, a = C * Math.cos(h), bb = C * Math.sin(h);
+        const l_ = L + 0.3963377774 * a + 0.2158037573 * bb;
+        const m_ = L - 0.1055613458 * a - 0.0638541728 * bb;
+        const s_ = L - 0.0894841775 * a - 1.291485548 * bb;
+        const l3 = l_ ** 3, m3 = m_ ** 3, s3 = s_ ** 3;
+        const g = (v) => { v = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(Math.max(v, 0), 1 / 2.4) - 0.055; return Math.min(255, Math.max(0, v * 255)); };
+        return [g(4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3),
+                g(-1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3),
+                g(-0.0041960863 * l3 - 0.7034186147 * m3 + 1.707614701 * s3)];
+      };
+      const toRgb = (str) => {
+        if (!str) return null;
+        const ok = str.match(/oklch\(\s*([\d.]+%?)\s+([\d.]+%?)\s+([\d.]+)/i);
+        if (ok) {
+          const n = (v, sc = 1) => (v.endsWith('%') ? (parseFloat(v) / 100) * sc : parseFloat(v));
+          return oklchToRgb(n(ok[1]), n(ok[2], 0.4), parseFloat(ok[3]));
+        }
+        const m = str.match(/rgba?\(([^)]+)\)/i);
+        if (m) { const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number); return p.length >= 3 ? p.slice(0, 3) : null; }
+        const hx = str.match(/^#([0-9a-f]{6})$/i);
+        if (hx) return [0, 2, 4].map((i) => parseInt(hx[1].slice(i, i + 2), 16));
+        return null;
+      };
+      // alpha of any css color string, for the background walk
+      const alphaOf = (str) => { const m = str.match(/\/\s*([\d.]+%?)\s*\)/) || str.match(/rgba\([^,]+,[^,]+,[^,]+,\s*([\d.]+)/); return m ? (m[1].endsWith('%') ? parseFloat(m[1]) / 100 : parseFloat(m[1])) : 1; };
       const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
       const lum = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
       // Walk up for the nearest opaque painted background. If we hit a gradient or
       // image first, contrast is not computable from styles alone - say so rather
       // than reporting a misleading ratio.
-      const bgOf = (el) => { let n = el; while (n && n !== document.documentElement) { const s = getComputedStyle(n); if (s.backgroundImage && s.backgroundImage !== 'none') return 'unpaintable'; const c = toRgb(s.backgroundColor); const a = s.backgroundColor.includes('rgba') ? parseFloat(s.backgroundColor.split(',')[3]) : 1; if (c && a > 0.85) return c; n = n.parentElement; } return [255, 255, 255]; };
+      const bgOf = (el) => { let n = el; while (n && n !== document.documentElement) { const s = getComputedStyle(n); if (s.backgroundImage && s.backgroundImage !== 'none') return 'unpaintable'; const c = toRgb(s.backgroundColor); const a = s.backgroundColor === 'transparent' ? 0 : alphaOf(s.backgroundColor); if (c && a > 0.85) return c; n = n.parentElement; } return [255, 255, 255]; };
       const textNodes = [...document.querySelectorAll('body *')].filter((el) => vis(el) && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 2));
       const tiny = [], lowContrast = [], overImage = [], gradientText = [];
       const sizes = new Set(), radii = new Set(), shadows = new Set(), colors = new Set(), families = new Set(), weights = new Set();
