@@ -94,7 +94,7 @@ Everything else in this table is the shipped product.*
 | Product / surface | Row height | Text | Line-height | ls | Padding | Divider | Notes |
 |---|---|---|---|---|---|---|---|
 | **Linear** — issue row (app shell rendered in DOM on linear.app, dark) | **40px** | 13px | 19.5px (1.5) | −0.13px | `0 28px 0 36px` | **none** | Title `#D0D6E0` w510; ID `#8A8F98` w400; both 13px |
-| **Linear** — sidebar item | **28px** | 13px | 19.5px | −0.13px | 0 | none | Inactive label `#8A8F98` |
+| **Linear** — sidebar item | **28px** | 13px | 19.5px | −0.13px | `0 7px` | none | Nav label `#D0D6E0` w510 (re-probed 2026-09; **not** `#8A8F98` — that is the ID/meta level), radius 8px |
 | **Linear** — inline label chip | 24px | 12px | 14px | normal | `4px 8px 4px 6px` | none | `border-radius: 9999px`, `#8A8F98` |
 | **GitHub** — repo file row | **41px** | 14px | 21px (1.5) | normal | `0 0 0 16px` per cell | 1px `#D1D9E0` (1.43:1) | 3 columns: name / commit msg / date |
 | **GitHub** — repo tab (`Code`, `Issues`) | 30px | 14px | 30px | normal | `0 8px` | — | radius 6px; **active = weight 600**, inactive 400 |

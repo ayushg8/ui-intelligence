@@ -24,6 +24,7 @@ Use them twice:
 | [`ai-native-products.md`](ai-native-products.md) | `ai-product` |
 | [`editorial-luxury-and-marketing.md`](editorial-luxury-and-marketing.md) | `editorial`, `luxury`, `premium-marketing` |
 | [`institutional-health-civic.md`](institutional-health-civic.md) | `institutional-civic`, `healthcare-clinical` |
+| [`redesigns-and-evolution.md`](redesigns-and-evolution.md) | All — what changed 2024–2026, which conventions are shifting, which are fashion, which are stable |
 
 **On copying.** These exist to transfer principles, not pixels. Imitating Linear's palette gives you
 a Linear skin; understanding *why* its rows are 28px and nothing moves on hover gives you something

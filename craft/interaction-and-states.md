@@ -80,8 +80,151 @@ Read directly from live products (computed styles + stylesheet custom properties
 | GOV.UK | secondary rest → hover | `#f3f3f3` → `#cecece` | **1.418:1** |
 | Radix Themes | pressed filter (on top of the a10 fill) | `brightness(.92) saturate(1.1)` light / `brightness(1.08)` dark | pressed = 8% darker in light, 8% brighter in dark |
 
-**The convergent number:** neutral hover overlay on a dense surface is **6–8%** (Radix 5.9–7.1%,
-Material 3 8%, GitHub ~6.4pp relative luminance). That is your default. Not 10%. Not `/90`.
+**The convergent number:** neutral hover overlay on a dense surface is **5–8%** (Notion 5.1%,
+Radix 5.9%, Material 3 8%, GitHub ~6.4pp relative luminance). That is your default. Not 10%.
+Not `/90`.
+
+### The rest → hover → active ladder (the ratio nobody publishes)
+
+Hover deltas get written about; the *press* delta almost never does, and it is the number that
+decides whether a click feels like it landed. Two independent systems, resolved to real values:
+
+| System | rest | hover / focus | active (pressed) | active ÷ hover |
+|---|---|---|---|---|
+| Radix Themes, neutral overlay | 0 | `--gray-a3` **5.9%** | `--gray-a4` **9.0%** | **1.53×** |
+| Radix Themes, switch track press | — | — | `--gray-a4` 9.0% (surface) / `--gray-a5` 12.2% (classic) | — |
+| Notion tatami, neutral surface | 0 | `#0000000d` **5.1%** | `#0000001a` **10.2%** | **2.00×** |
+| Notion tatami, alpha icon button | `#0000001a` 10.2% | `#0003` **20.0%** | `#0000004d` **30.2%** | **1.51×** |
+| Notion tatami, selection indicator | `#0000001a` 10.2% | — | selected `#0000004d` 30.2% | 3× rest |
+
+> **The rule: `active` overlay ≈ 1.5–2× the `hover` overlay, on the same scale.** Not a different
+> color, not a transform — the same neutral, roughly doubled. Generated UI almost always ships a
+> hover state and no `:active` at all, which is why clicking generated buttons feels like nothing
+> happened.
+
+Radix's full neutral alpha ladder, resolved and contrast-checked (black over white):
+
+| Token | Alpha | Composited | vs white |
+|---|---|---|---|
+| `--gray-a2` | 2.4% | `rgb(249,249,249)` | 1.05:1 |
+| `--gray-a3` | 5.9% | `rgb(240,240,240)` | 1.14:1 |
+| `--gray-a4` | 9.0% | `rgb(232,232,232)` | 1.23:1 |
+| `--gray-a5` | 12.2% | `rgb(224,224,224)` | 1.32:1 |
+| `--gray-a6` | 14.9% | `rgb(217,217,217)` | 1.41:1 |
+| `--gray-a7` | 19.2% | `rgb(206,206,206)` | 1.57:1 |
+| `--gray-a8` | 26.7% | `rgb(187,187,187)` | 1.92:1 |
+
+Steps a2→a8 are roughly **+3pp each**. If you build your own overlay scale, that's the spacing —
+and hover/active are *adjacent-ish* steps (a3/a4), not opposite ends.
+
+### Notion collapses hover, focus and active — deliberately
+
+Resolved from `notion.com`'s `--tatami-*` custom properties. Note what is *identical*:
+
+```css
+--tatami-color-button-primary-background:        #0075de;
+--tatami-color-button-primary-background-hover:  #005bab;
+--tatami-color-button-primary-background-focus:  #005bab;   /* same as hover */
+--tatami-color-button-primary-background-active: #005bab;   /* same as hover */
+--tatami-color-interaction-focus-ring: #0075de;
+--tatami-dimension-interaction-focus-ring-outline-width:  .125rem;  /* 2px */
+--tatami-dimension-interaction-focus-ring-outline-offset: .125rem;  /* 2px */
+```
+
+For **buttons**, Notion ships one "engaged" background and lets the 2px/2px ring be the *only*
+thing that distinguishes focus. For **surfaces** (rows, icon buttons) it does separate hover from
+active 2:1, as the ladder above shows. That is the right split: a button is one object you commit
+to, a row is something you sweep across.
+
+Also measured: `#0075de` on white text is **4.57:1**; the hover `#005bab` is **6.81:1**. Notion's
+hover step *increases* contrast. A `hover:opacity-90` would have moved it the other way.
+
+### Notion and Linear have exactly opposite hover asymmetries
+
+Notion attaches the transition to the **state rule**, not the base rule:
+
+```css
+.button:hover:not(:disabled), .button:focus-visible:not(:disabled) {
+  transition-property: background-color, color;          /* named, never `all` */
+  transition-duration: var(--tatami-motion-global-fade-in-duration);  /* .15s */
+  transition-timing-function: cubic-bezier(0, 0, .58, 1); /* ease-out */
+}
+```
+
+The base `.button` declares no transition, so hover **fades in over 150ms and snaps out at 0s** —
+the mirror image of Linear (`--speed-highlightFadeIn: 0s` / `FadeOut: .15s`). Both are top-tier
+products and they are exact opposites. The transferable part is not which direction, it's that
+**the transition lives in the `:hover` block so the two directions can differ at all.** Put it on
+the base rule and you get one symmetric duration, which is the generated default.
+
+Pick by density: instant-in (Linear) for rows you sweep across, where a fade reads as lag;
+fade-in/snap-out (Notion) for sparse buttons, where a lingering fade-out reads as a ghost.
+
+### Switches, checkboxes and committed controls
+
+Radix Themes' Switch, read off the stylesheet. This is the most carefully-tuned small control I
+measured:
+
+| Rule | Value | What it means |
+|---|---|---|
+| `[data-state="checked"]::before` | `transition-duration: .16s` | turning **on** takes 160ms |
+| `[data-state="unchecked"]::before` | `transition-duration: .12s` | turning **off** takes 120ms — **25% faster** |
+| `:active::before` | `transition-duration: 30ms` | while held down, the track recolors in 30ms |
+| `.rt-SwitchRoot:active::before` (surface) | `background-color: var(--gray-a4)` | press = 9.0% neutral overlay |
+| `[data-state="unchecked"]:active::before` (classic) | `background-color: var(--gray-a5)` | 12.2% |
+| `:focus-visible::before` | `outline-offset: 2px` | ring on the **track**, not the input |
+| `[data-disabled] .rt-SwitchThumb` | `transition-property: none; transition-duration: 0s` | **a disabled switch never animates** |
+
+Three transferable ideas, none of which appear in generated switches:
+
+1. **On is slower than off.** Committing takes 160ms and reads as deliberate; releasing takes
+   120ms and gets out of the way. Same enter/exit asymmetry as GitHub Primer's 300/200 tokens,
+   applied to a 20px control.
+2. **`:active` drops the duration to 30ms.** The press responds essentially instantly; the
+   *settle* takes the full 140–160ms. One extra line, and it is the entire difference between a
+   switch that feels mechanical and one that feels like a CSS demo.
+3. **Disabled kills the transition outright.** If a disabled switch is toggled programmatically it
+   must snap, not glide — a gliding disabled control implies you can operate it.
+
+Other measured control values from the same sheet:
+
+| Thing | Value |
+|---|---|
+| `--segmented-control-transition-duration` | **100ms** |
+| Segmented item hover (state `off`) | `--gray-a2` — **2.4%**, the faintest hover in this document |
+| Segmented separator, when the group `:has(:focus-visible)` | `transition-duration: 0s` |
+| Card hover (classic variant) | `transition-duration: **40ms**` |
+| Slider thumb focus | `0 0 0 3px var(--accent-3), 0 0 0 5px var(--focus-8)` — 3px tinted gap, then the ring |
+| `--spinner-animation-duration` / `--spinner-opacity` | **0.8s** / **0.65** |
+| Checkbox / radio / switch `:focus-visible` | `outline-offset: 2px` on the `::before` box |
+| Segmented item `:focus-visible` | `outline-offset: **-1px**` (inset — it lives in a tight group) |
+| Checkbox card `:active:not(:focus-visible)` | `gray-a4` overlay — **press styling is suppressed while the focus ring shows** |
+
+That last row is a real subtlety: `:active:not(:focus-visible)` prevents a keyboard user's
+Space-press from stacking a press overlay *under* their focus ring, which would muddy both.
+
+Radix also exposes **cursors as design tokens**, which almost nobody does:
+
+```css
+--cursor-disabled: not-allowed;
+--cursor-slider-thumb-active: default;   /* NOT `grabbing` while dragging a slider */
+```
+
+Tokenising the cursor is why Radix's disabled cursor is consistent across nine components. Copy
+the idea: `--cursor-disabled`, `--cursor-drag`, `--cursor-dragging`.
+
+### Toast internals (Sonner, read from `dist/index.mjs`)
+
+| Constant | Value |
+|---|---|
+| `TOAST_LIFETIME` | **4000ms** |
+| `VISIBLE_TOASTS_AMOUNT` | **3** |
+| `GAP` (between stacked toasts) | **14px** |
+| `SWIPE_THRESHOLD` | **45px**, *or* velocity > **0.11** |
+| `TIME_BEFORE_UNMOUNT` | **200ms** |
+
+The dual swipe threshold is the detail worth stealing: a *fast* flick dismisses at any distance, a
+*slow* drag needs the full 45px. Distance-only thresholds make flick-dismiss feel broken.
 
 ### Focus rings
 
@@ -93,7 +236,24 @@ Material 3 8%, GitHub ~6.4pp relative luminance). That is your default. Not 10%.
 | GitHub (Primer) | `outline: 2px solid var(--borderColor-accent-emphasis)` | **−2px** (`--focus-outline-offset: -.125rem`) | inset by default so overflow containers never clip it |
 | Apple | `outline: 2px solid #0071e3` | +1px control / +3px container / **−7px** in global nav | offset is per-context, ring is constant |
 | GOV.UK | `background: #ffdd00; box-shadow: 0 2px 0 #0b0c0c;` plus `outline: 3px solid transparent` | 0 | brand-independent; the transparent outline is the Windows High-Contrast fallback |
+| Notion (tatami) | `outline: 2px solid #0075de` | **+2px** | `--tatami-dimension-interaction-focus-ring-outline-{width,offset}` are both `.125rem` |
+| GOV.UK, text input | `outline: 3px solid #ffdd00; outline-offset: 0` **plus** `box-shadow: inset 0 0 0 2px #0b0c0c` | 0 | the inset black is what makes a *yellow* ring legible on white |
+| GOV.UK, radio (focus) | `box-shadow: 0 0 0 4px #ffdd00`, border-width → 4px, `outline: 3px solid transparent; outline-offset: 1px`, and a separate `outline-color: highlight` rule | +1px | the three stacked rules are the complete forced-colors story |
+| GOV.UK, radio (focus **+** hover) | `box-shadow: 0 0 0 4px #ffdd00, 0 0 0 10px #cecece` | +1px | focus and hover **compose** rather than override |
+| Radix Themes, slider thumb | `0 0 0 3px var(--accent-3), 0 0 0 5px var(--focus-8)` | — | tinted gap instead of a page-background gap |
 | shadcn/ui | `ring: 3px` at `--ring/50` | — | half-alpha ring; weakest of the set |
+
+**Three independent teams converged on 2px width + 2px offset**: Vercel Geist, Radix Themes and
+Notion tatami. If you need a default and have no other information, that is it.
+
+**GOV.UK's hover halo is the technique to steal.** On a small radio, hovering paints a 10px grey
+ring *outside* the control via `box-shadow: 0 0 0 10px #cecece` — the perceived target grows by
+10px in every direction and **not one pixel of layout moves**, because box-shadow doesn't
+participate in layout. That is the correct answer to "this control feels too small to hit" —
+not padding, which reflows, and not `scale()`, which jitters. And when focus and hover are both
+true, the two shadows stack (`0 0 0 4px #ffdd00, 0 0 0 10px #cecece`): the yellow focus ring sits
+*inside* the grey hover halo and both remain readable. That is the state-collision problem solved
+in one declaration.
 
 ### Loading indicators
 
@@ -121,6 +281,12 @@ Material 3 8%, GitHub ~6.4pp relative luminance). That is your default. Not 10%.
 | Radix Dialog | open | focus moves to the **first focusable field**, not the container; 19 sibling elements get `aria-hidden="true"`; `body { pointer-events: none; overflow: hidden }` |
 | Radix Dialog | press Escape | closes, focus returns to the exact trigger button |
 | GitHub | drag a task-list item | source gets `opacity: 0`; cursor `grabbing`; pinned-issue drag source gets `--bgColor-accent-muted` |
+| Vercel (contact sales) | type `notanemail`, stay focused | error fires at **1005ms** of idle — debounced, not blur-triggered |
+| Vercel (contact sales) | append `@company.com` (now valid) | error clears **1094ms** later — the clear is debounced too (**wrong**) |
+| Notion (contact sales) | type `notanemail`, wait 1.5s focused | nothing; on Tab out → *"Email address is not valid."* + `aria-invalid="true"` |
+| Notion (contact sales) | correct the value, stay focused | `aria-invalid` → `false` immediately, before blur |
+| Linear (contact sales) | type invalid, idle, blur | nothing at any point — validation is submit-only |
+| GitHub | `issues?q=label:zzz-does-not-exist-99` | yellow banner names the bad token (*"Invalid value `zzz-does-not-exist-99` for `label`"*) and highlights it in the query input; the empty region below still says only *"No results / Try adjusting your search filters"* with **no clear-filter action** |
 
 ---
 
@@ -161,7 +327,20 @@ Divide by frequency, not by taste.
 - **Buttons and cards, a handful per screen** — one full step of your color scale (Radix
   `9 → 10`, a 1.16:1 step), 100–150ms.
 - **The one CTA on a marketing page or a government service form** — go big. GOV.UK's 1.5:1
-  hover step is right for a page a citizen visits once and must not misclick on.
+  hover step is right for a page a citizen visits once and must not misclick on. And this is not a
+  government quirk: Notion's marketing primary button steps `#0075de → #005bab`, a measured
+  **1.49:1** — within a rounding error of GOV.UK. Two very different houses, same number, because
+  it's the same *situation*: one button, one visit, high cost of a miss.
+
+**Then set `:active` at 1.5–2× the hover overlay.** Radix goes `gray-a3` (5.9%) → `gray-a4` (9.0%),
+a 1.53× step. Notion goes 5.1% → 10.2%, exactly 2×. Same hue, same scale, roughly doubled — never
+a different color and never a transform. A control with a hover state and no `:active` is the most
+common half-finished state machine in generated UI: the click produces no evidence it registered,
+so users click twice.
+
+**Suppress the press styling while the focus ring is showing.** Radix writes the press rule as
+`:active:not(:focus-visible)`. A keyboard user pressing Space would otherwise stack a dark overlay
+underneath their focus ring and make both harder to read.
 
 **Use an overlay, not a recolor, when the surface underneath varies.** Linear's list row hover is a
 `::before` pseudo-element with `background: var(--color-bg-level-2); opacity: 0; border-radius: 6px`
@@ -232,9 +411,23 @@ the border, the icon, and the label all fade by different perceptual amounts.
 GitHub instead swaps tokens: `--control-bgColor-disabled` + `--fgColor-disabled: #59636e`, which
 measures **5.44:1** on the disabled background. Fully readable. Radix Themes recolors too
 (`color: gray-a8; background: gray-a3; filter: none; outline: none`) but `gray-a8` is only
-**1.92:1** on white — so even a good design system ships a disabled state you can't read. Disabled
-controls are formally exempt from WCAG 1.4.3, and that exemption is why everyone ships something
-unreadable. Take GitHub's number, not Radix's.
+**1.92:1** on white — so even a good design system ships a disabled state you can't read. Worse,
+Radix's disabled *checkbox* puts a `gray-a8` checkmark on a `gray-a3` background, which composites
+to `rgb(187,187,187)` on `rgb(240,240,240)` — a measured **1.68:1**. A disabled-but-checked
+checkbox is one of the most information-dense things in a settings UI ("this is on, and you can't
+change it") and Radix renders it at the threshold of invisibility. Disabled controls are formally
+exempt from WCAG 1.4.3, and that exemption is why everyone ships something unreadable. Take
+GitHub's number, not Radix's — and give *disabled-and-checked* more contrast than
+*disabled-and-unchecked*, because it carries actual state.
+
+**Note the honest exception:** GOV.UK — normally the strictest system in this file — ships
+`.govuk-input:disabled { opacity: 0.5; cursor: not-allowed }`. So the blanket "never `opacity:
+0.5`" is too strong. The distinction that survives: opacity is defensible on a control whose
+*only* content is text on a plain background (fading text and its border by the same amount is
+harmless); it's wrong on a compound control where a saturated fill, a hairline border and a glyph
+would each fade by different perceptual amounts. Radix's disabled switch is the model — it recolors
+(`background-color: var(--gray-a3)`) *and* sets `transition-property: none` so a disabled control
+can never animate.
 
 **Better still: don't disable the button.** A disabled submit button with no explanation is the
 most common dead end in generated software. Prefer:
@@ -328,6 +521,58 @@ read the skeleton across the room, it's wrong.
   menu or keyboard handler, and every drag-to-upload needs a file input button. Announce moves via
   `aria-live` ("Moved to position 3 of 12"). This is the state agents skip most reliably, because
   the happy path demos fine with a mouse.
+
+### Decision 9: switches, checkboxes and other committed controls
+
+These differ from buttons in one way that changes everything: **the control itself is the result.**
+There is no separate thing to look at, so the control has to carry both the feedback and the state.
+
+**Switch vs checkbox is a semantic decision, not a style one.**
+
+- A **switch** takes effect immediately and has no Save button. Label it as a state, not an action
+  — "Email notifications", not "Enable email notifications". If your switch needs a Save button,
+  it should have been a checkbox.
+- A **checkbox** is a value in a form that gets submitted with everything else. It's also the only
+  one of the two with a legitimate third state (`indeterminate`, for a parent whose children
+  disagree). Switches have no indeterminate state; if you need one, you needed a checkbox.
+- Radio vs a segmented control is a density decision, not a semantic one — same semantics, and the
+  segmented control is right when there are 2–4 short options you want visible and comparable.
+
+**Timings, from the measurements above:**
+
+```css
+/* Radix Themes' switch, distilled */
+.switch::before            { transition: background-color .12s; }  /* off:  120ms */
+.switch[data-state=on]::before { transition-duration: .16s; }      /* on:   160ms — slower */
+.switch:active::before     { transition-duration: 30ms; }          /* press: near-instant */
+.switch[data-disabled] *   { transition-property: none; }          /* never animates */
+```
+
+- **Turning on is slower than turning off** (160/120). Commitment gets weight; release gets out of
+  the way.
+- **`:active` drops to 30ms** so the press is acknowledged before the toggle completes. This is the
+  single line that separates a switch that feels mechanical from one that feels like a demo.
+- **The thumb travels on `transform: translateX()`**, never on `left` or `margin`. Compositor-only.
+- **Disabled never animates.**
+
+**What must never happen:**
+
+- **The switch must not wait for the server to move.** Move the thumb on click, then reconcile. A
+  switch that hangs mid-travel for 400ms is the worst-feeling control in software. If the write
+  fails, snap the thumb back and show a persistent inline error naming the setting — never a toast
+  (see the optimistic-rollback rules above).
+- **No layout movement, ever.** The track and thumb keep their geometry; only `translateX` and
+  `background-color` change. A switch that grows on hover shifts its own label.
+- **The label is the hit target.** Wrap in a `<label>` or wire `htmlFor` — a 20px switch is below
+  every touch-target minimum on its own. If it must stay small, use GOV.UK's trick: extend the
+  *perceived* target with `box-shadow: 0 0 0 10px <hover-grey>` on hover, which adds zero layout.
+- **Focus ring goes on the track**, not the visually-hidden `<input>`, at the usual 2px/2px.
+- **Never use color alone for on/off.** A green track and a grey track are the same track to a
+  red-green colorblind user in a screenshot. The thumb's *position* is the real signal — which is
+  why the track must be wide enough that the travel is unmistakable — and `role="switch"` +
+  `aria-checked` carries it for screen readers.
+- **Don't put an on/off label inside the track.** It forces the track wider, it doesn't localize,
+  and it's redundant with thumb position.
 
 ---
 
@@ -437,18 +682,38 @@ Notes that actually change your implementation:
 
 ## Inline validation timing
 
-The measured answer, from Stripe's registration form:
+Four real email fields, driven by a scripted browser and timed to the millisecond. Same input
+(`notanemail`), same sequence: type → idle → blur → correct while focused.
 
-| Event | Behavior |
-|---|---|
-| Typing an invalid value, field still focused | **Nothing.** No error at any point during typing. |
-| 1.2s idle, still focused | Still nothing. |
-| Blur (Tab out) | Error appears: *"Please enter a valid email."* |
-| Return, edit until valid, **still focused** | **Error clears immediately on change** — before blur. |
+| Product | While typing | Idle, still focused | On blur | Corrected, still focused |
+|---|---|---|---|---|
+| **Stripe** (register) | nothing | nothing at 1.2s | error: *"Please enter a valid email."* | **clears immediately** |
+| **Notion** (contact sales) | nothing | nothing at 1.5s | error: *"Email address is not valid."*, `aria-invalid=true` | **clears immediately**, `aria-invalid=false` |
+| **Vercel** (contact sales) | nothing | **error at 1005ms**, `aria-invalid=true` | error persists | clears — but **1094ms later** |
+| **Linear** (contact sales) | nothing | nothing | nothing | nothing — submit-only |
 
-That asymmetry is the whole rule, and it's the one thing to copy:
+Stripe and Notion are the same product, built by different companies: **validate on blur, clear on
+change.** That's the answer, corroborated twice.
 
-> **Validate on blur. Clear on change. Re-validate on blur.**
+Vercel is the instructive one, and it splits into a defensible half and a bug:
+
+- **Defensible:** a ~1000ms idle debounce *while the field is still focused*. For a single-field
+  form this arguably beats blur — the user finds out without leaving the field, and 1s is long
+  enough that nobody sees an error mid-word. If you prefer this to on-blur, it's a real choice.
+- **A bug:** the *clear* is debounced too. Measured at **1094ms** after the value became valid.
+  The user has already fixed it and the form spends a full second continuing to call them wrong.
+
+> **Never debounce the clear.** Whatever triggers the error — blur or a 1s idle — removing it is
+> unconditional and immediate, on the first keystroke that makes the value valid. Debounce exists
+> to avoid *premature blame*; there is no such thing as premature forgiveness.
+
+Linear's submit-only behaviour is fine for a 3-field marketing form where the user will hit submit
+within seconds anyway. It would be wrong for a 14-field account setup, where discovering four
+errors at once after two minutes of typing is the worst possible ordering.
+
+The whole rule, in one line:
+
+> **Validate on blur (or ~1s idle). Clear on change, instantly. Re-validate on blur.**
 
 Why: validating on change punishes people mid-typing (`a` is not a valid email, and telling them so
 while they type `ayush@…` is hostile). Waiting for blur to *clear* an error punishes them for

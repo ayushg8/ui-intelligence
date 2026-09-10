@@ -20,7 +20,7 @@ not "a vet app."
 
 | The situation | Archetype | Density | Reference products |
 |---|---|---|---|
-| Power users, all day, keyboard, triage a queue | [`technical-productivity`](technical-productivity.md) | compact | Linear, Superhuman, Height, Raycast |
+| Power users, all day, keyboard, triage a queue | [`technical-productivity`](technical-productivity.md) | compact | Linear, Superhuman, Raycast, Missive |
 | Developers are the users; docs are a product surface | [`developer-platform`](developer-platform.md) | compact–comfortable | Vercel, Stripe, Railway, Resend |
 | Many resources, many roles, dense tables, saved views | [`enterprise-dense`](enterprise-dense.md) | compact | Attio, Retool, Datadog |
 | The output is charts and answers to analytical questions | [`analytics-bi`](analytics-bi.md) | compact | Hex, Amplitude, PostHog, Sigma |

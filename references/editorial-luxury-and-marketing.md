@@ -23,20 +23,20 @@ it look like a template.
 
 | Product | Why it's here | The single thing to steal |
 |---|---|---|
-| **Anthropic** | The cleanest asymmetric editorial hero currently shipping, and it exposes its whole token system | Sans display + **serif body** (`Anthropic Serif` at 20px/1.4), headline left in cols 1–7, deck in cols 9–12 — and **two words underlined** instead of a gradient |
-| **Vercel** | The tightest display tracking in production: `-3.84px` on a 64px h1 = **−0.06em** | Line-height exactly `1.0` at 64px on desktop, relaxed to `1.167` at 48px on mobile. Tight leading is a size-conditional decision, not a global one |
-| **Stripe** | Real product UI as the hero asset — a working checkout, a fraud table with real numbers | Scroll reveals at **800ms–1s** with `cubic-bezier(0.165,0.84,0.44,1)` and `clip-path`, not 300ms fade-up |
-| **Apple** (MacBook Pro) | The vertical-rhythm benchmark: `padding: 144px 0` on every section | Its one gradient headline is a **4-stop desaturated sample of the product's own finish**: `linear-gradient(90deg,#E4F6F0,#9DCFCA 31%,#6B95AC 68%,#45657D)` |
-| **Rivian** (R1S) | A 200px wordmark over real cinematography, with 32px CTAs in the opposite corner | Type tokens that bind tracking to size: display `-0.025em`, headline `-0.02em`, body/label `-0.01em`, and `--leading-display: 0.96` |
+| **Anthropic** | Publishes its whole token system to `:root` — 282 properties including per-font leading-trim | Sans display + **serif body** (`Anthropic Serif` at 20px/1.4 is the `<body>` default), headline left in cols 1–7 (`X:78, W:736`), deck in cols 9–12 — and **two words underlined** instead of a gradient |
+| **Vercel** | −0.06em on a 64px h1, held as an em across both breakpoints (`-3.84px` at 64px, `-2.88px` at 48px) | Line-height exactly `1.0` at 64px desktop, relaxed to `1.167` at 48px mobile. Leading is size-conditional; tracking is not |
+| **Stripe** | 715 `--hds-*` tokens on `:root` in which **every heading and text weight is 300** | Scroll reveals at **800ms–1s** with `cubic-bezier(0.165,0.84,0.44,1)` and `clip-path`, not 300ms fade-up. Note the hero itself breaks two rules in this file — see "Where the references disagree" |
+| **Apple** (MacBook Pro) | 30,873px tall, 14 sections from 525px to 7,329px, most at `padding: 144px 0` | Its one gradient headline is a **4-stop desaturated sample of the product's own finish**: `linear-gradient(90deg,#E4F6F0,#9DCFCA 31%,#6B95AC 68%,#45657D)` |
+| **Rivian** (R1S) | A 200px wordmark over real cinematography, with 56px CTAs in the opposite corner | Type tokens that bind tracking to size: display `-0.025em`, headline `-0.02em`, body/label `-0.01em`, and `--leading-display: 0.96` |
 | **OpenAI** | The hero *is* the product's first interaction — a live composer, not a screenshot of one | Body is **17px/28px (1.647)**, not 16/24. There is no 16px anywhere in the scale |
 | **Linear** | Marketing that ships the app's own design language, four sections at `128px` padding | Display weight `510` and `590` — real variable-font axis values, not 500/600 |
-| **Aesop** | Proof that a luxury hero headline can be **30px** and win | Headline `30px/39.9px` (lh **1.33**), weight 400, **zero negative tracking**, CTA = a 0-radius outlined rectangle with a hairline arrow |
+| **Aesop** | The lowest-contrast hero in the set: a 30px headline over a film | Headline `30px/39.9px` (lh **1.33**), weight 400, **zero negative tracking**, CTA = a 0-radius outlined rectangle with a hairline arrow. *(Cloudflare-blocked on re-probe 2026-09 — numbers are from the 2026-08 pass, unconfirmed since.)* |
 | **Kinfolk** | Three optical sizes of one bespoke serif: `-Display`, `-Deck`, `-Text` | The hero CTA is two text links with a pipe: `Buy | Read`. No buttons anywhere above the fold |
-| **The Row** | The extreme of restraint: a full-bleed 35mm photograph with **no text on it at all** | Body copy at **13px/21.45px (lh 1.65)**. Small type + generous leading reads as expensive; large type + tight leading reads as SaaS |
+| **The Row** | The whole homepage is **1,281px tall**: nav, one photograph, a two-line credit, a newsletter field | Body copy at **13px/21.45px (lh 1.65)**, and `html { font-size: 13px }` so every rem in the system is 13px. Small type + generous leading reads as expensive; large type + tight leading reads as SaaS |
 | **The Pudding** | Editorial cards where the thumbnail is the actual chart, cropped | Per-story flat color mat (`#F5C33C`, `#F19EF5`, `#E88B2E`) instead of one brand color; issue number in an outline pill + `AUG 2026` in mono, above the image |
-| **basement.studio** | Display leading **below 1**: 87px/78px = 0.897 | Nav counts as **superscript parentheses** — `Showcase ⁽²⁶⁾`, `Blog ⁽²⁹⁾` — an editorial footnote, not a badge bubble |
-| **Locomotive** | `html { font-size: 15px }` — the whole rem scale is rebased | Nav links at 26px, body at 15px: the *navigation* is the display type |
-| **Hello Monday** | `h1 { font-size: 80px; line-height: 64px }` = **0.8** | Negative leading as a deliberate device on a single-word headline (`Products`) |
+| **basement.studio** | Display leading **below 1** at both breakpoints: 87/78 (0.897) desktop, 46/39.2 (0.852) mobile | Nav counts as **superscript parentheses** — `Showcase ⁽²⁶⁾`, `Blog ⁽²⁹⁾` — an editorial footnote, not a badge bubble |
+| **Locomotive** | `html { font-size: 15px }` — the whole rem scale is rebased | Nav links at 26px, body at 15px: the *navigation* is the display type. Also ships **emoji inside the h1**: `🔶 Locomotive® Digital-first Design Agency🍺🔞` |
+| **Hello Monday** | `h1 { font-size: 80px; line-height: 64px }` = **0.8**, in a **serif** (ClarendonBTWXX-Light) at weight 300 | The h1 is a rotating word carousel set in near-white on white — the headline is deliberately the *quietest* thing on the fold, under a hand-drawn illustration. Nav chrome is a live counter: `4 days until Monday` |
 | **teenage.engineering** *(not on the brief)* | Every dimension is a fraction of viewport width, derived from `--base-design-width: 980` | `--fs-20: calc(0.0183673 * 100vw)`, `--space-xl: calc(0.0459184 * 100vw)`. One absolute value in the system: `--btn-min-click-area: 48px` |
 | **Oxide Computer** *(not on the brief)* | An engineering-drawing hero: real rack photo + real console UI joined by a leader line, captioned `FIG. 1 OXIDE CLOUD COMPUTER` | **Positive** body tracking (`+0.336px` on 16px = **+0.021em**) and a whole palette in `oklch()` |
 
@@ -63,31 +63,58 @@ measurable luxury-commerce reference.
 Everything below was read out of the live sites with Playwright — computed styles at 1440×900 and
 390×844, plus CSS custom properties enumerated off `:root`. Exact unless marked approx.
 
+**The probe technique, and the one way it lies.** Enumerate tokens with
+`getComputedStyle(document.documentElement)` and iterate `cs.item(i)` for names starting `--`. Do
+**not** walk `document.styleSheets` → `sheet.cssRules`: that throws on any cross-origin stylesheet
+and silently returns zero, which is how the previous pass of this file reported "Stripe ships no
+custom properties" when it ships 715. Every token count in this file was re-taken with the computed-
+style method on 2026-09; where a count moved, both numbers are given. Counts drift between deploys —
+treat them as order-of-magnitude, and treat the individual token *values* as the durable part.
+
+Two more probe cautions this pass turned up. **Query the visually largest text, not `h1`** — Apple's
+`<h1>` is a 28px eyebrow, and The Pudding and teenage.engineering have no `<h1>` at all. And
+**read `html`'s font-size before trusting any `rem`** — it is 10px on Rivian, 13px on The Row, 15px
+on Locomotive, 17px on Apple and 22px on Hello Monday.
+
 ### Hero type, measured at 1440
 
-| Site | h1 size / line-height | lh ratio | letter-spacing | weight | family |
-|---|---|---|---|---|---|
-| Rivian R1S | 200px / 192px | **0.96** | −5px (−0.025em) | 500 | Adventure |
-| Resend | 96px / 96px | 1.00 | −0.96px (−0.01em) | 400 | Domaine (serif) |
-| basement.studio | 87px / 78px | **0.897** | −3.48px (−0.04em) | 600 | Geist |
-| Apple `headline-super` | 80px / 84px | 1.05 | −1.2px (−0.015em) | 600 | SF Pro Display |
-| Hello Monday | 80px / 64px | **0.80** | normal | 300 | NB International Pro |
-| cosmos.so | 74px / 74px | 1.00 | −3.7px (**−0.05em**) | **350** | cosmosOracle |
-| Locomotive | 70px / 77px | 1.10 | normal | 400 | Helvetica Now Display |
-| Family | 68px / 74.8px | 1.10 | −1.36px (−0.02em) | 500 | Family |
-| Oxide | 65px / 65px | 1.00 | −1.625px (−0.025em) | **400** | Suisse Intl |
-| Linear | 64px / 64px | 1.00 | −1.408px (−0.022em) | **510** | Inter Variable |
-| Vercel | 64px / 64px | 1.00 | −3.84px (**−0.06em**) | **400** | Geist Sans |
-| Anthropic | 60.87px / 66.95px | 1.10 | normal | 700 | Anthropic Sans |
-| Kinfolk | 50px / 52px | 1.04 | −0.5px (−0.01em), **uppercase** | 400 | Kinfolk-Serif-Display |
-| Stripe | 48px / 55.2px | 1.15 | −0.96px (−0.02em) | **300** | Söhne Var |
-| OpenAI (h2) | 48px / 55.68px | 1.16 | −1.44px (−0.03em) | 500 | OpenAI Sans |
-| Aesop | 30px / 39.9px | **1.33** | **normal** | 400 | Suisse Intl |
+| Site | h1 size / line-height | lh ratio | letter-spacing | weight | family | x / width |
+|---|---|---|---|---|---|---|
+| Rivian R1S | 200px / 192px | **0.96** | −5px (−0.025em) | 500 | **Liga** (display cut; `Adventure` is the body face) | 48 / 1344 |
+| Resend | 96px / 96px | 1.00 | −0.96px (−0.01em) | 400 | Domaine (serif) | — |
+| basement.studio | 87px / 78px | **0.897** | −3.48px (−0.04em) | 600 | Geist | 16 / 1290 |
+| Apple `.typography-headline-super` | 80px / 84px | 1.05 | −1.2px (−0.015em) | 600 | SF Pro Display | — |
+| Hello Monday | 80px / 64px | **0.80** | normal | 300 | **ClarendonBTWXX-Light** (serif) | 70 / 1299 |
+| cosmos.so | 74px / 74px | 1.00 | −3.7px (**−0.05em**) | **350** | cosmosOracle | — |
+| Locomotive | 70px / 77px | 1.10 | normal | 400 | **LocomotiveNew** (`HelveticaNowDisplay` is the body face) | 40 / 1360 |
+| Family | 68px / 74.8px | 1.10 | −1.36px (−0.02em) | 500 | Family | — |
+| Oxide | 65px / 65px | 1.00 | −1.625px (−0.025em) | **400** | SuisseIntl | 40 / 720 |
+| Linear | 64px / 64px | 1.00 | −1.408px (−0.022em) | **510** | Inter Variable | 78 / 1282 |
+| Vercel | 64px / 64px | 1.00 | −3.84px (**−0.06em**) | **400** | GeistSans | 24 / 444 |
+| Anthropic | 60.87px / 66.95px | 1.10 | normal | 700 | Anthropic Sans | 78 / 736 |
+| Kinfolk | 50px / 52px | 1.04 | −0.5px (−0.01em), **uppercase** | 400 | **Kinfolk-Serif-Deck** | 360 / 720 |
+| Stripe | 48px / 55.2px | 1.15 | −0.96px (−0.02em) | **300** | sohne-var | 208 / 959 |
+| OpenAI (h2) | 48px / 55.68px | 1.16 | −1.44px (−0.03em) | 500 | OpenAI Sans | — |
+| Apple `<h1>` (the real one) | 28px / 32px | 1.14 | **+0.196px** | 600 | SF Pro Display | 90 / 630 |
+| Aesop | 30px / 39.9px | **1.33** | **normal** | 400 | Suisse Intl | — |
 
-Two things fall out of this table. First: **display weight is almost never bold.** Eleven of sixteen
-sit at 300–510. The AI default of `font-bold`/`font-extrabold` at hero size is the single loudest
-tell. Second: **line-height at display size clusters at 0.90–1.10, never 1.25.** Tailwind's
-`leading-tight` (1.25) is loose for a 64px headline and is what an AI reaches for.
+Four things fall out of this table.
+
+1. **Display weight is almost never bold.** Twelve of seventeen sit at 300–510. The AI default of
+   `font-bold`/`font-extrabold` at hero size is the single loudest tell.
+2. **Line-height at display size clusters at 0.80–1.16, never 1.25.** Tailwind's `leading-tight`
+   (1.25) is loose for a 64px headline and is what an AI reaches for.
+3. **The display face is usually not the body face.** Rivian sets its wordmark in `Liga` and its
+   body in `Adventure`; Locomotive sets the h1 in `LocomotiveNew` and body in `HelveticaNowDisplay`;
+   Hello Monday sets an 80px *serif* h1 over a grotesk page. Reading the `<body>` font-family and
+   assuming it is the display font is the most common way to misread one of these sites.
+4. **Six of these headlines start within 80px of the left edge** (16, 24, 40, 40, 48, 70, 78, 78).
+   Two are centered (Kinfolk at x:360 in a 720px column, Aesop). None is a `max-w-4xl mx-auto` stack.
+
+**The h1 is often not the headline.** Apple's `<h1>` is the 28px eyebrow `MacBook Pro`; the 80px
+line is a `<p class="typography-headline-super">`. The Pudding and teenage.engineering ship **no
+`<h1>` at all**. If you are auditing a page by querying `h1`, you will measure the wrong element on
+three of these sixteen sites.
 
 ### Body copy, measured at 1440
 
@@ -102,14 +129,24 @@ tell. Second: **line-height at display size clusters at 0.90–1.10, never 1.25.
 | Oxide | 16px / 22px | 1.375 | **+0.336px (+0.021em)** | 400 | Suisse Intl |
 | Stripe (small) | 16px / 22.4px | 1.40 | normal | 300 | Söhne Var |
 | Linear (marketing) | 15px / 24px | 1.60 | −0.165px (−0.011em) | 400 | Inter Variable |
-| The Pudding | 16px / 22.4px | 1.40 | normal | 400 | Gooper SemiCondensed |
-| Locomotive | 15px / 19.5px | 1.30 | normal | 400 | Helvetica Now Display |
+| The Pudding | 16px / 22.4px | 1.40 | normal | 400 | **Atlas Grotesk** (`Gooper SemiCondensed` is the headline face and the `<body>` default) |
+| Locomotive | 15px / 19.5px | 1.30 | normal | 400 | HelveticaNowDisplay |
 | The Row | **13px / 21.45px** | **1.65** | normal | 400 | Basic Commercial |
 | Aesop (nav/meta) | 12px / 18px | 1.50 | normal | 400 | Suisse Intl |
 
 Note the inverse relationship: the smaller the body size, the looser the leading. 13px wants 1.65;
 20px wants 1.40. AI output uses `text-base leading-relaxed` (16/1.625) everywhere and it reads as
 neither.
+
+### The `html` font-size is not 16px on a quarter of these sites
+
+`html { font-size: … }` — Rivian **10px**, The Row **13px**, Locomotive **15px**, Apple **17px**,
+Hello Monday **22px**. Everyone else is 16px. Four of these deliberately rebase the root so that
+`rem` becomes a house unit: Rivian's `1.6rem` is 16px, The Row's `1rem` is 13px. Two consequences
+worth knowing: a `rem`-based spacing scale copied from one of these sites into a 16px document is
+silently wrong by up to 1.6×, and a user who raises their browser's default text size scales the
+*whole* Rivian layout, not just its type. Rebasing is a real technique with a real cost — pick it on
+purpose, and if you do, keep tap targets and focus rings in `px`.
 
 ### Tracking as a function of size — Rivian's tokens, verbatim
 
@@ -147,6 +184,35 @@ Body is `--type-p1-size: 1.0625rem` = **17px**. Everything secondary — `p2`, `
 There is no 16px token in the system. The step from 14 to 17 to 24 to 32 to 48 to 64 to 112 is the
 whole scale: **seven sizes, one of which is used for five different roles.**
 
+### Stripe's `--hds-*` system — every weight token is 300
+
+Stripe publishes **715 custom properties** on `:root` (an earlier pass of this file reported zero;
+that was a probe artifact — Stripe's stylesheet is cross-origin, so `sheet.cssRules` throws and you
+must enumerate `getComputedStyle(document.documentElement)` instead). The type half of it:
+
+```
+--hds-font-heading-xxl : 3.5rem / 1.03  / -0.025em / weight 300
+--hds-font-heading-xl  : 3rem   / 1.03  / -0.02em  / weight 300
+--hds-font-heading-lg  : 2rem   / 1.1   / -0.02em  / weight 300
+--hds-font-heading-md  : 1.625rem / 1.12 / -0.01em / weight 300
+--hds-font-heading-sm  : 1.375rem / 1.1  / -0.01em / weight 300
+--hds-font-heading-xs  : 1rem   / 1.2   /  0em     / weight 400
+--hds-font-text-xl     : 1.25rem  / 1.4  / -0.01em / weight 300
+--hds-font-text-md     : 1rem     / 1.4  /  0em    / weight 300
+--hds-font-text-xxs    : 0.75rem  / 1.45 /  0em    / weight 300
+--hds-space-core-*     : 0,1,8 … 80,88,96,104,112,120,128,136 … 152,160px   (8px grid)
+```
+
+Read the weight column: **300 at every size from 12px to 56px**, with 400 appearing only at the two
+smallest heading steps where 300 would go weak. This is the strongest single piece of evidence in
+the file for the weight rule — it is not a hero-only choice, it is the default for the entire system.
+Read the letter-spacing column too: tracking is bound to the step (−0.025 → −0.02 → −0.01 → 0), the
+same size-conditional pattern as Rivian, arrived at independently.
+
+Note also that Stripe's live marketing h1 (48px/55.2px, lh 1.15) does **not** use `heading-xxl`
+(56px, lh 1.03). The marketing page overrides the product design system for its own hero. Do not
+assume a published token is the one the page actually renders — measure the element.
+
 ### Anthropic's spacing system (all clamped mobile→desktop)
 
 | Token | Value | Resolves to |
@@ -180,15 +246,21 @@ whitespace looks measured and a Tailwind page's doesn't, even at identical `py` 
 
 | Site | Between top-level sections |
 |---|---|
-| Apple MacBook Pro | `padding: 144px 0` on every section → **288px** of content-to-content space (two sections use `144px / 216px`) |
-| Linear | `padding: 128px 0` per section → **256px**; prefooter uses `margin: 224px 0` |
-| Oxide | uniform **128px** gaps, measured nine times in a row: `[128,128,128,129,128,128,128,128,128]` |
-| Vercel | `mt-40 @md:mt-52` → **160px mobile / 208px desktop**; one band at `mt-53 mb-53 @md:mt-69 @md:mb-69` = 212/276px |
+| Apple MacBook Pro | `144px` is the dominant value, but it is **not** uniform. Measured pairs, in page order: `-96/0`, `144/144`, `144/216`, `0/144`, `0/0`, `144/144`, `144/0`, `144/144`, `144/144`, `144/0`. Where two padded sections meet you get **288px**; where a full-bleed band meets a padded one you get 144px; between two full-bleed bands, zero |
+| Linear | `padding: 128px 0` on each of the four feature sections → **256px** between them; prefooter uses `margin: 224px 0` |
+| Oxide | **128px** between every consecutive top-level `<section>`, re-measured 2026-09: `[128, 128, 128]` |
+| Vercel | `mt-40 @md:mt-52` → **160px mobile / 208px desktop** (confirmed: computed `margin-top: 208px` at 1440); one band at `mt-53 mb-53 @md:mt-69 @md:mb-69` = 212/276px |
 | Anthropic | `--section-space--main` 88→160px, `--large` 112→224px; spacing is its own empty `g_section_space` divs (measured 91px, 151px, 61px) |
 
 **The AI default is `py-16` / `py-20` — 64 to 80px.** That is 2–4× too tight. A homepage that reads
-as premium at 1440 has 128–288px between sections. If you take one number from this file, take this
-one.
+as premium at 1440 has 128–288px between padded sections. If you take one number from this file,
+take this one.
+
+But take the Apple row with it: the rule is *not* "put 144px on everything". Apple's zero-padding
+sections are the full-bleed image and video bands, which supply their own optical margin inside the
+asset. A section that bleeds to the viewport edge takes **0** vertical padding; a section with type
+on the page ground takes 144. Applying 144px uniformly to both is how a page ends up feeling padded
+rather than composed.
 
 ### Neutral ramps, verbatim
 
@@ -221,16 +293,45 @@ with five fixed accents that read as a synth panel: blue `#0071bb`, green `#0068
 **Oxide** — everything in oklch: ground `oklch(0.162 0.01 260)`, body `oklch(0.79 0.0011 260)`,
 headings `oklch(0.9 0.0001 260)`, secondary `oklch(0.606 0.0031 260)`, tertiary `oklch(0.717 0.0021 260)`.
 Chroma is 0.0001–0.01 — a hue is declared but is essentially unused, so lightness steps are
-perceptually even. This is what a hand-tuned dark neutral looks like.
+perceptually even — the four text steps are 0.606 → 0.717 → 0.79 → 0.9 L, roughly even increments,
+which an sRGB hex ramp cannot give you because equal hex steps are not equal perceived steps.
+Oxide also draws a **visible 10-column grid** over the page (`w-1/10 border-l border-secondary`
+overlays), so the column structure is part of the artwork rather than hidden behind it.
 
 **Aesop** — page ground `#FFFEF2`, text `#333333`. A warm off-white, not a gray.
 
-> **The measurable claim.** Premium neutrals run **0–3% HSL saturation**. OpenAI `#5d5d5d` = 0%.
-> Vercel `#8f8f8f` = 0%. Anthropic `#5e5d59` = 2.7%. Apple `#86868b` = 2.1%. Tailwind `slate-500`
-> `#64748b` = **16.3%**. If your body copy is `text-slate-600` on `bg-slate-50`, the page is
-> visibly blue and that blue is 5–8× more saturated than any reference in this file. Note the
-> asymmetry: **light grounds skew warm or pure** (`#faf9f5`, `#fffef2`, `#fafafa`), **dark grounds
-> skew very slightly blue** (`#08090a`, `oklch(… 260)`). Never the reverse.
+> **The measurable claim — and the right way to measure it.** Do **not** use HSL saturation. It is
+> undefined-ish near the lightness extremes and gives nonsense for exactly the colors that matter
+> here: Anthropic's ivory `#faf9f5` reads as **33.3% S**, Aesop's ground `#fffef2` reads as
+> **100% S**, and Linear's near-black `#08090a` reads as 11.1% — all three are visually neutral.
+>
+> Use **RGB channel spread** (max − min, out of 255). It is a direct read of how far from gray a
+> color is, at any lightness:
+>
+> | Reference neutral | Spread | Compare | Spread |
+> |---|---|---|---|
+> | OpenAI `#5d5d5d` | **0** | Tailwind `slate-500` `#64748b` | **39** |
+> | Vercel `#8f8f8f` | **0** | Tailwind `slate-600` `#475569` | **34** |
+> | The Row `#696969` | **0** | Tailwind `gray-500` `#6b7280` | **21** |
+> | Linear `#08090a` (ground) | **2** | Stripe `#273951` (product-UI text) | **42** |
+> | Anthropic `#5e5d59` | **5** | Linear `#8a8f98` (tertiary text) | **14** |
+> | Apple `#86868b` | **5** | Linear `#d0d6e0` (secondary text) | **16** |
+> | Anthropic `#faf9f5` (ivory ground) | **5** | | |
+> | Aesop `#fffef2` (warm ground) | **13** | | |
+>
+> **The line is at roughly 14.** Every text and surface neutral in the reference set sits at spread
+> 0–13; Tailwind's slate sits at 34–39. If your body copy is `text-slate-600` on `bg-slate-50`, the
+> page is visibly blue and that blue is 3–8× further from gray than any reference here.
+>
+> Two honest exceptions. **Linear is not neutral** — its text ramp (`#d0d6e0`, `#8a8f98`) sits at
+> spread 14–16, a deliberate cool cast that reads as screen-native rather than paper-native, and it
+> is the correct choice for a page that has to feel continuous with a dark app. **Stripe is not
+> neutral either** — `#273951` at spread 42 is a navy, used as text inside product UI. Both are
+> saturated on purpose and both are dark-ground or UI-chrome cases. On a light editorial ground,
+> stay under 14.
+>
+> Note also the asymmetry: **light grounds skew warm or pure** (`#faf9f5`, `#fffef2`, `#fafafa`),
+> **dark grounds skew very slightly blue** (`#08090a`, `oklch(… 260)`). Never the reverse.
 
 ### Buttons and radii
 
@@ -251,13 +352,20 @@ perceptually even. This is what a hand-tuned dark neutral looks like.
 | Kinfolk | 44px | 14px / 500 | 8px | 2px |
 | The Row | 30px | 11px / 400 | — | **0px** |
 
-The radius distribution is bimodal: **0–4px or fully round.** Almost nothing in this reference set
-uses 8px or 12px on a button, which is exactly what an AI produces. Rivian's radius scale is
+The radius distribution is bimodal: **0–6px or fully round.** Rivian's radius scale is
 `4 / 12 / 20 / 32 / 40` (`nano/micro/macro/mega`) with no 6 and no 8. Anthropic's is
 `0.25 / 0.5 / 1rem / 100vw`.
 
+*Where this is softer than it looks:* Vercel does ship 8px. Re-measured at 1440, its nav buttons are
+32px tall at **6px** radius, its in-page 40px buttons are at **8px**, and only the hero `Deploy now`
+is a pill. So "8px is always the tell" is too strong — 8px on a 40px button inside a product-UI-
+adjacent page is defensible. What is *not* defensible is 8px on **everything**, which is the shadcn
+default and carries no decision with it. The diagnostic is variance, not the value: if every radius
+on your page is the same number, you did not choose it.
+
 Also: **button height tracks role, not a single token.** Nav buttons are 30–36px; hero buttons are
-40–48px. An AI ships one 44px button everywhere.
+40–56px (Vercel nav 32 / hero 40; Linear nav 32 / hero 44; Oxide nav ~32 / Rivian hero 56). An AI
+ships one 44px button everywhere.
 
 ### Motion — durations and easings actually in production
 
@@ -273,10 +381,19 @@ Also: **button height tracks role, not a single token.** Nav buttons are 30–36
 | Rivian | named easings | `--ease-shift-magnetic: cubic-bezier(0.83,0,0.17,1)`, `--ease-attract-emphasized: cubic-bezier(0.2,0,0,1)`, `--ease-repel-aggressive-exit: cubic-bezier(0.8,0,1,1)` |
 | Kinfolk | image reveal | `0.5s cubic-bezier(0.25, 1, 0.5, 1)` on opacity (84 elements) |
 
-Two rules fall out. **Hover is 100–320ms; scroll reveal is 500ms–1s.** They are different budgets
-and AI collapses both to 300ms. And in all nine sites, the property list on button hover is
-`color, background-color, border-color, outline-color` — **not `transform`**. Nothing lifts, scales
-or shadows on hover in this entire reference set.
+Two rules fall out.
+
+**Hover is 100–320ms; scroll reveal is 500ms–1s.** They are different budgets and AI collapses both
+to 300ms.
+
+**Hover animates color, not geometry.** Re-counted 2026-09 by enumerating every `<a>`, `<button>`
+and `[role=button]` with a non-zero transition duration: **Vercel — 128 elements, 0 animating
+`transform`** (114 of them run the Tailwind `color, background-color, border-color, outline-color,
+text-decoration-color, fill, stroke` list at 0.1s/0.15s; 13 run `transition: all`).
+**Anthropic — 196 elements, 2 animating `transform`.** **Oxide — every `<a>` and `<button>` has
+`transition-duration: 0s`; its links snap.** So the honest version of the rule is *0–1% of
+interactive elements animate transform*, not literally zero, and one reference set doesn't animate
+hover at all. Nothing lifts, scales or shadows on hover anywhere in this set.
 
 ### Shadows
 
@@ -380,31 +497,45 @@ Stripe sets its 48px hero at **weight 300**. Oxide at 400. Vercel at 400 (h2 at 
 static weight can produce.
 *Why it works:* at 64–200px the stroke is already physically thick; a 700 weight closes the counters
 and the headline turns into a black brick. Weight and size do the same job, so you spend one, not
-both.
+both. Stripe's token file is the proof that this is systemic rather than a hero flourish: **every
+`--hds-font-heading-*` and `--hds-font-text-*` weight token is 300**, from 12px to 56px, with 400
+appearing only at the two smallest heading steps.
 *The generic alternative:* `text-6xl font-bold` or `font-extrabold`, sometimes with a gradient on
 top, which is the most recognizable single signature of AI marketing output.
-*When it does not apply:* when the headline is small (Anthropic's 61px runs 700 because it is being
-asked to hold a whole ivory page on its own, and the face is a grotesk with open counters), or when
-the page is dense and information-first — Rivian's 200px runs 600 because it's a wordmark, not a
-sentence.
+*When it does not apply:* three real limits. (a) **A headline that has to carry a page alone.**
+Anthropic's 61px runs 700 because it is the only element on an otherwise empty ivory fold, and
+`Anthropic Sans` is a grotesk with counters open enough to survive it. (b) **A short word set very
+large.** basement.studio runs 600 at 87px and Rivian runs 500 at 200px — at wordmark scale a 400
+starts to look like it was set by accident, because there is no sentence rhythm to carry it.
+(c) **Light type on a dark ground.** Optical thinning means a 300 that reads correctly as black on
+ivory reads as anaemic as white on `#08090a`; Linear's 510 and Oxide's 400 are both a step up from
+what the same faces would take on white. The rule is 300–510 *on a light ground with a face you
+have tested*; it is not "always pick the thinnest weight available".
 
 **5. The hero asset is a real photograph, a real product screenshot, or a live product — never an
 abstract gradient blob.**
 Rivian: full-bleed cinematography of two kids at the back of an actual R1S on an actual beach.
 Aesop: a narrative film with laundry on a line. The Row: a 35mm-grain photograph with **no text on
 it whatsoever**. Stripe: a working checkout with real payment methods and a fraud table showing
-`0.06% / 0.02% / 0.08%`. Oxide: a photograph of the rack joined by a leader line to a real console
-form (`Instance name: web`, `Image: ubuntu-24.04-noble`, `Memory: 8 GiB`, `CPUs: 2`), captioned
-`FIG. 1 OXIDE CLOUD COMPUTER`. OpenAI: a **live composer input** the visitor can type into.
+`0.06% / 0.02% / 0.08%`. Oxide: a photograph of the rack joined by a hairline leader line to a
+**tabbed `CLI / API / CONSOLE` panel** running a real request (`POST mazewar.dev/v1/instances`),
+captioned `FIG. 1 OXIDE CLOUD COMPUTER` in mono uppercase inside a hairline box in the opposite
+corner. OpenAI: a **live composer input** the visitor can type into.
 teenage.engineering: a commissioned hand-drawn comic.
 *Why it works:* it is the only thing on the page that cannot be reproduced by someone else in an
-afternoon. It is the actual differentiator.
+afternoon.
 *The generic alternative:* a blurred purple-to-pink radial gradient, a floating glassmorphic card,
 an isometric illustration of abstract boxes, or a fake dashboard with `Lorem` labels and
 `$12,345.67`.
-*When it does not apply:* pre-launch pages with nothing to photograph. Then do what Vercel does —
-render the brand mark itself at 250px with a real soft shadow and nothing else — or what Anthropic
-does, which is show a photograph that is *about* the idea rather than of the product.
+*When it does not apply:* **Stripe's current homepage is the honest counterexample** — as of
+2026-09 the fold is a full-bleed abstract gradient ribbon in orange/pink/violet/blue occupying the
+right 60% of the viewport, with the product UI moved below the fold. It works because that ribbon is
+a specific, hand-rendered, decade-old brand asset with its own identity, not a CSS radial blob; a
+visitor recognizes it as *Stripe's gradient*. The distinction is ownership, not medium: an abstract
+hero is fine if the abstraction is yours and is recognizable off the page. It is not fine if it
+could be swapped into a competitor's site without anyone noticing. Also legitimate: pre-launch pages
+with nothing to photograph — do what Vercel does, render the brand mark itself at 250px with a real
+soft shadow and nothing else, or what Anthropic does, show a photograph that is *about* the idea.
 
 **6. Nothing moves on hover.**
 Across nine measured sites the hover transition property list is `color, background-color,
@@ -415,8 +546,13 @@ links so the pointer never feels laggy.
 crosses it.
 *The generic alternative:* `hover:scale-105 hover:shadow-lg transition-all duration-300` on every
 card, which makes a three-card row feel like a trampoline.
-*When it does not apply:* a deliberate single hero-level interaction — an agency portfolio thumbnail
-that expands on hover, a product card in a shop grid where the image swaps. One per page, not forty.
+*When it does not apply:* three real limits. (a) A deliberate single hero-level interaction — an
+agency portfolio thumbnail that expands, a shop-grid card whose image swaps. One per page, not
+forty. (b) **Touch.** Every one of these hover states is invisible on a phone, so none of them may
+carry information a mobile visitor needs; if the only cue that something is a link is its hover
+color, mobile users are guessing. (c) The measurement itself is not absolute — Anthropic animates
+`transform` on 2 of 196 interactive elements, and Vercel leaves 13 elements on `transition: all`.
+Aim for "geometry does not move", not for a literal zero in a grep.
 
 **7. Scroll choreography is slow, uses clip-path or masks, and reveals content that is already there.**
 Stripe: `0.8s cubic-bezier(0.165, 0.84, 0.44, 1)` on `transform` across 46 elements and on
@@ -449,11 +585,19 @@ The Pudding and Kinfolk hold one measure for body text and only break it for ful
 Apple: `144px` top and bottom on every section. Linear: `128px`. Oxide: `128px`, nine times in a
 row. Anthropic names them `--section-space--{extra-small, small, medium, main, large, page-top}`
 resolving to 32/64/96/160/224/192px at desktop.
-*Why it works:* it is the single cheapest signal of confidence. Space says "this idea is finished".
+*Why it works:* the gap is what tells a scanning reader that an idea has ended. At 64px the eye
+carries the previous section's rhythm into the next one and the page reads as one undifferentiated
+scroll; somewhere around 120px the break registers as a break. It is also the cheapest possible
+edit — you can add it to a finished page in one pass.
 *The generic alternative:* `py-16` (64px) or `py-20` (80px), which reads as a landing-page template
 where every section is the same importance.
-*When it does not apply:* content-dense pages — a changelog, a pricing page, a docs index. Linear's
-own changelog section on the same homepage sits at zero extra padding because it is a list.
+*When it does not apply:* three cases, all common. (a) Content-dense pages — a changelog, a pricing
+page, a docs index; Linear's own changelog section on the same homepage sits at zero extra padding
+because it is a list. (b) **Full-bleed bands.** Apple runs `0` top and bottom on its edge-to-edge
+image and video sections, because the asset already contains its own margin; padding a full-bleed
+section is how you get 288px of empty ground above a photograph. (c) **Mobile**, where 224px is
+roughly a third of a 844px viewport — Vercel drops 208 → 160px, and below ~120px on a phone the same
+gap that read as confident at 1440 reads as a loading bug.
 
 **10. The luxury move is to make the type *smaller*, not bigger.**
 Aesop's hero headline is 30px at 1440. The Row's body copy is 13px/21.45px. Kinfolk's hero is 50px
@@ -523,8 +667,24 @@ reveal starts at `opacity: 0` and the trigger is disabled, the page is blank.
 **The cookie banner.** It is part of the design whether you like it or not, and it will cover your
 hero CTA. Aesop's sits as a full-width bar in the page's own `#FFFEF2` with body-size type. The Row
 gives it 0-radius black buttons matching the site. Kinfolk uses 2px-radius buttons matching its
-system. Rivian's uses 36px pills matching its system. Generated pages ship the vendor default and it
-is instantly the ugliest element on the page.
+system. Rivian's uses 36px pills matching its system. **Oxide's** — screenshotted 2026-09 — is a
+bottom-right panel on the page's own dark ground with two 0-radius hairline-outlined buttons,
+`REJECT OPTIONAL` and `ACCEPT ALL` in mono uppercase, identical to the site's nav buttons, plus an
+underlined `Privacy Policy` text link. It sits over the rack photograph and does not damage the
+composition because it is built from the same three elements as everything else. Generated pages
+ship the vendor default and it is instantly the ugliest element on the page.
+
+Two things to copy from Oxide's specifically: the reject option is a **peer** of accept, same size
+and same treatment (a dark pattern is also a design tell), and the banner is anchored to a corner
+rather than spanning the full width, so it covers the least valuable quadrant of the fold. Decide
+which quadrant that is before you place your CTA.
+
+**States that only exist under a bot wall.** Aesop, OpenAI and SSENSE all sit behind Cloudflare
+interstitials that serve a challenge page to headless requests. On the 2026-09 re-probe Aesop
+returned the challenge on every attempt, so **every Aesop number in this file is from the single
+2026-08 request that cleared and has not been re-confirmed.** If you are auditing a competitor and
+you get clean numbers on the first try, check that you did not just measure a Cloudflare page:
+a `<title>` of "Just a moment…", a body under 2KB, or a `#challenge-form` in the DOM are the tells.
 
 **Long headlines and translation.** Anthropic's hero is four lines at 390px and stays left-aligned;
 it does not re-center or shrink. German and Finnish will add 30% — a 64px headline at −0.06em with
@@ -551,30 +711,63 @@ ring: `0 0 0 2px var(--ds-background-100), 0 0 0 4px var(--ds-focus-color)`. App
 `--sk-focus-color: #0071e3` plus `--sk-focus-color-alt: rgb(0,0,0)` so the ring inverts on dark
 sections. Generated pages ship `focus:outline-none` and nothing else.
 
+**The nav bar over a full-bleed hero.** Six of these sites put a transparent nav over a photograph
+or film, which means the nav's own contrast is a function of whatever pixel is behind it. Rivian
+sets white chrome over dark cinematography; Oxide sets a `#0f1114`-ish ground so its green wordmark
+holds; basement puts a solid black bar above the scene rather than floating over it. There is no
+generated equivalent of this decision because a generated hero has a flat background — which is
+exactly why a generated page's nav is always legible and always inert. If you ship a transparent
+nav, you owe it a scroll state, and the scroll state has to change at a scroll position you chose,
+not at `scrollY > 0`.
+
+**The live number.** Stripe's hero eyebrow is `Global GDP running on Stripe: 1.71305256%` — a
+ticking counter carried to eight decimal places, in body-size type above the headline. Hello Monday's
+nav carries `4 days until Monday`. basement's nav carries `● Online ⁽¹⁰⁾`. These are the same move:
+one element on the page that is demonstrably *live*, so the page cannot have been a static export.
+The failure mode is a fake one — a counter that animates from 0 to a hardcoded 10,000 on load and
+then sits there is worse than no counter, because a returning visitor sees the identical number.
+
 ---
 
 ## Mobile
 
 The archetype does adapt, and the adaptations are measurable. Measured at 390×844:
 
-| Site | Desktop h1 | Mobile h1 | Ratio | Mobile side margin |
-|---|---|---|---|---|
-| Rivian R1S | 200px / 192px | 96px / 92.16px | 0.48 | 16px |
-| Anthropic | 60.87px / 66.95px | 40.29px / 44.32px | 0.66 | **33px** |
-| Stripe | 48px / 55.2px | 34px / 35.02px | 0.71 | 16px |
-| Vercel | 64px / 64px | 48px / **56px** | 0.75 | 24px |
-| Apple | 80px (`headline-super`) | 21px eyebrow / gradient headline scales via clamp | — | 24px |
+| Site | Desktop h1 | Mobile h1 | Size ratio | Desktop lh → mobile lh | Tracking (em) | Mobile side margin | Mobile page height |
+|---|---|---|---|---|---|---|---|
+| Rivian R1S | 200 / 192 | 96 / 92.16 | **0.48** | 0.96 → 0.96 | −0.025 → −0.025 | 16px | — |
+| basement.studio | 87 / 78 | **46 / 39.2** | **0.53** | 0.897 → **0.852** | −0.04 → −0.04 | 16px | 5,257 (desktop 6,714) |
+| Anthropic | 60.87 / 66.95 | 40.29 / 44.32 | 0.66 | 1.10 → 1.10 | 0 → 0 | **33px** | 6,483 (desktop 3,345) |
+| Stripe | 48 / 55.2 | 34 / **35.02** | 0.71 | 1.15 → **1.03** | −0.02 → −0.01 | 16px | **20,373** (desktop 14,668) |
+| Vercel | 64 / 64 | 48 / **56** | 0.75 | 1.00 → **1.167** | −0.06 → −0.06 | 24px | 4,981 (desktop 5,333) |
+| Linear | 64 / 64 | 38 / 41.8 | 0.59 | 1.00 → **1.10** | −0.022 → −0.022 | 23px | 5,876 (desktop 9,960) |
+| Apple | 80 (`headline-super`) | 21px eyebrow / gradient headline scales via clamp | — | — | — | 24px | — |
+
+**Tracking is held as an em; leading is not.** Every site in this table keeps the same `em` tracking
+across breakpoints (Vercel: −3.84px at 64 → −2.88px at 48, both exactly −0.06em; Linear: −1.408 →
+−0.836, both −0.022em). Only Stripe changes it, and only by one step. So: put tracking in `em` and
+forget it; put leading in a breakpoint.
+
+**Mobile page height is not desktop page height.** Anthropic nearly doubles (3,345 → 6,483) because
+side-by-side becomes stacked. Linear nearly halves (9,960 → 5,876) because four 1,230px feature
+sections are cut down. Stripe grows 39%. There is no single relationship — which means you cannot
+reason about a mobile page's shape from its desktop page's shape, and a scroll-triggered choreography
+tuned at 1440 fires at completely different moments at 390.
 
 The rules:
 
 1. **Display type drops to 48–75% of desktop, not 90%.** A `clamp()` whose min is 80% of its max is
    not a responsive type scale, it's a rounding error. Rivian's `clamp(72px, 13.54vi + 26.72px,
    200px)` has a 2.8× range.
-2. **Line-height goes *up* as size comes down.** Vercel: 1.0 → 1.167. Anthropic holds 1.10 → 1.10 but its
-   hero deck stays at **24px/33.6px on both breakpoints** while the headline drops 60.87→40.29px, so
-   headline-to-deck contrast compresses from **2.54× to 1.68×**. That is correct: a 12× contrast
-   ratio (Rivian's 200px/16px) is unreadable on a 390px screen, and Rivian resolves it the same way
-   by dropping to 96px.
+2. **Line-height usually goes *up* as size comes down — but not always.** Vercel 1.0 → 1.167,
+   Linear 1.0 → 1.10, Anthropic holds 1.10 → 1.10. Two measured counterexamples: **Stripe goes the
+   other way** (1.15 → 1.03) and **basement.studio tightens further** (0.897 → 0.852). The pattern
+   underneath is not "loosen on mobile", it is *leading tracks the physical size of the type,
+   independent of viewport*: Stripe's mobile hero at 34px is still large, so 1.03 holds; basement's
+   46px likewise. Anthropic's hero deck stays at **24px/33.6px on both breakpoints** while the
+   headline drops 60.87→40.29px, so headline-to-deck contrast compresses from **2.54× to 1.68×**.
+   That is correct — a 12× contrast ratio (Rivian's 200px/16px) is unreadable on a 390px screen,
+   and Rivian resolves it the same way by dropping to 96px.
 3. **Left alignment survives.** Anthropic's four-line mobile headline stays left-aligned at
    `X: 33px`. Do not center on mobile because "it looks balanced" — you lose the ragged right edge
    that makes it read as editorial.
@@ -584,14 +777,57 @@ The rules:
    a 390px viewport (full-bleed minus 16px margins) at 44px tall. Vercel's is 342px at 40px.
    Rivian's stays 40px tall at pill radius. A 60%-width centered button is the generic answer.
 6. **Where it admits it shouldn't adapt:** Oxide's engineering-drawing hero (leader line joining a
-   console form to a rack photo) cannot work at 390px, and Oxide doesn't try — mobile gets the
-   photograph and the headline, the diagram is dropped. basement.studio's explorable 3D scene is
-   likewise desktop-only. If your signature move is a two-object spatial relationship, ship a
-   different mobile hero rather than a squashed one.
-7. **teenage.engineering's answer** is a second set of vw ratios: `--fs-20` goes from
+   tabbed `CLI / API / CONSOLE` panel to a rack photo) cannot work at 390px, and Oxide doesn't try —
+   mobile gets the photograph and the headline, the diagram is dropped. If your signature move is a
+   two-object spatial relationship, ship a different mobile hero rather than a squashed one.
+   *Correction to the previous pass of this file:* basement.studio's 3D scene **does** ship at 390px
+   — verified by screenshot 2026-09. It occupies roughly the top 75% of the viewport as a rendered
+   scene, with the 46px headline pushed below it and the `HUMAN / MACHINE` segmented pill floating
+   over the type. So a heavy hero can survive mobile; what cannot survive is a hero whose meaning
+   depends on two elements sitting side by side.
+7. **Floating controls over type is a real pattern, not a bug.** basement's `HUMAN / MACHINE`
+   toggle sits *on top of* the mobile headline. The Row's mobile page is nav → photograph → a
+   two-line 13px credit (`William Eggleston, Untitled, c. 1983 – 1986 / © Eggleston Artistic Trust`)
+   → a newsletter field with a **full-width 0-radius dark Submit bar**. That credit line is the only
+   body copy on the entire homepage, and it is an attribution, not marketing.
+8. **teenage.engineering's answer** is a second set of vw ratios: `--fs-20` goes from
    `0.0183673 × 100vw` to `0.00918367 × 100vw`, and `--tile-border-radius` goes from
    `0.0255102 × 100vw` to **0**. Radii and paddings that are proportional on desktop are often
    correct at zero on mobile.
+
+---
+
+## Where the references disagree
+
+A file of rules that every reference obeys is a file of rules that were fitted to the references.
+These are the places the set genuinely splits, which is where judgement actually lives.
+
+**Stripe's homepage breaks two rules in this file, on purpose.** As of 2026-09 its fold is: a
+full-bleed abstract gradient ribbon on the right 60% (rule 5 says no abstract hero), and **two CTAs
+side by side** — a filled purple `Get started ›` next to an outlined `Sign up with Google` — plus
+`Sign in` and `Contact sales ›` in the nav, so four buttons above the fold (failure mode 3). Its
+headline is also not one color: the four lines run black → slate → violet word by word, animating
+between them. Every one of these is a self-aware, expensive, brand-owned decision by a design team
+with a decade of equity in that gradient. None of them is the same act as reaching for
+`bg-gradient-to-r from-purple-500`. **The rules in this file describe the safe default; Stripe is
+what it looks like to have earned an exception.** If you cannot name what you have earned, take the
+default.
+
+**Logo clouds: black vs. full color.** Vercel renders its logo row in true black at real optical
+proportions. Stripe renders Ford, Coinbase, Google, Shopify, Mindbody, MetLife, Ramp and Marriott
+in **full brand color**, on the fold line, with the row cropping off the right edge. Both are right;
+both are refusals of `grayscale opacity-60`. Pick black when your page has one accent and the logos
+would fight it; pick full color when the logos' recognizability is the whole point.
+
+**Left-aligned vs. centered heroes.** Kinfolk centers a 50px uppercase serif in a 720px column at
+x:360. Aesop centers 30px over a film. Hello Monday centers a near-invisible 80px serif under an
+illustration. Left-alignment is the majority (6 of 8 measurable, all starting within 80px of the
+edge) but it is not a law — what all three centered heroes share is that **the centered element is
+small**. Nobody centers 64px.
+
+**Restraint vs. density.** The Row's entire homepage is 1,281px tall. Apple's is 30,873px. Stripe's
+mobile page is 20,373px. Both extremes work, and the failure is in between: a 6,000px page made of
+eight 750px sections. Commit to one screen or commit to fourteen; the middle is where templates live.
 
 ---
 
@@ -611,8 +847,10 @@ label. If you need a announcement, make it a **line of text with a link**, not a
 
 **2. Centered 60px gradient headline.** `text-6xl font-bold bg-gradient-to-r from-purple-500
 to-pink-500 bg-clip-text text-transparent`.
-*Wrong because:* I checked all eight of the primary references for `linear-gradient` or
-`-webkit-text-fill-color: transparent` on `h1`/`h2` and got **zero hits**. Apple has exactly one
+*Wrong because:* re-checked 2026-09 across **fourteen** of these sites for `linear-gradient` or
+`-webkit-text-fill-color: transparent` on `h1`/`h2`/`h3` — Vercel, Anthropic, Linear, Oxide, Apple,
+Stripe, The Row, Hello Monday, Rivian, Kinfolk, The Pudding, basement, Locomotive,
+teenage.engineering — and got **zero hits**. Apple has exactly one
 gradient headline on the MacBook Pro page and it is
 `linear-gradient(90deg, #E4F6F0, #9DCFCA 31%, #6B95AC 68%, #45657D)` — four stops, all desaturated,
 sampled from the actual finish of the product in the photograph behind it.
@@ -635,10 +873,15 @@ secondary has no border at all, just a white fill on a `#fafafa` ground.
 under a heading that says "Trusted by teams at".
 *Wrong because:* desaturating a logo destroys the one thing that makes it recognizable at 24px, and
 even spacing makes six logos look like a shortfall.
-*Instead:* Vercel renders seven logos in **true black at their real proportions** (Charles Schwab's
-serif lockup next to DoorDash's script next to Supreme's Futura) on the fold line, sized by optical
-weight rather than to a uniform box. Oxide labels its row `POWERING THE BEST TEAMS` in mono
-uppercase and **crops the leftmost logo off the edge**, which reads as a selection from many.
+*Instead:* two measured answers, both refusals of grayscale. Vercel renders its logos in **true
+black at their real proportions** (Charles Schwab's serif lockup next to DoorDash's script next to
+Supreme's Futura) on the fold line, sized by optical weight rather than to a uniform box. Stripe
+renders eight — Ford, Coinbase, Google, Shopify, Mindbody, MetLife, Ramp, Marriott — in **full
+brand color** on the fold line, with the row running off the right edge. Oxide labels its row
+`POWERING THE BEST TEAMS` in mono uppercase and **crops the leftmost logo off the left edge** (the
+first mark reads as `OKE`), which says "a selection from many" in a way an evenly spaced row cannot.
+The common factor is that in all three the row is *cropped or bled*, never centered with equal air
+on both sides.
 
 **5. Three feature cards.** A 3-col grid of white cards, each with an outlined 24px icon in a
 rounded square, a 20px title, three lines of body, and `hover:shadow-lg`.
@@ -684,26 +927,75 @@ serif headline in `#faf9f5` on the image, and a single dark button. Apple's is a
 the price *and* the Buy button in one shape: `From $1999 or $166.58/mo. for 12 mo.` on the left,
 a blue `Buy` pill on the right. Linear's prefooter carries `margin: 224px 0` and a plain headline.
 
-### The other failure modes
+### The self-diagnostic
 
-- **Every section is the same height and the same treatment.** The single strongest structural
-  signal of a template. Apple's variance is 525px → 7,329px. Yours should not be 800px × 8.
-- **Every radius is 8px or 12px.** The reference set is bimodal: 0–4px (Stripe 4, Oxide 2, Aesop 0,
-  The Row 0, Kinfolk 2, Vercel nav 6) or fully round. 8px on everything is the shadcn default.
-- **Shadows are visible.** Vercel's heaviest shadow token peaks at 6% black. If you can see the
-  shadow as a gray area rather than as an edge, it's 3× too strong.
-- **`transition-all duration-300` and `hover:scale-105`.** Nine measured sites, zero `transform` on
-  button hover.
-- **Blue-gray neutrals.** `slate-500` is 16.3% saturated; every premium neutral measured here is
-  0–3%.
-- **One body size for the whole page.** OpenAI runs 17px for prose and 14px for meta, cta, caption
-  and nav — five roles at one size, prose at another. AI runs `text-base` and `text-sm` by accident
-  rather than by rule.
-- **Copy that could belong to any company.** See below.
-- **Icons doing no work.** An outlined 24px icon above every card title, chosen because the card
-  needed something at the top.
-- **Every heading centered with `mx-auto`.** Stripe varies its heading measure by column span
-  (856 / 752 / 648px) section to section; a single `max-w-3xl` ribbon is the tell.
+The nine slots above describe a page's *content*. This describes its *numbers*. Run these against
+the DOM of anything you just generated, before showing it to anyone. Each line is a threshold, not a
+vibe, and each names the reference value it is being measured against.
+
+| # | Measure | Fail if | Reference band | Why it's diagnostic |
+|---|---|---|---|---|
+| 1 | h1 `font-weight` | ≥ 600 at ≥ 56px | 300–510 (12 of 17) | Weight and size doing the same job |
+| 2 | h1 `line-height ÷ font-size` | ≥ 1.20 | 0.80–1.16 | `leading-tight` was never checked against the type |
+| 3 | h1 `letter-spacing ÷ font-size` | > −0.015em at ≥ 56px | −0.02 to −0.06em | Default sidebearings left in place |
+| 4 | Same `letter-spacing` class on h1 and on 14px labels | any | tracking is a function of size on Rivian, Stripe, Anthropic | One `tracking-tight` for the whole page |
+| 5 | Vertical gap between padded top-level sections | < 96px | 128–288px | `py-16` |
+| 6 | Distinct section heights ÷ section count | < 0.5 (i.e. most sections the same height) | Apple 525→7,329px | Equal sections are a template's signature |
+| 7 | Max−min RGB channel spread on any text or ground neutral | > 14 | 0–13 | `slate-*` |
+| 8 | Distinct button radii on the page | 1 | 2–3 (nav ≠ hero) | A single radius token was never a decision |
+| 9 | Distinct button heights on the page | 1 | 2–3 (30–36 nav, 40–56 hero) | Same |
+| 10 | Peak shadow alpha | > 0x1a (10%) | ≤ 0x0f (6%), always paired with a 1px border shadow | Visible gray = 3× too strong |
+| 11 | Interactive elements with `transform` in `transition-property` | > 2% | 0–1% | `hover:scale-105` |
+| 12 | Hover duration vs. scroll-reveal duration | equal | hover 100–320ms, reveal 500–1000ms | Both collapsed to 300ms |
+| 13 | `linear-gradient` or `-webkit-text-fill-color: transparent` on h1/h2/h3 | any | 0 hits across 14 sites re-checked 2026-09 | The single loudest tell |
+| 14 | Distinct heading measures (max-width values) across sections | 1 | 3 (Stripe 856/752/648; Oxide 720/600/480) | `max-w-3xl mx-auto` on everything |
+| 15 | Body font sizes in use | 1 | 2–3, by role (OpenAI 17 prose / 14 for five other roles) | `text-base` + accidental `text-sm` |
+| 16 | Mobile h1 ÷ desktop h1 | > 0.85 | 0.48–0.75 | A `clamp()` whose min is 80% of its max |
+| 17 | `prefers-reduced-motion` branch present when any reveal starts at `opacity: 0` | absent | required | Content never appears, not "less pretty" |
+| 18 | Elements matching `focus:outline-none` with no replacement ring | any | Anthropic 2px/4px offset; Vercel gap ring | — |
+
+**The composite tell.** Any one of these can be a defensible choice. The generated page fails
+**eleven to fifteen of them at once**, which is the actual signature: not a wrong number, but the
+total absence of any number that was chosen. If you fix only the top of the list — weight, leading,
+tracking, section gap, neutral spread — you move a page most of the way, because those five are the
+ones a reader registers before they read a word.
+
+### What the AI version of this archetype looks like, specifically
+
+So an agent can recognize its own output. The generated editorial/marketing page is, almost without
+variation:
+
+A 64px `font-bold` headline in Inter or Plus Jakarta, centered in `max-w-4xl mx-auto`, with a
+violet-to-pink `bg-clip-text` gradient on it, a `✨`-prefixed pill above it, a 18px
+`text-slate-600` subhead below it at `leading-relaxed`, and two `rounded-lg` 44px buttons under
+that reading `Get Started` and `Learn More`. Below the fold: a row of six grayscale logos under
+"Trusted by teams at"; three `rounded-2xl` white cards each with a `lucide-react` outline icon in a
+`rounded-xl bg-slate-100` square, a 20px title, three lines of `text-slate-600`, and
+`hover:shadow-lg hover:-translate-y-1 transition-all duration-300`; a bento grid of
+`bg-gradient-to-br from-slate-50 to-slate-100` tiles containing nothing; three testimonial cards
+with `<img src="https://i.pravatar.cc/…">` and five filled stars; a six-item `<details>` FAQ; and a
+`bg-gradient-to-r from-indigo-600 to-purple-600` band with `Ready to get started?` and a white
+button. Every section is `py-20`. Every section is between 700 and 900px tall. Every radius is `8px`
+or `rounded-2xl`. Every animation is `duration-300`. There is no `<figure>`, no caption, no
+footnote, no asterisk, no mono, no serif, no photograph, and no number that is not `10,000+`,
+`99.9%`, or `$12,345.67`.
+
+**Three deeper tells that survive a cosmetic fix**, and that a page can still exhibit after all
+eighteen thresholds above are satisfied:
+
+1. **Nothing on the page could be wrong.** Every claim is unfalsifiable. Oxide's headline invites
+   an argument from anyone in the category; `The all-in-one platform for modern teams` cannot be
+   disputed because it asserts nothing. If a competitor could paste your headline onto their site
+   without it becoming false, you have written the generic one.
+2. **The page has no second-most-important thing.** A generated page is a stack of equal blocks in
+   priority order. A designed page has one element that clearly won and everything else arranged
+   around it — Rivian's 200px wordmark with the CTAs pushed to the opposite corner, Oxide's
+   headline at the *bottom* left because the rack owns the right. The test: cover the hero asset.
+   If the remaining layout is a centered vertical stack, there was never a composition.
+3. **Every recurring device appears exactly once.** Oxide's mono-uppercase-in-a-hairline-box shows
+   up on the figure caption, the logo row label, the nav, and the buttons — four appearances make it
+   a system. A single `FIG. 1` on an otherwise shadcn page reads as costume. When you borrow a
+   device from this file, commit to using it at least three times or don't use it.
 
 ---
 
@@ -774,27 +1066,47 @@ honest.
 Screenshots in `/Users/ayushgarg/Ayush/UI_Library/.cache/shots/elm-*.png`; probe JSON in the session
 scratchpad under `elm/`.
 
-- **stripe.com** — 1440 + 390 screenshots and computed styles. Hero 48px/55.2px/−0.96px/w300;
-  section titles constrained to `span-8/7/6` (856/752/648px); scroll reveals at 0.8s
-  `cubic-bezier(0.165,0.84,0.44,1)` on transform and clip-path; bento cards containing a live
-  checkout and a fraud table with real percentages. **Zero CSS custom properties on `:root`.**
-- **linear.app** — 64px/64px/−1.408px at weight **510**; four homepage sections at `padding: 128px 0`
-  measuring 1220–1232px tall; prefooter at `margin: 224px 0`; hover at 0.1–0.16s
-  `cubic-bezier(0.25,0.46,0.45,0.94)`.
-- **vercel.com** — 984 CSS custom properties enumerated: full `--ds-gray-*` light and dark ramps,
+- **stripe.com** — re-probed 2026-09 at 1440 + 390. Hero 48px/55.2px/−0.96px/w300 at `X:208 W:959`,
+  headline colored per word (black → slate → violet, animating); mobile 34px/35.02px at `X:16`;
+  page 14,668px desktop / 20,373px mobile. **715 custom properties on `:root`** — the `--hds-*`
+  system, every heading and text weight token at 300, an 8px space scale to 160px. *(The previous
+  pass of this file reported "zero custom properties"; that was a probe artifact — Stripe's CSS is
+  cross-origin so `sheet.cssRules` throws. Enumerate `getComputedStyle(document.documentElement)`
+  instead. The same artifact would have mis-read Linear as 0 rather than 419.)* Section titles
+  constrained to `span-8/7/6` (856/752/648px); scroll reveals at 0.8s
+  `cubic-bezier(0.165,0.84,0.44,1)` on transform and clip-path; full-bleed brand gradient ribbon on
+  the right 60% of the fold; two hero CTAs plus two nav CTAs; full-color logo row.
+- **linear.app** — re-probed 2026-09. 64px/64px/−1.408px at weight **510**, `X:78 W:1282`; ground
+  `#08090a`; four homepage sections at `padding: 128px 0` measuring 1226/1229/1232/1220px tall;
+  prefooter at `margin: 224px 0`; **419 custom properties on `:root`** including
+  `--ease-out-quad: cubic-bezier(.25,.46,.45,.94)` and `--title-9-line-height: 1`. Mobile 38/41.8 at
+  `X:23`, page 9,960px desktop → 5,876px mobile. Text ramp `#d0d6e0` / `#8a8f98` is the one
+  measurably cool-cast neutral in the set (channel spread 16 / 14).
+- **vercel.com** — re-probed 2026-09: h1 `Agentic Infrastructure` 64/64/−3.84px at weight 400,
+  `X:24 W:444`; ground `#fafafa`, text `#171717`; second section at computed `margin-top: 208px`;
+  page 5,333px desktop / 4,981px mobile; mobile h1 48/56 at −2.88px (the same −0.06em); 128
+  transitioning `<a>`/`<button>`, **0** animating `transform`; nav buttons 32px at 6px radius,
+  in-page buttons 40px at 8px radius, hero `Deploy now` a 40px pill. Token dump: full `--ds-gray-*` light and dark ramps,
   `--ds-shadow-*` (peak alpha 6%), `--ds-focus-ring` gap ring, `--ds-page-width: 1400px`, fluid type
   tokens `--text-fluid-64-128`. h1 64/64/−3.84px = −0.06em. Three-column hero, black logo cloud.
-- **anthropic.com** — 283 tokens: complete ivory/slate/cloud palette, six named section-space steps,
+- **anthropic.com** — re-probed 2026-09: 282 tokens, ground `#faf9f5`, `<body>` default is
+  **Anthropic Serif 20/28**, h1 60.87/66.95 w700 at `X:78 W:736` (mobile 40.29/44.32 at `X:33`),
+  196 transitioning interactive elements of which **2** animate `transform`: complete ivory/slate/cloud palette, six named section-space steps,
   12-col 89.5rem grid, six line-height values, three letter-spacing values, per-font leading-trim
   ems, nav timings. Asymmetric hero with two underlined words; sans display + serif body.
 - **openai.com** — 1,157 tokens (required a 15s wait past a Cloudflare interstitial): 13-step pure
   neutral primitive ramp, dark mode by token remap, `--type-p1-size: 1.0625rem` (17px), clamp-based
   h1/h2/xl. Hero is a live composer with five hairline pill chips.
-- **apple.com/macbook-pro** — 288 tokens (`--sk-*` glyph/fill grays with alpha pairs, footnote size
-  tokens, 12-col `ric-column-*` at 7.29157vw). `.typography-headline-super` = 80px/84px/−1.2px/w600;
-  every section `padding: 144px 0`; 30,873px page with 14 sections from 525px to 7,329px; the
+- **apple.com/macbook-pro** — re-probed 2026-09: 132 `:root` properties reachable this pass (288
+  previously, likely a same-origin-stylesheet difference), `html { font-size: 17px }`, ground `#000`.
+  `.typography-headline-super` = 80px/84px/−1.2px/w600 — note this is on a `<p>`; the actual `<h1>`
+  is the 28px/32px eyebrow `MacBook Pro` at `+0.196px` tracking. Section padding is **not** uniform
+  144: measured in page order `-96/0, 144/144, 144/216, 0/144, 0/0, 144/144, 144/0, 144/144,
+  144/144, 144/0`; 30,873px page with 14 sections from 525px to 7,329px; the
   4-stop desaturated gradient headline; 980px content column; `0.32s cubic-bezier(0.4,0,0.6,1)`.
-- **rivian.com/r1s** — 710 tokens: full 13-step px type scale, `--leading-display: 0.96`, four
+- **rivian.com/r1s** — re-probed 2026-09: **624** tokens (was 710), `html { font-size: 10px }`, h1
+  200/192/−5px at weight 500 in **`Liga`** (not `Adventure`, which is the body face), `X:48 W:1344`,
+  page 18,533px. Also: full 13-step px type scale, `--leading-display: 0.96`, four
   tracking tokens bound to role, `-cq` container-query type mirror, `4/12/20/32/40` radius scale,
   physically-named easings. 200px hero wordmark over autoplay film; 96px at 390px.
 - **aesop.com/us** — computed styles captured on the one request that cleared Cloudflare (15s wait);
@@ -806,21 +1118,38 @@ scratchpad under `elm/`.
 - **pudding.cool** — Gooper SemiCondensed at 32px/32px/−0.8px; per-story flat color mats
   (`#F5C33C`, `#F19EF5`, `#E88B2E`); outline-pill issue numbers with mono dates above the image;
   2px button radius; 1280px container.
-- **basement.studio** — 87px/78px (lh 0.897) at −0.04em; superscript-parenthesis nav counts; live
-  `● Online ⁽¹⁰⁾` indicator; explorable 3D scene hero; HUMAN/MACHINE segmented toggle.
-- **locomotive.ca** — `html { font-size: 15px }`; h1 70px/77px with no tracking adjustment; nav
-  links at 26px against 15px body.
-- **hellomonday.com** — `h1 { 80px / 64px }` (lh 0.8) at weight 300; h3 23px/27.37px at weight 300.
-- **teenage.engineering** *(off-list)* — 129 tokens, all proportional to `--client-width: 100vw`
+- **basement.studio** — re-probed and screenshotted 2026-09 at 1440 + 390. Desktop 87px/78px
+  (lh 0.897) at −0.04em, `X:16 W:1290`; **mobile 46px/39.2px (lh 0.852) at −0.04em** — the same em
+  tracking and still sub-1 leading. Superscript-parenthesis nav counts; live `● Online ⁽¹⁰⁾`
+  indicator; HUMAN/MACHINE segmented toggle floating over the mobile headline. **The 3D scene ships
+  at 390px** (the previous pass called it desktop-only; that was wrong).
+- **locomotive.ca** — re-probed 2026-09. `html { font-size: 15px }`; h1 70px/77px at `X:40 W:1360`
+  with no tracking adjustment, in **`LocomotiveNew`** (not `HelveticaNowDisplay`, which is the body
+  face), and containing emoji: `🔶 Locomotive® Digital-first Design Agency🍺🔞`. Nav links at 26px
+  against 15px body. Page 6,598px.
+- **hellomonday.com** — re-probed and screenshotted 2026-09. `html { font-size: 22px }`;
+  `h1 { 80px / 64px }` (lh 0.8) at weight 300 in **`ClarendonBTWXX-Light`, a serif** (the previous
+  pass credited `NB International Pro`, which is the body face). The h1 is a rotating word carousel
+  set in near-white on white under a hand-drawn two-figure illustration; nav carries a live
+  `4 days until Monday` counter. Page 10,101px.
+- **teenage.engineering** *(off-list)* — re-probed 2026-09: **101** tokens (was 129), no `<h1>`,
+  page 15,233px, all proportional to `--client-width: 100vw`
   against `--base-design-width: 980`; two font families, two weights (100/300); five fixed accents;
   `--btn-min-click-area: 48px` as the sole absolute; nav-as-sitemap with a Japanese mission
   paragraph at ~10px.
-- **oxide.computer** *(off-list)* — 479 tokens, entire palette in `oklch()`; h1 65px/65px/−1.625px
+- **oxide.computer** *(off-list)* — re-probed 2026-09: **169** `:root` properties (was 479), entire
+  palette in `oklch()`; ground `oklch(0.162 0.01 260)`; page 9,794px; every `<a>`/`<button>` at
+  `transition-duration: 0s`; visible 10-column border overlay; h1 65px/65px/−1.625px
   at weight 400; body 16px/22px with **+0.021em** tracking; 12px uppercase 2px-radius buttons;
-  `FIG. 1` hero caption with a leader line to a real console form; nine consecutive 128px section
-  gaps.
-- **therow.com** *(SSENSE substitute)* — body 13px/21.45px (lh 1.65) Basic Commercial; 11px 0-radius
-  buttons; full-bleed 35mm hero photograph with no overlaid text.
+  `FIG. 1` hero caption with a leader line to a tabbed `CLI / API / CONSOLE` panel; section gaps
+  re-measured at `[128, 128, 128]` between consecutive top-level `<section>`s (the earlier
+  "nine in a row" figure used a finer selector and is not reproducible at section level).
+- **therow.com** *(SSENSE substitute)* — re-probed and screenshotted 2026-09 at 1440 + 390.
+  `html { font-size: 13px }`; body 13px/21.45px (lh 1.65) Basic Commercial; 11px 0-radius buttons.
+  **Whole homepage is 1,281px tall**: letterspaced centered `THE ROW` wordmark with hamburger left
+  and search/bag right, one full-bleed William Eggleston photograph, a two-line 13px credit
+  (`William Eggleston, Untitled, c. 1983 – 1986 / © Eggleston Artistic Trust`), and a newsletter
+  field with a full-width 0-radius dark `Submit` bar. The credit is the only body copy on the page.
 - **cosmos.so, family.co, resend.com** — surfaced by the off-list screen; measured but not fully
   torn down. Cosmos: 74px/74px at −0.05em, weight **350**, bespoke `cosmosOracle`.
 - **awwwards.com/websites/sites_of_the_day** — fetched 2026-09 to confirm basement.studio and Studio
@@ -833,3 +1162,61 @@ scratchpad under `elm/`.
   (`elm-ssense-1440.png`). The Pudding stands in for the newsroom-interactive slot; The Row stands
   in for luxury commerce. Aesop and OpenAI each required a 15–18s wait past a Cloudflare
   interstitial and are reported from the requests that cleared it.
+- **Direction-pass screenshots (2026-09)**, in `/Users/ayushgarg/Ayush/UI_Library/.cache/shots/`:
+  `editorial-luxury-and-marketing-dir-1` (stripe.com), `-2` (therow.com), `-3` (oxide.computer),
+  `-4` (aesop.com — returned a Cloudflare challenge page, not the site), `-5` (hellomonday.com),
+  `-6` (basement.studio), each at `-1440.png` and `-390.png`.
+
+---
+
+## Direction pass (2026-09)
+
+Second-reader pass over the 2026-08 teardown. Fourteen sites re-probed with Playwright, six
+re-screenshotted at 1440 and 390 and looked at directly.
+
+**Corrected — numbers that were wrong**
+
+- **Stripe ships 715 `:root` custom properties, not zero.** The original "zero custom properties"
+  was a probe artifact (cross-origin `sheet.cssRules` throws). The recovered `--hds-*` system turned
+  out to be the strongest evidence in the file for the weight rule: every heading and text weight
+  token is 300. Same artifact had hidden Linear's 419 tokens.
+- **Four display faces were misattributed to the body face**: Rivian's h1 is `Liga` not `Adventure`;
+  Hello Monday's is `ClarendonBTWXX-Light` (a serif) not `NB International Pro`; Locomotive's is
+  `LocomotiveNew` not `HelveticaNowDisplay`; Kinfolk's is `-Serif-Deck` not `-Serif-Display`. The
+  Pudding's body is Atlas Grotesk, not Gooper.
+- **Apple's `padding: 144px 0` is not on every section** — measured `-96/0, 144/144, 144/216, 0/144,
+  0/0, 144/144, 144/0, …`. Full-bleed bands take zero. Also, Apple's `<h1>` is the 28px eyebrow; the
+  80px line is a `<p>`.
+- **The 0–3% HSL saturation rule was measurably wrong at the lightness extremes** (Anthropic's ivory
+  reads 33% S, Aesop's ground reads 100% S). Replaced with RGB channel spread, threshold 14, with
+  Linear (14–16) and Stripe (42) named as the honest exceptions.
+- **"Zero `transform` on hover" was an over-claim** — Anthropic animates transform on 2 of 196
+  interactive elements and Vercel leaves 13 on `transition: all`. Restated as 0–1%.
+- **basement.studio's 3D hero does ship at 390px.** Previous pass called it desktop-only.
+- **Oxide's section gaps re-measure as `[128,128,128]`**, not nine in a row; token count 169 not 479.
+  Rivian 624 not 710; teenage.engineering 101 not 129.
+- **Aesop is now Cloudflare-blocked on every attempt** — all Aesop figures flagged as unconfirmed
+  since 2026-08.
+
+**Cut**
+
+Subjective ranking claims that carried no measurement ("the cleanest hero currently shipping", "the
+tightest tracking in production", "can be 30px and win", "the extreme of restraint"); "it is the
+actual differentiator"; "space says this idea is finished"; "this is what a hand-tuned dark neutral
+looks like" — each replaced with the number or mechanism that was doing the work.
+
+**Added**
+
+- `### Stripe's --hds-* system` — the full type-token block.
+- `### The html font-size is not 16px on a quarter of these sites` — Rivian 10, The Row 13,
+  Locomotive 15, Apple 17, Hello Monday 22, and what that costs.
+- `## Where the references disagree` — Stripe's homepage breaking two rules in this file on purpose,
+  black vs. full-color logo rows, centered heroes, and the 1,281px-vs-30,873px page-length split.
+- `### The self-diagnostic` — 18 numeric thresholds replacing the loose "other failure modes" list,
+  plus a specific description of the generated page and three tells that survive a cosmetic fix.
+- Probe-technique warnings (computed-style enumeration, don't trust `h1`, read `html` font-size).
+- Mobile table rebuilt with basement, Linear, leading deltas, em-tracking, and mobile page heights;
+  Stripe and basement added as counterexamples to "leading loosens on mobile".
+- States: Oxide's cookie banner as the model, the transparent-nav-over-media problem, the live
+  number (Stripe's ticking GDP eyebrow, Hello Monday's `4 days until Monday`), and bot-wall detection.
+- Real limits attached to findings 4, 5, 6 and 9, which previously had trivial or missing ones.

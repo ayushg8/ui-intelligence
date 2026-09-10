@@ -1,20 +1,31 @@
 # Design tokens, Figma-to-code and the design/engineering seam
 
-**Evaluated:** 2026-09 · **Researcher note:** Three things changed since the last time anyone wrote
-a sane summary of this category. (1) **The DTCG spec finally shipped something implementable** —
-Format Module *2025.10* is a Final Community Group Report dated 28 October 2025, and the Resolver
-Module (modes, themes, density) is a Candidate Recommendation marked "considered stable". The draft
-at `tr.designtokens.org` is *not* that; it says in its own Status section "Do not attempt to
-implement this version." Half the tooling in this category cites the wrong document. (2) **Every
-commercial vendor in the category repositioned to "context for AI agents" inside about twelve
-months.** Supernova's homepage headline is now "Design & engineering knowledge, ready for AI
-agents"; zeroheight's is "Get teams and agents building from your design system — not around it";
-Knapsack's entire homepage is now a *waitlist* reading "Your AI has no idea what good looks like."
-Specify is simply dead. Nobody sells "design token management" any more; they sell MCP endpoints.
-(3) **The Figma MCP server has hard rate limits that make it unusable as a build pipeline** — 600
-tool calls per day on Enterprise, 200/day on Professional and Organization, and **6 per month** on a
-View or Collab seat. That number is the most important fact in this file and almost nobody states
-it.
+**Evaluated:** 2026-09 (measurement passes 2026-09-09 and 2026-09-10)
+
+**Researcher note:** Five things worth stating up front. (1) **The DTCG spec finally shipped
+something implementable** — the 2025.10 release (Format, Color, Resolver), dated 28 October 2025.
+Both Format and Resolver carry the *same* status, and it is worth being precise because most
+write-ups are not: the header reads "Final Community Group Report", the Status section reads
+"published by the DTCG as a Candidate Recommendation… this specification is considered stable…
+intended for implementation." The draft at `tr.designtokens.org` is a different document; its own
+banner reads "Do not attempt to implement this version." Half the tooling in this category cites
+that one. (2) **Every commercial vendor repositioned to "context for AI agents" inside twelve
+months.** Supernova sells "Design & engineering knowledge, ready for AI agents"; zeroheight "Get
+teams and agents building from your design system — not around it"; Knapsack's homepage is now a
+*waitlist*. Specify is dead. Nobody sells "design token management" any more; they sell MCP
+endpoints. (3) **The Figma MCP server's rate limits make it unusable as a build pipeline** — 600
+tool calls/day on Enterprise, 200/day on Professional and Organization, **6 per month** on a View
+or Collab seat. That is the most important fact in this file and almost nobody states it.
+
+(4) **The spec's own conformance is untested in practice, and I tested it.** One DTCG 2025.10
+file, two conformant-claiming tools: Style Dictionary emits `#2563eb` where Terrazzo emits
+`rgb(14.51% 38.82% 92.16%)`, and Style Dictionary silently writes `[object Object]` for a
+spec-form `duration` token on all three of its platform outputs, with a checkmark and exit code 0.
+Write the same tokens the old way, with hex strings, and Terrazzo refuses the file entirely. **There
+is no file both accept and render the same.** That is the adoption state of the format, measured
+rather than asserted. (5) **The Resolver module materialises the cross-product it was supposed to
+solve** — 90 tokens × 12 permutations came out as 1,080 declarations against 186 for the equivalent
+hand-written cascade.
 
 The honest structural finding: the seam between design and code is a *social* problem that this
 industry keeps selling *pipeline* solutions for. The pipelines work — Style Dictionary genuinely
@@ -34,16 +45,33 @@ they install a second source of truth and call it synchronization.
    line is concrete: Style Dictionary earns its build step when you need the *same* value in CSS
    *and* in Swift/Kotlin/XAML, or when one codebase serves ≥2 visually distinct brands. One web app
    with a dark mode is not that. Dark mode is a `@media` block, not a pipeline.
-3. **Cap the token count and check it.** Production reference points measured for this file:
-   Linear ships **419** custom properties on `:root` (138 of them machine-hashed, so ~281 real),
-   Vercel **576**, Atlassian **619**, GitHub Primer **1,998**, Shopify Polaris **2,041**. Your
-   product-UI token file should be 60–120 declarations. If you are over 300 and you are not
-   Atlassian, you are generating tokens, not designing them.
-4. **Two layers, never three.** A primitive ramp (`--n-600`, `--accent`) and a semantic layer
-   (`--text-muted`, `--bg-surface`). Components reference *only* the semantic layer. Carbon's
-   shipped CSS has **668 `--cds-*` properties with only 27 alias declarations between them** —
-   almost every token is a literal, which means changing a theme means regenerating all 668 instead
-   of remapping twenty. That is what a missing semantic layer costs.
+3. **Cap the token count and check it — but never on performance grounds.** Production reference
+   points measured for this file: Material 3 defines **26** colour roles for all of Android; Linear
+   ships **419** custom properties on `:root` (138 machine-hashed, so ~281 real), Vercel **576**,
+   Atlassian **619**, GitHub Primer **1,998**, Shopify Polaris **2,041**. Your product-UI token file
+   should be 60–120 declarations. If you are over 300 and you are not Atlassian, you are generating
+   tokens, not designing them. **Scope:** that budget covers interface *chrome*. Data-encoding
+   palettes are a separate, legitimate budget — a serious chart layer is 8–12 categorical hues plus
+   two or three 9–11-step sequential/diverging ramps, in both schemes, which is 80–150 tokens before
+   any chrome exists (see `charts-and-dataviz.md`). Counting them against a 120 cap forces the
+   palette into a JS file, which is the failure mode this file spends Decision 2 arguing against.
+   Budget the two separately. Measured here: going from 90 to 2,041 declared properties costs
+   **0.3 ms** on a theme switch across 2,000 consuming nodes. The cost of a bloated token set is
+   entirely human — nobody, including the agent reading your `:root`, can tell which 90 of the 2,041
+   were chosen.
+4. **Two layers, never three — and make sure the second layer survives the build.** A primitive
+   ramp (`--n-600`, `--accent`) and a semantic layer (`--text-muted`, `--bg-surface`). Components
+   reference *only* the semantic layer. **Scope:** "never three" is a rule for a system whose
+   consumers can edit its source. A component library consumed by *third parties* — Polaris's actual
+   audience is developers building embedded Shopify apps who cannot patch Polaris — needs
+   component-scoped tokens as a deliberate override API, because the alternative is those developers
+   forking components. That is the honest defence of `--Component-Form-*`, and it does not license a
+   first-party app to invent one. Carbon's shipped CSS has **668 `--cds-*` properties with 27
+   alias declarations between them**; Atlassian's has **1,193 declarations with 30**. Both have a
+   semantic layer in their source and none in the browser, because the default Style Dictionary CSS
+   format resolves aliases at build time — `outputReferences` is `false` unless you set it. Changing
+   a theme then means regenerating every literal instead of remapping twenty names. Set the flag,
+   then assert it: `grep -c 'var(--' tokens.css` should be roughly the size of your semantic layer.
 5. **Before writing any Figma-MCP-driven workflow, run `whoami` and check the seat.** Code Connect
    requires a Dev or Full seat on **Organization or Enterprise**. The Variables REST API requires a
    Full seat on **Enterprise** for both GET and POST. Most teams asking an agent to "sync our Figma
@@ -59,6 +87,7 @@ they install a second source of truth and call it synchronization.
 |---|---|---|---|
 | Hand-authored CSS custom properties | `essential` | The correct default for ~95% of teams, and the only option where the source of truth is enforced by a compiler. | low |
 | Figma Variables (in-file, with `codeSyntax`) | `essential` | Use it as the *mirror*, not the source. Four value types and no unit awareness make it unfit to be the origin of a token system. | low |
+| Penpot design tokens | `situational` | The only design tool with native DTCG tokens — 11 types against Figma's 4, JSON import/export on the $0 tier, no Enterprise gate. Adopting it means changing design tools, which is why it is not higher. | low |
 | Style Dictionary v5 | `strong` | The pipeline layer, unrivalled and boring. 1.68M weekly installs. Only install it when you have a second platform. | low |
 | Terrazzo | `strong` | DTCG-native, actually implements the Resolver module, MIT, 456 stars. The modern answer if you're starting a pipeline in 2026. | low |
 | DTCG Format + Resolver Module 2025.10 | `strong` | First implementable version of the spec, and the Resolver is the theming answer the format lacked for six years. Target it; don't hand-author it. | low |
@@ -92,9 +121,11 @@ they install a second source of truth and call it synchronization.
   than DTCG-compatible, it implements the Resolver module (SD does not), and its plugin set covers
   CSS, Sass, Tailwind, vanilla-extract and Swift. The cost is a 456-star project with six
   subscribers.
-- **Designers must edit tokens and they will not open a PR:** Tokens Studio. Nothing else lets a
-  designer author aliases, math and multi-dimensional themes inside Figma. Price it honestly:
-  €17/editor/mo for the Variables plan, €499/mo for Organization.
+- **Designers must edit tokens and they will not open a PR:** Tokens Studio if you are staying in
+  Figma — nothing else lets a designer author aliases, math and multi-dimensional themes there, at
+  €17/editor/mo for the Variables plan up to €499/mo for Organization. **If the design tool itself
+  is still open:** Penpot does the same job natively for $0, in DTCG, with JSON in and out and no
+  plan gate on the export. That comparison is the one nobody in this category runs.
 - **You need a browsable design-system site that non-engineers maintain:** zeroheight (Free tier is
   usable; $49/editor/mo after) or Supernova (Free up to 5 seats, $35/seat/mo Pro). Both now ship an
   MCP server; both are docs products wearing an AI hat.
@@ -138,9 +169,11 @@ What to read out of that table:
   segments deep and 16 characters on average; Primer's are four deep and 30. Token count is not a
   quality signal in either direction — it's a signal of how many *surfaces* the system has to
   govern. Primer covers github.com, a marketing site and a docs site; Linear covers one app.
-- **194 of shadcn's 365 are `--color-*`,** i.e. Tailwind v4's stock 22-hue × 11-step palette that
-  ships whether you use it or not. The actual shadcn theme is ~30 semantic names on top of it. If an
-  agent "reads the tokens" from a shadcn app it will find 365 and think it found a design system.
+- **194 of shadcn's 365 are `--color-*`** — Tailwind v4's stock ramp, re-measured 2026-09-10.
+  Note the number: v4's full default palette is 22 hues × 11 steps = 242, so the page carries the
+  *used* subset, not the whole thing — but 194 colour values nobody chose is still the point. The
+  actual shadcn theme is ~30 semantic names on top. An agent that "reads the tokens" from a shadcn
+  app finds 365 and thinks it found a design system.
 - **Polaris ships `--Light-*` (400 props) and `--Dark-*` (400 props) simultaneously.** Theming by
   namespace duplication rather than by remapping a semantic layer. Both sets are always in the
   cascade; the theme picks which prefix to read. This is the failure mode `system/3-tokens.md`
@@ -148,33 +181,180 @@ What to read out of that table:
 - **Vercel has three token namespaces live on one page:** `--ds-*` (223), `--geist-*` (103) and
   `--tw-*` (57). Two of those are Vercel's own, from different eras. This is what "we'll migrate the
   design system incrementally" looks like eighteen months in.
+- **The counter-anchor nobody cites: Material 3 defines 26 colour roles.** Not 26 hundred —
+  twenty-six, "organized into six groups: primary, secondary, tertiary, error, surface, and
+  outline," covering the whole of Android. `m3.material.io` itself ships only 158 custom properties,
+  107 of which are seven segments deep and belong to its own docs typography. When someone argues a
+  serious design system needs four figures of tokens, the counter-example is the design system that
+  ships on three billion devices with 26 semantic colour names.
 - **Atlassian's 619 are the best-designed large set here.** Every name follows
   `ds-<property>-<role>-<prominence>-<state>`: `--ds-background-accent-magenta-subtlest-hovered`,
   `--ds-border-danger-subtle`, `--ds-space-negative-150`. You can predict a name you've never seen.
   That grammar is the reason 619 is navigable and Polaris's 2,041 is not.
-- **Stripe is the outlier and it's instructive.** A separate pass over the 303 KB of CSS
-  stripe.com actually loads found **115 declared custom properties, exactly 4 of them colour
-  literals, zero `prefers-color-scheme` blocks and zero `[data-theme]` selectors.** Stripe's
-  marketing site has no CSS-variable colour token layer at all — its custom properties are
-  per-section layout plumbing (`--hero-logo-wall-rows-reduced-height`,
-  `--time-of-day-select-icon-transition-timing-function`). One of the best-looking sites on the web
-  does not have the thing this category sells.
+- **Stripe — correcting an earlier pass in this file.** A first measurement here reported that
+  stripe.com had essentially no colour-token layer. That was a partial read of the stylesheets. A
+  full re-measure on **2026-09-10** (all 5 CSS responses concatenated, 482 KB) finds
+  **715 custom properties live on `:root`, 436 of them colour-valued, 917 unique names across 1,813
+  declarations, 47% of which are `var()` aliases.** They are one coherent namespace,
+  `--hds-*`, with a predictable grammar: `--hds-color-action-bg-subduedHover`,
+  `--hds-color-input-text-label`, `--hds-color-accentColorMode-ruby-icon-solid`,
+  `--hds-color-core-neutral-975`. Stripe does have the thing this category sells, and it is one of
+  the best-organised examples of it. What Stripe genuinely does *not* have: **zero
+  `prefers-color-scheme` blocks and zero `[data-theme]` selectors** — one namespace, one theme, no
+  dark mode on the marketing site at all. The lesson is the grammar and the single axis, not the
+  absence of tokens. (Method note: measure stylesheet *text*, not `document.styleSheets` — 29 of
+  Polaris's sheets are CORS-opaque to `cssRules` and a naive probe reports zero.)
 - **Carbon's semantic layer is missing.** A stylesheet-text pass found 668 declared properties, 659
   prefixed `--cds-`, and **only 27 declarations whose value is a `var()` reference.** Longest name:
   `--cds-notification-action-tertiary-inverse-text-on-color-disabled` (65 characters). Themes are
   produced by regenerating every literal, not by remapping aliases.
 
+### What the token surface costs on the wire
+
+Method: every CSS response body plus every inline `<style>` concatenated, then regex-counted for
+custom-property declarations. Measured 2026-09-10, 1440×900, after `networkidle`.
+
+| Site | `:root` props | Token decls | Unique names | `var()` aliases | Token text | % of all CSS |
+|---|---|---|---|---|---|---|
+| linear.app | 419 | 1,562 | 699 | 21.1% | **48.7 KB** | 9.8% |
+| atlassian.design | 619 | 1,193 | 639 | **2.5%** | 52.0 KB | 32.3% |
+| ui.shadcn.com | 365 | 2,255 | 550 | 34.5% | 88.8 KB | 13.1% |
+| stripe.com | 715 | 1,813 | 917 | 47.0% | 96.8 KB | 20.1% |
+| vercel.com | 576 | 3,747 | 810 | 35.9% | 154.8 KB | 16.5% |
+| polaris.shopify.com | 2,041 | 5,244 | 2,257 | 80.7% | **289.8 KB** | **50.0%** |
+| carbondesignsystem.com | 16 (class-scoped) | 5,234 | 1,171 | 18.8% | 350.1 KB | 28.3% |
+| primer.style | 1,998 | 6,363 | 2,230 | 41.2% | **329.5 KB** | 27.2% |
+
+**Half of the CSS Shopify's Polaris site ships is token declarations.** 289.8 KB of the 580 KB of
+CSS on the page is `--name: value`. Primer ships 329.5 KB of tokens inside 1.2 MB of CSS; Carbon
+ships 350.1 KB of them inline in the HTML. Linear ships 48.7 KB and is 9.8% tokens.
+
+The "token decls" column exceeds the unique-name column everywhere because every mode block
+redeclares names — that ratio *is* the cross-product tax. Polaris declares 5,244 times to define
+2,257 names (2.3×). Primer 6,363 to define 2,230 (2.9×). Linear 1,562 to define 699 (2.2×).
+
+Atlassian's 2.5% alias rate is the number to stare at. 1,015 of its 1,193 shipped token
+declarations are colour literals; only 30 are `var()` references. Atlassian has the best *naming
+grammar* measured here and almost no *runtime* semantic layer — the aliasing happens in the build
+and the browser receives flattened hex. Same shape as Carbon (27 aliases in 668 properties). Both
+must therefore ship a complete second literal set to change theme. Polaris, at 80.7% aliases,
+actually does the aliasing at runtime — and still ships `--Light-*` and `--Dark-*` in parallel.
+
+### Token count is free at runtime — the cost is human
+
+Measured with Playwright: a synthetic page with 2,000 nodes each consuming 7 custom properties,
+`data-theme` flipped 12 times, median of forced style+layout.
+
+| Declared tokens on `:root` | Median theme-switch (style + layout, 2,000 consumers) |
+|---|---|
+| 90 | 2.0 ms |
+| 300 | 2.1 ms |
+| 619 (Atlassian scale) | 2.1 ms |
+| 2,041 (Polaris scale) | 2.3 ms |
+| 6,000 | 3.2 ms |
+
+Declaring 2,041 unused properties instead of 90 costs **0.3 ms** on a theme switch and 0.3 ms on an
+unrelated recalc (2.2 → 2.5 ms). `getPropertyValue('--x')` costs ~0.5 µs.
+
+**So every performance argument against a large token set is wrong**, and you should stop making
+it. The argument against 2,041 tokens is that no human can hold 2,041 decisions, that the 1,841
+nobody chose will be picked at random by the next contributor, and that an agent reading your
+`:root` will treat all of them as sanctioned. Argue that. Don't argue milliseconds.
+
+Related: the cascade-vs-JS-object theming gap is also smaller than usually claimed *at the DOM
+level* — flipping one attribute took 2.0 ms where rewriting inline styles on all 2,000 nodes took
+2.8 ms, only 1.4×. The real cost of the JS-object approach is not the style write; it is the React
+re-render that produces it, the RSC boundary, and the pre-hydration flash. See Decision 2.
+
+### The pipeline, run locally
+
+Every number below is from installing and running the tools on this machine on **2026-09-10**,
+Node 24.15.0, npm 11.12.1, warm cache.
+
+**Install footprint for a token pipeline:**
+
+| | `node_modules` | files | packages in lockfile | install (warm) |
+|---|---|---|---|---|
+| `style-dictionary@5.5.3` | **58 MB** | 4,719 | 107 | 3.8 s |
+| `@terrazzo/cli@2.7.1` + `@terrazzo/plugin-css@2.7.1` | **57 MB** | 1,911 | 94 | 7.3 s |
+
+That is the price of producing a file you could have typed. Build times are not the problem — SD
+built three platforms in 3.7 s, Terrazzo built 90 tokens in 123 ms.
+
+**Finding 1 — the same DTCG file does not work in both tools.** I wrote one 31-token file in DTCG
+2025.10 form (colours as `{ "colorSpace": "srgb", "components": [...] }`, dimensions and durations
+as `{ "value": n, "unit": "…" }`) and ran it through both:
+
+- **Terrazzo built it** (`✔ 31 tokens built 35ms`) and emitted `--accent-base: rgb(14.51% 38.82% 92.16%)`.
+- **Style Dictionary built it** and emitted `--accent-base: #2563eb`.
+
+Same input, same `$type`, two different CSS colour syntaxes. Now the reverse: I wrote the *same*
+tokens with plain hex strings (`"$value": "#2563eb"`), which is how essentially every DTCG file in
+the wild is written —
+
+- **Style Dictionary built it silently.**
+- **Terrazzo refused**, with `lint:lint: 15 errors` and
+  `lint:core/valid-color: Migrate to the new object format, e.g. "#ff0000" → { "colorSpace": "srgb", "components": [1, 0, 0] }`.
+
+**There is no single file in this category that both major implementations accept and render
+identically.** That is the adoption state of the spec in 2026, stated as an experiment rather than
+as a star count. Plan for a format migration when you adopt DTCG, not for a portability win.
+
+**Finding 2 — Style Dictionary 5.5.3 silently emits `[object Object]` for spec-conformant
+`duration` tokens.** Input, straight from the Format Module's own object form:
+
+```json
+"motion": { "dur": { "$type": "duration", "fast": { "$value": { "value": 120, "unit": "ms" } } } }
+```
+
+Output, on all three platforms, from one build:
+
+```
+build/tokens.css      --motion-dur-fast: [object Object];
+build/Tokens.swift    public static let motionDurFast = [object Object]
+build/tokens.xml      <string name="motion_dur_fast">[object Object]</string>
+```
+
+The build prints `✔︎` and **exits 0**. The deprecated string form `"120ms"` works; the object form
+does not. `dimension` handles both forms correctly, so this is specific to `duration`. Terrazzo
+emits `120ms` from the identical input. If you run Style Dictionary, grep your generated output for
+`[object Object]` in CI — it is one line and it catches a class of failure that has no other signal.
+
+**Finding 3 — `outputReferences` is off by default, and that single default explains Carbon and
+Atlassian.** With the stock `css/variables` format:
+
+```
+--text-default: #1c1917;      /* alias resolved at build time */
+--bg-surface:   #ffffff;
+```
+
+With `"options": { "outputReferences": true }`:
+
+```
+--text-default: var(--n-900);
+--bg-surface:   var(--n-0);
+```
+
+The default flattens your semantic layer into literals before it reaches the browser. A design
+system that ships that output has no runtime semantic layer, cannot re-theme through the cascade,
+and must regenerate a complete second literal set per theme — which is exactly the shape measured
+on carbondesignsystem.com (27 `var()` in 668 properties) and atlassian.design (30 in 1,193). One
+boolean, and it is off. Set it.
+
 ### Figma: the access matrix that decides whether any of this is possible
 
 Retrieved live from the Figma MCP server's own `rate-limits-access.md` resource and from
-`developers.figma.com`, 2026-09-09.
+`developers.figma.com`; re-verified verbatim 2026-09-10.
 
 **MCP tool-call limits (reads; writes like `create_new_file` and `whoami` are exempt):**
 
 | Seat | Starter | Professional | Organization | Enterprise |
 |---|---|---|---|---|
 | View, Collab | **20 / month** | 6 / month | 6 / month | 6 / month |
-| Dev, Full | — | 200/day, 10/min | 200/day, 15/min | **600/day, 20/min** |
+| Dev, Full | **20 / month** | 200/day, 10/min | 200/day, 15/min | **600/day, 20/min** |
+
+(On Starter the 20/month cell spans both seat rows — seat type buys you nothing until you leave
+Starter. That is the row most "let's wire up the Figma MCP" plans actually land in.)
 
 Education plans get Professional Dev/Full limits. Only MCP clients listed in Figma's MCP Catalog
 can connect at all. Enterprise-managed auth exists only for Claude, via Okta Cross App Access.
@@ -197,6 +377,11 @@ So: the minimum spend to make the Variables REST API legal is an Enterprise Full
 Any plan that says "we'll sync tokens from Figma via the API" is quoting $1,080/user/year before it
 writes a line of code.
 
+The `POST` gate is stricter than the `GET` gate and almost nobody states it. Verified on
+`developers.figma.com/docs/rest-api/variables/` on 2026-09-10: **`GET` requires Enterprise and any
+organisation member; `POST` requires Enterprise, a Full seat, *and* admin.** A "designers push
+tokens into the repo" plan that survives the GET check still dies at the POST check.
+
 **Figma's variable type system — the reason it can't be the source of truth:**
 
 `resolvedType` is exactly `'BOOLEAN' | 'FLOAT' | 'STRING' | 'COLOR'`. That is the whole list. There
@@ -207,6 +392,12 @@ UPDATE actions… To change a variable's type, create a new variable with the de
 and repoint any aliases and bindings to it."* Renaming a token is cheap in Figma; retyping one is a
 migration.
 
+The scope list sharpens the point rather than softening it. A `FLOAT` variable can be scoped to
+`CORNER_RADIUS`, `GAP`, `WIDTH_HEIGHT`, `OPACITY`, `FONT_SIZE`, `LINE_HEIGHT`, `LETTER_SPACING`,
+`PARAGRAPH_SPACING`, `PARAGRAPH_INDENT`, `STROKE_FLOAT`, `EFFECT_FLOAT`, `FONT_WEIGHT`,
+`TEXT_CONTENT` or `ALL_SCOPES` — **fourteen declared roles, zero declared units.** Figma can be told
+that `16` is a line-height and still cannot record whether it means `16px`, `1.6` or `16rem`.
+
 The one genuinely good part of Figma's model is `codeSyntax` — per-variable WEB/ANDROID/iOS code
 names — and `VariableScope`, which limits where a variable appears in pickers. Both are *mirroring*
 affordances: they let a Figma variable point at a name you already own in code. Use them.
@@ -215,8 +406,8 @@ affordances: they let a Figma variable point at a name you already own in code. 
 
 | Document | Status | Date |
 |---|---|---|
-| Design Tokens **Format Module 2025.10** | **Final Community Group Report** | 28 Oct 2025 |
-| Design Tokens **Resolver Module 2025.10** | **Candidate Recommendation**, "considered stable… intended for implementation" | 28 Oct 2025 |
+| Design Tokens **Format Module 2025.10** | Header: **Final Community Group Report**. Status section: **Candidate Recommendation**, "considered stable… intended for implementation" | 28 Oct 2025 |
+| Design Tokens **Resolver Module 2025.10** | Identical status to Format — *both* labels, same wording. There is no maturity gap between the two modules. | 28 Oct 2025 |
 | Design Tokens **Color Module 2025.10** | published in the 2025.10 set | 28 Oct 2025 |
 | `tr.designtokens.org/format/` (the URL everyone links) | Draft, banner reads **"Do not attempt to implement this version"** | 08 Sep 2026 |
 
@@ -244,14 +435,14 @@ two months ago and is still open. The Resolver Module is the answer, and it arri
 
 | Package | Latest | Published | Weekly npm | License | Notes |
 |---|---|---|---|---|---|
-| `style-dictionary` | 5.5.3 | 2026-09-06 | **1,682,990** | Apache-2.0 | ★4,802, 631 forks, 242 open issues, 69 published versions since 2017-03-07 |
+| `style-dictionary` | 5.5.3 | 2026-09-06 | **1,682,990** | Apache-2.0 | ★4,802, 631 forks, **218 open issues + 24 PRs**, 69 versions since 2017-03-07 |
 | `@figma/code-connect` | **2.0.0** | 2026-08-18 | 1,058,160 | MIT | ★1,571; v2 removed framework parsers |
 | `storybook` | 10.6.0 | 2026-09-02 | 19,523,428 | MIT | ★91,026; 10.0.0 landed 2025-10-28 |
 | `@storybook/addon-docs` | — | — | 15,571,865 | MIT | the actual docs surface |
 | `@storybook/addon-themes` | — | — | 3,409,150 | MIT | the theming integration |
 | `@tokens-studio/sd-transforms` | 2.0.3 | **2025-12-10** | 163,156 | MIT | nine months without a release |
 | `@tokens-studio/types` | — | — | 171,219 | MIT | — |
-| `@terrazzo/plugin-css` | 2.5.0 | 2026-07-26 | 66,216 | MIT | outpaces the CLI |
+| `@terrazzo/plugin-css` | **2.7.1** | 2026-08-11 | 66,216 | MIT | outpaces the CLI; versioned in lockstep with it |
 | `@terrazzo/cli` | 2.7.1 | 2026-08-11 | 55,239 | MIT | ★456, 6 subscribers, created 2021-11-17 |
 | `token-transformer` | 0.0.33 | **2023-05-25** | 45,193 | MIT | three years stale, still 45k/wk |
 | `open-props` | 1.7.23 | 2026-01-31 | 23,452 | MIT | ★5,512 — see `css-and-styling-infra.md` |
@@ -294,6 +485,7 @@ must appear in two artefacts a compiler cannot both read*.** That's it. Concrete
 | Web + native iOS + native Android | **Yes** | Swift and Kotlin cannot read your CSS. This is the original problem Style Dictionary was built for and it still solves it better than anything. |
 | ≥4 brands with genuinely different ramps, maintained by different teams | **Yes** | The cross-product of brand × mode × density is where hand-maintenance actually breaks. |
 | Design system published as a package to ≥5 consuming apps | **Yes** | You need versioned artefacts with a changelog, which means a build. |
+| One web app **+ transactional HTML email** | **Yes** | Email clients drop custom properties; every value must be inlined as a literal. This is the "second artefact a compiler cannot read" test passing on a product with one platform, and the rule as usually stated ("wait for a second platform") gets it wrong. Same for PDF/print generation and for OG-image rendering. |
 | "Our designers keep using off-system colours" | **No** | That is a review problem. A pipeline will faithfully export the off-system colours. |
 
 The team-size heuristic people ask for: **below roughly 10 front-end engineers and one design
@@ -339,7 +531,12 @@ The counter-cases where you genuinely need the JS object, and they are real:
 
 - **Canvas, WebGL and chart libraries** take colours as strings, not as `var()`. You must read them
   out: `getComputedStyle(document.documentElement).getPropertyValue('--color-accent')`. Do this once
-  at mount and on theme change, not per frame.
+  at mount and on theme change, not per frame. **And when the canvas *is* the product** — a
+  whiteboard, a map, a video or node editor, a game — invert the ordering: most of the pixels never
+  touch the cascade, so a CSS-first system means every value round-trips through a stylesheet parse
+  to become a JS string, and `@property` registration silently normalises what comes back. Make the
+  JS object primary and emit the CSS from it. See `editors-canvas-nodes.md` and `maps-3d-media.md`.
+  The test is share of painted pixels, not framework.
 - **React Native** has no CSS. If you ship both, hand-write the RN object and mirror it, or generate
   both from one DTCG file — this is a legitimate pipeline trigger (see Decision 1).
 - **Design-time arithmetic** — generating a 12-step ramp from one hue, computing contrast-safe
@@ -349,6 +546,91 @@ The counter-cases where you genuinely need the JS object, and they are real:
   generated `.d.ts` of literal string unions plus a stylelint rule
   (`declaration-property-value-no-unknown`, or a custom rule allowlisting `--*` names). The
   expensive fix is vanilla-extract or Panda; see `css-and-styling-infra.md`.
+
+**The type-safety objection has an answer nobody is using: `@property`.** The standard reply to
+"custom properties are untyped" is to reach for TypeScript. But CSS has had a type system for
+tokens since Chrome 85 — Baseline since **2024-07-09** (Safari 16.4, Firefox 128; see
+`css-and-styling-infra.md`) — and a survey of twelve production sites on 2026-09-10 found that
+**not one of them registers a design token with it.** Every `@property` block in the wild is framework
+plumbing:
+
+| Site | `@property` blocks | What they are | `syntax` values used |
+|---|---|---|---|
+| tailwindcss.com | 123 | `--tw-*` internals | mostly `"*"` |
+| vercel.com | 106 | `--tw-*` internals | mostly `"*"` |
+| ui.shadcn.com | 101 | `--tw-*` internals | 84 × `"*"`, 5 × `<color>` |
+| base-ui.com | 61 | `--tw-translate-*`, `--tw-rotate-*` | 57 × `"*"` |
+| linear.app | 50 | `--x-*` CSS-in-JS atom hashes | 48 × `"*"`, 2 × `<length>` |
+| primer.style, github.com | 1–3 | incidental | — |
+| polaris.shopify.com, m3.material.io, radix-ui.com/themes | **0** | — | — |
+
+Almost all of them pass `syntax: "*"` — registering only to get `inherits: false`, which is the
+Tailwind-v4 trick for scoping utility variables, not typing them. The typed form is unclaimed
+ground. What it buys, measured in-browser on 2026-09-10:
+
+```css
+@property --accent { syntax: "<color>"; inherits: true; initial-value: #2563eb; }
+:root { --accent: #2563eb; --plain-accent: #2563eb; }
+.bad { --accent: 16px; --plain-accent: 16px; }   /* a bad token value */
+```
+
+| Behaviour | Registered `--accent` | Unregistered `--plain-accent` |
+|---|---|---|
+| Wrong type assigned (`16px` to a colour) | falls back to `initial-value` → `rgb(37, 99, 235)` | computes to `16px` |
+| …and the property that consumed it | `color` stays correct | `background-color` becomes **`rgba(0, 0, 0, 0)`** |
+| Token never defined at all | falls back to `initial-value` | invalid at computed-value time → transparent |
+| `transition: --accent 300ms` | interpolates — `rgb(110, 72, 172)` at t=120 ms | snaps to the end value |
+
+The second row is the whole argument. **An unregistered token with a bad value does not throw, does
+not warn, and does not fall back — it makes the element transparent.** That is the single most
+common invisible failure in a hand-authored token system, and one `@property` line per semantic
+colour prevents it. Registration also makes tokens animatable, which is the only way to transition
+a gradient stop or a shadow colour.
+
+Two costs, both real: a registered property's computed value is **normalised** —
+`getPropertyValue('--accent')` returns `rgb(37, 99, 235)` where the unregistered one returns the
+literal `#2563eb`, so any JS or test that string-compares token values breaks. And `initial-value`
+is required for any non-`"*"` syntax, so registration forces you to name a fallback for every token,
+which is a feature disguised as a chore.
+
+**Two products where registering makes the interface worse, so scope it.** First, **white-label or
+tenant-themed products** where a customer supplies colours at runtime: a bad tenant value stops
+being loudly broken and starts silently rendering *your* `initial-value`, so the storefront ships in
+the wrong brand and looks fine. Validate on ingest and leave those tokens unregistered, or the
+failure moves from visible to invisible — the opposite of why you registered. Second, **any UI that
+reads token values back into a control** — a theme builder, a design-token editor, a colour picker
+bound to `--accent`. Normalisation means the user types `#2563eb` and the field reads back
+`rgb(37, 99, 235)`; keep the authored value in your own state, never round-trip it through
+`getPropertyValue`.
+
+Otherwise: register the semantic layer (`<color>`, `<length>`, `<number>`, `<time>`) and leave the
+primitive ramp alone. Twenty lines.
+
+**Two more CSS features that reduce token count rather than manage it.** `color-mix()` is now
+mainstream — 1,113 uses on tailwindcss.com, 558 on ui.shadcn.com, 157 on vercel.com, 104 on
+linear.app. `color-mix(in oklab, var(--accent) 12%, transparent)` replaces the
+`--accent-subtle` / `--accent-subtler` / `--accent-subtlest` ladder that generates three names per
+hue. That ladder is a large fraction of how Atlassian reaches 619 and Polaris 2,041.
+
+`light-dark()` is **used zero times across all twelve sites measured**, despite being Baseline
+since 2024-05-13. **Correcting an earlier claim in this file: it does not cost you the manual
+toggle.** `light-dark()` resolves against the *used* value of `color-scheme`, which is
+author-settable, so `:root[data-theme="dark"] { color-scheme: dark }` overrides the OS. Verified in
+headless Chromium across all six OS × attribute combinations — OS-light + `data-theme="dark"`
+renders dark, OS-dark + `data-theme="light"` renders light. `system/3-tokens.md` already sets
+`color-scheme` per theme, so the corpus's own default is compatible with it.
+
+The real reasons to skip it are narrower and still decisive for product UI: it takes exactly **two**
+values, so a third axis (brand, density, a "dim" theme, forced-colors) cannot be expressed; both
+values are locked into one declaration, so you cannot re-map only the dark half from a subtree or a
+later cascade layer; and it couples token values to `color-scheme`, which also drives UA
+form-control and scrollbar rendering, so the two can no longer move independently. Fine for a docs
+site or a two-theme marketing page. Wrong for anything with a third axis.
+
+Style container queries (`@container style(--density: compact)`) would be the ideal density
+mechanism — subtree-scoped modes with no attribute plumbing. **Zero uses across all twelve sites.**
+Treat it as not yet real; use `[data-density]` on a subtree, which does the same job with worse
+ergonomics and universal support.
 
 What *not* to do: a `tokens.ts` that is the source of truth and gets injected into a `<style>` tag
 at runtime. You have then paid the JS cost, lost the compile-time enforcement, and made the values
@@ -367,9 +649,22 @@ not edit, so every value change needs a designer *and* a CI run; and Figma has n
 mis-click in a variable panel becomes a production colour change with no diff anyone read.
 
 **B. Code generates Figma (repo → Figma).** A script reads `tokens.css` and writes variables via
-the Plugin API (all plans) or the REST API (Enterprise). Correct in principle, and worth doing at
-scale. In practice the Plugin API path needs someone to open Figma and run the plugin, which is
-manual anyway, which collapses into C.
+the Plugin API (all plans) or the REST API (Enterprise, Full seat, admin). Correct in principle, and
+worth doing at scale. In practice the Plugin API path needs someone to open Figma and run the
+plugin, which is manual anyway, which collapses into C.
+
+This direction got materially cheaper in 2026 and most write-ups have not caught up. Figma's MCP
+server now documents **write-to-canvas and code-to-canvas as first-class features** — its own
+introduction page says agents can "build and update frames, components, **variables**, and auto
+layout in your Figma files using your design system as the source of truth." Figma is now shipping
+the mirror direction as a product. The seat maths still bites (writes like `create_new_file` are
+exempt from the rate limit, but the reads you need to check your work are not), yet the mechanical
+objection to B — "somebody has to sit in Figma and retype it" — is going away.
+
+(Both A and B are arguments about *Figma*. If the design tool is not yet fixed, Penpot moves the
+constraint: native DTCG in and out, eleven token types, no plan gate. It does not change the
+enforcement argument below — an exported file is still unreviewed — but it does remove "the tool
+cannot express your tokens" from the list of reasons A fails.)
 
 **C. Figma mirrors, by hand, on a cadence.** The repo is the source of truth. A designer keeps a
 Figma variable collection whose names and values match, updates it when the CSS file changes, and
@@ -449,11 +744,38 @@ Three rules that make this hold:
    shrinks row height and leaves 14px text, which produces a cramped row rather than a dense one.
    See `craft/density-and-hierarchy.md`.
 
-**What the tools do with this:** Style Dictionary handles multi-mode by running the build once per
-permutation and emitting one file per combination — the cross-product, materialised. That's correct
-for iOS and Android, where there is no cascade, and wasteful for the web, where there is. Terrazzo
-implements the Resolver module directly and shipped "partial CSS output for resolvers" on
-2026-08-11, which emits only the varying properties per mode — the right shape. Figma's own model
+**What the tools do with this — measured, not assumed.** I built the same three-axis system twice:
+once as a DTCG Resolver 2025.10 file through `@terrazzo/cli@2.7.1` (the only implementation of the
+Resolver module I could verify), once as hand-written CSS. 90 tokens; `brand` × `theme` × `density`
+= 3 × 2 × 2 = 12 permutations.
+
+| | Declarations | Selector blocks | Bytes |
+|---|---|---|---|
+| Resolver → `@terrazzo/plugin-css` permutations | **1,080** | 12 | 25,931 |
+| Hand-written cascade (derived from that output, provably equivalent) | **186** | 5 | 4,539 |
+| | **5.8×** | 2.4× | 5.7× |
+
+The Resolver's data model has no concept of "override only what changed." Every permutation
+re-emits every token. In the four-block probe, the dark block redeclares `--pad-x: 16px` — a
+spacing value dark mode never touches — and every block redeclares the entire primitive ramp. The
+parser's internals say so plainly: `getPermutationID()`, "Make a deterministic string from an
+object", and a `destructiveMerge` written because "we need a really performant way to merge token
+sets." Merging complete sets *is* the design.
+
+The hand-written equivalent needs 90 base declarations plus the deltas that actually differ — dark
+50, compact 22, brand-b 12, brand-c 12 — and it gets the eighth, ninth and twelfth combinations
+free, because the browser composes `[data-brand="b"][data-theme="dark"][data-density="compact"]`
+without anyone writing that selector. The generated file must enumerate all twelve. Add a fourth
+axis and the cascade grows by one block; the resolver output doubles.
+
+This is not an argument that the Resolver module is bad. It is the correct model for **iOS,
+Android, and any target without a cascade**, where the permutation genuinely must be materialised —
+and it is a far better answer than Style Dictionary's "run the build N times with different config"
+approach to the same problem. It is an argument that **the web already has a resolver, it ships in
+every browser, and generating permutations into it is paying twice.** Style Dictionary's
+multi-mode story is the same shape and cruder: one build per permutation, one file per combination.
+
+Figma's own model
 (collections with modes, plus the new *extended collections* for brand variants) is orthogonal-ish
 but caps at one mode axis per collection, so multi-axis theming in Figma means multiple collections
 and manual discipline about which axis lives where.
@@ -468,6 +790,19 @@ and manual discipline about which axis lives where.
   from group names.
 - Composite types (typography, shadow, border, gradient, transition) exist in the format and are
   the main thing Figma variables cannot express.
+- **`dimension` accepts `px`, `em` and `rem`. That is the entire unit enum** — verified against
+  `@terrazzo/token-types@2.7.1`, which types it as `unit: 'px' | 'em' | 'rem'`, and `duration` as
+  `unit: 'ms' | 's'`. There is no `%`, no `ch`, no `vw`, no `dvh`, no `fr`, no `svh`. So
+  `--measure: 68ch`, `--sidebar: 22vw`, `--sheet-h: 90dvh` and every fluid `clamp()` you own cannot
+  be DTCG dimension tokens. They become `string` tokens, which means no transform, no unit
+  conversion, no per-platform output — i.e. exactly the tokens the pipeline can't help with. A
+  corpus that recommends `ch` measures (`craft/typography.md`) is recommending values the format
+  cannot type.
+- `fontWeight` accepts a number **or** one of eighteen keywords (`thin`, `hairline`, `extra-light`,
+  `ultra-light`, `light`, `normal`, `regular`, `book`, `medium`, `semi-bold`, `demi-bold`, `bold`,
+  `extra-bold`, `ultra-bold`, `black`, `heavy`, `extra-black`, `ultra-black`). Two of those pairs
+  are synonyms with different spellings, so a naive round-trip through two tools can change the
+  string without changing the weight.
 - Vendor extensions go under `$extensions` with a reverse-DNS key. Tokens Studio's extras live at
   `$extensions["studio.tokens"]`. If you see them in a file, you are looking at a Tokens Studio
   export, not a portable one.
@@ -530,6 +865,27 @@ Figma and from a code source, both render a browsable site, both now expose an M
 at 500 calls/month; Supernova gates "MCP consumers" by tier). Choose them when the constraint is
 "non-engineers must author documentation", never when it is "we need a token pipeline."
 
+**Two things I saw on first-party token docs on 2026-09-10 that change what "the documentation
+surface" means.**
+
+*Primer has the pattern worth copying, and it admits its own limit.* Its colour page is a three-column
+table — swatch, `--fgColor-accent` with a copy button, `#0969da` — above a callout reading: *"This
+page only shows colors in the site's active theme ('light' or 'dark'). Use the Primitives Storybook
+to see colors in all themes."* That is the correct division of labour, shipping at GitHub: **the
+docs site is the single-theme reference; Storybook is the all-themes surface**, because Storybook is
+the only one running the real cascade. Also worth copying: `--fgColor-closed` and `--fgColor-danger`
+are both `#d1242f`. Two names, one value, deliberately — a semantic distinction preserved through a
+coincidence of value. Any "dedupe tokens by value" tooling would destroy it.
+
+*Polaris's public token catalogue is gone.* `polaris.shopify.com/tokens/color` now redirects into
+shopify.dev's "Polaris references", where Polaris is described as "Shopify's unified UI framework
+built on web components" and the page offers "Install AI Toolkit / Ask about this page / Copy MD".
+The 2,041 properties are still in the shipped CSS; the browsable token documentation an agent would
+have cited is not. Carbon, meanwhile, now documents **three** token layers — Core, Component and
+**AI Tokens** — a dedicated set for surfaces where an AI feature is present. Expect more of that: a
+token layer whose job is to mark machine-generated content is a 2026 idea that did not exist when
+this category's tooling was designed.
+
 **Knapsack** has left the category. Its homepage is a waitlist for an AI-conformance product whose
 own copy names Supernova and Storybook as *inputs* it aggregates. Interesting thesis, unusable
 today.
@@ -556,14 +912,19 @@ today.
   customization 5 · perf 5 · stability 5 · originality 2
 - **Evidence:** custom properties are Baseline widely available; cascade-composed modes cost zero
   JS and zero re-renders. Measured comparison set in the reference section above (Linear 419,
-  shadcn 365, Vercel 576, Atlassian 619, Primer 1,998, Polaris 2,041 — all 2026-09-09). The one
-  genuine weakness is silent failure on typos, mitigable with a stylelint allowlist and a generated
-  `.d.ts`.
-- **Looked at:** the shipped `:root` of eight production design systems, enumerated via
-  `getComputedStyle` at 1440×900. The finding that changed my mind: Stripe ships 115 custom
-  properties, 4 of them colours, and no theme selectors at all — a top-tier interface with
-  essentially no token layer in CSS. Token infrastructure is not what makes an interface look
-  designed.
+  shadcn 365, Vercel 576, Atlassian 619, Stripe 715, Primer 1,998, Polaris 2,041). Scale is a
+  non-issue: 90 → 2,041 declared properties costs **0.3 ms** on a theme switch across 2,000
+  consuming nodes, measured. The three-axis cascade version of a 90-token system is **186
+  declarations in 5 blocks** where the generated resolver equivalent is 1,080 in 12. The one genuine
+  weakness is silent failure on typos — and it is worse than "renders nothing": a wrong *type*
+  resolves to `rgba(0, 0, 0, 0)`, so the element goes transparent. Mitigate with `@property`
+  (`syntax` + `initial-value`) on the semantic layer, a stylelint allowlist, and a generated `.d.ts`.
+- **Looked at:** the shipped `:root` of fourteen production sites, enumerated via `getComputedStyle`
+  at 1440×900, plus a full stylesheet-text pass for byte weight. The finding that changed my mind
+  runs the other way from the first pass: **Stripe ships 715 custom properties, 436 of them
+  colours, in one clean `--hds-*` grammar and with zero theme selectors.** A top-tier interface with
+  a serious token layer and exactly one theme. What makes it work is the single namespace and the
+  single axis, not the count — and not a pipeline.
 - **Vibecode risk:** low — but only if you replace the default ramp. See "The generated version".
 - **Link:** `/Users/ayushgarg/Ayush/UI_Library/system/3-tokens.md`
 
@@ -594,6 +955,42 @@ today.
 - **Vibecode risk:** low.
 - **Link:** https://developers.figma.com/docs/rest-api/variables/
 
+### Penpot design tokens — `situational`
+- **What:** Open-source design tool (MPL-2.0, self-hostable) with **native DTCG design tokens** —
+  a Tokens panel alongside Layers and Assets, token sets, themes, aliases, math, and JSON
+  import/export. Free tier is $0/user/mo.
+- **Verdict:** The entry this file was missing, and it falsifies the sharper half of the Figma
+  argument. The disqualifying facts about Figma Variables are the four-value type system and the
+  Enterprise gate on the REST API. Penpot has neither: its token types cover border radius, colour,
+  dimensions, opacity, sizing, spacing, stroke width, rotation, typography, numbers and shadows —
+  **eleven against Figma's four**, with gradients listed as not yet available — and DTCG JSON goes in
+  and out at the free tier with no plan check. So "the design tool cannot express or export your
+  tokens" is a fact about *Figma*, not about design tools. What it does not falsify is Decision 3:
+  the repo is still where enforcement lives, and Penpot's export is still an unreviewed artefact.
+  The real cost is that adopting it is a *design-tool* migration, not a token-tool decision —
+  libraries, plugins, muscle memory and every collaborator who sends you a Figma link. That is why
+  it is `situational` and not higher.
+- **Use when:** the design tool is genuinely still an open question, you self-host, or the budget
+  will not carry Figma Enterprise and designers must own token values. ·
+  **Don't use when:** the org is on Figma. Migrating a design tool to fix a token export is the
+  most expensive possible answer to a twenty-minute mirroring problem.
+- **Scores /5:** visual 4 · interaction 4 · a11y — · engineering 4 · maintenance 5 · docs 4 ·
+  customization 5 · perf 3 · stability 4 · originality 5
+- **Evidence:** `penpot/penpot` ★59,827 · 4,088 forks · MPL-2.0 · pushed 2026-09-10 (all verified
+  2026-09-10). Pricing: Professional **$0**/user/mo (≤8 team members, unlimited viewers, 10 GB);
+  Unlimited **$7**/user/mo with the monthly bill capped at $175; self-host free. Token type matrix
+  and the "first tool to integrate native design tokens" claim from `penpot.app/design-tokens`.
+- **Looked at:** `penpot.app/design-tokens` and `help.penpot.app/user-guide/design-tokens/` at 1440
+  and 390. The docs tree is the tell that this is real and not a checkbox: *Creating a token*,
+  *Referencing tokens into values (aliases)*, *Using math in token values* with **Basic operators**
+  and **Math functions** as separate pages, then Themes. The product screenshot shows a LAYERS /
+  ASSETS / **TOKENS** tab row with a THEMES selector ("Alias / Dark Mode") over checkbox-toggled
+  SETS (`global` → `color`, `dimension`) — the same enabled-stack-of-sets model Tokens Studio uses,
+  shipped in the editor rather than in a €169/mo plugin. The help centre nav also carries an **MCP
+  Server** item, so the AI-context repositioning reached the open-source end of the category too.
+- **Vibecode risk:** low.
+- **Link:** https://penpot.app/design-tokens
+
 ### Style Dictionary v5 — `strong`
 - **What:** Node build system that reads token files (DTCG or legacy), applies transforms, and
   writes platform-specific output — CSS, SCSS, JS, TS, Swift, Kotlin, XML, whatever you can write a
@@ -613,19 +1010,28 @@ today.
   web app. You are building a compiler for a single-file problem.
 - **Scores /5:** visual 2 · interaction — · a11y — · engineering 5 · maintenance 5 · docs 4 ·
   customization 5 · perf 4 · stability 4 · originality 4
-- **Evidence:** ★4,802 · 631 forks · 242 open issues · `style-dictionary` 5.5.3 published
+- **Evidence:** ★4,802 · 631 forks · **218 open issues + 24 open PRs** (GitHub's `open_issues_count`
+  of 242 includes PRs — same counting error `css-and-styling-infra.md` corrects) · `style-dictionary` 5.5.3 published
   2026-09-06 · 1,682,990 wk npm · Apache-2.0 · repo moved from `amzn/` to
   `style-dictionary/style-dictionary` · v4.0.0 2024-06-28, v5.0.0 2025-05-16 · v5 breaking:
   no references to non-token leaf nodes, no `.value` suffix, reference syntax fixed to DTCG, Node
-  ≥22 (all quoted from the v5.0.0 release notes).
+  ≥22 (all quoted from the v5.0.0 release notes) · **run locally 2026-09-10**: install 58 MB /
+  4,719 files / 107 lockfile packages; three platforms built in 3.7 s; a spec-form
+  `{"value":120,"unit":"ms"}` `duration` token emitted `[object Object]` into CSS, Swift **and**
+  Android XML with `✔︎` and exit 0; `outputReferences` defaults to `false`, flattening every alias
+  to a literal.
 - **Looked at:** https://styledictionary.com at 1440 and 390 — teal chameleon mark, oversized
   black grotesque wordmark, a live four-tab demo (Tokens / Config / Script / Output) that actually
   compiles DTCG JSON to `/vars.css` in the page, with a format dropdown. The demo is the best part
   of the site and it's below the fold at both widths. On mobile the four hero buttons reflow into a
   ragged 1-2-1 stack — "Documentation", then "Migration to Version 4" beside "GitHub", then "v3
   docs" alone and centred. A tool at 5.5.3 whose mobile hero offers v3 and v4 wayfinding and no v5.
-- **Vibecode risk:** low as a tool. Medium as a habit: the default `css/variables` formatter emits
-  every token flat with no semantic layer, which is how you get 668 literals and 27 aliases.
+- **Vibecode risk:** low as a tool. **Medium-high as a habit**, for two reasons now measured
+  rather than suspected: the default `css/variables` formatter resolves every alias to a literal
+  unless you set `outputReferences: true`, which is how you get Carbon's 668 literals with 27
+  aliases and Atlassian's 1,193 with 30; and it will write `[object Object]` into three platform
+  outputs and tell you the build succeeded. An agent that installs Style Dictionary, accepts the
+  defaults and doesn't read the output ships both failures.
 - **Link:** https://styledictionary.com
 
 ### Terrazzo — `strong`
@@ -633,10 +1039,16 @@ today.
   vanilla-extract, Swift and a token-listing output. MIT, free.
 - **Verdict:** The best-engineered new thing in the category and the one that actually tracks the
   spec. It treats DTCG as the input language rather than as an import format, and — the
-  differentiator — **it implements the Resolver module**: commits on 2026-08-11 landed "partial CSS
-  output for resolvers" and "fix resolver alias merging", which is precisely the orthogonal-axis
-  theming model from Decision 4, emitting only the varying declarations per mode instead of a full
-  set per permutation. Style Dictionary does not do this. The risk is proportionality: 456 stars,
+  differentiator — **it is the only implementation of the Resolver module I could verify**:
+  `@terrazzo/parser@2.7.1` ships `sets`, `modifiers`, `resolutionOrder`, `apply(input)` and
+  `getPermutationID()`, and `@terrazzo/plugin-css` exposes a `permutations` API with the older
+  `modeSelectors` marked deprecated. Style Dictionary does not do this at all.
+  **Correcting an earlier claim in this file:** the August 2026 "partial CSS output for resolvers"
+  commit does not mean it emits only the varying declarations. I ran it — 90 tokens across a
+  3 × 2 × 2 resolver produced **1,080 declarations in 12 blocks**, every block re-emitting every
+  token, against 186 declarations in 5 blocks for the hand-written cascade. Terrazzo faithfully
+  implements the spec, and the spec materialises permutations. That is the right answer for Swift
+  and Kotlin and the wrong one for a browser. The risk is proportionality: 456 stars,
   six subscribers, effectively one maintainer. `@terrazzo/plugin-css` pulls 66,216 weekly against
   the CLI's 55,239, which suggests it is being consumed as a library inside other builds as much as
   run as a CLI. Adopt it for a new pipeline; don't migrate a working Style Dictionary config to it
@@ -647,8 +1059,9 @@ today.
 - **Scores /5:** visual 3 · interaction — · a11y — · engineering 5 · maintenance 4 · docs 4 ·
   customization 4 · perf 4 · stability 3 · originality 5
 - **Evidence:** ★456 · created 2021-11-17, pushed 2026-09-10 · 6 subscribers · MIT ·
-  `@terrazzo/cli` 2.7.1 2026-08-11, 55,239 wk npm · `@terrazzo/plugin-css` 2.5.0 2026-07-26, 66,216
-  wk npm · resolver commits #815 and #817, both 2026-08-11.
+  `@terrazzo/cli` 2.7.1 2026-08-11, 55,239 wk npm · `@terrazzo/plugin-css` 2.7.1 2026-08-11, 66,216
+  wk npm · resolver commits #815 and #817, both 2026-08-11 · resolver + permutation behaviour run
+  locally 2026-09-10 (install 57 MB / 1,911 files / 94 packages; 90 tokens built in 123 ms).
 - **Looked at:** https://terrazzo.app at 1440 and 390 — a cyan blueprint grid across the whole
   viewport, Memphis-style flat shapes (coral rectangle, lime half-circle, teal/cyan triangle strip)
   with real Figma selection handles drawn on them, and "Design systems / FOR EVERYONE" in a white
@@ -693,8 +1106,12 @@ today.
 - **Link:** https://www.designtokens.org/TR/2025.10/
 
 ### Figma Code Connect — `situational` (`strong` if you are already Organization or Enterprise)
-- **What:** Per-component mapping files that make Dev Mode and the Figma MCP server return *your*
-  component's real code and prop names instead of generated markup.
+- **What:** Per-component mappings that make Dev Mode and the Figma MCP server return *your*
+  component's real code and prop names instead of generated markup. Two paths now: the **CLI**
+  (template files in your repo, reviewable, versioned) and **Code Connect UI** (map components
+  inside Figma against a connected GitHub repo, one-to-many across frameworks). The UI path removes
+  the "author a TypeScript file per component" objection and re-introduces the Decision 3 one — a
+  mapping edited in Figma is a mapping nobody reviewed.
 - **Verdict:** The only tool in this file that reduces drift at the component level rather than the
   value level, and the only one whose output an engineer would keep. The 2026 shape is template
   files: framework-agnostic TypeScript that renders exactly the snippet you want, replacing the old
@@ -765,8 +1182,8 @@ today.
 - **Verdict:** By a distance the most capable token editor that lives inside Figma, and the only
   honest answer when designers must own token values and will not open a repo. It handles the things
   Figma Variables can't: composite typography, shadows, math (`{spacing.base} * 2`), and theme
-  matrices. The plugin repo is healthy — MIT, ★1,606, pushed the day before this evaluation, though
-  with 339 open issues. Two cautions. The pricing has moved decisively upmarket: €17/editor/mo for
+  matrices. The plugin repo is healthy — MIT, ★1,606, pushed the day of this evaluation, with **248 open
+  issues + 91 PRs**. Two cautions. The pricing has moved decisively upmarket: €17/editor/mo for
   the Variables-only plan, **€169/mo** for Essential (one editor, one project) and **€499/mo** for
   Organization (five editors, twenty projects). And the piece most teams actually depend on —
   `@tokens-studio/sd-transforms`, the bridge that makes Tokens Studio output legible to Style
@@ -777,7 +1194,7 @@ today.
   you could edit in your IDE.
 - **Scores /5:** visual 3 · interaction 4 · a11y 2 · engineering 4 · maintenance 4 · docs 3 ·
   customization 5 · perf 3 · stability 4 · originality 4
-- **Evidence:** `tokens-studio/figma-plugin` ★1,606 · MIT · pushed 2026-09-09 · 339 open issues ·
+- **Evidence:** `tokens-studio/figma-plugin` ★1,606 · MIT · pushed 2026-09-10 · 248 open issues + 91 PRs ·
   `@tokens-studio/sd-transforms` 2.0.3 published 2025-12-10, 163,156 wk npm ·
   `@tokens-studio/types` 171,219 wk npm · pricing verified on tokens.studio/pricing 2026-09-09.
 - **Looked at:** https://tokens.studio at 1440 and 390 — "DESIGN SYSTEMS, / FULLY AUTOMATED" in
@@ -1046,7 +1463,16 @@ Ranked by how often I've seen it, not by severity.
 9. **Per-platform output diverges silently.** The web gets a new token, iOS doesn't, because the
    iOS build filters by a `platform` attribute someone forgot to set. Mitigation: a test asserting
    the token *count* matches across platform outputs, with an explicit allowlist of exclusions.
-10. **The MCP budget runs out mid-task.** An agent is 60% through a screen and starts getting rate
+10. **A bad token value makes an element invisible rather than wrong.** `--bg-surface: 16px`
+    (a fat-finger, a bad merge, a mis-typed Figma export) does not throw. The declaration is invalid
+    at computed-value time and `background-color` resolves to `rgba(0, 0, 0, 0)`. Measured above.
+    Mitigation: `@property` with a `syntax` and an `initial-value` on every semantic colour, so the
+    failure lands on the fallback instead of on transparent.
+11. **The generator emits `[object Object]` and the build passes.** Verified on Style Dictionary
+    5.5.3 with a spec-conformant `duration` token: CSS, Swift and Android XML all got
+    `[object Object]`, with `✔︎` and exit code 0. Mitigation:
+    `grep -q '\[object Object\]' build/ && exit 1` in CI. Nothing else catches it.
+12. **The MCP budget runs out mid-task.** An agent is 60% through a screen and starts getting rate
     limit errors, and its recovery behaviour is to guess values. Mitigation: fetch the frame's
     variable definitions once, write them into the working context, and don't re-query.
 
@@ -1057,7 +1483,6 @@ Ranked by how often I've seen it, not by severity.
 **CSS custom properties, hand-authored, versioned in the app repo, with Figma mirroring.**
 
 Concretely, in order:
-
 1. Before the first component, write `app/tokens.css` following `system/3-tokens.md`: a primitive
    ramp (10–12 neutrals, one accent, 3–4 semantic colours), a semantic layer that components
    reference exclusively, and mode blocks for dark / density / brand as separate attribute
@@ -1066,14 +1491,22 @@ Concretely, in order:
    is the sentence that stops a future engineer from using it for a label.
 3. Add one stylelint rule: no hex, rgb, oklch or bare px in any file except `tokens.css`. This is
    the enforcement mechanism the whole argument rests on; without it the file is a suggestion.
-4. Run `node tools/contrast.mjs --pairs` and commit the output. Contrast is a property of the token
+4. Register the semantic layer with `@property` — `syntax` and `initial-value` per token. Twenty
+   lines, and it converts the system's worst failure mode (a wrong value silently renders the
+   element transparent) into a visible fallback. Nobody measured here does this; it is free
+   correctness sitting on the floor.
+5. Run `node tools/contrast.mjs --pairs` and commit the output. Contrast is a property of the token
    *pair*, so it belongs to the token file, not to the component.
-5. Have a designer create one Figma variable collection whose names match the semantic layer
+6. Have a designer create one Figma variable collection whose names match the semantic layer
    exactly, and set each variable's `codeSyntax.WEB` to the custom-property name. Twenty minutes.
    Re-mirror when the CSS changes — which after month one is a handful of values a quarter.
-6. If you run Storybook, add one docs page that renders every token from live `var()` references, so
+7. If you run Storybook, add one docs page that renders every token from live `var()` references, so
    a token change produces a visual diff a human reviews.
-7. Revisit only when Decision 1's line is crossed: a second non-web platform, or ≥4 independently
+8. Reduce the count with `color-mix()` before adding names. `--accent-subtle`,
+   `--accent-subtler`, `--accent-subtlest` is three names per hue that
+   `color-mix(in oklab, var(--accent) 12%, transparent)` computes. That ladder is a large part of
+   how a 90-token file becomes a 600-token file.
+9. Revisit only when Decision 1's line is crossed: a second non-web platform, or ≥4 independently
    maintained brands. Then add Terrazzo (new pipeline) or Style Dictionary (multi-platform, big
    ecosystem) and emit CSS *plus* the other platform from one DTCG file — with the CSS output
    diffed against the hand-authored file on the first run so you can prove nothing changed.
@@ -1197,7 +1630,22 @@ brands", "we use Figma", "we want designers to see the tokens". None of those re
    nobody knows why `--text-disabled` exists or why it must not be used for meaning.
    **Correction:** comment the constraint, not the colour. `/* 3.1:1 — never carries meaning */`.
 
-10. **Recommending Specify, or Theo, or `token-transformer`.** All three are dead; all three still
+10. **A DTCG file written in whichever dialect the model saw most.** Hex strings for colours and
+    `"16px"` strings for dimensions is the 2021–2024 dialect and the one training data is full of.
+    It builds in Style Dictionary and is **rejected outright by Terrazzo** with fifteen lint errors.
+    The 2025.10 dialect (`{"colorSpace":"srgb","components":[…]}`, `{"value":16,"unit":"px"}`)
+    is the opposite: Terrazzo builds it, Style Dictionary builds it but silently mangles `duration`.
+    **Correction:** name the tool before writing the file, write that tool's dialect, and diff the
+    emitted CSS against the previous file on the first build. Do not claim the file is "portable."
+
+11. **Every mode axis emitted as a full token set** — because that is what the resolver, the
+    exporter and the Figma collection all hand you. Measured here: 90 tokens × 12 permutations =
+    **1,080 declarations, 25,931 bytes, 12 selector blocks**, where the hand-written cascade is 186
+    declarations in 5 blocks and gets the remaining seven combinations for free.
+    **Correction:** on the web, emit the base set plus per-axis deltas. Only materialise
+    permutations for targets with no cascade — iOS, Android, email.
+
+12. **Recommending Specify, or Theo, or `token-transformer`.** All three are dead; all three still
     have live sites or five-figure weekly download counts.
     **Correction:** check `pushed_at` and the latest npm publish date before naming any tool in this
     category. It moves fast and the corpses stay warm.
@@ -1232,6 +1680,18 @@ Run against your own output before you call the token work done.
 - [ ] If you cited the DTCG spec: did you link `designtokens.org/TR/2025.10/` and not the draft that
       says "do not implement"?
 - [ ] Does the density mode move type size, not only padding?
+- [ ] `grep -c 'var(--' tokens.css` — is it roughly the size of your semantic layer, or near zero?
+      Near zero means the aliases were flattened at build time and you have no runtime semantic
+      layer. (`outputReferences: true` in Style Dictionary.)
+- [ ] `grep -r '\[object Object\]' <build output>` — zero hits? Run this even when the build
+      printed a checkmark and exited 0.
+- [ ] Do the mode blocks declare only the properties that *differ*, or does each one re-emit the
+      whole set? Count: `awk '/\{/{n=0} /^\s*--/{n++} /\}/{print n}'`. Every block after the first
+      should be small.
+- [ ] Are the semantic colour tokens registered with `@property` (a `syntax` and an
+      `initial-value`)? If not, a wrong value renders transparent instead of falling back.
+- [ ] Did you argue against a large token set on performance grounds? Delete that argument — the
+      measured cost of 2,041 vs 90 properties is 0.3 ms.
 - [ ] Do the Figma variable names match the CSS custom-property names exactly, with `codeSyntax`
       set?
 
@@ -1270,10 +1730,64 @@ Screenshotted at 1440 (and 390 where noted) with `tools/shot.mjs` and read as im
     classes, data attributes), a "Copy markdown" button, and a demo screenshot composited on a stock
     photo of leaves.
 
+**Second pass, 2026-09-10** — twelve more surfaces screenshotted at 1440 and read as images:
+
+13. **atlassian.design/foundations/design-tokens** — the Tokens nav has five children, two of which
+    are "Use tokens in **code**" and "Use tokens in **design**" as separate pages. The seam, made
+    literal in an information architecture. Border and Radius tokens still carry `Beta` pills.
+14. **primer.style/foundations/primitives/color** — swatch / `--fgColor-accent` + copy button /
+    `#0969da`, and the "this page only shows the active theme, use the Primitives Storybook" callout.
+    The best token-docs pattern measured.
+15. **polaris.shopify.com/tokens/color** — **redirects to shopify.dev "Polaris references."** The
+    standalone token catalogue is gone; the page now offers "Install AI Toolkit / Ask about this
+    page / Copy MD."
+16. **carbondesignsystem.com/elements/color/tokens** — three layers: Core Tokens, Component Tokens,
+    **AI Tokens**.
+17. **www.designtokens.org/TR/2025.10/format/** — the W3C Community Group *Final Report* watermark,
+    28 October 2025, five editors and six authors. Its own copyright line credits the contributors
+    to the *Resolver* Module — a copy-paste error on the Format module's front page.
+18. **spectrum.adobe.com/page/design-tokens/** — "design decisions, translated into data"; nav
+    separates Design tokens / Platform scale / Theming as three foundations.
+19. **m3.material.io/styles/color/roles** — "There are **26 standard color roles** organized into
+    six groups." The count that anchors this whole file.
+20. **ui.shadcn.com/themes** — now a theme *builder*: Base Color, Theme, Chart Color, Heading font,
+    Text font, Icon Library, Radius, plus Shuffle. Every default reads "Neutral" / "Inter". This is
+    the generated-interface factory with a UI.
+21. **docs.tokens.studio** — nav carries "Export to Figma Guide" *and* "Import from Figma Guide",
+    "Variables and Tokens Studio" *and* "Styles and Tokens Studio", with Themes marked `(pro)`. The
+    bidirectional-sync problem has its own documentation tree. The product shot shows the model:
+    token *sets* (`core` / `light` / `dark` / `theme`) with checkboxes, so a theme is an enabled
+    stack of sets rather than an orthogonal axis.
+22. **terrazzo.app/docs/cli/integrations/css** — "Convert your modes into any CSS selector for
+    complete flexibility," with integrations for CSS, CSS-in-JS, Sass, JS/TS, Storybook, Swift,
+    Tailwind and Vanilla Extract, and a "Resolvers & Theming" guide in the sidebar.
+23. **developers.figma.com/docs/figma-mcp-server/** — write-to-canvas and code-to-canvas as
+    first-class doc pages; "agents can build and update frames, components, variables, and auto
+    layout in your Figma files using your design system as the source of truth."
+24. **styledictionary.com/reference/hooks/formats/predefined/** — the predefined format list, which
+    is where `outputReferences` is documented as an option rather than a default.
+
 Measured with Playwright (`getComputedStyle(document.documentElement)`, 1440×900, after
 `networkidle`): linear.app, ui.shadcn.com, vercel.com, atlassian.design, m3.material.io,
-primer.style, polaris.shopify.com, spectrum.adobe.com. Separately, a stylesheet-text pass over
-stripe.com and carbondesignsystem.com. All numbers in the reference table above.
+primer.style, polaris.shopify.com, spectrum.adobe.com, base-ui.com, radix-ui.com/themes,
+tailwindcss.com, github.com, storybook.js.org, developer.apple.com/design/human-interface-guidelines.
+Separately, a stylesheet-**text** pass (every CSS response body plus every inline `<style>`, which
+is the only method that survives CORS-opaque sheets) over all of the above plus stripe.com and
+carbondesignsystem.com, for the byte-weight and alias-ratio tables.
+
+Run locally on 2026-09-10, Node 24.15.0 / npm 11.12.1: `style-dictionary@5.5.3` and
+`@terrazzo/cli@2.7.1` + `@terrazzo/plugin-css@2.7.1`, each installed into an empty project and run
+against (a) a 31-token DTCG file in legacy hex form, (b) the same file in DTCG 2025.10 object form,
+(c) a 90-token three-axis resolver with twelve permutations. Install footprints, build times, emitted
+CSS, the `[object Object]` duration bug, the `outputReferences` default and the 5.8× permutation
+blow-up are all from those runs and are reproducible. `@terrazzo/parser@2.7.1`'s
+`types.d.ts` and `lib/resolver-utils.d.ts`, and `@terrazzo/token-types@2.7.1`'s `index.d.ts`, read
+directly for the Resolver shape and the DTCG unit enums.
+
+Browser behaviour probes (headless Chromium, 1440×900): custom-property count vs theme-switch cost
+at 90/300/619/2041/6000 declarations over 2,000 consuming nodes; cascade attribute flip vs per-node
+inline-style writes; `@property` type-guarding, animation, missing-token fallback and computed-value
+normalisation.
 
 Fetched and read: `designtokens.org/TR/2025.10/` (Format and Resolver modules),
 `tr.designtokens.org/format/`, `developers.figma.com/docs/rest-api/variables/`,
@@ -1293,9 +1807,18 @@ for every package in the health table.
 
 ## Open questions
 
-- **Does anyone actually implement the Resolver module besides Terrazzo?** Terrazzo's August 2026
-  commits are the only implementation I could verify. A survey of the DTCG's new test-suite package
-  consumers in six months would settle it.
+- **Does anyone actually implement the Resolver module besides Terrazzo?** Still open, and the
+  Terrazzo half is now settled rather than assumed: `@terrazzo/parser@2.7.1` ships `sets`,
+  `modifiers`, `resolutionOrder`, `apply(input)` and `getPermutationID()`, and `plugin-css` exposes
+  a `permutations` API (with `modeSelectors` marked deprecated). It works. What no one has published
+  is a **partial** CSS emitter for resolvers — one that writes only the tokens a modifier changes.
+  That is perhaps 200 lines against the existing `apply()` and it would remove the single strongest
+  argument against pipelines on the web. If you build one thing from this file, build that.
+- **Does registering tokens with `@property` break anything at scale?** Twelve sites, zero examples,
+  so there is no field evidence either way — only the four behaviours measured here on a synthetic
+  page. The specific unknowns: style-recalc cost when 90 properties are registered rather than
+  declared, and how many existing test suites string-compare `getPropertyValue()` output and would
+  break on the normalised computed value.
 - **What does the real distribution of token counts look like?** Eight sites is a sample, not a
   study. A crawl of the top 500 sites' `:root` custom-property counts, split by whether they publish
   a design system, would turn the "under 120" heuristic into a real percentile.

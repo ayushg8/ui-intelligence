@@ -4,7 +4,7 @@
 
 ## What this archetype is for
 
-Interfaces where the numbers on screen are claims about money that actually exists, and where the user's next action may be irreversible within seconds. That covers business banking (Mercury, Brex), spend management (Ramp), cross-border transfer (Wise, Revolut), consumer banking and P2P (Monzo, Cash App, Nubank, Chime), brokerage (Robinhood, Coinbase), and the money-movement infrastructure layer (Stripe, Modern Treasury, Column, Increase, Plaid, Fragment, Lithic). It does *not* cover crypto-casino UI, pricing pages, invoicing-as-a-feature inside a SaaS product, or dashboards that merely display a revenue number — those show money, they don't move it. The distinguishing test: **if a mis-read digit or a mis-clicked button costs the user real money that they cannot claw back with an undo, you are in this archetype.** Everything below is downstream of that.
+Interfaces where the numbers on screen are claims about money that actually exists, and where the user's next action may be irreversible within seconds. That covers business banking (Mercury, Brex), spend management (Ramp), cross-border transfer (Wise, Revolut), consumer banking and P2P (Monzo, Cash App, Nubank, Chime), brokerage (Robinhood, Coinbase), and the money-movement infrastructure layer (Stripe, Modern Treasury, Column, Increase, Plaid, Fragment, Lithic). It does *not* cover crypto-casino UI, pricing pages, invoicing-as-a-feature inside a SaaS product, or dashboards that merely display a revenue number — those show money, they don't move it. The distinguishing test: **if a mis-read digit or a mis-clicked button costs the user real money that they cannot claw back with an undo, you are in this archetype.**
 
 ## The reference set
 
@@ -12,28 +12,33 @@ Interfaces where the numbers on screen are claims about money that actually exis
 |---|---|---|
 | **Stripe** | The de-facto grammar for payment status, decline handling and developer-facing money UI | The `seller_message` / customer-message split: one event, two audiences, two strings, and a documented rule about which internal states you must *not* reveal |
 | **Mercury** | The institutional-serious pole done at consumer polish | A persistent, non-dismissible legal-status bar ("fintech company, not an FDIC-insured bank … Choice Financial Group and Column N.A., Members FDIC") pinned in the first viewport |
-| **Ramp** | Extreme color restraint in a dense finance product | Chartreuse `#E1FC53` appears exactly twice on the page — one secondary CTA and one count badge. The primary CTA is black. |
+| **Ramp** | One accent, one job, enforced down a 13,700px page | Chartreuse `#E1FC53` fills six elements on the homepage and **every one of them is a button or a link-button**. Zero uses as text, icon, chart series or decorative panel. |
 | **Brex** | Type engineering for numerals | Inter loaded with `"liga" 0, "calt" 0, "zero" 0` — ligatures and contextual alternates disabled outright, and the slashed zero deliberately turned **off** |
 | **Wise** | The canonical fee-and-FX disclosure UI, fully public | Currency is a *selector pill on the left*, not a `$` glyph; the amount field carries no symbol at all |
 | **Monzo** | Consumer-warm with a real fluid type system | Every step is a `clamp()` — `--step-0` is locked at exactly `1rem` with `0vw` so body text never scales, only headings do |
 | **Cash App** | Loud brand, quiet product | Brand green is a marketing surface only; inside the app the chrome is white/black with neutral gray pills |
 | **Robinhood** | Seriousness bought with typography | A high-contrast serif (Martina Plantijn) for editorial headlines in a product that used to be accused of gamification |
-| **Coinbase** | (Cloudflare-gated to headless; measured only via challenge page) | — |
 | **Plaid** | The permission/consent layer | A four-step shadow scale where only geometry changes — every level is `hsla(0,0%,7%,.08)` |
 | **Modern Treasury** | Double-entry made legible | Debits and Credits panels are headed in **slate and clay**, not green and red |
-| **Column** | A nationally chartered bank shipping a real design system | A cool, blue-tinted neutral ramp (`gray-900` = `rgb(18,22,30)`), and `font-weight: 300` named "regular" |
+| **Column** | A nationally chartered bank shipping a real design system | A cool, blue-tinted neutral ramp (`gray-900` = `rgb(18,22,30)`), `font-weight: 300` named "regular", and `font-feature-settings: "salt" 2` set on `body` so the alternate letterforms are the default, not an opt-in |
 | **Nubank / Revolut** | The consumer-warm pole at scale | Revolut's home balance is `£6,012` — no decimals, symbol at full size and weight |
 | **Increase** *(off-list)* | The most typographically serious money product I measured | The only site in my sample that actually applies `font-variant-numeric: tabular-nums` — plus a licensed **MRZ Mono** (the passport machine-readable-zone face) in the stack |
 | **Copilot Money** *(off-list)* | Consumer money app with institutional numeral discipline | Aggregates render whole-dollar, individual transactions render to the cent, in the same screen |
 | **Fragment** *(off-list)* | Ledger infrastructure as pure monospace | A whole marketing site set in mono, where `$` is used as a letterform (`Payment$ f•r agent$`) |
 
-**How I found the off-list three.** Mercury's own FDIC disclosure names **Column N.A.** as its partner bank; following that partner-bank/BaaS layer one hop further surfaced **Increase**, confirmed as serious by its own customer wall ("Ramp processes millions of bill payments with Increase," Nik Koblov, Head of Engineering). **Fragment** surfaced the same way from the Modern Treasury adjacency — the ledger-API cohort — and its logo wall (Bilt, Ramp, AtoB, Nala, Basic Capital, Whop) confirms it's shipping to real money movers. **Copilot Money** I went looking for deliberately: I wanted the consumer-warm pole executed with institutional numeral discipline, which the named consumer products (Cash App, Monzo, Revolut) all decline to do.
+**Provenance of the off-list three.** Mercury's FDIC disclosure names Column N.A.; one hop down that partner-bank layer surfaces **Increase** (customer wall: Coast, Vantaca, Tekion, AngelList, gusto, check, AtoB, ramp). **Fragment** sits in the same ledger-API cohort as Modern Treasury. **Copilot Money** was sought deliberately as the consumer-warm pole with institutional numeral discipline — a combination Cash App, Monzo and Revolut all decline.
 
 ---
 
 ## Measured specifics
 
-All values read from computed styles via Playwright at 1440×900 (or 390 for mobile), September 2026. Nothing here is recalled.
+All values read from computed styles via Playwright at 1440×900 (or 390×844 for mobile), September 2026, re-verified 2026-09-10. Nothing here is recalled.
+
+Four caveats that will bite anyone re-running this:
+- **Some sites serve agents a different document.** `ramp.com` returns a plain-text "Ramp — Machine Version" markdown page to a default headless user-agent. A probe that doesn't spoof a real desktop UA silently measures that page instead, gets `font-family: Times`, zero tokens, and reports nonsense. Every Ramp number below comes from a run with a Chrome 128 macOS UA string, confirmed stable across two runs (5,822 elements each).
+- **`ramp.com` ships colors in CIE Lab.** Computed values come back as `lab(92.1406 -20.4979 84.7726)`, not `rgb(225, 252, 83)`. String-matching hex against `getComputedStyle` finds nothing.
+- **FX-derived numbers drift hourly.** Wise's rate read `0.8593`, `0.8595` and `0.8596` in three probes an hour apart; the recipient amount moved `25,703.51` → `25,709.04` → `25,710.15`. Treat the *format* as the finding and the digits as a timestamped sample.
+- **`coinbase.com` returns a Cloudflare interstitial to headless Chromium.** Nothing from it is in this file.
 
 ### Wise — the money-entry card (`wise.com/us/send-money/`)
 
@@ -47,9 +52,10 @@ All values read from computed styles via Playwright at 1440×900 (or 390 for mob
 | Savings chip ("4.91 USD volume discount") | `14px`, `#054D28` on `#E2F6D5`, radius `10px`, height `30px` |
 | Primary CTA ("Send money") | bg `#9FE870`, text `#163300`, height `48px`, radius `9999px` |
 | Comparison table | header `#163300` bg / white `14px/26px` w700; body row height **74px**; value cell `16px/26px` w600 |
-| Exchange rate chip | `1 USD = 0.8594 EUR` — **4 decimal places** on the rate, 2 on every amount |
+| Exchange rate chip | `1 USD = 0.8595 EUR` — **4 decimal places** on the rate, 2 on every amount; a padlock glyph sits left of the rate inside the same pill, and a `>` chevron right of it |
+| Fact-row icon rail | Each meta row (`Arrives`, `Total fees`) is led by a 40px circular 1px-outlined icon — clock, receipt — in a fixed left gutter |
 
-**Wise's two-ramp semantic color system** (this is the most transferable thing in the file):
+**Wise's semantic color system** — three values per role, not one:
 
 ```
 --color-content-positive:      #008026   /* text — dark enough for AA on white */
@@ -58,17 +64,26 @@ All values read from computed styles via Playwright at 1440×900 (or 390 for mob
 --color-interactive-negative:  #E74848
 --color-content-warning:       #9A6500
 --color-interactive-warning:   #DF8700
---color-content-primary:       #37517E   /* body text is navy, not black */
---color-content-secondary:     #5D7079
---color-content-tertiary:      #768E9C
+--color-content-primary:       #0E0F0C
+--color-content-secondary:     #454745
+--color-content-tertiary:      #6A6C6A
 --color-background-positive:   rgba(54,199,151,0.10196)
 --color-background-negative:   rgba(255,135,135,0.10196)
 --color-background-warning:    rgba(255,172,0,0.10196)
---color-background-neutral:    rgba(134,167,189,0.10196)
---color-border-neutral:        rgba(0,0,0,0.10196)
+--color-background-accent:     rgba(56,200,255,0.10196)
+--color-background-neutral:    rgba(22,51,0,0.07843)
+--color-border-neutral:        rgba(14,15,12,0.12157)
+--color-background-celebration: #ECF9F9
+--color-content-celebration:    #0B4C72
 ```
 
-Every status *background* is exactly `0.10196` alpha (26/255) of a **different, brighter** hue than either the text or the fill. Three separate values per semantic role — text, fill, wash — is the whole trick. Also: `--radius-small: 10px / medium: 16px / large: 24px / xlarge: 32px / full: 9999px`, but `--btn-radius-base: 3px`. Control heights are a named ladder: `24 / 32 / 40 / 48 / 56 / 72`. Nav transitions: `350ms` default, `200ms` short, `600ms` long.
+**Three values per semantic role — text, fill, wash — is the whole trick.** Note what the alphas actually are: the four *status* washes are `0.10196` (26/255) of a hue that is neither the text color nor the fill color. The **neutral** wash is different — `0.07843` (20/255) of the brand forest green `#163300`, not of black, and not of a blue-gray. So "neutral" here is still brand-tinted; only the four status washes share a formula.
+
+Two more things worth taking:
+- Every status and interactive role ships **three states** — base, `-hover`, `-active` — as literal tokens (`--color-interactive-positive`, `-hover`, `-active`), so no component ever composes a hover from an opacity guess or a `filter: brightness()`. Sixteen roles carry the full triple. The `content-*` roles that are pure text (`primary`, `secondary`, `tertiary`) correctly do not.
+- There is a dedicated **`celebration`** semantic pair (`#ECF9F9` wash / `#0B4C72` text), separate from `positive`. Success and celebration are different events: a transfer settling is `positive`; hitting a savings goal is `celebration`. Most systems collapse these and end up using triumphant green on a settled-but-reversible ACH credit.
+
+Radii: `--radius-small: 10px / medium: 16px / large: 24px / xlarge: 32px / full: 9999px`, and `--btn-radius-base: 9999px` — buttons are fully round, so radius is not a shared scale with cards. Control heights are a named ladder in raw px: `--size-x-small 24 / small 32 / medium 40 / large 48 / x-large 56 / 2x-large 72`, on top of a literal `--size-4 … --size-160` set.
 
 ### Column — the neutral ramp is cool, not gray
 
@@ -82,18 +97,28 @@ gray-400 rgb(169,172,182)   gray-900 rgb( 18, 22, 30)
 
 R < G < B at every stop. `gray-900` is `#12161E` — a blue-black, never `#111`. Semantics: `red-500 #D64260`, `red-600 #A41742`; `green-500 #9CD95D`, `green-600 #72AC3F`; `yellow-600 #F3BE34`; `blue-600 #1E4199`.
 
-Type scale (`--text-100` → `--text-1000`): `12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 44, 56, 72px`. Weight tokens: **`--font-regular: 300`**, book 400, medium 500, semibold 600, bold 700. Fonts: SuisseIntl / SuisseIntlMono / Inter (UI). Elevation is deliberately near-invisible:
+**But headings aren't gray-900.** `h1`, `h2` and `h3` all compute to `rgb(17,26,74)` — `blue-800`, a true navy — while body text is `gray-600 rgb(87,90,100)`. The gray ramp carries surfaces and body; the blue ramp carries voice. `h1` is `52px / 57.2px` (ratio **1.10**) `ls -1.56px` (−0.03em) w600.
+
+Type scale (`--text-100` → `--text-1000`): `12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 44, 56, 72px`. The token names are **not** evenly spaced — `100, 200, 300, 350, 400, 500, 550, 600, 700, 750, 800, 900, 1000`. The `350 / 550 / 750` half-steps are where 18px, 28px and 40px were inserted after the fact. That is what a scale looks like after two years of shipping, and it is a better model than a pristine ratio nobody can extend.
+
+Weight tokens: **`--font-regular: 300`**, book 400, medium 500, semibold 600, bold 700 — so the token named "regular" is a Light. Fonts: SuisseIntl / SuisseIntlMono / Inter (UI), with `font-feature-settings: "salt" 2` on `body`, i.e. the stylistic-alternate set is the default rendering, not an opt-in class.
+
+Elevation, the full token:
 
 ```
---shadow-product: 0 40px 32px rgba(0,0,0,.02), 0 22px 18px rgba(0,0,0,.03), 0 12px 10px rgba(0,0,0,…)
+--shadow-product: 0px 40px 32px rgba(0,0,0,0.02),
+                  0px 22px 18px rgba(0,0,0,0.03),
+                  0px 12px 10px rgba(0,0,0,0.03),
+                  0px  7px  5px rgba(0,0,0,0.04),
+                  0px  3px  2px rgba(0,0,0,0.07)
 --shadow-product-border: 0 0 0 1px rgba(0,0,0,0.05)
 ```
 
-Max shadow opacity is **3%**, carried by a hairline ring instead. Inputs: border `gray-300` → hover `gray-500` → focus `blue-600`.
+Five layers, and the opacity runs **inversely to the blur**: the widest, softest layer is the faintest (2% at 32px blur), the tightest is the strongest (7% at 2px). That is the shape of real contact shadow, and it is the opposite of the single `0 4px 12px rgba(0,0,0,0.15)` default. Max opacity anywhere in the stack is **7%**, and the card's actual edge is a `1px` `rgba(0,0,0,0.05)` ring, not a shadow.
 
 ### Stripe
 
-- **API reference** (`docs.stripe.com/api`): body `14px / 22px` `#3C4257`; headings `#1A2C44`; `h1` is only **`24px / 32px` w700**; `h2` `21px` w700; `h3` `16px` w600; page bg `#F4F7FA`; `td` `14px/20px`, padding `12px`; code in Source Code Pro `14px / 18.2px`.
+- **API reference** (`docs.stripe.com/api`): body `14px / 22px`, `h1` **`24px / 32px` w700**, `h2` `21px` w700, `h3` `16px` w600, `td` `14px/20px` padding `12px`, code in Source Code Pro `14px / 18.2px`, page bg `#F4F7FA`. Body copy, table cells and every heading are **the same color** — `#1A2C44`. The entire hierarchy of the world's most-read payments document is carried by size and weight alone, with zero color steps. An `h1` at 24px is also only 1.7× body.
 - **Elements Appearance API defaults** — the closest thing to a canonical checkout token set:
   ```js
   colorPrimary: '#0570de',  colorBackground: '#ffffff',
@@ -117,30 +142,31 @@ Max shadow opacity is **3%**, carried by a hairline ring instead. Inputs: border
 | Product | Measured |
 |---|---|
 | **Mercury** | Custom variable font `arcadia` / `arcadiaDisplay` at **non-standard axis values: 480, 420, 400, 360**. `h1 49.35px / 54.28px` (ratio 1.10) w480 `#EDEDF3`; `h2 42px / 48.3px` `ls +0.42px` w480; nav/button `16px/16px` w420, radius `40px`, padding `0 20px`; light-mode body `#2A2924` |
-| **Modern Treasury** | Four families: `mt-neue-display` (h1 `71px/78.1px`, ratio 1.10, w**450**), `mt-neue-text` (h3 `32px/40px`), `mt-sans` (UI `14px/21px` w500), `mt-mono` (rail labels). `html { font-feature-settings: "cv10","ss07","ss08" }` set globally |
+| **Modern Treasury** | Four families: `mt-neue-display` (h1 `71px/78.1px` ratio 1.10 w**450**; h2 `47px/58.75px` w450), `mt-neue-text` (h3 `32px/40px` w400), `mt-sans` (UI `14px/21px` w500), `mt-mono` (rail labels). `html { font-feature-settings: "cv10","ss07","ss08" }` set globally. Rail chips (`CARD`, `FBO ACCOUNTS`, `LOAN`, `WALLET`, `PAYOUT`) are ALL-CAPS mono on **one** plum fill — a single non-semantic hue for the entire taxonomy, not one hue per rail |
 | **Brex** | `font-feature-settings: "calt" 0, "cv01", "cv05" 0, "cv10", "liga" 0, "ss01" 0, "ss03", "zero" 0`. `h1 72px / 72px` (ratio **1.0**) `ls -1.44px` (−0.02em) w500 `#15191E`; subhead `20px/24px` `ls -0.4px` `#60646C`; fine print `12px/18px` `ls -0.24px`; button radius `6px` |
 | **Monzo** | `--step-0: clamp(1rem, 1rem + 0vw, 1rem)` — body is pinned; `--step-5: clamp(2.4883rem, 2.2447rem + 1.2182vw, 3.0518rem)`; `--default-line-height: 1.4`. `h1 48.83/58.59` w800, `h2 39.06/46.87` w800, `h3 25/35` w700, body `16/22.4`. Declares `font-feature-settings: "tnum"` in its stylesheet but does not apply it on marketing |
 | **Robinhood** | Three families: Martina Plantijn serif for `h1 64px/72px ls -0.33px w400`; Phonic for `h2 52px/62px ls -1.5px` and `h3 40px/48px ls -1px`; Capsule Sans Text for body `18px/28px` and UI `14px/20px` w700. Page `#000` |
-| **Plaid** | Plaid Sans / Cern / Inconsolata. `h1 76px / 85.12px ls -3.4px` w500. Shadow scale where **only geometry moves**: `e1 0 16px 24px`, `e2 0 8px 16px`, `e3 0 8px 8px`, `e4 0 2px 4px` — all `hsla(0,0%,7%,.08)`. `--transition-duration: 35ms`; modal `200ms` short / `500ms` longer |
+| **Plaid** | Plaid Sans / Cern / Inconsolata. `h1 76px / 85.12px ls -3.4px` w500 (computed `color: rgba(0,0,0,0)` — the headline is gradient-clipped text). Shadow scale where **only geometry moves**: `e1 0 16px 24px`, `e2 0 8px 16px`, `e3 0 8px 8px`, `e4 0 2px 4px` — all `hsla(0,0%,7%,.08)`, and shipped twice, once in `rem` and once in `px`. `--transition-duration: 35ms`; modal `200ms` / `500ms`; `--button-border-radius: 2px` — the sharpest corner in the whole reference set; primary easing `cubic-bezier(0.23, 1.2, 0.32, 1)`, an **overshoot** curve (y > 1) reserved for non-money chrome |
 | **Cash App** | Cash Sans. `h1 56px / 53.2px` — **line-height below font-size (0.95)** — `ls -1.68px` w400; `h2/h3 40px/44px ls -1.2px` w400; body `15px/18px`; legal `12px/14.4px` `#999`; CTA radius `1000px` |
 | **Column (docs)** | Sidebar is the API object graph verbatim: Entity, Bank Account, Account Number, Counterparty, ACH Transfer, Book Transfer, Check Transfer, Wire Transfer, International Wire, Realtime Transfer, Loans, Events, Webhooks, Reporting — **and `Simulation` as a peer nav item** |
+| **Ramp** | Lausanne `h1 64px / 64px` (ratio **1.0**) `ls -0.01px` w400. Ships production CSS in **CIE Lab** — chartreuse computes as `lab(92.1406 -20.4979 84.7726)`, near-black as `lab(8.86531 0.515342 0.18619)`, with `oklab()` for translucent fills. 18 elements carry tabular figures, all of them inside `<number-flow-react>` animated counters at `10px` |
 
 ### Empirical: who actually uses tabular figures
 
 I scanned eight production sites for computed `font-variant-numeric: tabular-nums` or `font-feature-settings: "tnum"`:
 
-| Site | Elements with tabular figures |
-|---|---|
-| increase.com | **42** |
-| column.com | 0 applied — `"tnum"` **declared** in stylesheet |
-| monzo.com | 0 applied — `"tnum"` **declared** in stylesheet |
-| wise.com/us/send-money | 0 |
-| mercury.com | 0 |
-| ramp.com | 0 |
-| moderntreasury.com | 0 |
-| docs.stripe.com/api | 0 |
+| Site | Elements with tabular figures | What they are |
+|---|---|---|
+| increase.com | **42** | One `$12,304,488.86` counter, digits ticking, each in its own span |
+| ramp.com | **18** | `<number-flow-react>` counters rendering an animating `0.8711986%` at `10px` |
+| monzo.com | 0 applied, **6 rules declared** | `.Form_tnum`, `.DonutChart_donutChartTotalValue`, `.NumberRange_valueField` — form fields, chart totals, range sliders |
+| column.com | 0 applied, declared in stylesheet | — |
+| wise.com/us/send-money | 0 | Not even on the `52px` hero amount |
+| mercury.com | 0 | — |
+| moderntreasury.com | 0 | Including the `$1,500.00` ledger panels |
+| docs.stripe.com/api | 0 | — |
 
-Read that carefully before you cargo-cult `tabular-nums` onto everything. See finding 1.
+**Both** sites that apply tabular figures apply them to a number that is *animating*, and to nothing else. Monzo's three declared classes name the other legitimate case: fields the user edits, and totals that recompute. Nobody applies it to static display type. Read that before you cargo-cult `tabular-nums` onto `body`. See finding 1.
 
 ---
 
@@ -148,17 +174,19 @@ Read that carefully before you cargo-cult `tabular-nums` onto everything. See fi
 
 ### 1. Tabular figures are for *columns and mutation*, not for every number
 
-Wise sets its `52px` hero amount in **proportional** figures with `letter-spacing: normal` — no tabular. So do Mercury, Ramp, Modern Treasury and Stripe's docs. Increase applies `tabular-nums` in exactly one situation: a `$12,304,488.86` counter whose digits tick, wrapped in per-digit spans. Column and Monzo define a `tnum` token and reserve it for app surfaces not exposed on marketing.
+Wise sets its `52px` hero amount in **proportional** figures with `letter-spacing: normal` — no tabular. So do Mercury, Modern Treasury (including the `$1,500.00` ledger panels) and Stripe's docs. The two sites in the sample that *do* apply it apply it to the same thing: Increase's `$12,304,488.86` counter with per-digit spans, and Ramp's `<number-flow-react>` percentage counters at `10px`. Both are animating. Monzo declares `tnum` in exactly three named classes — `.Form_tnum`, `.DonutChart_donutChartTotalValue`, `.NumberRange_valueField` — form input, chart total, range slider. Three cases: mutating, recomputing, editable.
 
 **Why it works:** tabular figures exist to solve two problems — vertical alignment down a column, and horizontal jitter when a digit changes in place. A single hero amount that never changes has neither problem, and proportional figures in a well-drawn face are simply better-looking (the `1` isn't marooned in a monospace slot).
 
 **Generic alternative it beats:** slapping `font-variant-numeric: tabular-nums` on `body` because a blog post said fintech uses tabular numbers. You get evenly-spaced but visually gappy display type and no benefit.
 
-**Where it does not apply:** any transaction ledger, balance column, invoice line-item table, or number that animates. There, tabular is non-negotiable — Increase's per-digit counter would visibly reflow without it.
+**Where it does not apply:** any transaction ledger, balance column, invoice line-item table, editable amount field, or number that animates. There, tabular is non-negotiable — Increase's per-digit counter would visibly reflow without it, and an amount field that re-lays-out as you type reads as broken.
+
+**And where the rule inverts entirely:** a genuinely monospaced face. Increase's Input Mono, Column's SuisseIntlMono and Fragment's whole site are already fixed-advance — adding `tabular-nums` there is a no-op, and reaching for a proportional face *because* you want a hero amount to look good is the actual decision. Don't set a ledger in a display face and then patch it with `tnum`.
 
 ### 2. Currency is a control, not a prefix, the moment there is more than one currency
 
-Wise's amount field contains `30,000.00` with **no symbol whatsoever**. The currency lives in a separate `USD ▾` pill with a flag, to the left of the field. The fee below is written `88.83 USD` — code as a suffix. The rate chip reads `1 USD = 0.8594 EUR`.
+Wise's amount field contains `30,000.00` with **no symbol whatsoever**. The currency lives in a separate `USD ▾` pill with a flag, to the left of the field. The fee below is written `88.83 USD` — code as a suffix. The rate chip reads `1 USD = 0.8595 EUR`, with a padlock glyph inside the pill to its left — the rate is a *held* value, and the lock says so.
 
 **Why it works:** in a converter, currency is a variable the user changes, so it must be a target with a hit area. Baking `$` into the field forces you to re-render the glyph on every switch, and `$` is ambiguous across USD/CAD/AUD/MXN/SGD anyway. Suffixing the ISO code on derived values (`88.83 USD`) removes the ambiguity without stealing space from the number.
 
@@ -168,7 +196,7 @@ Wise's amount field contains `30,000.00` with **no symbol whatsoever**. The curr
 
 ### 3. Never superscript the cents, and never shrink the currency symbol
 
-Retail pricing shrinks the symbol and raises the cents (`$29⁹⁹`) because it makes the number *feel* smaller. That is the entire reason to avoid it here. Wise renders `30,000.00` and `25,704.61` at a single size and weight. Modern Treasury's ledger panels render `$1,500.00` uniformly, including the totals row.
+Retail pricing shrinks the symbol and raises the cents (`$29⁹⁹`) because it makes the number *feel* smaller. That is the entire reason to avoid it here. Wise renders `30,000.00` and `25,709.04` at a single size and weight — one `52px/78px` w400 run for the send amount, one `40px` run for the receive amount, symbol-free, with the fraction identical to the integer. Modern Treasury's ledger panels render `$1,500.00` uniformly, including the totals row.
 
 **Why it works:** money UI's job is to make the number feel *accurate*, not small. Uniform weight across symbol, integer and fraction reads as a quantity; a raised superscript fraction reads as a price tag.
 
@@ -178,7 +206,7 @@ Retail pricing shrinks the symbol and raises the cents (`$29⁹⁹`) because it 
 
 ### 4. Precision is a function of what the number is *for*, and it changes within one screen
 
-Copilot Money's dashboard, in a single view: the sidebar account list shows `$832` and `$1,594`; the "Top categories" list shows `$368`, `$84`, `$263`, `$21`; the transaction list shows `$10.99`, `$32.86`, `$21.35`, `$56.40`. Aggregates are whole-dollar, line items are exact. Wise shows amounts to 2 decimals but the FX rate to 4. Revolut's home balance is `£6,012` with no decimals at all.
+Copilot Money's dashboard, in a single view: the sidebar account list shows `$832` and `$1,594`; the "Top categories" list shows `$368`, `$84`, `$263`, `$21`; the transaction list shows `$10.99`, `$32.86`, `$21.35`, `$56.40`. Aggregates are whole-dollar, line items are exact. *(These are read from Copilot's app screenshots; the marketing site rotates its imagery, so treat the pattern as the finding.)* Wise shows amounts to 2 decimals but the FX rate to **4** — `1 USD = 0.8595 EUR`, right in the pill above the field. Revolut's home balance is `£6,012` with no decimals at all. Modern Treasury goes the other way and keeps cents in its `Total Debits` / `Total Credits` rows, because those rows have to tie out.
 
 **Why it works:** cents on an aggregate are noise you cannot act on — nobody reconciles a category total. Cents on a line item are the thing you're checking against your receipt. Four decimals on an FX rate matter because the third and fourth decimal move real money at size.
 
@@ -188,7 +216,7 @@ Copilot Money's dashboard, in a single view: the sidebar account list shows `$83
 
 ### 5. Debits and credits are not good and bad — do not color them green and red
 
-Modern Treasury's Ledgers page shows a **Debits** panel headed in dark slate and a **Credits** panel headed in clay/maroon, with `$1,500.00` in identical neutral type in both. Two distinct hues, neither of which is a status color.
+Modern Treasury's Ledgers page shows a **Debits** panel headed in dark slate-teal and a **Credits** panel headed in clay/maroon, with `$1,500.00` in identical neutral type in both — including in the `Total Debits` and `Total Credits` rows, which also carry cents. Two distinct hues, neither of which is a status color. The `Account` / `Amount` column headers are small mono chips on a mint wash, borrowed from code annotation rather than from table styling. And the JSON rendered beside the panels encodes direction as a word — `"direction": "credit"`, `"direction": "debit"` — never as a sign on the amount, which stays `1500` in both entries.
 
 **Why it works:** in double-entry, a debit is not a loss and a credit is not a gain — the sign depends on the account type. Coloring them green/red teaches the user a lie and then makes the lie load-bearing. Two arbitrary, memorable, non-semantic hues let you distinguish the columns without asserting a valence.
 
@@ -196,15 +224,21 @@ Modern Treasury's Ledgers page shows a **Debits** panel headed in dark slate and
 
 **Where it does not apply:** a consumer transaction feed, where money-in and money-out *do* map to a user-meaningful direction. Even there, prefer a sign or an explicit direction word over color alone.
 
+**It also does not apply if you have no double-entry model.** If your backend stores a signed `amount` on a single row and nobody in the company can tell you what the contra account is, two panels headed slate and clay are cosplay. Ship the signed feed honestly and add the ledger when you have one. The failure this finding prevents is *teaching a lie*; inventing accounting vocabulary you don't implement teaches a different one.
+
 ### 6. Reserve every accent color for exactly one job, then count the uses
 
-Ramp's chartreuse `#E1FC53` appears on the entire homepage exactly twice: the "See a demo" secondary CTA and a small numeric badge. The primary CTA is black. Mercury's blue-violet appears only on "Open account." Increase's mint green appears only on the announcement link and one active icon tile. Wise splits `content-positive #008026` (text) from `interactive-positive #2EAD4B` (fills) so that the accessible dark green never gets used as a background and the vivid green never gets used as body text.
+Ramp's chartreuse `#E1FC53` fills exactly six visible elements across a 13,722px homepage — `See a demo`, `Get started for free` (×3), `Switch in days, not months`, `Explore Ramp Intelligence` — and **every one of them is a button or a link-button**. Zero uses as text color, icon fill, chart series, badge, border or decorative panel. That's the discipline: not "use it rarely," but "it means *press this*, and it never means anything else." (Near-black `lab(8.87 0.52 0.19)` carries the other five buttons; which of the two is "primary" varies by section, and both are the same shape.) Mercury's blue-violet appears only on `Open account`. Wise splits `content-positive #008026` (text) from `interactive-positive #2EAD4B` (fills) so the accessible dark green never becomes a background and the vivid green never becomes body text.
 
 **Why it works:** trust reads as *predictability*. If green means "settled" in one place and "primary action" in another and "brand" in a third, the user has to reason about color instead of consuming it. One meaning per hue makes status legible at a glance across a 40-row table.
 
 **Generic alternative it beats:** a brand gradient on the balance card, colored icons for every nav item, and a green "Send" button next to green "Completed" chips.
 
-**Where it does not apply:** the marketing site. Stripe's own `/payments` page carries a full-bleed indigo→cyan→violet gradient wedge that would be indefensible on a balance. Marketing sells; product reports. Keep two palettes and don't let them meet.
+**Where it does not apply:** the marketing site, and the gap is enormous. Stripe's `/payments` page runs a full-bleed indigo→cyan diagonal gradient wedge across the lower half — and the checkout mock sitting **on top of it** is flat white with near-black type and a single `Subtotal £240.00 / VAT (20%) £48.00 / Total £288.00` column. One screenshot, both palettes, the boundary drawn as a literal edge. Copilot Money runs chrome-bevelled headline type over blurred floating category pills on marketing, then renders whole-dollar aggregates in flat neutral type in the app. Increase runs a saturated green→cyan→blue gradient bar-chart illustration next to a headline, and an acid-yellow announcement pill, while its product numbers stay `#1D2A36` on white.
+
+Keep two palettes and don't let them meet. The tell that you've failed is that the balance card and the hero share a fill.
+
+**And it does not mean one accent total.** Increase runs mint (`Contact sales`), acid yellow (announcement pill) and a full gradient (hero art) on one page without ambiguity, because each occupies a different *slot* — CTA, announcement, illustration — and none of them appears in a status chip. The rule is one meaning per hue, not one hue per product.
 
 ### 7. Status is a state machine with a documented vocabulary, and states can go backwards
 
@@ -216,9 +250,11 @@ Stripe's payout enum: `pending → in_transit → paid | failed | canceled`. The
 
 **How to build it:** pick a closed vocabulary and show *when* alongside *what* — `Settled · Sep 4`, `Pending · expected Sep 6`, `Returned · R01 insufficient funds`. Give reversible-terminal states (`paid`, `settled`) a neutral or muted-positive treatment rather than a triumphant one, and reserve saturated success for states that genuinely cannot reverse.
 
-**Where it does not apply:** instant, irreversible rails. An internal book transfer or an RTP send really is terminal; there, a definite success state is honest.
+**Where it does not apply:** rails that are genuinely terminal on completion. An internal book transfer between two accounts on your own ledger is one — the money never left. Be careful with the ones that only *feel* terminal: RTP and FedNow are irrevocable for the sender, but the receiving institution can still return funds, and the network carries a request-for-return message. "Irrevocable" and "final" are not the same word. If your rail has any message type that moves money backwards, you are in the state-machine case.
 
-### 8. Errors are two-layer: a machine identity, a human class, and a specific detail
+**It also does not apply to a status the user cannot act on.** If a payment passes through four internal states in 900ms, surfacing all four is theater. Collapse them and show the one the user can respond to.
+
+### 8. Errors are three registers from one event: a machine identity, a human class, and a specific detail
 
 Increase returns `{ type: "invalid_operation_error", title: "The action you specified can't be performed on the object in its current state.", detail: "There's an insufficient balance in the account.", status: 409 }`. Their UI renders the same shape: a validation card reading `beneficial_owner_identity` in mono, with plain English beneath — *"Check their details or add a second identification document."* Stripe's charge outcome carries a `seller_message` ("Payment complete.") separate from the customer-facing decline string.
 
@@ -226,7 +262,9 @@ Increase returns `{ type: "invalid_operation_error", title: "The action you spec
 
 **Generic alternative it beats:** one toast that says "Transaction failed. Please try again." — which is both useless and, when the real cause is `insufficient_funds`, actively wrong advice.
 
-**Where it does not apply:** never omit the machine identity, but *do* suppress it visually in consumer surfaces — put it behind a "Details" disclosure or a copyable reference code rather than in the headline.
+**Where it does not apply:** field-level form validation. `Routing number must be 9 digits` needs one register, inline, next to the field — wrapping it in a machine enum and a support code is over-engineering an error the user fixes in two seconds. The three-register shape earns its cost when the error (a) came back from a rail rather than a validator, (b) will generate a support ticket, or (c) the user cannot resolve alone.
+
+**And a constraint, not an exception:** never omit the machine identity, but suppress it visually in consumer surfaces — behind a "Details" disclosure or a copyable reference code, never in the headline.
 
 ### 9. Some true reasons must never be shown to the payer — design for the collapse
 
@@ -242,11 +280,15 @@ Stripe's decline-code table carries an explicit instruction for `fraudulent`, `l
 
 Wise's card states, in this order: `Arrives / by Friday`, then `Total fees / Included in USD amount` with `88.83 USD →` as an underlined chip, then a green `4.91 USD volume discount` chip. The label is `14px` gray, the answer is `16px` **semibold** near-black. The field label is literally *"You send exactly."*
 
+Wise then does something most products skip: it surfaces the discount **twice** — once as the compact `4.91 USD volume discount` chip, and once as a full mint-wash panel beneath the fee row headed *"You're sending a lot so we discounted our fee"* with a `Learn more about sending large amounts` link. The chip is for the scanner; the panel is for the person who wants to know why.
+
 **Why it works:** the two questions a sender actually has are "how much do they get" and "what did this cost me," and the second one is where every legacy remitter hides. Stating *included vs. added* removes the last ambiguity. The chevron makes the fee a claim you can audit rather than a number you must accept. Surfacing the discount rather than silently applying it converts a cost line into a trust moment.
 
 **Generic alternative it beats:** a footnote reading "Fees may apply" or an FX rate quoted without disclosing the spread — which is the same as hiding the fee.
 
-**Where it does not apply:** genuinely zero-fee flows. Don't invent a fee row to look transparent; a `Fee — $0.00` line on an internal transfer is noise. Say nothing, or say "No fee" once.
+**Where it does not apply:** genuinely zero-fee flows. Don't invent a fee row to look transparent; a `Fee — $0.00` line on an internal transfer is noise. Say the word, not the number — Stripe's own checkout mock renders `Shipping Estimate — FREE`, not `£0.00`, and names the rate inline as `VAT (20%)` rather than leaving a bare `£48.00` for the user to reverse-engineer.
+
+**It also does not apply where the fee isn't yours to state.** If a correspondent bank will deduct an unknown amount mid-route, `Total fees` is a lie either way. Name the mechanism (`Intermediary banks may deduct a fee we can't see`) instead of a number you'd have to retract.
 
 ### 11. Label above, value below, differentiated on three channels at once
 
@@ -260,7 +302,7 @@ Wise's meta rows: label `14px / w400 / #454745`; value `16px / w600 / #0E0F0C`. 
 
 ### 12. The legal disclosure is a design element with a permanent slot
 
-Mercury pins a dark pill in the first viewport: *"Mercury is a fintech company, not an FDIC-insured bank. Banking services provided through Choice Financial Group and Column N.A., Members FDIC."* Increase's own top banner reads *"Announcing Increase Bank, Member FDIC."* Both name the chartered entity, not just a badge.
+Mercury pins a dark pill in the first viewport: *"Mercury is a fintech company, not an FDIC-insured bank. Banking services provided through Choice Financial Group and Column N.A., Members FDIC."* It survives at 390px — same three lines, still above the fold, still not dismissible — which is the hard case, because the mobile viewport is where disclosures normally get pushed to a footer. Mercury also runs a superscript `¹` on the word "banking" in its subhead, so the qualifying footnote is bound to the specific claim rather than floating at the page bottom. Increase's top banner reads *"Introducing Increase Bank, Member FDIC"* — an acid-yellow pill above the `h1`, above the CTA. Both name a chartered entity.
 
 **Why it works:** a neobank's most common trust objection is "is my money actually insured, and by whom." Naming the partner bank answers it and simultaneously signals that you understand the regulatory structure you operate in. Hiding it in the footer reads as evasion to exactly the sophisticated user you want.
 
@@ -278,7 +320,7 @@ Mercury pins a dark pill in the first viewport: *"Mercury is a fintech company, 
 
 **Empty ledger, first run.** A brand-new account has a genuinely empty transaction list, and it is the single most anxious moment in the product ("did my deposit arrive?"). Do not draw an illustration of a piggy bank. Show the account and routing numbers, the exact status of any inbound funds, and a single action. Column and Increase both make **`Simulation` / Sandbox Simulations a first-class API surface** so a developer can populate that empty state with a real webhook-driven event instead of a mock — the empty state is a feature to be tested, not a screen to be decorated.
 
-**Too much data.** A high-volume operator account has 40k transactions a month. Server-side pagination with a stable cursor, and a filter set that mirrors the object model (Column's docs nav *is* the filter taxonomy: type, status, counterparty, date range, amount range). Virtualized rows at a fixed height — Wise's comparison rows are `74px`, Increase's data rows read at roughly 44–48px — so scroll position is arithmetic, not a guess.
+**Too much data.** A high-volume operator account has 40k transactions a month. Server-side pagination with a stable cursor, and a filter set that mirrors the object model (Column's docs nav *is* the filter taxonomy: type, status, counterparty, date range, amount range). Virtualized rows at a **fixed** height so scroll position is arithmetic rather than a guess — Wise's comparison rows measure exactly `74.0px`, and pick one number and hold it, because a row that grows for a long counterparty name breaks virtualization and re-introduces the jank you virtualized to avoid. Truncate with a tooltip instead.
 
 **Permission denied.** In a money product this is usually *approval* rather than *access*: the user can see the payment but cannot release it. Say which. `You need Admin approval to send over $10,000. Request approval →` beats `403 Forbidden` and beats hiding the button, because a hidden button teaches the user the feature doesn't exist.
 
@@ -286,7 +328,7 @@ Mercury pins a dark pill in the first viewport: *"Mercury is a fintech company, 
 
 **Irreversibility.** Confirmation should require the user to reproduce a fact, not just click again. The strong pattern is: restate the amount, the recipient's *verified* name (not the nickname), the rail, and the arrival estimate on one screen; require an explicit action; then show a receipt with a reference ID immediately. For high-value or first-time-recipient sends, add a hold window and say so. "Are you sure?" with Cancel/OK is not a confirmation — it's a speed bump the user learns to click through.
 
-**Receipts and audit trail.** Every money movement needs a permanent, linkable, copyable record: reference ID, amount, currency, both parties, rail, the full status timeline with timestamps, and any fee. Modern Treasury's framing — *"double-entry accounting principles for consistency, immutability, and auditability"* — is the bar. If a status changed, the receipt shows *both* the old and new state with times; it never silently rewrites history.
+**Receipts and audit trail.** Every money movement needs a permanent, linkable, copyable record: reference ID, amount, currency, both parties, rail, the full status timeline with timestamps, and any fee. The test is Modern Treasury's three words — *consistency, immutability, auditability*. Immutability is the one that bites: if a status changed, the receipt shows **both** the old and the new state with times. A record that silently rewrites `pending` to `returned` is not a receipt, it's a cache.
 
 ---
 
@@ -294,35 +336,66 @@ Mercury pins a dark pill in the first viewport: *"Mercury is a fintech company, 
 
 This archetype is mobile-first on the consumer side and mobile-*hostile* on the operator side, and the two need different answers.
 
-**Consumer.** Cash App, Revolut, Monzo and Nubank are all phone-primary and their marketing sites are phone screenshots. The balance is the hero: Revolut shows `Personal` in small light type above `£6,012` at display size. Monzo pins body text with `--step-0: clamp(1rem, 1rem + 0vw, 1rem)` while headings scale — the correct instinct, because shrinking body copy on a phone to fit a layout is how legal disclosures become unreadable. Amount entry gets a **custom numeric keypad**, not the system keyboard: you control decimal behavior, thousands separators and the max, and you get a large hit target for the send action in the thumb zone. Cash App's card screen uses ~48px tall fully-rounded gray pills (`Lock`, `•• 4465`) side by side — two targets, generous, unambiguous.
+**The amount input is `type="text"`, not `type="number"`.** Measured on Wise at 390: `<input type="text" inputmode="decimal">`. This is the single most copyable thing in this section. `type="number"` gives you a spinner you don't want, mutates on scroll-wheel and arrow keys, rejects the user's locale separators, and returns `""` for anything it considers invalid so you cannot even see what they typed. `type="text"` + `inputmode="decimal"` raises the same numeric keypad on iOS and Android, and leaves formatting to you. If you need a currency keypad with your own decimal and thousands behavior, render your own — but start here, because the custom keypad is a week and this is a line.
+
+**The number scales; the body copy doesn't.** Wise drops its send amount from `52px` at 1440 to `34px` at 390, and the receive value from `40px` to `24px`. Monzo does the exact opposite with prose: `--step-0: clamp(1rem, 1rem + 0vw, 1rem)` pins body text at 16px at every width while `--step-5` runs `2.4883rem → 3.0518rem`. Together that is the rule — **a number is a display element and may shrink to fit; running text and legal copy may not.** Shrinking body copy to make a layout fit is how a disclosure becomes unreadable, and the disclosure is the part a regulator reads.
+
+**Target sizes come off the same named ladder as desktop.** Wise at 390, measured: primary CTAs `48px` tall and full-bleed to a 16px gutter (`325–358px` wide); currency selector pill `40px`; exchange-rate pill `40px`; fee drill-down chip `32px`. Everything lands on `32 / 40 / 48` — the `--size-small / medium / large` tokens, unchanged from desktop. The only sub-40 target on the card is the fee chip, which is the audit affordance, not the action. Monzo runs `44px` and `48px` buttons at `border-radius: 500px`, with secondary `Learn more` pills at `36px` / `13.28px` — the one place it goes under 44, and it's a link, not a commitment.
+
+**The converter is not the mobile hero.** On Wise's desktop layout the money card sits beside the headline, co-equal. At 390 it is pushed **below** the headline, the subhead, three feature rows and two full-width CTAs — roughly 1,400px down. The social-proof row also drops from two store badges to one. On a phone the first job is the pitch; the calculator is what you scroll to.
+
+**The consumer balance.** Revolut shows `Personal` in small light type above `£6,012` — symbol inline, full size, full weight, no decimals — inside a phone frame over a photographic hero. Cash App's card screen uses ~48px fully-rounded gray pills (`Lock`, `•• 4465`) side by side.
 
 **Operator / reconciliation.** A 12-column transaction table does not become a mobile table. It becomes a card list with the three fields that matter (counterparty, amount, status) and a detail sheet for the rest. Ramp, Mercury and Modern Treasury all show desktop dashboards in their product imagery for a reason — nobody reconciles a month of AP on a phone. Building the responsive table is the wrong effort; building a good mobile *approval* flow (see one payment, approve or reject, with full context) is the right one, because approving from a phone is the genuine mobile job.
 
-**Both.** Stripe's own Elements guidance: *"Make sure that you choose a font size of at least 16px for input fields on mobile"* — under 16px, iOS Safari zooms the viewport on focus, which mid-payment feels like a crash.
+**Both.** Stripe's Elements guidance: *"Make sure that you choose a font size of at least 16px for input fields on mobile"* — under 16px, iOS Safari zooms the viewport on focus, which mid-payment feels like a crash. Monzo's `<select>` at 390 is exactly `16px` / `52px` tall. Note this constrains *inputs* only; the `12px` legal line under Cash App's copy is not an input and is fine.
 
 ---
 
 ## How this archetype fails
 
-The bad imitation is recognizable in about two seconds, and it's usually four things at once.
+This section is about one specific failure: **the fintech UI a language model produces when asked for one.** It is not "bad design" in general — it is a narrow, reproducible, recognizable artifact, and it comes out the same way almost every time, because the training distribution for "fintech dashboard" is Dribbble, not a bank. What follows is written so an agent can grep its own output.
 
-**A gradient on the balance.** The single loudest tell. A linear-gradient card with the balance in white over purple-to-pink, usually with a `box-shadow` at 20% opacity and a card radius of 24px. Real money products put the balance in near-black on white or white on near-black, on a flat surface, with elevation at 2–3% (Column's `--shadow-product` maxes at `rgba(0,0,0,0.03)` and carries the card on a `1px` `rgba(0,0,0,0.05)` ring instead). Gradients are a marketing-page material. Stripe uses one on `/payments`; it does not appear on a ledger.
+### The eight-second diagnosis
 
-**Display type on the number.** Setting `$12,480.55` in the same expressive display face as the marketing headline — or worse, a geometric/rounded/playful face — reads as decorative rather than reported. Note what the serious products do instead: Increase licenses **Input Mono with `ss01,ss02,ss12`** and **MRZ Mono**; Modern Treasury has a dedicated `mt-mono` for rail labels; Column ships `SuisseIntlMono`; Brex explicitly disables Inter's ligatures and contextual alternates (`"liga" 0, "calt" 0`) so nothing clever happens to a string of digits. They are all spending money to make numerals *duller*.
+Read your own generated file and answer these. Any **yes** is a defect, not a preference.
 
-**Animated counters on real balances.** Money counting up from `$0` to `$4,281.19` over 800ms. It is a slot machine, it delays the answer to the only question on screen, and if the user navigates mid-animation they see a false number. If you must animate a change, tick only the digits that changed, use tabular figures so nothing reflows (this is the *only* reason Increase's counter works), and never animate on first paint.
+1. Does any element with a balance, amount, or total in it have a `linear-gradient` / `radial-gradient` background? → **yes = fail**
+2. Does a currency amount use `<sup>`, `<small>`, `text-transform`, `vertical-align: super`, or a different `font-size` for the cents or the symbol than for the integer? → **yes = fail**
+3. Is there a `useEffect` / `requestAnimationFrame` / `framer-motion` counter animating a balance from `0` on mount? → **yes = fail**
+4. Does a status render as an emoji, an icon alone, or a colored dot with no adjacent word? → **yes = fail**
+5. Are there four or more distinct hues used for statuses, and can you say out loud what each one means without looking? → **can't = fail**
+6. Does any actionable amount go through `Math.round`, `toFixed(0)`, `Intl.NumberFormat` with `notation: 'compact'`, or a `k`/`M` suffix? → **yes = fail**
+7. Is there a `box-shadow` on a money card with alpha above `0.10`? → **yes = fail**
+8. Does the confirm dialog's text contain the word "sure"? → **yes = fail**
 
-**Emoji in the transaction list.** Careful here — Copilot Money, which is excellent, puts an emoji in every category chip. The boundary is *where*: the emoji lives inside a small colored category tag, at roughly 10px, on the opposite side of the row from the amount. The amount itself sits in plain neutral type with nothing near it. The failure mode is emoji adjacent to or inside the amount, emoji as the status indicator (✅/❌ instead of a word), or a random emoji per merchant. Status must be a word — `Settled`, `Pending`, `Returned` — because words survive screen readers, search, CSV export and color blindness. Emoji survive none of those.
+### The specific artifacts, and what to write instead
 
-**Insufficient precision, or the wrong precision.** `$1.2k` on a statement line. `$400` where the real number is `$399.87`. Rounding a rate to `0.86` when it's `0.8594`. Any of these on an actionable number means the user cannot reconcile against their bank, and once they catch you rounding once they distrust every number you show.
+**1. The gradient balance card.** The loudest tell, and it is almost always the same card: `linear-gradient(135deg, #667eea 0%, #764ba2 100%)` or a purple→pink variant, `border-radius: 24px`, `box-shadow: 0 20px 40px rgba(102,126,234,0.3)`, balance in white `font-weight: 700`, a small `+2.4%` in a translucent white pill, and a decorative circle or blurred blob at 10% opacity in a corner. The model produces this because the phrase "fintech card" retrieves a Dribbble shot, not a bank.
 
-**One decorative color per status.** A pastel palette where `Pending` is lavender, `Settled` is mint, `Failed` is coral, and the primary button is periwinkle. Nothing is legible as urgent because nothing is *not* pretty. Compare Wise: one dark green for positive *text*, one brighter green for positive *fills*, a 10% wash for positive *backgrounds*, and no other green anywhere.
+What real products do: flat surface, near-black on white or white on near-black. Column's `--shadow-product` stacks **five** layers whose maximum alpha is `0.07`, and the actual card edge is a `1px` `rgba(0,0,0,0.05)` ring — not a shadow. Modern Treasury's ledger panels have no shadow at all; they are separated by a header fill. Gradients belong to marketing: Stripe's `/payments` page runs an indigo→cyan wedge *behind* a completely flat checkout card.
 
-**Fake density.** Copying Linear-style 28px rows and 12px type into a banking product because "fintech is dense." Ramp and Mercury are used daily by finance operators and are dense; Cash App and Monzo are used for 30 seconds and are not. Density is a function of session length and repetition, not of the vertical.
+**2. Display type on the number.** Setting `$12,480.55` in the marketing headline face, or in a geometric/rounded/playful face, or at `font-weight: 800`. Reads as decorative rather than reported. What the serious products spend money on instead: Increase licenses Input Mono (shipped with `"ss01","ss02","ss12"` baked into `@font-face`) *and* MRZ Mono, the machine-readable-zone face from passports. Column ships SuisseIntlMono. Modern Treasury has `mt-mono` purely for rail labels. Brex disables Inter's ligatures and contextual alternates outright — `"liga" 0, "calt" 0` — and turns the slashed zero **off** with `"zero" 0`. Every one of those is money spent to make numerals *duller*.
 
-**A confirmation dialog that confirms nothing.** "Are you sure you want to send $5,000? [Cancel] [Confirm]" with no recipient name, no rail, no arrival date and no fee. It creates friction without creating certainty, which is the worst of both.
+**3. Animated counters on real balances.** `$0 → $4,281.19` over 800ms on mount. It is a slot machine; it delays the answer to the only question on screen; and a user who navigates mid-animation reads a false number and screenshots it. The two products in the reference set that animate numbers animate an *aggregate*, not a balance: Increase's `$12,304,488.86` is company-wide processed volume, Ramp's `<number-flow-react>` counters run a `0.8711986%` rate at `10px`. Both use tabular figures — mutation is one of the two cases that justify them. If you must animate a change, tick only the changed digits, use `tabular-nums`, and never on first paint.
 
----
+**4. Emoji doing a status's job.** The boundary is not "no emoji" — Copilot Money, a five-time Apple design honoree, puts one in every category chip. Look at exactly where: a `~10px` ALL-CAPS colored tag (`💪 HEALTH`, `🥑 GROCERIES`, `💳 SUBSCRIPTIONS`, `🛍️ SHOPS`, `🚗 CAR`) sitting at the far end of the row from the amount, with per-category hue and the merchant name in plain white beside it. The amount is in flat neutral type with nothing near it. The failures are: emoji inside or adjacent to the amount; ✅/❌/⏳ **as** the status; a per-merchant emoji picked by an LLM. Status must be a word — `Settled`, `Pending`, `Returned` — because words survive screen readers, `Cmd-F`, CSV export, and color blindness. Emoji survive none of those.
+
+**5. Precision laundering.** `$1.2k` on a statement line, or `$12.3M` on a row someone has to reconcile. `$400` where the number is `$399.87`. A rate shown as `0.86` when it is `0.8595`. `Intl.NumberFormat(… notation: 'compact')` anywhere the user might reconcile. Each of these means the user cannot check you against their bank, and the first time they catch you rounding they stop trusting every number on the page. Note the inverse failure is just as common: `toFixed(2)` on everything, which turns a category summary into `$368.00 $84.00 $263.00 $21.00` — four columns of dead zeros. Precision is per-role, and it changes within one screen.
+
+**6. The pastel status palette.** `Pending` lavender, `Settled` mint, `Failed` coral, `Processing` peach, primary button periwinkle. Nothing reads as urgent because nothing is *not* pretty, and the failure color is one step from the pending color at a glance. Compare Wise: one dark green for positive **text** (`#008026`), one brighter green for positive **fills** (`#2EAD4B`), a **10% wash** for positive backgrounds, and no other green anywhere in the system.
+
+**7. Fake density.** Copying Linear's 28px rows and 12px type into a consumer banking app because "fintech is dense." Ramp and Mercury are used for hours a day by finance operators and are dense; Cash App and Monzo are used for thirty seconds and are not. Density is a function of session length and repetition, not of the vertical. The tell is `12px` type in a product whose user opens it twice a month.
+
+**8. A confirmation that confirms nothing.** `Are you sure you want to send $5,000? [Cancel] [Confirm]` — no recipient name, no rail, no arrival date, no fee. It buys friction without buying certainty, which is strictly worse than no dialog: the user learns to click through it, and now you have trained them to dismiss the one screen that was supposed to stop them.
+
+**9. Invented compliance furniture.** A gold "FDIC Insured" shield in the footer with no bank named. "Bank-level security 🔒" as a feature bullet. "256-bit encryption" next to a padlock. A "SOC 2 Type II" badge on a product that has not been audited. Models generate these because trust marks are visually dense in the training data and cost nothing to draw. They assert trust instead of evidencing it, and one of them is a regulatory problem rather than a design one.
+
+**10. Success states for things that have not succeeded.** `Transaction successful ✅` on an ACH credit that can return for two business days. A three-node stepper with a checkmark on the last node and no code path for regression. Terminal-green on `paid`, which Stripe's own API reference warns can flip: *"Some payouts that fail might initially show as `paid`, then change to `failed`."*
+
+### What is missing, rather than wrong
+
+The generated version is usually not missing a color. It is missing the states that cost time to think about: no stale-data timestamp, no partial-outage message naming the affected rail, no `Idempotency-Key`, no submitted-but-unconfirmed state, no approval-vs-access distinction on a 403, no receipt with a reference ID, no status-change history on that receipt, and an empty state with an illustration where the account and routing numbers should be. It ships the happy path in a nice font. Every section above this one is about the other paths.
 
 ## Copy and tone
 
@@ -358,25 +431,65 @@ The two poles genuinely diverge, and both are right.
 
 ## Sources
 
-Screenshots captured with Playwright at 1440×900 and 390×844 and read as images; computed styles and CSS custom properties extracted with a Playwright evaluate probe. September 2026.
+Screenshots captured with Playwright at 1440×900 and 390×844 and read as images; computed styles and CSS custom properties extracted with a Playwright `evaluate` probe. September 2026; re-probed and corrected 2026-09-10.
 
-- `https://mercury.com` and `/bank` — dark-mode hero, `arcadia` variable font at weights 480/420/360, the persistent FDIC partner-bank disclosure pill naming Choice Financial Group and Column N.A.
-- `https://www.moderntreasury.com` and `/products/ledgers` — mono rail chips (ACH, WIRE, RTP, FEDNOW, PUSH-TO-CARD, STABLECOINS), the Debits/Credits panels in slate and clay with `$1,500.00` in identical neutral type, four-family type stack, global `font-feature-settings: "cv10","ss07","ss08"`
-- `https://column.com` and `/docs/api` — full token dump: cool gray ramp, 13-step type scale, `--font-regular: 300`, near-invisible `--shadow-product`, docs sidebar as the API object graph with `Simulation` as a peer nav item
-- `https://increase.com` — TT Interphases Pro / Input Mono (`ss01,ss02,ss12`) / MRZ Mono; 42 elements with computed `tabular-nums` on a `$12,304,488.86` per-digit counter; the `beneficial_owner_identity` validation card; the three-tier amount row (`$3,100,000` bold / `$24.8M` gray / `62%` gray); Ramp customer quote
-- `https://increase.com/documentation/api/overview` — the `{type,title,detail,status}` error object, `Idempotency-Key` requirement, Sandbox Simulations
-- `https://wise.com/us/send-money/` — the measured money-entry card (52px/78px `#163300` right-aligned input, 14/21.7 labels vs 16/24 w600 values, `88.83 USD` drill-down chip, `#E2F6D5` discount chip, `#9FE870` CTA), plus the complete `content-*` / `interactive-*` / `background-*` token system at `0.10196` alpha
-- `https://docs.stripe.com/api` — reference typography (14/22 body, 24/32 h1, `#F4F7FA` page)
-- `https://docs.stripe.com/declines/codes` — the full Stripe decline table and the explicit instruction to present `fraudulent` / `lost_card` / `merchant_blacklist` as `generic_decline`; `advice_code`
-- `https://docs.stripe.com/elements/appearance-api` — default `colorPrimary #0570de`, `colorText #30313d`, `colorDanger #df1b41`, `spacingUnit 2px`, `borderRadius 4px`, and the 16px-minimum mobile input rule
+**Re-verified in the 2026-09-10 direction pass** (probe run against the live site, values confirmed or corrected in place):
+
+- `https://wise.com/us/send-money/` — `52px/78px` `#163300` right-aligned input confirmed; `74.0px` comparison rows confirmed; full `content-*` / `interactive-*` / `background-*` / `size-*` token dump re-read. **Corrected:** `--color-content-primary` is `#0E0F0C` not `#37517E`; secondary `#454745`; tertiary `#6A6C6A`; `--color-background-neutral` is `rgba(22,51,0,0.07843)` not a blue-gray at `.10196`; `--color-border-neutral` is `rgba(14,15,12,0.12157)`; `--btn-radius-base` is `9999px` not `3px`. **Added:** the `celebration` semantic pair, the three-state hover/active roles, `type="text" inputmode="decimal"`, the mobile `32/40/48` ladder.
+- `https://column.com` — gray ramp, semantic ramps, 13-step type scale and `--font-regular: 300` all confirmed exactly. **Corrected:** `--shadow-product` has five layers and maxes at `rgba(0,0,0,0.07)`, not 3%. **Added:** headings are `blue-800 rgb(17,26,74)`, `"salt" 2` global, the `350/550/750` half-steps.
+- `https://increase.com` — **42** tabular elements confirmed, on `$12,304,488.86` at `28px`; `h2 40/48 ls -0.8 w600`, `h3 24/28.8`, lead `20/28`, `#687887` secondary, `--ease-out-quint` all confirmed. **Corrected:** the accent story — the announcement pill is acid yellow, `Contact sales` is mint, and the hero art is a saturated gradient.
+- `https://ramp.com` — **Corrected on two counts:** chartreuse fills **six** elements, not two, all of them buttons; and Ramp applies tabular figures to **18** elements, not zero, inside `<number-flow-react>` counters. **Added:** production CSS in CIE `lab()`; `h1` Lausanne `64/64`; the agent-served "Machine Version" page.
+- `https://www.brex.com` — every value confirmed unchanged: the full `"calt" 0 … "zero" 0` string, `h1 72/72 ls -1.44px w500 #15191E`, subhead `20/24 ls -0.4 #60646C`, fine print `12/18 ls -0.24`.
+- `https://monzo.com` — `--step-0` pinned and `--step-5` confirmed; `h1 48.83/58.59 w800`, `h2 39.06/46.87`, `h3 25/35 w700`, body `16/22.4` confirmed. **Added:** the three classes that actually carry `"tnum"`; mobile `44/48px` targets at `border-radius: 500px`, `<select>` at `16px/52px`.
+- `https://plaid.com` — four-step shadow scale at a constant `hsla(0,0%,7%,.08)` and `--transition-duration: 35ms` confirmed. **Added:** `--button-border-radius: 2px`, the overshoot easing, the gradient-clipped `h1`, the rem/px duplication.
+- `https://mercury.com` — `arcadia`/`arcadiaDisplay` at 480/420, `h1 49.35/54.28`, `h2 42/48.3 ls +0.42`, `#EDEDF3` confirmed. **Added:** the FDIC pill holds its first-viewport slot at 390px; the superscript footnote marker.
+- `https://www.moderntreasury.com` and `/products/ledgers` — global `"cv10","ss07","ss08"` confirmed; `h1 71/78.1 w450` confirmed. Debits-in-slate / Credits-in-clay confirmed by screenshot, with `$1,500.00` identical in both and in both `Total` rows. **Added:** `h2 47/58.75`; mono `Account`/`Amount` header chips on a mint wash; one plum fill for the whole rail taxonomy; `"direction": "credit"|"debit"` as a word not a sign.
+- `https://docs.stripe.com/api` — `14/22` body, `24/32` w700 `h1`, `21` w700 `h2`, `16` w600 `h3`, `td 14/20` at `12px` padding, Source Code Pro `14/18.2`, `#F4F7FA` page all confirmed. **Corrected:** body and headings are the **same** color, `#1A2C44`; the earlier `#3C4257` body value is wrong.
+- `https://stripe.com/payments` — gradient wedge confirmed by screenshot, and confirmed to be canvas/SVG rather than a CSS `background-image`. **Added:** the flat checkout card sitting on top of it, `Shipping Estimate — FREE`, `VAT (20%)`.
+- `https://www.revolut.com` — `Personal` / `£6,012` confirmed at 390, inside a phone frame over a photographic hero. It is image text, so an `innerText` probe misses it.
+- `https://copilot.money` — category chips confirmed by screenshot: ALL-CAPS ~10px tags with leading emoji and per-category hue (`💪 HEALTH`, `🥑 GROCERIES`, `💳 SUBSCRIPTIONS`, `🛍️ SHOPS`, `🚗 CAR`), opposite end of the row from the amount. Marketing runs chrome-bevelled display type over blurred floating pills.
+
+**Documentation, read rather than measured** (unchanged this pass):
+
+- `https://docs.stripe.com/declines/codes` — the decline table and the explicit instruction to present `fraudulent` / `lost_card` / `stolen_card` / `merchant_blacklist` as `generic_decline`; `advice_code`
+- `https://docs.stripe.com/elements/appearance-api` — `colorPrimary #0570de`, `colorText #30313d`, `colorDanger #df1b41`, `spacingUnit 2px`, `borderRadius 4px`, and the 16px-minimum mobile input rule
 - `https://docs.stripe.com/api/payouts/object.md` and `/api/charges/object.md` — the payout status enum plus "may show as `paid`, then change to `failed`"; `outcome.seller_message` / `network_status` / `risk_level`
-- `https://ramp.com` and `/bill-payments` — chartreuse used exactly twice, black primary CTA
-- `https://www.brex.com` — the Inter feature-settings string with `"liga" 0`, `"calt" 0`, `"zero" 0`; `h1 72/72 ls -1.44px`; in-app phone imagery showing `$22,528.62 available` and cent-precise expense rows
-- `https://monzo.com` — the full `clamp()` fluid step scale with `--step-0` pinned, `--default-line-height: 1.4`, declared-but-unused `"tnum"`
-- `https://cash.app` — Cash Sans `h1 56/53.2` (line-height under font-size), and the in-app card screen where the brand green disappears entirely in favour of white/black and neutral gray pills
-- `https://robinhood.com` — Martina Plantijn serif h1 over pure black, three-family stack
-- `https://plaid.com` — the four-step shadow scale at a constant `hsla(0,0%,7%,.08)`, `--transition-duration: 35ms`
-- `https://nubank.com.br`, `https://www.revolut.com` — consumer-warm pole; Revolut's `£6,012` no-decimal home balance with `Personal` label above
-- `https://copilot.money` — real cross-platform app screenshots showing whole-dollar aggregates beside cent-precise transactions, emoji confined to category chips, over/left budget rings
-- `https://fragment.dev` — an entire ledger-infrastructure site set in monospace
-- `https://www.coinbase.com` — returned a Cloudflare interstitial to headless Chromium; measured values are from that page only and are excluded from findings
+- `https://increase.com/documentation/api/overview` — the `{type,title,detail,status}` error object, `Idempotency-Key` requirement, Sandbox Simulations
+- `https://column.com/docs/api` — docs sidebar as the API object graph, `Simulation` as a peer nav item
+
+**Not re-measured this pass** (values below carry their original September 2026 reading): `https://cash.app` marketing type was re-confirmed (`h1 56/53.2 ls -1.68 w400`, `h2/h3 40/44 ls -1.2`, body `15/18`) but the in-app card-screen pills are from product imagery and were not re-probed. `https://robinhood.com`, `https://nubank.com.br`, `https://fragment.dev` were not re-probed. `https://www.coinbase.com` returns a Cloudflare interstitial to headless Chromium and contributes nothing.
+
+---
+
+## Direction pass (2026-09)
+
+Re-probed ten of the reference sites and screenshotted seven at 1440 and 390.
+
+**Corrected — these were wrong, and wrong numbers are worse than no numbers.**
+
+- Wise `--btn-radius-base`: `3px` → `9999px`.
+- Wise `--color-content-primary`: `#37517E` → `#0E0F0C`, with the "body text is navy, not black" claim deleted. Secondary and tertiary were also wrong (`#5D7079` → `#454745`, `#768E9C` → `#6A6C6A`).
+- Wise "every status background is exactly `0.10196`": true for the four status washes, false for `neutral`, which is `0.07843` of the brand green. `--color-border-neutral` was `rgba(0,0,0,.10196)`, is `rgba(14,15,12,0.12157)`.
+- Column "max shadow opacity is 3%": it is **7%**, across five layers, with alpha rising as blur falls. This value was also quoted a second time in the failure section; both fixed.
+- Ramp "chartreuse appears exactly twice, primary CTA is black": it fills **six** elements, all buttons; near-black carries five others. Reframed as "one accent, one job."
+- Ramp "0 elements with tabular figures": **18**, in `<number-flow-react>` counters. This inverts the finding into a stronger one — both sites in the sample that use tabular figures use them on animating numbers, and nowhere else.
+- Stripe docs body color `#3C4257`: body and headings are both `#1A2C44`.
+- Increase "mint appears only on the announcement link and one active icon tile": the announcement pill is acid yellow, mint is the primary CTA, and the hero carries a full gradient.
+- Wise's `0.8594` rate and derived amounts drift hourly; now labelled as a timestamped sample with the drift range recorded.
+
+**Cut.** The Coinbase table row (it said nothing). "Everything below is downstream of that." "This is the most transferable thing in the file." Wise's unverified `350/200/600ms` nav transitions. The three-paragraph provenance narrative, compressed to two sentences. "Modern Treasury's framing … is the bar," replaced with the three words that are the actual test. The failure section's "usually four things at once" before a list of eight.
+
+**Added.**
+
+- **Method caveats that change results:** `ramp.com` serves a plain-text "Machine Version" document to a default headless UA — probe it without a real UA string and you silently measure a different page; Ramp ships production colors in CIE `lab()`, so hex string-matching finds nothing; FX-derived values drift within the hour.
+- **Wise:** the `celebration` semantic pair distinct from `positive`; base/hover/active triples on every interactive role; the padlock inside the rate pill; the 40px circular icon rail on fact rows.
+- **Column:** headings are `blue-800`, not `gray-900`; `"salt" 2` set globally on `body`; the `350/550/750` half-steps as evidence of a scale extended in production.
+- **Modern Treasury:** `Total` rows carry cents; mono `Account`/`Amount` chips on a mint wash; one plum hue for the entire rail taxonomy; `"direction"` as a word rather than a sign.
+- **Stripe:** the `/payments` gradient wedge sits *behind* a flat checkout card — the two-palette rule as a literal edge in one screenshot; `Shipping Estimate — FREE` and `VAT (20%)` as evidence for finding 10's boundary.
+- **Copilot:** the exact anatomy of an acceptable emoji — ~10px ALL-CAPS tag, per-category hue, far end of the row from the amount.
+- **Mobile section, which was the thinnest:** `type="text" inputmode="decimal"` rather than `type="number"`, with the reasons; numbers scale on mobile while body copy is pinned (Wise `52→34px` against Monzo's `--step-0`); measured target ladder `32/40/48` at 390; the converter falls below the fold on mobile; Monzo's `44/48px` at `radius: 500px` and its `36px` secondary exception.
+- **Plaid:** `--button-border-radius: 2px`; the overshoot easing curve; the gradient-clipped `h1`.
+
+**Boundaries hardened.** Findings 1, 5, 7, 8 and 10 had limits that were restatements rather than limits. Finding 1 now names the case where the rule inverts (an already-monospaced face). Finding 5 names the case where the whole finding is cosplay (no double-entry model behind it). Finding 7 corrects "RTP is terminal" — RTP is irrevocable for the sender, which is not the same as final, and any rail with a return message type is a state machine. Finding 8 excludes field-level validation, where three registers is over-engineering. Finding 10 adds the fee you cannot state honestly because it isn't yours.
+
+**Failure section rewritten** around the specific artifact a language model emits, not bad design generally: an eight-question self-diagnosis an agent can run against its own file (gradient on a balance, `<sup>` on cents, mount-time counters, wordless status, four-plus status hues, compact notation on actionable numbers, shadow alpha over `0.10`, the word "sure" in a confirm dialog), the literal CSS the model tends to produce (`linear-gradient(135deg, #667eea 0%, #764ba2 100%)`, `border-radius: 24px`, `box-shadow: 0 20px 40px rgba(102,126,234,0.3)`), two new failure modes — invented compliance furniture, and success states for things that have not succeeded — and a closing note that the generated version usually fails by *omission*: no stale timestamp, no idempotency key, no submitted-but-unconfirmed state, no receipt history.

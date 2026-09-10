@@ -82,6 +82,7 @@ characteristic failure. Start at [`archetypes/README.md`](archetypes/README.md) 
 | Navigation, IA, sidebars, search | [`craft/navigation-and-ia.md`](craft/navigation-and-ia.md) |
 | Button labels, errors, empty states, tone | [`craft/copy-and-voice.md`](craft/copy-and-voice.md) |
 | Breakpoints, mobile, touch | [`craft/responsive-and-mobile-web.md`](craft/responsive-and-mobile-web.md) |
+| Photos, illustration, screenshots, logos, icons in place | [`craft/imagery-and-illustration.md`](craft/imagery-and-illustration.md) |
 
 **Reference products.** [`references/`](references/) — teardowns of the best interfaces in the
 world, with measured values. Read the one matching your archetype before you design, and use it for

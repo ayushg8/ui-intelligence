@@ -8,10 +8,34 @@
 
 The users are controllers, AP clerks, founders, treasury ops, and the engineers who build on money APIs. They are in the product every business day, often for hours, but the *unit of work* is not a keystroke — it is a payment, an approval, a reconciliation. They are usually accountable to somebody else for the number: a board, an auditor, a customer whose payout is late. The stakes are asymmetric and one-directional: a wire sent to the wrong counterparty at 4:55pm is gone, and the recovery is a phone call, not a Cmd-Z. The test from [`../references/fintech-and-trust.md`](../references/fintech-and-trust.md): **if a mis-read digit or a mis-clicked button costs real money that no undo can claw back, you are here.**
 
-- **Choose this over `enterprise-dense`** when the rows are irreversible events rather than editable records. `enterprise-dense` optimises for how many rows fit; this archetype optimises for how confidently one row can be read and acted on. Mercury's ledger runs **49–51px rows at 16px body** — roughly 60% taller than Attio's — in a product used all day. That is not sloppiness, it is the archetype.
+- **Choose this over `enterprise-dense`** when the rows are irreversible events rather than editable records. `enterprise-dense` optimises for how many rows fit; this archetype optimises for how confidently one row can be read and acted on. Mercury's ledger runs a flat **51px row at 16px body** — 60% taller than `enterprise-dense`'s 32px default, 42% taller than Attio's 36px — in a product used all day. That is not sloppiness, it is the archetype.
 - **Choose this over `fintech-consumer`** when the money is not the user's own. A consumer checks a balance for 30 seconds and needs reassurance; an operator releases $2M of somebody else's payroll and needs evidence. Warmth is a liability here — every degree of it is subtracted from the impression that you are careful.
 - **Choose this over `developer-platform`** when the primary surface is a dashboard someone *acts* in, even if the product also ships an API. Increase and Column are both; their docs are `developer-platform`, their dashboards are this. Two surfaces, shared tokens, different densities.
 - **Choose this over `analytics-bi`** when the number is a claim about a specific transaction rather than an aggregate over many. If drilling into a figure ends at a receipt with a reference ID, you are here; if it ends at a filtered chart, you are in `analytics-bi`.
+
+### Side by side with the three it gets confused with
+
+| | **fintech-institutional** | `fintech-consumer` | `enterprise-dense` | `analytics-bi` |
+|---|---|---|---|---|
+| Body | 15–16 | 16 | 13 | 13 chrome / 12 data |
+| Row height | **51** | 64 touch / 44–48 desktop | 28–32 | 22–24 |
+| Radius (control/container) | 4 / 8 | 12 / 16 | 4 / 6 | 4 / 6 |
+| Sidebar | 220–260 | none (tab bar) / 220–260 | 232–256 | 0 or 224–256 |
+| Table width | full bleed | 720–880 | full bleed | full bleed |
+| Accent jobs | **1** | 3 | 0 (status only) | 0 (series only) |
+| Neutral temperature | cool, R < G < B | warm, R > G > B | alpha over surface | alpha over surface |
+| Motion micro / standard | 160 / 200 | 140 / 220 | 120 / 160 | 120–150 / 180 |
+| Elevation | hairline ring, diffuse ≤14% | one shadow ≤10% | borders + 2 shadows | borders + 1 overlay shadow |
+
+Read that honestly, because two of the four columns are close.
+
+**It shares its radius scale (4–8px) and its sidebar width with `enterprise-dense`, and those are not where they differ.** The difference lives in row height and body size — 51/16 against 32/13 — and in what a row *is*. An `enterprise-dense` row is an editable record; correcting it costs a keystroke, so the file optimises for how many fit. A row here is an event that already happened on a rail; correcting it costs a phone call, so the file optimises for how confidently one can be read. Everything downstream follows: the taller row, the larger type, the confirmation screen, the reversal state, the idempotency key. If you can undo it in the product, you are in `enterprise-dense`.
+
+**It shares body size, and very nearly desktop row height, with `fintech-consumer`** — 16px against 16px, 51px against 44–48px. Those two numbers are within noise and there is no honest reason to push them apart: both users are reading a ledger on a large screen. The difference lives in four places that are not close. Neutral temperature is opposite (cool `#12161E` against warm `#22201D`), and it is the fork a viewer feels without naming. Radius is 4/8 against 12/16. The accent has one job here and three there. And the machinery is not shared at all: idempotency keys, a reversal state that runs backwards, an approver name inside the row, two-layer errors with a collapsed decline class. A consumer app that ships all of that is over-built; this archetype without it is a skin.
+
+The two also diverge under constraint even where the number matches. A 51px row here is 51px because it carries a counterparty glyph, a two-line verified name, a signed amount, an account, a rail and an inline-editable category — drop three of those and it correctly becomes 40px. A 64px consumer row is 64px because a thumb needs it, and it never goes below 48px no matter what it carries.
+
+**`analytics-bi` does not collide on any number** — 22–24px rows against 51px is not a near miss. It collides on the word "dashboard," and the test is the drill-down: a figure that ends at a receipt with a reference ID is here, a figure that ends at a filtered chart is there.
 
 ## When it is the wrong one
 
