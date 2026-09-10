@@ -1,0 +1,217 @@
+# Overlays, command palettes, menus, toasts, navigation
+
+**Evaluated:** 2026-09 · **Researcher note:** The primitive layer changed owners this cycle — shadcn/ui made Base UI the default in July 2026, Radix now sits under WorkOS in slow-maintenance mode, and Base UI absorbed Vaul's job (it ships a real `Drawer` with gestures and snap points) and Sonner's job (a first-party `Toast`). Meanwhile the single-author stars of 2023 — cmdk, Vaul — have gone quiet while their download counts kept climbing, which is the most dangerous shape a dependency can have. The platform half is oversold: `<dialog>` and Popover API are genuinely good, CSS anchor positioning is *not* Baseline (85.93% global, Firefox partial-only), so Floating UI is still load-bearing under every primitive library including Base UI.
+
+## Verdict at a glance
+| Library | Tier | One-line verdict | Vibecode risk |
+|---|---|---|---|
+| Base UI (`@base-ui/react`) | `essential` | The Radix team's second attempt, funded and shipping monthly; correct overlay semantics with no house style. | low |
+| Floating UI | `essential` | Boring infrastructure that everything else depends on, including Base UI. Don't replace it with CSS yet. | low |
+| Sonner | `essential` | The only toast library where the *motion* was designed, not bolted on. Its default look is now a tell. | high |
+| React Aria Components | `strong` | Best overlay semantics in the ecosystem; dismissal behavior is a first-class prop, not a workaround. | low |
+| Radix Primitives | `strong` | Still correct, still huge, now the compatibility track rather than the frontier. | low |
+| cmdk | `strong` | Still the right command menu and still what shadcn installs — but the demo site is gone and it hasn't shipped since March 2025. | high |
+| react-resizable-panels | `strong` | Unglamorous, actively released, zero opinions. The only serious answer for split panes. | low |
+| Native `<dialog>` + Popover API | `situational` | Use for menus/tooltips/simple modals; you still hand-roll iOS scroll lock and anchor fallbacks. | none |
+| Vaul | `situational` | Beautiful gesture physics, 21 months since a release, 164 open issues. Legacy-only now. | medium |
+| Ariakit | `situational` | Deepest ARIA correctness, thinnest ecosystem. Right when the pattern is unusual. | low |
+| react-hot-toast | `situational` | 4.7 kB and honest. Pick it when the bundle budget is the constraint. | medium |
+| kbar | `situational` | Hit 1.0 after four years of betas. Right only if you want an *action registry*, not a search box. | medium |
+| react-medium-image-zoom | `situational` | Small, alive, does one thing. Mostly replaceable by a `<dialog>` + View Transition. | low |
+| Ark UI / Zag | `reference-only` | Study the state machines; adopt only if you ship React + Vue + Solid from one design system. | low |
+| Tippy.js | `avoid` | Archived May 2024, still 5.7M weekly downloads. | — |
+| Popper.js | `avoid` | 21M weekly downloads for a library its own author replaced with Floating UI. | — |
+| react-toastify | `avoid` | Ships a visual identity you will spend a day deleting. | high |
+| ninja-keys / react-cmdk | `avoid` | Both dead since mid-2024. | — |
+| "modern-cmdk" / "better-cmdk" | `avoid` | SEO-shaped AI-generated repos with benchmark claims and no users. | — |
+
+## Recommendations by need
+- **Default choice:** Base UI for every overlay primitive (dialog, popover, menu, tooltip, drawer, toast), Floating UI underneath it (already is), cmdk only for the command menu — because Base UI is the only library in this space with a funded full-time team, monthly releases, and no house style to fight.
+- **Best engineering:** React Aria Components. It is the only library that treats `isDismissable`, `isKeyboardDismissDisabled`, focus restoration and touch scroll-lock as explicit API surface instead of implicit behavior you discover in a GitHub issue.
+- **Best visual quality out of the box:** Sonner. Nothing else ships motion this considered — but that is exactly why its defaults are a fingerprint.
+- **Best accessibility:** React Aria Components, and it is not close. Ariakit is second.
+- **Most customizable / least house-style:** Base UI. Zero CSS shipped, `render` prop composition, no `asChild` foot-guns.
+- **Lightest:** react-hot-toast at 4.7 kB gzipped, roughly half of Sonner's 9.2 kB. For positioning, the native Popover API is 0 kB.
+- **Promising newcomer:** Base UI's own `Drawer` — `<Drawer.Root swipeDirection="right">` with snap points and indent effects, i.e. Vaul's feature set inside a maintained library.
+- **Premium/paid worth it:** none. Nothing paid in this category beats free.
+
+## Scorecards
+
+### Base UI — `essential`
+- **What:** Unstyled, accessible React primitives from MUI, built by engineers who previously built Radix. 35+ components including Dialog, AlertDialog, Drawer, Popover, Menu, ContextMenu, Tooltip, Toast, Autocomplete, Combobox.
+- **Verdict:** This is now the default answer and the evidence is unambiguous — shadcn/ui switched its default registry to Base UI in July 2026 ("New projects now use Base UI by default. Radix is still fully supported"), and Base UI ships roughly monthly against Radix's quarterly. The overlay docs are unusually honest: the Dialog page opens with a *usage guideline* telling you not to use Dialog for gestures, and the Drawer page says "Drawer extends Dialog… if you don't need these, use Dialog instead." That is a library steering you away from its fancier component, which almost never happens. The one real trap: the package was renamed. `@base-ui/react` is v1.8.0 at 11.0M weekly; the old `@base-ui-components/react` is frozen at `1.0.0-rc.0` and still pulling 429k weekly from stale tutorials and stale LLM training data. An agent that installs the old name gets a release candidate from before 1.0.
+- **Use when:** any new React app that needs overlays. · **Don't use when:** you have an existing large Radix surface — migrate component-by-component, not in one PR.
+- **Scores /5:** visual 3 (nothing shipped, by design) · interaction 5 · a11y 5 · engineering 5 · maintenance 5 · docs 5 · customization 5 · perf 4 · stability 4 (1.x is young; the rename already broke people) · originality 4
+- **Evidence:** ★10,869 · last release v1.8.0 2026-09-04 · last push 2026-09-09 · 10,994,876 wk npm (`@base-ui/react`) · 319 contributors · MIT · depends on `@floating-ui/react-dom` · default registry for shadcn/ui since July 2026
+- **Looked at:** https://base-ui.com/react/components/dialog and /drawer — monochrome docs, hairline 1px borders, zero shadows anywhere, a single geometric sans at generous line-height, live demo above a tabbed source panel with CSS Modules / Tailwind switching. It looks like documentation rather than a landing page, which is correct for a primitive library. At 390px the Drawer page's code block overflows horizontally and clips the import path — their own docs don't fully hold at mobile width.
+- **Vibecode risk:** low — it ships no CSS, so nothing about a Base UI app is recognizable unless you copy shadcn's theme verbatim.
+- **Link:** https://base-ui.com
+
+### Floating UI — `essential`
+- **What:** The positioning engine for anchored elements: collision detection, flipping, shifting, arrow placement, virtual elements. `@floating-ui/react` adds interaction hooks and a full focus/dismiss layer.
+- **Verdict:** You are almost certainly already shipping it and should stop trying not to. Radix's popper and Base UI both list `@floating-ui/react-dom` as a direct dependency — this is the shared substrate under the entire headless ecosystem, which makes its maintenance status a systemic risk rather than a per-project one. Good news: 32.7k stars, pushed 2026-08-26, 131 contributors. The 2026 blog-spam claim that CSS anchor positioning obsoletes it does not survive checking: caniuse puts anchor positioning at 85.93% global with only 57.74% *full* support, Firefox is partial-only at 147+, and Safari is full only from 27. `@position-try` fallbacks — the part that actually flips a popover away from a viewport edge — is the piece that lags. Use CSS anchoring as progressive enhancement on a tooltip; do not build a production menu on it in 2026.
+- **Use when:** anything anchored that must survive edges, scroll containers, and iframes. · **Don't use when:** you only need centered modals and toasts — neither needs positioning math.
+- **Scores /5:** visual 2 · interaction 5 · a11y 4 (the react package's dismiss/focus layer is genuinely good) · engineering 5 · maintenance 5 · docs 4 · customization 5 · perf 4 · stability 5 · originality 4
+- **Evidence:** ★32,738 · last tagged release 2026-07-11 · last push 2026-08-26 · 20,445,632 wk npm (`@floating-ui/react`) · 131 contributors · MIT · direct dependency of Radix Popper and Base UI
+- **Looked at:** https://floating-ui.com — a 3D-rendered smiling balloon mascot floating in a purple/blue radial gradient, a gradient-filled wordmark, and a gradient CTA button. It looks like 2021. This is the clearest evidence/taste split in the category: dated marketing site, immaculate library.
+- **Vibecode risk:** low — it emits no visual output at all.
+- **Link:** https://floating-ui.com
+
+### Sonner — `essential`
+- **What:** An opinionated toast component for React. Stacked, expandable, swipe-dismissible, promise-aware.
+- **Verdict:** Emil Kowalski's toasts are the one place in this category where somebody clearly cared about motion — the collapse-to-stack, the height interpolation when a toast in the middle is dismissed, the swipe threshold. Nothing else is close. Two honest caveats. First, its defaults are now a fingerprint: shipping Sonner unstyled announces "shadcn app" as loudly as a violet gradient CTA does. Second, the 4-second default auto-dismiss is too fast for any toast containing an action — if you put an Undo button in a toast, raise the duration or the button is decorative for keyboard and screen-reader users. Also worth knowing: shadcn's Base UI track now routes `add toast` to Base UI's own Toast primitive, with Sonner remaining on the Radix track. Sonner is not dying — v2.0.8 shipped 2026-08-09 — but it is no longer the automatic install.
+- **Use when:** transient, non-blocking confirmation of something the user just did. · **Don't use when:** the message is an error the user must act on (that's inline), or a destructive confirmation (that's an AlertDialog). A toast the user must read is a bug.
+- **Scores /5:** visual 5 · interaction 5 · a11y 4 · engineering 4 · maintenance 4 · docs 4 · customization 3 · perf 5 · stability 4 · originality 5
+- **Evidence:** ★12,950 · last release v2.0.8 2026-08-09 · last push 2026-08-10 · 41,834,659 wk npm · 89 contributors · MIT · 9.2 kB gzipped · zero runtime dependencies
+- **Looked at:** https://sonner.emilkowal.ski — clicked "Render a toast" and captured the result. Bottom-right, white card, ~12px radius, a 1px hairline border doing most of the work with a very soft low-opacity shadow behind it, 14px semibold title over 14px gray description, ~356px max width, no icon and no color. The restraint is the design: it reads as an OS notification, not a "Success!" banner. The site's logo is literally three offset stacked cards — the whole identity is the stack behind the top toast.
+- **Vibecode risk:** high — the default Sonner toast is one of the three or four most recognizable "this was built fast" tells on the web right now. Restyle the surface (border color, radius, position) if you care.
+- **Link:** https://sonner.emilkowal.ski
+
+### React Aria Components — `strong`
+- **What:** Adobe's behavior + accessibility layer, shipped as unstyled components (`Modal`, `ModalOverlay`, `Popover`, `Menu`, `Dialog`, `Toast`, `NavigationTree`).
+- **Verdict:** The most rigorous overlay implementation in React, and the only one that treats dismissal semantics as a designed API rather than an emergent behavior. Its Modal docs put `isDismissable` and `isKeyboardDismissDisabled` as *live toggles in the demo* — you can feel the difference between "click the backdrop to close" and "you must decide" before writing a line. It also handles the ugly parts nobody markets: iOS touch scroll-lock, focus restoration when the trigger unmounts, and virtual-keyboard resize. The costs are real: Apache-2.0 rather than MIT (fine for most, a checkbox for some legal teams), a considerably larger API surface, and an ecosystem that assumes you write your own CSS from zero. It's third in downloads by an order of magnitude (3.5M vs Radix's 48M) which means fewer copy-paste answers.
+- **Use when:** accessibility is a contractual requirement, or you're building a design system other teams consume. · **Don't use when:** you want to move fast off shadcn blocks — the ecosystem gravity is elsewhere.
+- **Scores /5:** visual 2 · interaction 5 · a11y 5 · engineering 5 · maintenance 5 · docs 5 · customization 5 · perf 4 · stability 5 · originality 4
+- **Evidence:** ★15,860 (adobe/react-spectrum) · last release react-aria-components 1.21.0 2026-09-04 · last push 2026-09-10 · 3,520,784 wk npm · Apache-2.0
+- **Looked at:** https://react-spectrum.adobe.com/react-aria/Dialog.html — plain white docs, indigo accent, 8px radii, Vanilla CSS / Tailwind source tabs, a theme picker, a "Copy for LLM" affordance, and the live dismissal toggles described above. Visually the least exciting docs I looked at and functionally the most useful. The `Sheet` section explicitly frames drawers as "a Modal with custom entry and exit animations" — the correct mental model, and the one Vaul obscured.
+- **Vibecode risk:** low.
+- **Link:** https://react-spectrum.adobe.com/react-aria/
+
+### Radix Primitives — `strong`
+- **What:** The library that defined the headless-overlay category. Dialog, Popover, DropdownMenu, ContextMenu, Tooltip, Toast.
+- **Verdict:** Still correct, still enormous, no longer where the work is happening. `@radix-ui/react-dialog` last published 2026-07-24 against Base UI's monthly cadence, 347 open issues, and maintenance now sits with WorkOS. Radix is not deprecated — shadcn explicitly says so and keeps `npx shadcn init -b radix` — but the calculus for a *new* project has flipped. Note the dependency graph if you care about weight: `@radix-ui/react-popover` pulls fifteen sibling packages including `react-remove-scroll`, `aria-hidden`, `react-focus-scope` and `react-focus-guards`. That granularity was a virtue in 2022 and is npm-tree noise in 2026.
+- **Use when:** an existing codebase already runs on it, or a third-party block library you depend on assumes it. · **Don't use when:** greenfield — Base UI is the same team's better answer.
+- **Scores /5:** visual 2 · interaction 5 · a11y 4 · engineering 5 · maintenance 3 · docs 4 · customization 4 · perf 4 · stability 5 · originality 5
+- **Evidence:** ★19,253 · `@radix-ui/react-dialog` 1.1.23 published 2026-07-24 · last push 2026-08-08 · 48,282,651 wk npm (dialog) · 107 contributors · MIT · maintained by WorkOS · 347 open issues
+- **Looked at:** did not screenshot separately — Radix ships no visuals, and every shadcn surface I captured is Radix output.
+- **Vibecode risk:** low on its own; high as consumed through unmodified shadcn defaults.
+- **Link:** https://www.radix-ui.com/primitives
+
+### cmdk — `strong`
+- **What:** The unstyled command-menu component. Composable filter/score, keyboard nav, grouping, loading states.
+- **Verdict:** It is still the right answer and it is still what `shadcn add command` installs, on both the Radix and Base UI tracks. But look at the actual state before depending on it: the repo moved from `pacocoursey/cmdk` to `dip/cmdk` (Dip — "Tools for interface excellence," a four-person studio including Paco Coursey), the homepage field was cleared, and **cmdk.paco.me now 307-redirects to the GitHub repo**. The interactive demo that taught this whole pattern to the ecosystem no longer exists. Last release v1.1.1 on 2025-03-14 — eighteen months. Last commit of substance 2025-08-03. Meanwhile 36.0M weekly downloads and 451,943 dependent repos. That gap between usage and activity is the risk signal, not the star count. Being company-owned is better than being abandoned, and "Coming Soon" on dip.org suggests a successor; treat cmdk as stable-frozen rather than actively maintained and pin the version.
+- **Use when:** you're building a real command palette with search, groups, and async results. · **Don't use when:** you have under ~15 actions — that's a menu, and a palette will just hide them.
+- **Scores /5:** visual 3 · interaction 5 · a11y 3 (combobox semantics are adequate, not exemplary) · engineering 4 · maintenance 2 · docs 2 (README only, since the demo site is gone) · customization 5 · perf 4 · stability 4 · originality 5
+- **Evidence:** ★12,961 · last release v1.1.1 2025-03-14 · last push 2025-10-29 · 36,048,053 wk npm · 51 contributors · MIT · 14.6 kB gzipped · 451,943 dependent repos (GitHub "Used by")
+- **Looked at:** https://cmdk.paco.me — redirects to https://github.com/dip/cmdk, so what you actually see is a GitHub repo page: 13 tags, "Update README" 11 months ago, v1.1.1 marked Latest "last year." I also captured https://ui.shadcn.com/docs/components/command, which is now the de-facto documentation. Notable there: shadcn has added an RTL configuration guide and an RTL command-menu example, which cmdk itself never handled.
+- **Vibecode risk:** high — not cmdk's fault (it's unstyled), but the shadcn Command dialog styling on top of it is one of the most copied surfaces on the web.
+- **Link:** https://github.com/dip/cmdk
+
+### react-resizable-panels — `strong`
+- **What:** Resizable split panes with persistence, collapsible panels, nested groups, imperative APIs, and SSR support.
+- **Verdict:** The unsexy one that actually gets maintained. 4.12.4 shipped 2026-09-06 — three days before I checked — with only 7 open issues against 5.4k stars, which is a maintenance ratio nothing else in this file matches. It ships literally zero styling: the handle is an unstyled div you're expected to size and color yourself, which is the correct choice and also why nobody screenshots it. Relevant to the design question: a resizable pane is usually the honest alternative to the modal you were about to build. If the user needs to reference the thing behind the overlay, a pane beats a dialog every time.
+- **Use when:** IDE-shaped layouts, side-by-side diff/preview, a detail rail the user should be able to widen. · **Don't use when:** mobile — panels below ~700px should collapse to stacked views, not shrink.
+- **Scores /5:** visual 2 · interaction 4 · a11y 4 (handles are keyboard-resizable) · engineering 5 · maintenance 5 · docs 4 · customization 5 · perf 4 · stability 5 · originality 3
+- **Evidence:** ★5,359 · last release 4.12.4 2026-09-06 · last push 2026-09-06 · 22,807,904 wk npm · 59 contributors · MIT · 7 open issues
+- **Looked at:** https://react-resizable-panels.vercel.app — the docs sit on a saturated violet gradient background with a dark rounded card and cyan-outlined info callouts; it's the least attractive page I looked at in this category. The demo itself is two flat slate panels with a 4px grab handle between them, i.e. exactly the unstyled output you'd expect. Judge the release log, not the site.
+- **Vibecode risk:** low.
+- **Link:** https://github.com/bvaughn/react-resizable-panels
+
+### Native `<dialog>` + Popover API + CSS anchor positioning — `situational`
+- **What:** The platform's own overlay stack. `<dialog>.showModal()` for modals; `popover` attribute for light-dismiss layers in the top layer; `anchor-name` / `position-anchor` / `position-area` / `@position-try` for anchoring.
+- **Verdict:** Genuinely good and genuinely oversold. What the platform gives you free is the hard part of *stacking*: top-layer rendering means no z-index war, no portal, no stacking-context bug when a parent has `transform` or `filter`. `popover` handles Esc, light-dismiss and toggling; `showModal()` handles inert-ing the background and focus trapping. What it does **not** give you: (1) scroll lock — `overflow: hidden` on body works on desktop and fails on iOS Safari, where only cancelling `touchmove` with `{passive: false}` stops rubber-banding, and toggling body overflow can jump scroll position; (2) reliable initial focus — `autofocus` on `<dialog>` misbehaves in desktop Chrome, and if your first focusable element is at the bottom of the DOM the dialog opens scrolled to the bottom; (3) anchor positioning at production coverage — 85.93% global but only 57.74% full support, Firefox partial-only from 147, Safari full only from 27, and `@position-try` (the flip-away-from-the-edge behavior) is the laggard. Also: `returnValue` is not updated on Esc-dismiss, so never read it as "the user confirmed."
+- **Use when:** menus, tooltips, non-critical popovers, simple confirm dialogs, or any project where a zero-dependency overlay matters more than perfect parity. · **Don't use when:** the overlay is scrollable on iOS, or the anchor must flip reliably on Firefox.
+- **Scores /5:** visual n/a · interaction 3 · a11y 4 · engineering 5 · maintenance 5 · docs 4 · customization 5 · perf 5 · stability 3 · originality 5
+- **Evidence:** CSS anchor positioning per caniuse.com — 85.93% global (57.74% full + 28.19% partial); Chrome full 151+, partial 125–150; Safari full 27+, partial 26.0–26.6; Firefox partial 147+, unsupported ≤144. `<dialog>` and Popover API are broadly available. Sonner has an open feature request (#655) for Popover API support, i.e. even the good libraries haven't adopted the top layer yet.
+- **Vibecode risk:** none.
+- **Link:** https://developer.mozilla.org/en-US/docs/Web/API/Popover_API
+
+### Vaul — `situational`
+- **What:** The React drawer/bottom-sheet with iOS-grade gesture physics — velocity-aware dismissal, snap points, background scale.
+- **Verdict:** Emil Kowalski's drawer was the best-feeling overlay on the web when it shipped and it taught the whole ecosystem what a sheet should feel like. It is now a maintenance problem. Last release v1.1.2 on 2024-12-14 — 21 months. Last push 2025-10-03. 164 open issues against 8.6k stars. And 24.4M weekly downloads, because shadcn's Drawer shipped it to everyone. Base UI has since shipped its own `Drawer` with gestures, snap points and indent effects inside a library with a full-time team, and shadcn's Base UI track routes there. There is also a community port, `borabaloglu/vaul-base` (112★, last push 2025-12-20), which is too thin to depend on. Keep Vaul if it's already in your tree and working; do not start with it.
+- **Use when:** legacy Radix codebase that already ships it. · **Don't use when:** greenfield — use Base UI Drawer.
+- **Scores /5:** visual 5 · interaction 5 · a11y 3 · engineering 4 · maintenance 1 · docs 3 · customization 4 · perf 4 · stability 3 · originality 5
+- **Evidence:** ★8,599 · last release v1.1.2 2024-12-14 · last push 2025-10-03 · 24,366,525 wk npm · 43 contributors · MIT · 18.1 kB gzipped · 164 open issues
+- **Looked at:** https://vaul.emilkowal.ski at 390px — note the domain: `vaul.emilkowalski.com` does not resolve at all, which is how most agents will get it wrong. The page itself is a plain centered black-on-white type specimen with a pill outline button, plus a banner promoting the author's paid course. The interesting detail is the copy: "This component can be used as a Dialog replacement on mobile and tablet devices" — which is the correct rule and worth stealing regardless of which library you use.
+- **Vibecode risk:** medium — the background-scales-and-recedes iOS sheet is recognizable, though far less so than a Sonner toast.
+- **Link:** https://vaul.emilkowal.ski
+
+### Ariakit — `situational`
+- **What:** Unstyled React components and primitives with an unusually deep commitment to getting WAI-ARIA patterns exactly right.
+- **Verdict:** The most technically careful headless library that almost nobody uses. Actively developed (pushed 2026-09-10, 43 open issues) with 1.1M weekly downloads — an order of magnitude below Radix, two below Base UI. Its composability model is more granular than Radix's or Base UI's, which is a real advantage when the pattern you need is *not* on the standard list: a menu that is also a combobox, a popover that hosts a form with its own focus scope, nested disclosure inside a dialog. GitHub's API returns no SPDX license for the repo, which I could not resolve — verify licensing before adopting it commercially.
+- **Use when:** you need an overlay composition the standard libraries don't model. · **Don't use when:** the pattern is ordinary — you'll pay in ecosystem support for no gain.
+- **Scores /5:** visual 2 · interaction 5 · a11y 5 · engineering 5 · maintenance 4 · docs 4 · customization 5 · perf 4 · stability 4 · originality 4
+- **Evidence:** ★8,608 · last push 2026-09-10 · 1,102,021 wk npm · 43 open issues · license not reported by the GitHub API — unverified
+- **Vibecode risk:** low.
+- **Link:** https://ariakit.org
+
+### react-hot-toast — `situational`
+- **What:** A small, headless-ish toast library with a hooks API and promise helpers.
+- **Verdict:** 4.7 kB gzipped against Sonner's 9.2 kB, and it does 90% of the job. What you give up is exactly the 10% that made Sonner famous — the stacking, the height animation, the swipe. Maintenance is thinner than it looks: v2.6.0 shipped 2025-08-15, last push 2025-08-16, 143 open issues, 33 contributors. Thirteen months quiet is a yellow flag rather than a red one for a library this small and this stable, but it is the wrong default in 2026. Its 2.0M weekly downloads against Sonner's 41.8M tells you where the ecosystem went.
+- **Use when:** bundle size is a hard constraint, or you're not in the shadcn ecosystem and want something with fewer opinions. · **Don't use when:** the toast is part of the product's feel.
+- **Scores /5:** visual 3 · interaction 3 · a11y 4 · engineering 4 · maintenance 2 · docs 4 · customization 4 · perf 5 · stability 4 · originality 3
+- **Evidence:** ★10,969 · last release v2.6.0 2025-08-15 · last push 2025-08-16 · 2,041,838 wk npm · 33 contributors · MIT · 4.7 kB gzipped · 143 open issues
+- **Vibecode risk:** medium — its default green-check / red-x pill is a 2021 tell.
+- **Link:** https://react-hot-toast.com
+
+### kbar — `situational`
+- **What:** A command-palette *framework*: you register actions with keywords, shortcuts, parents and perform handlers, and it renders a searchable nested menu.
+- **Verdict:** The most interesting maintenance story here — kbar spent four years on `0.1.0-beta.*` and finally cut **v1.0.0 on 2026-08-10**. It is alive. It is also a fundamentally different bet from cmdk: cmdk gives you a filterable list and you own state; kbar gives you a global action registry with nesting and shortcut binding, and you own less. That registry is the right shape if your palette *is* your app's action layer (à la Superhuman, whose team explicitly argues for "omnipotence" — every possible action reachable from one place, one shortcut, everywhere). It is the wrong shape if the palette is mostly search. At 26.9 kB gzipped it is nearly twice cmdk, and 253k weekly downloads means you are largely on your own.
+- **Use when:** the palette is the primary navigation model and actions are keyboard-shortcut-bound. · **Don't use when:** the palette is a search box with a few commands bolted on — use cmdk.
+- **Scores /5:** visual 3 · interaction 4 · a11y 3 · engineering 4 · maintenance 4 · docs 3 · customization 3 · perf 3 · stability 3 (1.0 is one month old) · originality 4
+- **Evidence:** ★5,252 · v1.0.0 released 2026-08-10 (first stable, after betas since 2021) · last push 2026-08-10 · 253,267 wk npm · 35 contributors · MIT · 26.9 kB gzipped · 0 open issues
+- **Looked at:** https://kbar.vercel.app — captured at 1440 and 390. Sparse, near-monochrome docs page; the palette itself is the demo. It does not sell itself well, which partly explains the download gap.
+- **Vibecode risk:** medium — its default palette styling is more distinctive than cmdk's (which has none).
+- **Link:** https://kbar.vercel.app
+
+### react-medium-image-zoom — `situational`
+- **What:** Click-to-zoom for images, Medium-style: the image scales up over a dimmed backdrop, Esc/scroll/click dismisses.
+- **Verdict:** A small, genuinely maintained library (v5.4.9 on 2026-08-12, 0 open issues, 30 contributors) that solves one problem correctly, including the parts people forget — focus restoration to the original image, Esc handling, and not breaking with `next/image`. The honest caveat is that the platform is closing in: `<dialog>` plus a View Transition gets you 80% of this in about 30 lines, and does it with the top layer for free. Worth 813k weekly downloads' worth of trust; not worth a dependency if you already have a dialog primitive and a transition helper.
+- **Use when:** content-heavy sites (docs, editorial, portfolios) where images are the content and you don't want to hand-roll dismissal. · **Don't use when:** you need a real gallery — that's `yet-another-react-lightbox` (1.3k★, pushed 2026-09-08, 521k wk npm).
+- **Scores /5:** visual 4 · interaction 4 · a11y 4 · engineering 4 · maintenance 5 · docs 3 · customization 3 · perf 4 · stability 5 · originality 2
+- **Evidence:** ★2,120 · last release v5.4.9 2026-08-12 · last push 2026-08-26 · 813,969 wk npm · 30 contributors · BSD-3-Clause · 0 open issues
+- **Vibecode risk:** low.
+- **Link:** https://github.com/rpearce/react-medium-image-zoom
+
+### Navigation substrates: React Router / TanStack Router / Next App Router — `strong` (all three)
+- **What:** The routing layer, which is the real navigation design decision — overlays are what you build when routing can't express the state.
+- **Verdict:** All three are healthy; the choice is about type-safety appetite, not quality. React Router is at v8.3.1 (2026-08-28) with 56.6k stars and 46.6M weekly downloads — the safest hire-for and the deepest example base. TanStack Router (15.1k★, pushed 2026-09-10, 17.7M weekly) is the correct answer when **URL state is product state** — typed search params are the actual differentiator, and they matter enormously in this category: filters, selected items, and open panels belong in the URL, not in `useState`. Next's App Router is the default when you're already in Next. The design point an agent should carry: **parallel and intercepting routes exist so a "modal" can be a route.** If an overlay's content deserves a shareable URL, a back button, and a refresh that doesn't lose it, it is a route rendered in a dialog — not a dialog holding state.
+- **Use when:** always — pick one. · **Don't use when:** never; the anti-pattern is *not* picking, and reinventing history handling inside overlay state.
+- **Scores /5:** engineering 5 · maintenance 5 · docs 4 · stability 5 (React Router) / engineering 5 · maintenance 5 · docs 4 · stability 4 (TanStack, faster-moving)
+- **Evidence:** react-router ★56,575 · v8.3.1 2026-08-28 · 46,591,685 wk npm · MIT. TanStack/router ★15,065 · pushed 2026-09-10 · 17,666,954 wk npm · MIT · 633 open issues. vercel/next.js ★142,217 · pushed 2026-09-10 · MIT.
+- **Vibecode risk:** low.
+- **Link:** https://tanstack.com/router · https://reactrouter.com
+
+## The design question: when is each overlay the right answer
+
+Most modals are a failure of layout — a designer ran out of room and reached for a layer. The test is whether the user needs the thing behind the overlay. If yes, you wanted a panel, a pane, or a route.
+
+- **Modal dialog** — correct only when the interaction is *short, blocking, and destructive-or-committing*: confirm a delete, accept terms, resolve a conflict. If the modal scrolls, it should have been a page. If it contains a multi-step form, it should have been a route. If the user needs to check something behind it, it should have been a side panel.
+- **AlertDialog vs Dialog** — a real semantic difference every primitive library exposes and almost nobody uses. AlertDialog is `role="alertdialog"`, has no backdrop dismissal and no Esc-to-close by default, and focuses the safe action. Use it for irreversible actions and nothing else.
+- **Drawer / sheet** — the mobile substitute for a dialog (Vaul's own docs say so), and on desktop the substitute for a *pane* you don't have room for. Snap points are for progressive disclosure, not decoration.
+- **Popover** — a small, dismissible, non-blocking layer anchored to a trigger. If it contains more than about seven interactive elements it should be a panel.
+- **Tooltip** — supplementary information only, never the only place a fact lives, never on touch (there is no hover), never containing interactive content. If it needs a link, it's a popover.
+- **Toast** — the acknowledgment of something the user just did, that they may safely ignore. Errors requiring action go inline near the cause. Never stack more than three; Sonner's collapse behavior exists because everyone stacked more than three.
+- **Command palette** — a keyboard fast-path *layered on top of* discoverable UI, never a replacement for it. Superhuman's rules are the good ones: the same shortcut everywhere, one palette rather than Cmd+K plus Cmd+P, every action reachable, fuzzy matching with aliases (type "archive," find "Mark Done"), contextual score boosting rather than hiding, and a useful non-empty state on open. Show the keyboard hint next to every action so users graduate off the mouse.
+- **Resizable panes** — the answer whenever the user must reference and act at the same time. The most under-used overlay-avoider in the list.
+
+### Keyboard-first patterns, as actually observed
+- **Linear** (screenshotted, linear.app landing product shot): persistent ~300px left sidebar with icon+label rows and a Favorites section; no global top bar — the content pane carries its own contextual header with the issue ID, title, star and overflow, plus a `1 / 84` counter with up/down arrows for keyboard traversal of the result set. Reviews render as an inline right rail, not a popover. Most tellingly, the long-running agent surface is a **floating panel anchored bottom-right with minimize / expand / close chrome** — non-modal, dismissible, persistent. Linear's answer to "show me a process that takes 30 seconds" is explicitly not a dialog.
+- **Raycast** (raycast.com): the palette *is* the app — no chrome, an input at top, a scored result list, per-row action hints, and a persistent bottom action bar showing the primary action plus `⌘K` for the secondary action menu. The nested-palette pattern (a palette inside a palette) is Raycast's, and cmdk ships a "raycast preset" style in its repo. Note the marketing site is not the product: it's a black page with a red gradient-blur diagonal and a Helvetica-class headline.
+- **Superhuman**: one shortcut, everywhere, for everything; `command-score` (their own scoring library, which cmdk also uses) returning 0–1 per match; aliases so a user's word finds your label; and relevance scaling rather than context-hiding — they only hide commands that are "fully irrelevant."
+- **Vercel / Notion / Arc**: Arc's Cmd+T command bar unifies "new tab," "switch tab," "search," and "jump to Space" into one input — the strongest argument in the category that a palette should replace several separate affordances rather than sit beside them. I did not capture Notion's or Vercel's palettes directly (both sit behind auth), so treat descriptions of their internals as unverified.
+
+## Rejected / avoid
+- **Tippy.js** — archived 2024-05-27 by its own author, who now maintains Floating UI. Still pulling 5,752,546 weekly downloads. If you find it in a codebase, that's a migration ticket.
+- **Popper.js (`@popperjs/core`)** — 21,238,204 weekly downloads for a library explicitly superseded by Floating UI, same author. Pure transitive-dependency inertia.
+- **react-toastify** — 3,608,721 weekly, v11.1.0 2026-04-19, so it isn't dead. It's rejected on taste: it ships a strong default visual identity (colored full-bleed toasts, progress bar, icons) that you will spend a day overriding, and until you do, every app using it looks the same. Sonner and react-hot-toast both start closer to neutral.
+- **ninja-keys** — 1,708★, last push 2024-07-14. Dead. A web-component command palette is a good idea; this is not a live implementation of it.
+- **react-cmdk** — 1,238★, last push 2024-06-19. Dead, and confusingly named close enough to `cmdk` that agents pick it by mistake.
+- **`modern-cmdk` / `better-cmdk`** — these dominate 2026 search results for "cmdk alternative" with claims like "wins 14 of 15 benchmarks, up to 5.9x faster" and "optional WASM engine for sub-1ms on 100K items." They are recently-created, effectively unused repos with AI-generated READMEs. A command palette rendering 100,000 items is a solved problem called "don't." Do not install these.
+- **`@base-ui-components/react`** — not a bad library, a stale *package name*. Frozen at `1.0.0-rc.0` with 429k weekly downloads from outdated docs. The live package is `@base-ui/react` (v1.8.0).
+- **`body-scroll-lock`** — 1,622,710 weekly. Superseded by `react-remove-scroll` (which Radix already pulls in) and by `overscroll-behavior: contain`.
+
+## What surprised me
+- **cmdk's demo site is gone.** `cmdk.paco.me` 307-redirects to GitHub, the repo moved from `pacocoursey/cmdk` to the `dip/cmdk` org, and the homepage field was cleared. 36M weekly downloads and 451,943 dependent repos are pointing at a project whose last release was March 2025 and whose documentation is now a README. Not abandoned — Dip is a real four-person studio with "Coming Soon" products — but nobody's dependency dashboard is showing this.
+- **Base UI ate two beloved single-author libraries in one release cycle.** It now ships a `Drawer` with gesture support, snap points and indent effects (Vaul's entire feature set) and a first-party `Toast`, and shadcn's Base UI track routes `add drawer` and `add toast` to them. Vaul hasn't cut a release since December 2024.
+- **CSS anchor positioning is not Baseline, despite roughly a dozen 2026 blog posts asserting it is.** caniuse: 85.93% global, but only 57.74% *full* — Firefox is partial-only from 147, Safari full only from 27, and `@position-try` (the flip-at-the-viewport-edge behavior, i.e. the entire reason you wanted it) is the laggard. Every "delete Floating UI" post I found is wrong, and Base UI — written by people who would love to drop the dependency — still ships `@floating-ui/react-dom`.
+- **`react-remove-scroll` does 64.2M weekly downloads on 941 stars.** The most-installed library in this entire category is a 941-star repo by one maintainer (Anton Korzunov) that nobody chooses on purpose — Radix pulls it in. That is the real systemic dependency here, not any of the famous names.
+- **kbar shipped v1.0.0 in August 2026 after nearly five years on beta tags.** It had been widely written off as abandoned. It isn't.
+- **The category's search results are now polluted with AI-generated libraries.** Searching "cmdk alternative 2026" surfaces two synthetic repos with benchmark tables and WASM claims above every real option. Any agent doing naive web search in this category will recommend one of them.
+
+## Open questions
+- **Base UI Drawer vs Vaul on gesture feel.** I read the API and the docs; I could not measure velocity thresholds, rubber-banding or snap-point interpolation without a device. Settled by: building both on a physical iPhone and comparing dismiss-velocity behavior and 120Hz frame pacing.
+- **Ariakit's license.** GitHub's API returns `null` for SPDX. Settled by: reading `LICENSE` at HEAD in the repo.
+- **Whether Dip is shipping a cmdk successor.** dip.org lists cmdk v1.1.1 plus "Coming Soon." Settled by: watching the `dip` org for new public repos, or asking them directly.
+- **Vercel's and Notion's palette internals.** Both sit behind auth; I described only patterns I could source. Settled by: an authenticated session and a DOM inspection.
+- **Whether npm's 36M/wk for cmdk reflects real installs or CI amplification** from shadcn scaffolding. Settled by: comparing npm downloads against GitHub dependent-repo growth over several months.
