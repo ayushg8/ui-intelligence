@@ -6,7 +6,7 @@ the page's computed CSS. Target **≤2**. Ship gate is **≤3**.
 **Evaluated:** 2026-09 · Every number and quoted string below was read out of a live interface with
 Playwright (computed styles, `:root` custom properties, stylesheet rule inspection) or off a
 1440×900 render at 2×. The calibration set is 14 real interfaces, listed with their scores in
-§7. Nothing here is recalled.
+§8. Nothing here is recalled.
 
 **The instrument's job is not to detect novelty.** It detects *absence of decisions*. A boring
 interface where every boring choice was made on purpose scores 0. Read §3 before you score
@@ -63,7 +63,7 @@ Most bad rubrics collapse these. They have different scores and different fixes.
 
 | Diagnosis | Looks like | Score on this rubric | Fix |
 |---|---|---|---|
-| **Generated** | Library defaults + placeholder content + one state per element + fabricated evidence | **7–10** | §8, top of the ladder |
+| **Generated** | Library defaults + placeholder content + one state per element + fabricated evidence | **7–10** | §9, top of the ladder |
 | **Templated** | One coherent system applied consistently, zero domain fit, all fixture content | **5–6** | Replace content and re-derive density from the real task. The system is fine; it is about someone else's product. |
 | **Merely mediocre** | 3.2:1 contrast, a heading smaller than the body, a misaligned column, an unreadable chart | **score it low here, flag it separately** | This is a craft failure, not a generation tell. Route to `visual-critique-method.md` and `system/8-gates.md`. Inflating the vibecode score for it makes the instrument useless as a signal. |
 | **Good but conventional** | Every element is standard, and every element is right for this product | **0–2** | Nothing. Ship it. |
@@ -76,7 +76,7 @@ expectations built in other products, and spending them is a cost, not a virtue.
 with no gradient, no radius, no shadow, no illustration and no personality, because every one of
 those absences is a decision it can defend.
 
-**Novelty is not a defence.** The v0 pages in §7 are visually *more* adventurous than Linear's —
+**Novelty is not a defence.** The v0 pages in §8 are visually *more* adventurous than Linear's —
 chromatic-aberration text, iridescent 3D renders, a glassmorphic floating nav — and they score 8.
 Ambition applied to nothing is still nothing.
 
@@ -117,8 +117,9 @@ Rules:
 
 ## 5 — The fast path (60 seconds, 5 questions)
 
-Use this on every UI change. It correlates with the full score to within about ±1.5 across the
-calibration set, and it is cheap enough that there is no excuse for skipping it.
+Use this on every UI change. It is cheap enough that there is no excuse for skipping it, and it
+never misses in the direction that matters — nothing in the calibration set scores low here and
+high on the full path.
 
 | # | Question | Fail if | Points |
 |---|---|---|---|
@@ -128,8 +129,17 @@ calibration set, and it is cheap enough that there is no excuse for skipping it.
 | **4** | `grep -c ':focus-visible'` on the page CSS, and: does any element show a second state (hover/selected/loading/empty/error)? | 0 / none | +1 |
 | **5** | Does any of these appear verbatim: `Acme`, `Lorem`, `$1,250.00`, `1,234`, `45,678`, `+12.5%`, `John Doe`, `example.com`, `99.9% uptime`, `Everything you need`, `Trending up this month`, `Product Name`, `Your Company`? | Yes | +1 |
 
-Sum = fast score, 0–10. Calibration: GOV.UK 0 · Linear 0 · Mercury 0 · Basecamp 0 · Vercel 3 ·
-TailAdmin 6 · shadcn `dashboard-01` 7 · v0 Optimus 8 · v0 Agentic 9.
+Sum = fast score, 0–10. Measured against the §8 set, fast score first, full score second:
+
+```
+GOV.UK 0/0.2   Linear 0/1.4   Basecamp 0/1.4   Mercury 0/1.6   Stripe 0/1.7   Vercel 2/3.5
+shadcn dash-01 9/5.3   Cruip 9/6.1   TailAdmin 8/6.4   Compute 9/8.2   Optimus 10/8.1   Agentic 10/8.5
+```
+
+**It is accurate at both ends and runs about 2–3 points hot on templates.** That is by design: the
+fast path cannot tell "generated" from "somebody else's finished product", because from the outside
+they look the same and both need the same first fix. Use it as the trigger for the full path, not
+as the score. Anything ≥4 on the fast path gets the full path.
 
 **Question 1 is the whole rubric compressed.** If the answer is yes, nothing you do to the radius
 scale will help.
@@ -139,7 +149,7 @@ scale will help.
 ## 6 — The full path: ten dimensions
 
 Each is scored 0–10. **0 = no evidence of generation; 10 = pure scaffold.** Anchors are measured
-values from §7's set.
+values from §8's set.
 
 ### 6.1 Product specificity · weight 20
 
@@ -228,9 +238,9 @@ but do not restyle a working admin panel to satisfy this line.
 | Score | Anchor |
 |---|---|
 | **0** | States are a system. GOV.UK: **28** `:focus-visible` rules and **135** `:focus` rules, with a named focus token, and the focus style inverts text and background rather than adding a ring. |
-| **2** | Focus authored deliberately and narrowly. Linear: 7 `:focus-visible` rules, 4 `outline:none` — every removal paired with a replacement. Stripe: 4 `:focus-visible`, focus ring composed from `--s--focus-ring` tokens. Resend: 8 `:focus-visible`, 0 bare `:focus`. |
+| **2–3** | Focus authored deliberately, every removal paired with a replacement. Linear: 7 `:focus-visible`, 4 `outline:none`. Stripe: 4 `:focus-visible`, ring composed from `--s--focus-ring` tokens. Resend: 8 `:focus-visible`, 0 bare `:focus`. Vercel: **22** `:focus-visible` against **23** `outline:none` — a one-for-one trade, which is what "we removed the default and replaced it" looks like in a tally. |
 | **6** | Outlines killed, partially restored. TailAdmin: **13** `outline: none` rules, **26** bare `:focus` rules, **2** `:focus-visible` — a keyboard user gets nothing on most controls. |
-| **10** | Zero. All four v0 apps measured: `0` rules matching `:focus-visible`, `0` matching `:focus`. Nothing on the page has a keyboard state, an empty state, an error state or a loading state. |
+| **9–10** | Zero. All four v0 apps measured `0` rules matching `:focus-visible` and `0` matching `:focus`; so does Cruip's "Simple" template. Nothing on the page has a keyboard state, an empty state, an error state or a loading state. |
 
 Also score, from the screenshot: does any list show what it looks like with **zero** rows? Does any
 number show what it looks like while **loading**? Does any destructive action show its
@@ -335,3 +345,296 @@ was, but when present it is worth the full deduction on its own.
 That is the guard. An agent that reads this rubric and starts inventing novel navigation patterns
 to lower its score has misread it, and will produce something worse than the bland thing it
 replaced.
+
+---
+
+## 7 — Combining, and the two clamps
+
+```
+raw = Σ(dimension_score × weight) / 100
+```
+
+Then apply, in this order:
+
+**Clamp A — the specificity ceiling.** If `SPEC ≤ 2` **and** `COPY ≤ 2`, the final score is
+**capped at 3**, whatever the surface dimensions say.
+
+> An interface full of real domain content is not vibecode, even when every component in it is
+> conventional. Linear uses Inter, dark mode, pill buttons, a card grid and 128px section padding —
+> the whole tell list — and reads as designed, because the cards contain `DRV-8852` and
+> `vehicle_state`. This clamp stops an agent from "fixing" a specific interface into a
+> distinctive-looking generic one.
+
+**Clamp B — the fixture floor.** If either is true, the final score is **at least 6**:
+1. A framework fixture string appears verbatim: `Acme`, `Lorem`, `$1,250.00`, `1,234`, `45,678`,
+   `+12.5%`, `Total Revenue`, `Trending up this month`, `Visitors for the last 6 months`,
+   `John Doe`, `jane@example.com`, `Product Name`, `Your Company`, `example.com`.
+2. A quantitative claim is attributed to a third party you did not verify — `98% faster
+   deployment / STRIPE`, `99.9% uptime`, `50M+ tasks`, a logo wall of companies that are not
+   customers.
+
+> The second is not only a design failure. Publishing an invented metric under a real company's
+> name is a claim about someone else's business.
+
+The only exemption from Clamp B is an artifact whose visible purpose is to demonstrate the
+component itself — a labelled block preview, a Storybook page, a design-system doc. "It's just a
+demo" is not that exemption; the label has to be on the screen.
+
+**Report the raw score, the clamped score, and which clamp fired.**
+
+---
+
+## 8 — Calibration set
+
+14 interfaces, screenshotted at 1440×900 and probed for computed styles on 2026-09-09. Dimension
+codes in weight order: SPEC 20 · COPY 18 · DEF 13 · STATE 10 · RHY 10 · COL 8 · TYPE 8 · SURF 6 ·
+MOT 4 · ORIG 3.
+
+| Interface | Score | SPEC | COPY | DEF | STATE | RHY | COL | TYPE | SURF | MOT | ORIG |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| GOV.UK `/browse/benefits` | **0.2** | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 1 |
+| Linear `linear.app` | **1.4** | 0 | 2 | 2 | 2 | 1 | 2 | 1 | 2 | 1 | 2 |
+| Basecamp `basecamp.com` | **1.4** | 1 | 0 | 1 | 3 | 2 | 2 | 2 | 2 | 3 | 0 |
+| Mercury `mercury.com` | **1.6** | 0 | 2 | 2 | 3 | 2 | 2 | 1 | 2 | 2 | 2 |
+| Stripe API reference | **1.7** | 0 | 1 | 2 | 2 | 2 | 2 | 4 | 3 | 3 | 3 |
+| Resend `resend.com` | **2.6** | 2 | 4 | 2 | 2 | 3 | 3 | 1 | 3 | 3 | 2 |
+| Vercel `vercel.com` | **3.5** | 2 | 6 | 1 | 3 | 4 | 4 | 3 | 5 | 4 | 4 |
+| shadcn `dashboard-01` preview | **5.3** | 5 | 7 | 4 | 5 | 5 | 6 | 4 | 4 | 9 | 5 |
+| Cruip "Simple" | **6.1** | 7 | 7 | 4 | 9 | 5 | 5 | 6 | 4 | 7 | 5 |
+| TailAdmin demo | **6.4** | 8 | 8 | 5 | 6 | 5 | 6 | 5 | 5 | 6 | 5 |
+| v0 "UXBooster" dashboard | **7.2** | 7 | 7 | 9 | 10 | 6 | 5 | 6 | 7 | 8 | 4 |
+| v0 "Optimus" | **8.1** | 9 | 8 | 8 | 10 | 8 | 6 | 7 | 8 | 9 | 4 |
+| v0 "Compute" | **8.2** | 9 | 9 | 8 | 10 | 8 | 5 | 7 | 8 | 9 | 4 |
+| v0 "Agentic" | **8.5** | 9 | 9 | 10 | 10 | 9 | 7 | 6 | 7 | 8 | 4 |
+
+### The reasoning, where it is not obvious
+
+**GOV.UK — 0.2.** The hardest case for a careless rubric. It has no radius, no shadow, no
+illustration, no gradient, no accent beyond one blue and one green, and a 1970s transport typeface.
+A rubric that scores "polish" would fail it. It scores 0 because nothing on the page is a default:
+19px body, `box-shadow: #083D29 0 2px 0 0` as button depth, 28 `:focus-visible` rules with an
+inverting focus style, and headings that are full conditional sentences — "Benefits and financial
+support if you're temporarily unable to work." Every absence is defended.
+
+**Basecamp — 1.4, ORIG 0.** Underlined text links as primary navigation, hand-drawn highlighter
+marks, a live counter reading `91,733 people are working in Basecamp right now!`, a first-person
+section head ("Tell me if this sounds about right."), emoji star ratings. By 2026 SaaS convention it
+is the least fashionable page in the set. It is also the one no generator could produce. Note that
+its **STATE is 3, worse than Linear's 2** — 3 `:focus-visible` rules against 8 bare `:focus` — and
+it still scores 1.4, because the dimensions that matter are elsewhere. This is the rubric working.
+
+**Vercel — 3.5, the deliberate hard case.** Vercel's aesthetic *is* the aesthetic v0 imitates. Its
+headline is two abstract words. Its body copy — "For coding agents / To ship apps and agents /
+Automated by agents" — is indistinguishable from generated copy, which is why COPY scores 6, the
+worst dimension of any interface above the line. It still lands at 3.5 because SPEC is 2: real
+customer logos you can verify, a dated real event, a proprietary typeface, 374 authored tokens.
+**The lesson is that surface similarity to generated output is not evidence.** Score the substance.
+
+**shadcn `dashboard-01` — 5.3, and why not higher.** Every fixture string is present (`Acme Inc.`,
+`$1,250.00`, `1,234`, `45,678`, `+12.5%` twice) and MOT is 9 — the page serving it runs 113 transitions, every one `0.15s`, every one
+`cubic-bezier(0.4,0,0.2,1)`, 54 of them `transition-property: all`. It escapes Clamp B only because the page around it
+is visibly labelled "A dashboard with sidebar, charts and data table" beside a Preview/Code toggle
+and an `npx shadcn add dashboard-01` command. **Ship that markup as your product and it is a 6.4 —
+same pixels, different claim.**
+
+**Cruip "Simple" — 6.1.** A paid, human-designed template, and it scores above shadcn's own block
+preview. Why: `0` `:focus-visible` rules and `0` `:focus` rules on the whole page; a straight
+apostrophe in the 64px h1 (`The website builder you're looking for`); `letter-spacing: -0.4px` on
+14px buttons because `tracking-tight` sits on a wrapper; and a hero mockup showing
+`npm login --registry=https://npm.pkg.github.com --scope=@phanatic` on a page selling a website
+builder. Human authorship is not a defence either — the rubric detects absent decisions, whoever
+failed to make them.
+
+**TailAdmin — 6.4, the template anchor.** Internally consistent, one accent, correct hierarchy,
+correct contrast, nothing broken. It is not vibecode; it is somebody else's finished product with
+your logo on it. The evidence is in the data, not the styling: `$20K ↓ / $20K ↑ / $20K ↑` across
+three different metrics in one row, and "Target you've set for each month" as the subtitle of both
+"Monthly Target" and "Statistics". Real dashboards never show three identical numbers.
+
+**v0 Optimus and v0 Compute — 8.1 and 8.2, and the skeleton finding.** These are different
+templates by different authors, and above the fold they are the *same page*: wordmark plus `™`
+upper-left, five or six single-word nav items centred, `Sign in` plus a filled pill CTA upper-right,
+a monospace eyebrow preceded by a short horizontal rule, an 86–160px sans headline lower-left, a
+full-bleed decorative render on the right, and a three-to-five-item fabricated stat strip pinned to
+the bottom edge. Both ship the h2 `Global by default.` verbatim and the pricing CTA set
+`Start free · Start trial · Contact sales · Compare all features` verbatim. **If your landing page
+matches that skeleton, the score is ≥7 before you look at anything else.**
+
+**v0 Agentic — 8.5, the highest.** DEF is a 10: the `:root` is shadcn's default set completely
+untouched — `--background:#fff`, `--foreground:#0a0a0a`, `--border:#e5e5e5`, `--ring:#a1a1a1`,
+`--radius:.625rem`, plus `--chart-1..5: #f05100, #009588, #104e64, #fcbb00, #f99c00` and seven
+`--sidebar-*` properties on a marketing page with neither chart nor sidebar. The visible surface is
+the most ambitious in the set (iridescent 3D render, glassmorphic floating nav). Ambition and
+scaffolding are independent.
+
+### What the calibration set proves about 2023-era advice
+
+Three tells that were reliable and are now noise. Do not spend deductions on them:
+
+- **Purple/blue gradients.** Zero purple gradients across four v0 apps. What they actually use:
+  hairline `repeating-linear-gradient` grids, oklab image scrims, and a 3%-black radial cursor glow.
+- **`shadow-md` on every card.** v0 Optimus and v0 Compute have **no** non-reset shadows at all.
+  Meanwhile Basecamp layers two-stop ambient shadows on nine elements.
+- **Reading measure.** Every interface in the set, generated and designed, lands between 66 and 72
+  characters. Tailwind's defaults got there.
+
+And one that inverted: **decorative full-bleed hero imagery**. Mercury's hero is a surreal
+AI-rendered landscape and it scores 1.6. v0 Compute's hero is a surreal AI-rendered landscape and
+it scores 8.2. The image is not the variable.
+
+---
+
+## 9 — The remediation ladder
+
+Ordered by **points per hour**, computed from the weights. Do not start at the bottom; the bottom is
+where it feels like design.
+
+### What each fix is actually worth
+
+Moving one dimension from its generated anchor to its designed anchor changes the total by:
+
+| Fix | Dimension move | Δ score |
+|---|---|---|
+| Replace fixture content with real domain content | SPEC 9 → 2 | **−1.4** |
+| Rewrite every string in the product's voice | COPY 8 → 2 | **−1.1** |
+| Delete dead scaffold tokens, theme the rest | DEF 8 → 1 | **−0.9** |
+| Author focus, hover, empty, loading, error | STATE 10 → 2 | **−0.8** |
+| Give sections and components different spacing | RHY 8 → 3 | **−0.5** |
+| Build a radius and shadow scale | SURF 8 → 2 | **−0.4** |
+| Two durations and a chosen easing | MOT 9 → 2 | **−0.3** |
+| Invent a novel navigation pattern | ORIG 4 → 0 | **−0.1** |
+
+The last line is the point of the table.
+
+### By score band
+
+**8–10 — the scaffold is showing. Three moves, in this order.**
+
+1. **Replace every string and every number with the real thing.** Not "better placeholders" — the
+   actual issue titles, the actual account names, the actual SKUs, the actual error text your API
+   returns. If you do not have real data, get five real rows and lay out for those. This is the
+   move that changes what the layout *should* be, which is why it is first: everything you build on
+   fixture data is laid out for the wrong content. *(−1.4, and it drags COPY down with it)*
+2. **Delete every fabricated claim.** Every invented percentage, every uptime figure, every logo of
+   a company that is not a customer, every "50M+". If you cannot source it, it does not go on the
+   page. Replace the stat strip with something true and smaller, or with nothing. *(releases Clamp B)*
+3. **Strip the scaffold and author one state.** `grep -c ':focus-visible'` — if it is 0, add the
+   focus ring and never remove an outline without replacing it. Delete `--sidebar-*` and
+   `--chart-*` if the page has neither. Add the empty state for the main list. *(−0.9 and −0.8)*
+
+Those three take 8.1 to roughly **3.4**. Nothing on the surface has changed yet.
+
+**5–7 — competent, someone else's product.**
+
+1. **Re-derive density from your task**, not from the template's. A template ships one density; your
+   users have one. Row height comes from usage frequency — see `craft/density-and-hierarchy.md`.
+   TailAdmin's 40px rows are right for a glance dashboard and wrong for an operations console.
+2. **Break the uniform section rhythm.** Nine sections at `128px/128px` means nobody asked which
+   section deserves air. Give the hero and the last section more; give dense sections less.
+3. **Find your one signature decision** and make it in the domain, not in the styling. GOV.UK's
+   is a 2px hard button shadow. Linear's is a 0.5px inset top-light on surfaces. Mercury's is
+   tabular figures with full-weight cents. One is enough; two is a theme; three is a costume.
+
+**3–4 — good but conventional. Usually: stop.**
+
+You are at the score where further work has negative expected value. Before touching anything,
+check that the remaining points are real findings and not preferences (§3). If COPY is your worst
+dimension — as it is for Vercel at 6 — fix the copy and ship. Do not add a distinctive interaction
+to lower a number.
+
+**0–2 — done.** Re-score after the next content change, not the next style change.
+
+### The ordering rule, stated plainly
+
+**Structure before surface. Content before structure.** An agent that scores 8, spends an hour on a
+radius scale and a custom easing curve, and re-scores at 7.4 has done an hour of work for 0.7
+points and has not touched the reason a human clocked it in two seconds.
+
+---
+
+## 10 — Output format
+
+Emit this. Not prose.
+
+```
+VIBECODE  raw 8.1  →  clamped 8.1   (Clamp B fired: fabricated third-party metric)
+1440×900 render + computed CSS.  Dimensions scored: 10/10.
+
+DIM    S   W    evidence
+SPEC   9  20    "98% faster deployment / STRIPE" ×2 in one viewport; "20 days saved on builds / NETFLIX"
+COPY   8  18    h2 "Global by default." — verbatim match with v0-compute; "Everything you need. Nothing you don't."
+DEF    8  13    :root = 33 props incl. --sidebar-ring, --chart-1..5; no sidebar, no chart on page
+STATE 10  10    0 rules matching /:focus-visible/; 0 matching /:focus\b/; no empty/loading/error state rendered
+RHY    8  10    padding 128px/128px on 8 of 9 sections; gaps 8/12/16/24/32/64/96 (default scale, untouched)
+COL    6   8    neutral ramp = #fafaf9/#080503/#dad7d0 themed, but --destructive #e40014 unchanged
+TYPE   7   8    30px, 48px, 60px, 160px co-occur; Instrument Sans + JetBrains Mono, weights 400/500 only
+SURF   8   6    border-radius vocabulary = calc(infinity*1px) on 22 elements and nothing else
+MOT    9   4    0.15s ×33, cubic-bezier(0.4,0,0.2,1) ×50, transition-property:all ×22
+ORIG   4   3    no decision present that a generator would not produce
+
+DIAGNOSIS  generated (not template, not mediocre)
+NEXT       1. replace stat strip with sourced numbers or delete it
+           2. real content in the feature grid — product nouns, not "Enterprise Security"
+           3. focus ring + empty state; delete --sidebar-*/--chart-*
+PROJECTED  3.4
+```
+
+If you scored from a screenshot alone, write `Dimensions scored: 7/10` and list DEF, STATE and MOT
+as `n/a — CSS not inspected`. Do not guess them, and do not average around them.
+
+---
+
+## 11 — Anti-gaming clauses
+
+The instrument is being run by the thing it grades. These are the loopholes to close.
+
+1. **You cannot lower a score by adding.** Every fix in §9 that is worth more than 0.4 points is a
+   *replacement* or a *deletion*. If your remediation plan is mostly additive — an animation, a
+   texture, a custom cursor, a bespoke scrollbar — you are decorating, and the score should not move.
+2. **Novelty is capped at 0.18 points** (ORIG, weight 3, range 0–6). There is no strategy in which
+   inventing an unusual pattern is the efficient move.
+3. **Restraint has no penalty.** Search §6 for a deduction that fires on absence of decoration.
+   There is none. GOV.UK proves the ceiling case: maximal restraint, minimum score.
+4. **Scoring from a screenshot caps at 7 dimensions.** An agent that "scores" DEF, STATE and MOT
+   without reading the CSS is inventing evidence, which is the thing the rubric penalises hardest.
+5. **A deduction with no pasteable observable is worth zero points.** Rewrite it as an observable or
+   drop it.
+6. **The same interface scores differently as a specimen and as a product.** The variable is whether
+   the content is a claim. Do not use "it's a demo" to escape Clamp B — the label must be visible on
+   the screen.
+7. **Do not score your own work in the same pass that you defend it.** The score and the
+   justification are different jobs. Score first, from the render, before re-reading your code.
+
+---
+
+## 12 — Card
+
+```
+FAST (60s)                                    WEIGHTS
+1 logo-swappable?            +3                SPEC 20  COPY 18  DEF 13  STATE 10
+2 no unfakeable detail?      +3                RHY  10  COL   8  TYPE  8  SURF   6
+3 nobody here wrote that?    +2                MOT   4  ORIG   3 (0-6 only)
+4 0 focus-visible / 1 state? +1
+5 fixture string present?    +1                CLAMP A  SPEC≤2 & COPY≤2 → max 3
+                                               CLAMP B  fixture string OR unsourced
+TARGET ≤2       SHIP GATE ≤3                            third-party metric → min 6
+
+CHEAPEST DECISIVE CHECKS
+  grep -c ':focus-visible'                     0 on a page with buttons → STATE 10
+  count :root custom properties                exactly 33 → shadcn scaffold untouched
+  --sidebar-* or --chart-* with neither on page → DEF ≥8
+  tally transition-duration + timing-function  one of each → MOT ≥8
+  tally border-radius values                   one value, and it's a pill → SURF ≥8
+  tally section padding-top/bottom             one value across all sections → RHY ≥8
+  grep for Acme | $1,250.00 | 1,234 | 45,678 | +12.5% | 99.9% | Everything you need
+
+ORDER OF WORK   content → evidence → states → rhythm → surface → motion
+```
+
+---
+
+**Related:** [`vibecode-taxonomy.md`](vibecode-taxonomy.md) for what each tell is and when it is
+fine · [`remedies.md`](remedies.md) for the before/after code ·
+[`visual-critique-method.md`](visual-critique-method.md) for how to look at the render before you
+score it · [`../craft/density-and-hierarchy.md`](../craft/density-and-hierarchy.md) for the density
+targets referenced in §9.

@@ -148,6 +148,30 @@ The voice is the publication's, not the product's. Three rules: **the headline m
 
 Bylines are names, not handles. Dates are absolute and include the year (`Wed 9 Sep 2026 14.31 EDT`, measured) because articles are read years later. Kickers name a section, not a mood. And never write "read more" — write what more there is to read.
 
+## The characteristic failure
+
+**The Medium-skin.** A team decides the product needs "an editorial feel", installs `@tailwindcss/typography`, wraps the CMS output in `prose lg:prose-xl`, and ships. The result is recognisable at fifty paces and every one of its symptoms is a default that was never chosen:
+
+- **The body is Inter at 18px/1.75 in a 65ch container** — a sans face drawn for UI labels, at documentation leading, in a book measure. Three defaults from three different design problems, none of them this one. Nothing measured in this file leads above 1.5 at 18px.
+- **The body colour is `text-gray-600`/`#4B5563`.** It looks refined in a Figma frame and greys out over a full screen of continuous text. The references run `#111`–`#333`.
+- **Everything is centred and symmetric.** Column centred, headline centred, byline centred under an avatar, empty margins on both sides — so when footnotes, figure credits or a position indicator arrive, there is nowhere to put them and they get dumped inline or at the bottom.
+- **One family at three sizes.** No display cut, no furniture face, so the h2 is body-text-but-bolder and the caption is body-text-but-smaller-and-grey. The page has no typographic *colour*, which is the actual thing readers respond to and the actual reason the references pay for three faces.
+- **Cards have leaked into the article.** A rounded, shadowed "Key takeaways" box; a bordered author card; a related-posts grid three paragraphs from the end. Radius above 12px on a text surface is the single strongest generated-UI tell (`system/3-tokens.md`), and it is strongest here because a page of prose contains nothing that should be a container.
+- **Motion has been added because the page felt static.** Each section fades and slides on scroll; a 3px gradient progress bar rides the top; the hero image parallaxes. All of it fires while the reader's eye is tracking a line of text.
+- **The chrome competes.** Floating share rail in the left margin, sticky subscribe bar at the bottom, "5 min read ⏱" pill, newsletter modal at 40% scroll. Four interruptions before the second section.
+- **The one image is a stock hero at 21:9**, full-bleed, decorative, followed by no other images at all — because no one decided what images are *for* in this publication.
+
+**Self-diagnosis, in order of severity.** Open the article at 1440 and check:
+
+1. Measure the body column in `ch`. If it is above 70, you are shipping documentation geometry for a reading task.
+2. Compute h1 ÷ body. If it is under 1.9, your hierarchy is carried by weight instead of scale, and the page will read as a blog template.
+3. Count faces. One family means the reader has no cue to distinguish a caption from a claim.
+4. Sample the body colour's contrast. Under 12:1 on the ground and you have chosen "refined" over "readable".
+5. Scroll and watch for anything that moves other than the page.
+6. Count elements between the first and last paragraph that have a `border-radius` or a `box-shadow`. The correct answer is zero.
+
+**The root cause is always the same:** the team imitated the *look* of a reading surface — serif-ish, airy, centred — without making the one decision the look comes from, which is that a single body of text is the only thing on the page allowed to be at reading size. Every symptom above is another element promoted to compete with the prose.
+
 ## Signature decisions that fit here
 
 1. **Citations become the second column.** At ≥1200px, every footnote renders as a sidenote in a 300–330px rail, vertically aligned to the sentence that cites it, in the mono/furniture face; below that width it collapses to an inline disclosure under its own paragraph. The reader never leaves the flow to check a source, and the note is never further from its claim than a glance. (Works in Progress ships exactly this.)
