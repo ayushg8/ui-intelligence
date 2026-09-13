@@ -448,6 +448,12 @@ Ten questions that span files, with what would close each.
 4. **Radix's intent under WorkOS.** Six weeks of silence, one issue closed since 2026-07-31, backlog growing, no
    public statement. **Settled by** a commit or release within 60 days, or a roadmap post. Same shape for
    `@dnd-kit/core` (22.4M wk, frozen 21 months) and cmdk (36M wk, 18 months).
+   *(2026-09-13, day 44 of 60: still nothing, and the npm publish log makes the question sharper than the
+   issue tracker did. Radix cut `1.7.0-rc` builds on 07-25, 07-27, 07-28, 07-30 and 07-31 — five in seven days
+   — then stopped on every tag. This is an abandoned release train, not a quiet month. **The 60-day mark falls
+   2026-09-29; if the next run finds no publish by then, treat the question as settled against Radix and say so
+   in the tier, not the prose.** Meanwhile the migration target held: `@base-ui/react` shipped 1.8.0 on
+   2026-09-04 at 9.71M wk.)*
 5. **Screen-reader behaviour versus accessibility marketing.** Every library claims APG conformance; only React
    Aria and Kobalte cite the pattern per component; AG Grid publishes ARIA *documentation* while React Aria
    publishes the *behaviour* others implement against. Every a11y score in these files reflects documented rigour
@@ -470,7 +476,11 @@ Ten questions that span files, with what would close each.
    and Style Dictionary silently writes `[object Object]` for a spec-form `duration` token with exit code 0.
    **There is no file both accept and render the same.** **Settled by** a published conformance suite.
 10. **How many provisional visual scores are wrong.** One of three blind scores that got re-checked moved
-    materially (React Spectrum 3 → 4, scored on reputation without looking). At that rate treat every
-    unlooked-at score as a coin flip: Angular Material, Carbon, Web Awesome, Quasar, Naive UI, Blueprint, Ionic,
-    Polaris, Reshaped, AG Charts (gallery 403s to headless capture), Carbon Charts, Charts.css, AntV X6/G6 and
-    ECharts. **Settled by** a screenshot pass from a real browser, not another agent run.
+    materially (React Spectrum 3 → 4, scored on reputation without looking). *(2026-09-13: two more settled
+    from a real browser — **Naive UI** and **Web Awesome**, both confirmed, neither moved; Naive UI gained a
+    recorded positive, `tabular-nums` on all 1,644 table cells, which shadcn's own tasks example sets on zero.
+    Running score: 1 of 5 blind scores materially wrong.)* Still unlooked-at and provisional: Angular Material,
+    Carbon, Quasar, Blueprint, Ionic, Polaris, Reshaped, AG Charts (gallery 403s to headless capture), Carbon
+    Charts, Charts.css, AntV X6/G6 and ECharts. **Settled by** a screenshot pass from a real browser, not
+    another agent run — and then a computed-style probe, because this pass produced an eyeball error in the
+    opposite direction (Naive UI's rows read as "~73px, far too airy" and measure 53px).

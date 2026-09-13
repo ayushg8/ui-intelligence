@@ -16,8 +16,16 @@ recalled from training data. The corpus:
 | **Generated** · pass 1 | 15 | v0.app community templates at their live preview URLs (Optimus, COMPUTE, AGENTIC, Tasko, UXBooster, Financial Dashboard, HR Pulse, DRIPNEX, Hoodie Store, Modern SaaS Landing, and 5 more) |
 | **Generated** · pass 1 | 10 | Published `*.lovable.app` apps built by real users, found via search, not curated by Lovable |
 | **Generated** · pass 2 | 8 | An adversarial re-probe of *different*, publicly deployed output: `v0-design-brutalist-ai-saa-s` (SYS.INT), `v0-pixel-perfect-seven` (PIXELCRAFT), `v0-sales-operations-dashboard` (SalesOps), `v0-ai-mockup-generator-five` (product.mockup), `wwwe.lovable.app` (LearnHub), `mode9.lovable.app` (Email Extractor), `mastering-lovable.lovable.app`, `v0-premium-templates` |
+| **Generated** · pass 3 | 5 | **Replit Agent**, added 2026-09-13 to close a generator gap: user-published `*.replit.app` apps found via search, not curated by Replit — TimelineOS (agent marketplace), Vortex Payroll (dashboard), My Tryout Tracker (landing), OpenFetch (docs), APE Strongman (event site) |
 | **Reference** | 2 | `ui.shadcn.com/blocks` and `/examples/dashboard` — the source of the defaults |
-| **Control** | 14 | linear.app, stripe.com, mercury.com, ramp.com, raycast.com, railway.com, vercel.com, notion.com, figma.com, sentry.io, posthog.com, basecamp.com, arc.net, gov.uk — five of them re-probed in pass 2 |
+| **Control** | 14 | linear.app, stripe.com, mercury.com, ramp.com, raycast.com, railway.com, vercel.com, notion.com, figma.com, sentry.io, posthog.com, basecamp.com, arc.net, gov.uk — five re-probed in pass 2, four re-probed in pass 3 |
+
+**Generator coverage is still incomplete.** Passes 1–2 sampled v0 and Lovable only; pass 3 adds Replit
+Agent. **Bolt remains unsampled** — its output deploys to randomly-named `*.netlify.app` hosts with no
+discoverable index, so there is no way to find genuine user output rather than vendor showcases. Until
+that is solved, read every tell below as measured on three of the four major builders. Pass 3 also
+produced a useful negative: APE Strongman, which has real photography and a real brand, escapes almost
+every tell in this file. The generator is not the determinant — the absence of content is.
 
 Two hard results frame everything below:
 
@@ -98,6 +106,7 @@ audit on these.*
 | [D12](#d12--faq-accordion-as-page-filler) | 6 questions nobody asked, at the bottom | `[data-state]` accordion under the last CTA |
 | [D13](#d13--the-primary--ghost-cta-pair-arrow-on-the-primary) | Filled CTA with `→`, outline CTA beside it | Two sibling buttons under the subhead, one filled one not |
 | [D14](#d14--the-kpi-tile-row) | 4 tiles: label, icon chip, big number, green delta | A 4-col grid whose children each hold one `svg` and one number |
+| [D15](#d15--pill-inflation--every-attribute-rendered-as-a-chip) | 13 chips on one card, `+3 more` also a chip | Pills ÷ focusable elements; >0.5 is a finding, controls run 0.00–0.15 |
 
 ### E · Library fingerprints
 | # | Tell | Detect in 5 seconds |
@@ -133,6 +142,7 @@ audit on these.*
 | [G9](#g9--copy-from-a-different-product-entirely) | Banking string inside a UX-audit tool | Read the small print |
 | [G10](#g10--the-models-own-caveats-rendered-as-ui) | A "Current limitations" section | Section headed with a disclaimer |
 | [G11](#g11--placeholder-identity) | `Acme Inc.`, `$1,250.00`, `jessin@gmail.com` | grep the fixture strings |
+| [G12](#g12--the-generated-illustration-and-the-generated-avatar) | Airbrushed sunset hero, merged hands; one-per-hue avatars | Open it full size: what is the picture arguing? |
 
 ### H · States & depth
 | # | Tell | Detect in 5 seconds |
@@ -1812,6 +1822,65 @@ If the only answer is "they are numbers," it is a filled slot, not a summary.
 
 ---
 
+### D15 · Pill inflation — every attribute rendered as a chip
+
+**The tell.** Every field on an object becomes a rounded-full chip, so a single card carries ten to
+fifteen of them at one visual weight. Measured 2026-09-13 on `agentmarketplace.replit.app`
+(TimelineOS, Replit Agent): **86 pills against 54 interactive elements on one 1440×900 view** — more
+pills than controls. One agent card carried thirteen: `Native` · `Native TimelineOS` · `Verified` ·
+`Setup: Low` · `Supervised / Approval-Based` · four capability chips · three tag chips · `+3 more`.
+Note the last one — the *overflow indicator* is also a pill, so "there are three things I am not
+showing you" is drawn at the same weight as the things themselves.
+
+The ratio is the measurement, not the count. Pills per interactive element, same probe, same session:
+
+| Page | Pills | Interactive | Pills per control |
+|---|---|---|---|
+| TimelineOS (Replit Agent) | 86 | 54 | **1.59** |
+| linear.app | 20 | 134 | 0.15 |
+| vercel.com | 3 | 98 | 0.03 |
+| stripe.com | 0 | 201 | 0.00 |
+| sentry.io | 0 | 134 | 0.00 |
+
+Linear's twenty are issue labels inside a product shot — `Bug`, `Design`, `Performance`, `iOS` — which
+is the legitimate use: a chip standing for a value drawn from a known set. It still runs an order of
+magnitude below the generated page.
+
+**Why AI generates it.** The model is handed an object with fifteen fields and no information about
+which of them a reader came for, and a chip is the only container that accepts a short string without
+requiring a decision about hierarchy. It is the token-level equivalent of the card (D1): the safest
+way to render an unknown attribute, applied to every attribute. The same impulse stacks *metric
+idioms* in one card — TimelineOS gives each agent a ring gauge (`94`), two five-star rows, a
+percentage (`TOS READY 100%`) and a bare integer (`CAPABILITY 94`), four quantification languages for
+one object, because each was individually plausible and nothing forced a choice among them.
+
+**Why it reads as generated.** A chip is a claim that a value is categorical, filterable and worth
+scanning. When everything is a chip, none of it is scannable — the eye gets fifteen equal-weight
+objects and no entry point, which is exactly the failure the card soup produces one level up.
+It also reliably encodes *nothing*: `Native` and `Native TimelineOS` appear on the same card, one of
+them redundant, because no pass ever asked whether the two fields said the same thing. A designer
+clocks it because real products spend chips: they are the most attention-expensive small component
+there is, and shipping teams ration them.
+
+**When it is actually fine.** When the chip set is closed, short and genuinely used for filtering —
+issue labels, model tags, a status. Linear, GitHub and Jira all chip their labels correctly. Two to
+four per row, drawn from a vocabulary the user recognises, is a working pattern.
+
+**Instead.** Rank the fields first: one or two are identity, a few are body, the rest are detail.
+Give identity the type, put body in plain text with a label, and let detail live in a definition
+list, a tooltip or the detail view — most of it should not be on the card at all. Where a chip
+survives, make it earn the shape: it should be clickable, or it should be a status. Pick one
+quantification idiom per object and delete the others. And never chip the overflow indicator —
+`+3 more` is a link.
+
+**Detect.** *Code:* count elements with `border-radius >= height/2`, visible background or border,
+text under ~32 characters, and divide by the count of focusable elements. Above ~0.5 is a finding;
+above 1.0 the page has more decoration than controls. *Screenshot:* pick one card and read its chips
+aloud in order. If two of them mean the same thing, or if you cannot say which one you would filter
+by, it is inflation.
+
+---
+
 ## E · Library fingerprints
 
 ### E1 · Dead tokens for components the page does not contain
@@ -2619,6 +2688,61 @@ an edge case. Good fixtures are a design tool — they surface layout failures t
 
 **Detect.** *Code:* `grep -rE "Acme|Olivia Martin|1,234|45,678|\\\$1,250|john@example|lorem"`.
 *Screenshot:* read every number and every name.
+
+---
+
+### G12 · The generated illustration, and the generated avatar
+
+**New this pass, and the least settled entry in the file.** Image generation is now built into the
+builders themselves, so the placeholder problem has a second form: not a missing image or a stock
+photo, but a *plausible* image nobody chose. Observed 2026-09-13 on two of five Replit Agent apps
+viewed; not yet probed on v0 or Lovable output, and not countable by any instrument here — see
+"Detect" for why. Treat it as a first observation, not a measured baseline.
+
+**The tell.** A hero illustration in the flat-vector-plus-airbrushed-gradient style every image model
+converges on: a warm sunset-to-peach sky behind a group of uniformly smiling people, plastic-smooth
+shading, no linework discipline, no consistent light source, and — reliably — anatomy that fails on
+close reading. On `mytryouttracker.replit.app`: a youth team celebrating, in which hands merge into
+neighbouring arms, a ball is held by nobody in particular, and the jersey numbers are `6`, `13` and a
+`17` whose glyphs do not match the other two. It sits in a rounded rectangle with a drop shadow,
+which is the giveaway of its provenance — it is being framed like a screenshot because the layout
+slot was built for one.
+
+The avatar form is the same failure at 48px: `agentmarketplace.replit.app` gives each of nine agents
+a circular sci-fi emblem, one per hue, all the same concentric-ring composition, none legible at the
+size it renders. A set generated one at a time has no shared grid, so it fails exactly where an icon
+set must succeed.
+
+**Why AI generates it.** The slot exists — the layout wants art at 560×400 — and generating something
+is now one call away, while commissioning, selecting, or deciding the page does not need a picture
+all require a judgment the builder cannot make. It is D1's logic applied to imagery: fill the
+container.
+
+**Why it reads as generated.** Illustration is where a product's point of view is least deniable.
+A commissioned illustration makes an argument — Stripe's isometric diagrams argue that money movement
+is a system you can inspect; Raycast's keycap argues the product is a physical instrument. A
+generated one argues nothing, because no one chose what it should say, and the style it defaults to
+is the median of every illustration ever scraped. The anatomy errors are a lower-order tell than that
+— they are what you notice second, after the absence of an idea.
+
+**When it is actually fine.** As a placeholder explicitly marked as one during layout. In a product
+where the generated image *is* the output being displayed. And for genuinely decorative texture —
+a gradient, a pattern, a blurred field — where no one is asked to read it as depiction.
+
+**Instead.** First ask whether the slot needs a picture: a product screenshot with real data in it
+beats any illustration, is cheaper, and is what a reader actually wants to see. If it needs art,
+commission it or buy it, and brief it on one specific idea rather than a mood. If the budget is zero,
+prefer a well-set type composition, a diagram you drew, or nothing — restraint reads as a decision,
+and a generated illustration reads as an absence of one. For avatars, generate from the identifier
+(initials on a deterministic hue, or a seeded geometric) so the set shares a grid by construction.
+
+**Detect.** *Code:* nothing reliable. Raster count does not separate the populations — the controls in
+this pass carried more raster images than the generated pages did (linear.app 34, stripe.com 27,
+sentry.io 20, against 0–1 on four Replit apps), because real products ship screenshots. C2PA
+provenance metadata is stripped by most build pipelines. *Screenshot:* open the image at full size
+and look at hands, text, repeated objects and light direction. Then ask the question that actually
+decides it: **what is this picture arguing?** If the answer is "that this is a page about sport," it
+is filling a slot.
 
 ---
 

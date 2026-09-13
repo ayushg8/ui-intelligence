@@ -296,6 +296,18 @@ I screenshotted production surfaces alongside the libraries. The single best ref
 
 Cross-checking pitch across everything I measured: Handsontable 29.5px · RevoGrid "Dark Compact" 36px · Plausible 36px · Tabulator 32px · Glide 34.5px · AG Grid default 42px · LyteNyte 43px · shadcn `tasks` example 49px · **MUI X 53px**. Anything above ~44px is a comfort default, not a dense-data default, and should be a density *toggle*, not a fixed value. If you copy one number from this file, copy 36.
 
+**Who actually ships tabular figures (re-probed 2026-09-13, computed styles, not docs).** The advice
+above is cheap to state and almost nobody follows it, including the recommended default:
+`ui.shadcn.com/examples/tasks` renders **0 cells** with `font-variant-numeric: tabular-nums` — the
+property is absent from the recipe entirely — while Naive UI's Data Table sets it on **all 1,644**
+cells on the page, inheriting it from the table root. Both land at the same pitch (49px vs 53px), so
+the difference is not density, it is one declaration nobody added. Since the shadcn `data-table`
+recipe is the single most-copied table markup in 2026, that omission propagates into most generated
+tables on the web. **Add `font-variant-numeric: tabular-nums` to your `<table>` root as the first
+edit after copying the recipe** — it costs one line and it is the difference between columns of
+numbers that scan and columns that shimmer. (Row pitch reproduced exactly: the 49px figure above
+re-measured at 49px a month on, which is the expected behaviour for a CSS-derived value.)
+
 Two more rules the good ones follow and the demos don't: **right-align the header label too**, not just the values (AG Grid's `rightAligned` column type does this; most hand-rolled tables forget); and **encode categorical state with hue, not with saturation of one hue** — Handsontable's demo renders High/Medium/Low as three shades of the same blue, which destroys the ranking it's trying to show.
 
 One honest negative finding: Linear's and Attio's marketing sites no longer show their list views at all. Both now lead with an AI-chat hero (Linear: "The product development system for teams and agents"; Attio: "Welcome to agentic revenue"), and the product shots below the fold are a Kanban board and an assistant panel respectively. The famous dense tables are behind login in 2026 — cite them from memory at your own risk; I could not verify their current specifics.

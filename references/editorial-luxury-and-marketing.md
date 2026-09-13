@@ -1012,7 +1012,8 @@ The register in this archetype is **declarative and specific**. Nobody good writ
 - `Financial infrastructure to grow your revenue` — Stripe.
 - `Fast runs in the family.` — Apple. A pun that only works because the section is about M5, M5 Pro
   and M5 Max.
-- `The product development system for teams` — Linear.
+- `The product development system for teams and agents` — Linear. (Re-read live 2026-09-13; this
+  file had the pre-2026 wording without `and agents`, which the rest of the corpus already carries.)
 - `What can I help with?` — OpenAI. The headline is the product's own prompt.
 - `Post-Poo Drops: a long-awaited homecoming` — Aesop. Genuinely funny, in a serious voice.
 - `ISSUE 60 / HISTORY SPECIAL` — Kinfolk. The headline is just the fact.
