@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLEET · inference ops</title>
+<style>
+/* ══════════════════════════════════════════════════════════════════════════
+   Archetype: data-terminal.  Built to archetypes/data-terminal.md.
+   Density: very compact — 20px rows, 12px body as the only size on the data
+   plane, 11px headers, no page title, no content max-width.
+   Signature: the latency span — p50→p99 drawn on one shared axis per row, so
+   the tail spread is a length rather than a number you have to subtract.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ground → panel is +0.04 L, per the archetype. No shadows in plane. */
+  --ground:  oklch(0.183 0.008 265);
+  --panel:   oklch(0.223 0.008 265);
+  --raised:  oklch(0.262 0.008 265);
+
+  /* one hue, three alphas — composes over ground, panel, selected row and fill */
+  --line:    oklch(0.88 0.02 265 / 0.12);
+  --line-2:  oklch(0.88 0.02 265 / 0.20);
+  --line-in: oklch(0.88 0.02 265 / 0.08);
+
+  --txt:     oklch(0.90 0.006 265);   /* values */
+  --txt-2:   oklch(0.74 0.008 265);   /* labels, units, ids — 8.1:1 */
+  --txt-3:   oklch(0.62 0.010 265);   /* headers, axis — 5.2:1. At 11px on a dark
+                                          ground this is the floor the archetype warns about;
+                                          0.56 measured 4.02:1 and failed 40 elements. */
+
+  /* THE domain ramp: latency against SLO. One meaning, product-wide. */
+  --ok:      oklch(0.76 0.16 155);
+  --warn:    oklch(0.80 0.15  85);
+  --hot:     oklch(0.70 0.17  35);
+  --crit:    oklch(0.65 0.20  25);
+  --accent:  oklch(0.72 0.13 235);    /* selection + focus only */
+
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --row: 20px;
+}
+* { box-sizing: border-box; }
+html,body { height:100%; }
+body {
+  margin:0; background:var(--ground); color:var(--txt);
+  font: 12px/1.25 var(--mono);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+:focus-visible { outline:1px solid var(--accent); outline-offset:1px; }
+@media (prefers-reduced-motion: reduce){ *{animation:none!important;transition:none!important} }
+
+.app { display:grid; grid-template-columns:44px 1fr; height:100vh; height:100dvh; }
+
+/* ── icon rail: 3–6 views, reached by keystroke. No tree. ─────────────── */
+.rail { background:var(--ground); border-right:1px solid var(--line); display:flex; flex-direction:column; align-items:center; padding:6px 0; gap:2px; }
+.rail b { font-size:11px; color:var(--txt-3); letter-spacing:.04em; margin-bottom:6px; }
+.rail button {
+  width:32px; height:26px; border-radius:2px; color:var(--txt-3);
+  font-size:11px; display:grid; place-items:center;
+  transition:background 120ms, color 120ms;
+}
+.rail button:hover { background:var(--line-in); color:var(--txt); }
+.rail button[aria-current="true"] { background:var(--line-2); color:var(--txt); }
+.rail .spacer { margin-top:auto; }
+
+.main { display:flex; flex-direction:column; min-width:0; }
+
+/* ── 32px toolbar: view name, mnemonic, range, connection ─────────────── */
+.bar { height:32px; display:flex; align-items:center; gap:10px; padding:0 8px; border-bottom:1px solid var(--line); flex:none; }
+.view { color:var(--txt); }
+.mn { color:var(--txt-3); font-size:11px; }
+.bar .sep { width:1px; height:14px; background:var(--line); }
+.ctl { height:24px; padding:0 7px; border:1px solid var(--line); border-radius:2px; color:var(--txt-2); font-size:11px; display:inline-flex; align-items:center; gap:5px; transition:background 120ms,border-color 120ms; }
+.ctl:hover { background:var(--line-in); border-color:var(--line-2); }
+.ctl[aria-pressed="true"] { background:var(--line-2); color:var(--txt); }
+.right { margin-left:auto; display:flex; align-items:center; gap:10px; font-size:11px; color:var(--txt-2); }
+.led { width:6px; height:6px; border-radius:50%; background:var(--ok); flex:none; }
+.led[data-s="degraded"] { background:var(--warn); }
+.led[data-s="down"] { background:var(--crit); }
+
+/* ── summary strip: totals + the live edge ───────────────────────────── */
+.strip { display:flex; align-items:stretch; gap:0; border-bottom:1px solid var(--line); flex:none; height:44px; }
+.stat { padding:5px 10px; border-right:1px solid var(--line-in); display:flex; flex-direction:column; justify-content:center; min-width:88px; }
+.stat u { font-size:11px; color:var(--txt-3); text-decoration:none; }
+.stat b { font-weight:400; color:var(--txt); }
+.stat b.bad { color:var(--crit); }
+.stat b.warn { color:var(--warn); }
+.spark { flex:1; padding:4px 8px 2px; display:flex; flex-direction:column; justify-content:flex-end; min-width:0; }
+.spark .lbl { font-size:11px; color:var(--txt-3); display:flex; justify-content:space-between; }
+
+/* ── the data plane ──────────────────────────────────────────────────── */
+.wrap { flex:1; overflow:auto; }
+table { width:100%; border-collapse:collapse; }
+thead th {
+  position:sticky; top:0; z-index:2; background:var(--ground);
+  font-size:11px; font-weight:400; color:var(--txt-3); text-align:left;
+  height:22px; padding:0 6px; white-space:nowrap; border-bottom:1px solid var(--line);
+}
+thead th.n { text-align:right; }
+tbody tr { height:var(--row); border-bottom:1px solid var(--line-in); }
+tbody tr:hover { background:var(--line-in); }           /* colour only, 0ms */
+tbody tr[aria-selected="true"] { background:oklch(0.72 0.13 235 / 0.16); }
+tbody td { padding:0 6px; white-space:nowrap; }
+td.n { text-align:right; }
+td.dim { color:var(--txt-2); }
+td.id { color:var(--txt-2); }
+
+.dot { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--ok); vertical-align:1px; }
+.dot[data-s="warn"] { background:var(--warn); }
+.dot[data-s="hot"]  { background:var(--hot); }
+.dot[data-s="crit"] { background:var(--crit); }
+.dot[data-s="cold"] { background:oklch(0.62 0.01 265); }
+
+/* THE SIGNATURE — p50→p99 as a span on one shared axis, 0–3000ms.
+   Length is tail spread. Colour is p99 against SLO. Zero extra columns. */
+.lat { width:224px; padding:0 6px; }
+.axis { position:relative; height:var(--row); }
+.span { position:absolute; top:8px; height:4px; border-radius:1px; background:var(--ok); }
+.span[data-b="warn"] { background:var(--warn); }
+.span[data-b="hot"]  { background:var(--hot); }
+.span[data-b="crit"] { background:var(--crit); }
+.p95 { position:absolute; top:6px; width:1px; height:8px; background:oklch(1 0 0 / 0.55); }
+.over { position:absolute; top:4px; right:-2px; font-size:10px; line-height:12px; color:var(--crit); }
+.over b { font-weight:400; }
+.slo { position:absolute; top:3px; width:1px; height:14px; background:oklch(1 0 0 / 0.16); }
+thead .axis-h { position:relative; height:22px; }
+thead .axis-h i { position:absolute; top:6px; font-size:11px; font-style:normal; color:var(--txt-3); transform:translateX(-50%); }
+
+/* the live edge: trailing bucket is hatched, settled data stops at the rule */
+.edge { position:absolute; inset:0 0 0 auto; width:14px;
+  background:repeating-linear-gradient(135deg, oklch(1 0 0 / 0.07) 0 2px, transparent 2px 4px);
+  border-left:1px solid oklch(1 0 0 / 0.28); }
+
+.flash { animation:fl 420ms ease-out; }
+@keyframes fl { from { background:oklch(0.72 0.13 235 / 0.30) } to { background:transparent } }
+
+/* ── bottom: per-pane staleness, not per-page ────────────────────────── */
+.foot { flex:none; border-top:1px solid var(--line); display:flex; align-items:center; gap:12px; height:24px; padding:0 8px; font-size:11px; color:var(--txt-3); }
+.foot .k { color:var(--txt-2); }
+kbd { font:inherit; font-size:10px; padding:0 3px; border:1px solid var(--line-2); border-radius:2px; color:var(--txt-2); }
+
+.state { display:none; padding:26px; color:var(--txt-2); max-width:520px; }
+.state h2 { font-size:12px; font-weight:400; color:var(--txt); margin:0 0 4px; }
+.state p { margin:0 0 10px; }
+body[data-v="empty"] .wrap table, body[data-v="err"] .wrap table, body[data-v="load"] .wrap table { display:none; }
+body[data-v="empty"] #s-empty, body[data-v="err"] #s-err { display:block; }
+body[data-v="load"] .skel { display:block; }
+.skel { display:none; }
+.skel div { height:var(--row); border-bottom:1px solid var(--line-in); display:flex; align-items:center; gap:10px; padding:0 6px; }
+.skel i { height:6px; border-radius:1px; background:var(--line-in); animation:p 1.6s ease-in-out infinite; }
+@keyframes p { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.demo { position:fixed; right:8px; bottom:30px; display:flex; gap:2px; padding:2px; background:var(--raised); border:1px solid var(--line-2); border-radius:3px; z-index:9; }
+.demo button { font-size:11px; padding:3px 7px; border-radius:2px; color:var(--txt-2); }
+.demo button[aria-pressed="true"] { background:var(--line-2); color:var(--txt); }
+</style>
+</head>
+<body data-v="live">
+
+<div class="app">
+  <nav class="rail" aria-label="Views">
+    <b>FL</b>
+    <button aria-current="true" title="Fleet — F1">FL</button>
+    <button title="Routes — F2">RT</button>
+    <button title="Errors — F3">ER</button>
+    <button title="Spend — F4">$$</button>
+    <button class="spacer" title="Settings">⚙</button>
+  </nav>
+
+  <main class="main">
+    <div class="bar">
+      <span class="view">FLEET</span><span class="mn">F1</span>
+      <span class="sep"></span>
+      <button class="ctl" aria-pressed="true">live</button>
+      <button class="ctl">5m</button>
+      <button class="ctl">1h</button>
+      <button class="ctl">tail p99</button>
+      <button class="ctl">err &gt; 0</button>
+      <div class="right">
+        <span><span class="led" data-s="degraded"></span> ws us-east · 41ms</span>
+        <span>2 panes stale</span>
+        <span id="clock">14:22:07</span>
+      </div>
+    </div>
+
+    <div class="strip">
+      <div class="stat"><u>rps · <span id="k-n">0</span> deps</u><b id="k-rps">—</b></div>
+      <div class="stat"><u>worst p99</u><b class="warn" id="k-ttft">—</b></div>
+      <div class="stat"><u>err</u><b class="bad" id="k-err">—</b></div>
+      <div class="stat"><u>429/min</u><b class="warn" id="k-429">—</b></div>
+      <div class="stat"><u>cache</u><b id="k-cache">—</b></div>
+      <div class="stat"><u>$/min</u><b id="k-cost">—</b></div>
+      <div class="spark">
+        <div class="lbl"><span>tokens/s · 60m</span><span>peak 1.94M</span></div>
+        <div style="position:relative;height:20px">
+          <svg width="100%" height="20" preserveAspectRatio="none" viewBox="0 0 300 20" aria-hidden="true">
+            <polyline id="sp" fill="none" stroke="oklch(0.72 0.13 235)" stroke-width="1" points=""/>
+          </svg>
+          <span class="edge" title="current minute, still filling"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="skel" aria-hidden="true">
+        <div><i style="width:52px"></i><i style="width:130px"></i><i style="width:64px"></i><i style="width:150px;margin-left:auto"></i></div>
+        <div><i style="width:52px"></i><i style="width:112px"></i><i style="width:64px"></i><i style="width:150px;margin-left:auto"></i></div>
+        <div><i style="width:52px"></i><i style="width:141px"></i><i style="width:64px"></i><i style="width:150px;margin-left:auto"></i></div>
+        <div><i style="width:52px"></i><i style="width:120px"></i><i style="width:64px"></i><i style="width:150px;margin-left:auto"></i></div>
+        <div><i style="width:52px"></i><i style="width:134px"></i><i style="width:64px"></i><i style="width:150px;margin-left:auto"></i></div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width:14px"><span class="sr" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">state</span></th>
+            <th>deployment</th>
+            <th>region</th>
+            <th class="n">rps</th>
+            <th class="lat"><div class="axis-h"><i style="left:0">0</i><i style="left:33%">1s</i><i style="left:66%">2s</i><i style="left:96%">3s</i></div></th>
+            <th class="n">ttft</th>
+            <th class="n">tok/s</th>
+            <th class="n">ctx</th>
+            <th class="n">err</th>
+            <th class="n">429</th>
+            <th class="n">cache</th>
+            <th class="n">$/min</th>
+            <th class="n">age</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+
+      <div class="state" id="s-empty">
+        <h2>No deployments match tail p99 &gt; 3s</h2>
+        <p>41 deployments are reporting. The filter <span style="color:var(--txt)">tail p99</span> excludes all of them — the fleet's worst tail is <span id="k-worst">—</span>.</p>
+        <button class="ctl" onclick="setV('live')">clear filter</button>
+      </div>
+      <div class="state" id="s-err">
+        <h2>Metrics socket dropped — us-east</h2>
+        <p>Last frame 00:47 ago. Rows below the rule are the last settled values, not live. Routing and spend are unaffected; this pane only reads.</p>
+        <button class="ctl" onclick="setV('live')">reconnect</button>
+        <span style="margin-left:8px">auto-retry in 6s · attempt 3</span>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span><span class="k">fleet</span> 0.4s</span>
+      <span><span class="k">spend</span> 61s</span>
+      <span style="color:var(--warn)"><span class="k" style="color:inherit">quota</span> 4m12s</span>
+      <span style="color:var(--warn)"><span class="k" style="color:inherit">cache</span> 4m12s</span>
+      <span style="margin-left:auto"><kbd>j</kbd><kbd>k</kbd> row · <kbd>/</kbd> filter · <kbd>a</kbd> ack · <kbd>s</kbd> silence · <kbd>g</kbd><kbd>g</kbd> top</span>
+    </div>
+  </main>
+</div>
+
+<div class="demo" role="group" aria-label="Demo: state">
+  <button aria-pressed="true" onclick="setV('live')">live</button>
+  <button onclick="setV('load')">loading</button>
+  <button onclick="setV('empty')">empty</button>
+  <button onclick="setV('err')">socket down</button>
+</div>
+
+<script>
+// Deterministic, domain-shaped data. Varied by construction: the tail spread is
+// the point, so p99/p50 ratios differ per deployment rather than scaling together.
+const MODELS = [
+  ['opus-5','1m'],['opus-5',''],['sonnet-5',''],['sonnet-5','batch'],['haiku-4-5',''],
+  ['haiku-4-5','batch'],['opus-4-8',''],['embed-3','']
+];
+const REGIONS = ['us-east-2','us-west-2','eu-west-1','eu-central-1','ap-northeast-1','ap-south-1'];
+let seed = 20260913;
+const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+
+const DEP = [];
+for (const [m, tag] of MODELS) {
+  for (const r of REGIONS) {
+    if (rnd() < 0.18) continue;                     // not every model is everywhere
+    const base = m.startsWith('opus') ? 620 : m.startsWith('sonnet') ? 310 : m === 'embed-3' ? 38 : 150;
+    const p50 = Math.round(base * (0.8 + rnd() * 0.7));
+    const spread = 1.4 + rnd() * rnd() * 6;          // most tight, a few very long tails
+    const p99 = Math.round(p50 * spread);
+    const p95 = Math.round(p50 + (p99 - p50) * 0.55);
+    const rps = Math.round((m === 'embed-3' ? 3000 : m.startsWith('haiku') ? 900 : 260) * (0.35 + rnd() * 1.5));
+    const err = rnd() < 0.14 ? +(rnd() * 3.9).toFixed(2) : +(rnd() * 0.11).toFixed(2);
+    const r429 = rnd() < 0.2 ? Math.round(rnd() * 700) : Math.round(rnd() * 14);
+    DEP.push({
+      m, tag, r, p50, p95, p99, rps, err, r429,
+      ctx: Math.round(28 + rnd() * 68),
+      tps: Math.round((m === 'embed-3' ? 0 : 40 + rnd() * 90)),
+      cache: +(rnd() * 94).toFixed(1),
+      cost: +(rps * (m.startsWith('opus') ? 0.0061 : m.startsWith('sonnet') ? 0.0012 : 0.00018)).toFixed(2),
+      age: rnd() < 0.07 ? Math.round(40 + rnd() * 250) : Math.round(rnd() * 3),
+    });
+  }
+}
+DEP.sort((a, b) => b.p99 - a.p99);
+
+const SLO = 1800, AX = 3000, W = 224 - 46;  // 46px reserved for the overflow tag
+const band = (p99) => p99 > SLO * 1.2 ? 'crit' : p99 > SLO ? 'hot' : p99 > SLO * 0.6 ? 'warn' : 'ok';
+const st = (d) => d.age > 30 ? 'cold' : d.err > 2 ? 'crit' : d.err > 0.5 || d.r429 > 300 ? 'hot' : d.p99 > SLO ? 'warn' : 'ok';
+const x = (ms) => Math.min(W, (ms / AX) * W);
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+document.getElementById('rows').innerHTML = DEP.map((d, i) => {
+  const b = band(d.p99), x1 = x(d.p50), x2 = x(d.p99);
+  return `<tr ${i === 3 ? 'aria-selected="true"' : ''} tabindex="0">
+    <td><span class="dot" data-s="${st(d)}"></span></td>
+    <td>${esc(d.m)}${d.tag ? `<span class="dim" style="color:var(--txt-3)">·${esc(d.tag)}</span>` : ''}</td>
+    <td class="id">${esc(d.r)}</td>
+    <td class="n">${d.rps.toLocaleString()}</td>
+    <td class="lat"><div class="axis">
+      <span class="slo" style="left:${x(SLO)}px" title="SLO 1800ms"></span>
+      <span class="span" data-b="${b}" style="left:${x1}px;width:${Math.max(2, x2 - x1)}px" title="p50 ${d.p50} → p99 ${d.p99}"></span>
+      <span class="p95" style="left:${x(d.p95)}px"></span>
+      ${d.p99 > AX ? `<span class="over" title="p99 ${d.p99}ms, past the ${AX / 1000}s axis">▸<b>${(d.p99 / 1000).toFixed(1)}s</b></span>` : ''}
+    </div></td>
+    <td class="n">${d.p50}</td>
+    <td class="n dim">${d.tps || '—'}</td>
+    <td class="n dim">${d.ctx}%</td>
+    <td class="n" ${d.err > 0.5 ? 'style="color:var(--crit)"' : d.err > 0.1 ? 'style="color:var(--warn)"' : 'class="n dim"'}>${d.err.toFixed(2)}</td>
+    <td class="n ${d.r429 > 300 ? '' : 'dim'}" ${d.r429 > 300 ? 'style="color:var(--warn)"' : ''}>${d.r429 || '·'}</td>
+    <td class="n dim">${d.cache}</td>
+    <td class="n">${d.cost.toFixed(2)}</td>
+    <td class="n ${d.age > 30 ? '' : 'dim'}" ${d.age > 30 ? 'style="color:var(--txt-3)"' : ''}>${d.age > 30 ? (d.age > 60 ? Math.floor(d.age / 60) + 'm' : d.age + 's') : d.age + 's'}</td>
+  </tr>`;
+}).join('');
+
+// The summary strip is COMPUTED from the rows, never authored. Hardcoding it is
+// how a screen ends up claiming a fleet total its own column contradicts — the
+// defect this corpus caught in an evaluation control and then reproduced here.
+const sum = (f) => DEP.reduce((a, d) => a + f(d), 0);
+const totRps = sum(d => d.rps);
+const totErr = sum(d => d.rps * d.err) / totRps;                 // request-weighted
+const tot429 = sum(d => d.r429);
+const totCache = sum(d => d.rps * d.cache) / totRps;             // request-weighted
+const totCost = sum(d => d.cost);
+const worst = DEP.reduce((a, d) => (d.p99 > a.p99 ? d : a));
+document.getElementById('k-rps').textContent = totRps.toLocaleString();
+document.getElementById('k-err').innerHTML = totErr.toFixed(2) + '<span style="color:var(--txt-3)">%</span>';
+document.getElementById('k-ttft').innerHTML = worst.p99.toLocaleString() + '<span style="color:var(--txt-3)">ms</span>';
+document.getElementById('k-429').textContent = tot429.toLocaleString();
+document.getElementById('k-cache').innerHTML = totCache.toFixed(1) + '<span style="color:var(--txt-3)">%</span>';
+document.getElementById('k-cost').textContent = totCost.toFixed(2);
+document.getElementById('k-n').textContent = DEP.length;
+const kw = document.getElementById('k-worst'); if (kw) kw.textContent = `${worst.p99}ms on ${worst.m}/${worst.r}`;
+
+// sparkline, with the trailing bucket left under the hatch
+let sp = []; for (let i = 0; i < 60; i++) sp.push(9 + Math.sin(i / 5) * 4 + rnd() * 4);
+document.getElementById('sp').setAttribute('points', sp.map((v, i) => `${i * 5},${20 - v}`).join(' '));
+
+// change flash: 420ms decay on the row that moved, nothing else animates
+const rowsEl = document.getElementById('rows');
+let t = null;
+function tick() {
+  const r = rowsEl.children[Math.floor(rnd() * Math.min(18, rowsEl.children.length))];
+  if (r) { r.classList.remove('flash'); void r.offsetWidth; r.classList.add('flash'); }
+  const c = document.getElementById('clock');
+  const [h, m, s] = c.textContent.split(':').map(Number);
+  const n = (h * 3600 + m * 60 + s + 1) % 86400;
+  c.textContent = [Math.floor(n / 3600), Math.floor(n / 60) % 60, n % 60].map(v => String(v).padStart(2, '0')).join(':');
+}
+function setV(v) {
+  document.body.dataset.v = v;
+  document.querySelectorAll('.demo button').forEach(b => b.setAttribute('aria-pressed', String(b.textContent.trim().startsWith(v === 'err' ? 'socket' : v))));
+  clearInterval(t); if (v === 'live') t = setInterval(tick, 1000);
+}
+setV('live');
+</script>
+</body>
+</html>
