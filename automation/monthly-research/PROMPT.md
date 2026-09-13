@@ -29,10 +29,28 @@ node -e "import('playwright').then(()=>console.log('playwright ok'))" 2>/dev/nul
 node tools/shot.mjs https://ui.shadcn.com --out .cache/shots --name smoke --widths 1440
 ```
 
-Use `ui.shadcn.com` as the smoke test, not `linear.app` — verified 2026-09-13, linear.app
-connection-resets through the sandbox's egress proxy while shadcn, base-ui, api.github.com and
-api.npmjs.org all return 200. A failed smoke test against one site is not evidence the browser is
-broken; try a second host before concluding anything.
+**On the "linear.app connection-resets" note — the host was not the variable.** An earlier
+verification found linear.app resetting while shadcn, base-ui, api.github.com and api.npmjs.org
+returned 200, and concluded the problem was one site. Re-tested from the browser itself on
+2026-09-13: **Chromium connection-resets on every one of those hosts, shadcn and base-ui included**,
+while `curl` returns 200 on the same hosts in the same session. The 200s were measured with curl, and
+curl's reachability does not transfer to the browser. Two separate faults, both browser-only:
+
+- The egress relay accepts Chromium's `CONNECT`, returns 39 bytes and closes the tunnel — it rejects
+  the browser's TLS handshake. No browser flag fixes this; disabling post-quantum key exchange,
+  HTTP/2, and passing `--proxy-server` explicitly were all tried and all failed.
+- Chromium separately does not trust the proxy CA (`api.github.com` →
+  `ERR_CERT_AUTHORITY_INVALID`), despite the proxy README claiming the browser NSS store is set up.
+
+**`tools/shot.mjs` now handles both automatically** — it re-execs with `NODE_USE_ENV_PROXY=1` and,
+on a connection-level navigation failure, retries with every request fulfilled from Node's `fetch`
+through Playwright's routing layer. Node reaches the network fine and trusts the CA, so the browser
+renders normally and you get real screenshots. Either smoke URL works. If you write your own
+Playwright script instead of using `shot.mjs`, you will hit the raw fault — copy the `routeViaNode`
+helper out of `tools/shot.mjs` rather than concluding the site is down.
+
+So: **a failed smoke test against one site is not evidence the browser is broken, and a `curl` 200 is
+not evidence it works.** Test the browser with the browser before concluding anything either way.
 
 If Chromium genuinely cannot run here, say so explicitly in the report and treat every visual
 judgment this month as provisional. Do not silently skip looking.

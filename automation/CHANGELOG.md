@@ -17,6 +17,11 @@ demotion candidates were opened and all three closed against me — see *Challen
 **Tooling — the screenshot step was broken in this environment, and is now fixed.** Chromium could
 not reach any host: the egress relay accepted its `CONNECT`, returned 39 bytes and closed, so every
 navigation died with `ERR_CONNECTION_RESET` while `curl` and Node reached the same hosts fine.
+(It also does not trust the proxy CA — `api.github.com` gives `ERR_CERT_AUTHORITY_INVALID` — which
+is a second, independent browser-only fault.) This also corrects the note added to `PROMPT.md` in
+`a9e3aab`: that pass found linear.app resetting while shadcn and base-ui returned 200 and concluded
+the host was the variable. It is not — those 200s were curl's. Re-tested from the browser,
+**Chromium resets on shadcn and base-ui too**; switching the smoke URL would not have helped.
 Disabling post-quantum TLS, HTTP/2 and passing the proxy explicitly all failed. Root cause is the
 relay rejecting Chromium's TLS handshake, which no browser flag fixes. `tools/shot.mjs` now re-execs
 itself with `NODE_USE_ENV_PROXY=1` and, when a navigation fails with a connection-level error,
