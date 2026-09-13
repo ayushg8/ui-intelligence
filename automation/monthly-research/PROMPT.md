@@ -18,15 +18,24 @@ Read `START-HERE.md`, then `libraries/README.md` and `data/index.json`. Note the
 Anything older than ~6 months is a candidate for re-verification; anything ranked `essential` or
 `strong` is a candidate for challenge regardless of age.
 
-Set up the visual tooling — you will need it:
+Set up the visual tooling — you will need it. **Check before installing:** the cloud environment
+ships Chromium pre-installed, so the install is usually wasted minutes.
 
 ```bash
-npm i -g playwright && npx playwright install --with-deps chromium
-node tools/shot.mjs https://linear.app --out .cache/shots --name smoke --widths 1440
+echo "$PLAYWRIGHT_BROWSERS_PATH" && ls /opt/pw-browsers 2>/dev/null   # usually already there
+node -e "import('playwright').then(()=>console.log('playwright ok'))" 2>/dev/null \
+  || npm i -g playwright && npx playwright install chromium            # only if the above failed
+
+node tools/shot.mjs https://ui.shadcn.com --out .cache/shots --name smoke --widths 1440
 ```
 
-If Chromium genuinely cannot be installed in this environment, say so explicitly in the report and
-treat every visual judgment this month as provisional. Do not silently skip looking.
+Use `ui.shadcn.com` as the smoke test, not `linear.app` — verified 2026-09-13, linear.app
+connection-resets through the sandbox's egress proxy while shadcn, base-ui, api.github.com and
+api.npmjs.org all return 200. A failed smoke test against one site is not evidence the browser is
+broken; try a second host before concluding anything.
+
+If Chromium genuinely cannot run here, say so explicitly in the report and treat every visual
+judgment this month as provisional. Do not silently skip looking.
 
 ## Step 1 — Sweep for candidates
 
