@@ -108,3 +108,48 @@ inside the 0–2 target band while scoring the controls around 6.
 - The api-landing pair was close on two of three judges (3/4 and 2/4). The skeptic called it
   *"close pair"* and said the control's field-highlighting demo *"teaches the product better."*
   That is the honest state of that scenario.
+
+---
+
+## Appendix: the corrected task-manager pair
+
+Re-shot with `class="scaffold"` hidden, **A/B assignment flipped** (treatment became B, so a judge
+with a bias toward the first image could not produce a false positive), and given to a fresh
+skeptic who had not seen the earlier round.
+
+**Result: treatment wins again — 2 vs 6, "B somewhat better."** Slightly better than its leaked-round
+score of 3, which confirms the visible scaffolding had been costing it.
+
+The clean judge then found a control defect that four prior reviewers — three judges and me — all
+missed:
+
+> *"B's counts reconcile: people 4+4+2+12+2+3 + 4 unassigned = 31 open, matching the brief.*
+> ***A claims '18 tasks' while sidebar 'Everyone 14' and per-person counts sum to 10.***"
+
+Three different totals on one screen in the control. That is the kind of defect that survives every
+visual review and destroys trust the moment a user notices it.
+
+### The best criticism of the winner in the whole evaluation
+
+> *"'Priya is running two threads' in the subtitle plus the 'second thread' tag on HAL-427 coins
+> jargon for what the two amber in-progress rows already show; the per-task stopwatches
+> (2h 41m, 18m, 55m) also imply time tracking **the brief's 'not much else' excludes**."*
+
+The second half is the sharpest single observation any judge made. The brief said *"assign work,
+see what's in progress, and not much else"* — and the winning build quietly implied a time-tracking
+feature nobody asked for. Scope creep rendered as UI, caught from a screenshot.
+
+### And a real steelman of the loser
+
+> *"A puts priority (High/Med/Low) and a due date on every card; B has no priority and mixes
+> '2d est' / 'due Fri' / 'no estimate'. A's explicit In review stage and per-column + buttons make
+> state changes direct, and all 18 tasks fit unscrolled; B cuts at HAL-408 with Jonas's 12 unseen."*
+
+The inconsistent right-column vocabulary is a legitimate defect in the winner, and the control's
+uniform priority+date is genuinely better on that one axis. Recorded because a result that cannot
+name what the loser did better is not a result, it is advocacy.
+
+### Updated scoreboard
+
+**13 of 13 judgments favour the treatment arm**, including the one run cleanly with the assignment
+flipped. Treatment mean **2.2**, control mean **6.1**.
