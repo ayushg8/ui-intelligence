@@ -1,6 +1,17 @@
 ---
 name: ui-intelligence
-description: Use whenever building or substantially changing any user interface — a web app, dashboard, internal tool, landing page, mobile screen, component, or design system. Routes into a design-intelligence library with product archetypes, measured craft references from the best products in the world, ranked library verdicts, and an anti-vibecode critique loop. Invoke BEFORE writing UI code, not after. Also use when asked to review, critique, polish, or de-genericize an existing interface, or when the user says the UI looks "AI-generated", "generic", "off", or "like a template".
+description: >-
+  ALWAYS invoke FIRST for any product UI work — app, dashboard, admin or internal tool, settings
+  page, form, table, onboarding flow, mobile screen, component, design system, or a marketing/landing
+  page for a product. Invoke before writing any CSS or JSX, and before any other design skill.
+  This is the process layer: it picks the product archetype, sets density and tokens, and runs the
+  render-look-score loop. It COMPOSES WITH the aesthetic skills rather than competing with them —
+  if `design-taste` applies (Ayush's own brand surfaces) invoke this first to choose the archetype,
+  then let design-taste supply the palette and voice inside it. It SUPERSEDES `frontend-design`,
+  `web-design-guidelines`, `ui-ux-pro-max` and `canvas-design` for product UI, because those set a
+  look without first deciding what is being built. Also invoke when asked to review, critique, audit,
+  polish or de-genericize an interface, or when UI looks "AI-generated", "generic", "off", or "like
+  a template".
 ---
 
 # UI Intelligence
