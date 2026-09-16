@@ -18,6 +18,7 @@
  */
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, resolve, relative } from 'node:path';
+import { execSync } from 'node:child_process';
 
 const ROOT = resolve(new URL('..', import.meta.url).pathname);
 const C = { red: (s) => `\x1b[31m${s}\x1b[0m`, yel: (s) => `\x1b[33m${s}\x1b[0m`, grn: (s) => `\x1b[32m${s}\x1b[0m`, dim: (s) => `\x1b[2m${s}\x1b[0m`, b: (s) => `\x1b[1m${s}\x1b[0m` };
@@ -76,7 +77,7 @@ for (const [idx, re] of Object.entries(promises)) {
 }
 
 // ── 3. freshness + stubs ───────────────────────────────────────────────────
-const dated = files.filter((f) => /\/(libraries|archetypes|craft|references|patterns)\//.test(f) && !f.endsWith('README.md'));
+const dated = files.filter((f) => /\/(libraries|archetypes|craft|references|patterns)\//.test(f) && !f.endsWith('README.md') && !f.endsWith('DIGEST.md'));
 const undatedList = [], stubs = [], dates = [];
 for (const f of dated) {
   const md = readFileSync(f, 'utf8');
@@ -95,6 +96,16 @@ const stale = dates.filter(([, d]) => new Date(d + '-01') < cutoff);
 if (stale.length) { warnings += stale.length; console.log(`  ${C.yel('stale')}   ${stale.length} file(s) older than 6 months — the monthly routine should re-check these`); stale.slice(0, 8).forEach(([f, d]) => console.log(C.dim(`          ${d}  ${f}`))); }
 
 if (stubs.length) { warnings += stubs.length; console.log(C.b('\nSuspiciously short')); stubs.forEach(([f, n]) => console.log(`  ${C.yel('stub?')}   ${f} (${n} lines)`)); }
+
+// ── 3b. digests current? ───────────────────────────────────────────────────
+console.log(C.b('\nDigests'));
+try {
+  execSync(`node ${join(ROOT, 'tools', 'digest.mjs')} --check`, { stdio: 'pipe' });
+  console.log(`  ${C.grn('ok')}      all DIGEST.md files match their sources`);
+} catch {
+  errors++;
+  console.log(`  ${C.red('stale')}   a DIGEST.md is behind its sources — run: node tools/digest.mjs`);
+}
 
 // ── 4. shape ───────────────────────────────────────────────────────────────
 const count = (d) => (existsSync(join(ROOT, d)) ? readdirSync(join(ROOT, d)).filter((f) => f.endsWith('.md') && f !== 'README.md').length : 0);

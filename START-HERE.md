@@ -67,6 +67,30 @@ self-check at the end of it. The full procedure is for anything with a layout.
 own density, type, color, motion and component logic, plus its reference products and its
 characteristic failure. Start at [`archetypes/README.md`](archetypes/README.md) for the selector.
 
+### Read the digest first, the file only when you need it
+
+The content files are large — the taxonomy alone is ~44k tokens, one craft file 12–37k — because
+every claim in them is measured and every measurement was adversarially re-verified. **Do not load
+them whole to answer a routine question.** Each directory carries a generated `DIGEST.md` holding
+the highest-leverage rules from every file in it:
+
+| Load this | Cost | Instead of |
+|---|---|---|
+| [`craft/DIGEST.md`](craft/DIGEST.md) | ~8k tok | 283k for all 14 craft files |
+| [`patterns/DIGEST.md`](patterns/DIGEST.md) | ~5k tok | 201k for all 8 pattern files |
+| [`archetypes/DIGEST.md`](archetypes/DIGEST.md) | ~1.6k tok | 212k for all 20 archetypes |
+| [`anti-patterns/DIGEST.md`](anti-patterns/DIGEST.md) | ~2k tok | 125k for all 4 |
+
+Then pull a single section on demand rather than opening the file:
+
+```bash
+node tools/digest.mjs --five craft/density-and-hierarchy.md     # the five rules that matter
+node tools/digest.mjs --check-list craft/typography.md          # the ship checklist, ~1k tok
+```
+
+Open the full file when a decision actually turns on the measured detail behind a rule — which
+happens, and is what the depth is for. The digests are generated; edit the source files.
+
 **Craft.** [`craft/`](craft/) — the deep, measured guidance. Load the one you need:
 
 | Question | File |

@@ -177,6 +177,9 @@ removed. Those break arguments, not just figures.
 - Do not add a resource without a verdict, a tier, and a reason.
 - Do not add a resource you have not looked at.
 - Do not restructure the library. Its shape is deliberate and its consumers depend on it.
+- **Regenerate the fast path.** After editing any content file: `node tools/digest.mjs`, then
+  `node tools/check.mjs` (which fails if a digest is stale). The digests are how an agent reads this
+  corpus without loading 800k tokens — a stale digest silently ships last month's advice.
 - Do not let any file grow unboundedly — if a category file exceeds ~800 lines, cut the weakest
   entries rather than appending.
 - Keep the writing dense and opinionated. Every sentence should change a decision.
